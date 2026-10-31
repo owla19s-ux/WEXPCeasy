@@ -207,6 +207,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 |---|---|---|---|
 | [connections/api](../connections/api/CONTRACT.md) | connections | F04 Provider/Model/Capability/流式/usage/工具意图 | B候选，真实Provider待验 |
 | [connections/local](../connections/local/CONTRACT.md) | connections | F06 文件/目录/终端/进程/Git/Android/监控 | B候选，Windows实验待验 |
+| [workflows/modes MODE-01～MODE-06](../workflows/modes/CONTRACT.md) | workflows/modes | F07-005～012模式发现/组合/规则/升级 | B候选，待评审 |
 | [software-development mode](../workflows/modes/software-development/CONTRACT.md) | workflows/modes | F07-013～020专业对象和关系 | B候选，未实现 |
 | conversations CV-01～CV-15 | conversations | F03逐项稳定锚点与输入输出 | B候选，流式/取消仍C |
 | views VIEW-01～VIEW-07 | views | F11投影/映射/布局/锚点 | B候选，多图/规模仍C |
