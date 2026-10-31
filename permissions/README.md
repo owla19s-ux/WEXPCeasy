@@ -1,7 +1,7 @@
 # permissions — 策略、授权决定与撤权
 
 **当前：第七批基础产品实现已落地；稳定实现与限制见本文“第七批实际实现”及[验收报告](../docs/batch7/REPORT.md)。下方阶段描述保留为历史依据。**
-历史初始状态（第二批）：当时尚无产品授权引擎；第七批已实现本域基础授权服务。此处仍是唯一的权限业务域；[shared/permissions](../shared/permissions/README.md) 仅保留旧入口指引，不再承担另一套授权服务。
+历史初始状态（第二批）：当时尚无产品授权引擎；第七批已实现本域基础授权服务。此处仍是唯一的权限业务域；[shared/permissions](../shared/permissions/README.md) 仅保留旧入口指引，不再承担另一套授权服务。模块细分使用 PERMISSIONS-*，既有 PER-01～04 保持稳定。
 
 ## 判断什么
 
@@ -76,6 +76,12 @@
 
 G1 引用、G2 工具意图、G4 Operation 历史和 G5 搜索命中均不产生授权。详见[基础能力落地映射](../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
 
+
+## 模块编号规则
+
+- 权限域细分使用 `PERMISSIONS-<子域>-NNN`，详见 [CONTRACT 第 11 节](CONTRACT.md#11-模块独立功能编号与细化契约)。
+- PER-01～PER-04 保留为既有稳定能力锚点。
+- D01/D02 已确认政策与特殊信任边界待决项分别标注；编号建立不代表未实现政策已落地。
 
 ## D01/D02 权限判定矩阵
 
