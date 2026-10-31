@@ -34,7 +34,7 @@
 | UI | UI/CONTRACT及I01–I16 | UI只拥有交互/呈现，不拥有F业务事实 |
 | plugins/accounts/dsh | README与研究文档 | 预留/独立路线；不是已建立WEX业务契约 |
 
-> CV-xx、API-xx、LOCAL-xx、MODE-xx、VIEW-xx、SH-06均为本次提出的候选定位符，不代表已经写入对应CONTRACT或获得批准。
+> CV/API/LOCAL/MODE/SD/VIEW/AIC/APP/SH能力锚点均已写入对应CONTRACT，当前仍为B/C/D候选语义；不等于接口签名冻结或产品实现完成。
 
 ## 2. 映射统计
 
