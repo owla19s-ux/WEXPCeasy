@@ -20,7 +20,7 @@
 |---|---|---|
 | space | SPC-01–SPC-07 | 稳定能力编号；SPC-06/07承接Context资源引用与工具组合细分 |
 | AI / roles | AIC-01–AIC-08 | 已补记忆子契约；D10/D05仍未决 |
-| connections | C01–C05 | 稳定编号；API/local子契约已分别补充 |
+| connections | C01–C05 + CONNECTIONS-* | 核心宿主细分编号；API/LOCAL 子模块独立维护 |
 | conversations | CV-01–CV-15 | 已补稳定锚点；B/C候选语义 |
 | connections/api | API-01–API-07 | 已补适配器子契约，真实Provider待验 |
 | connections/local | LOCAL-01–LOCAL-10 | 已补适配器子契约，Windows实测待验 |
@@ -101,22 +101,22 @@
 | F04-011 | 超时、重试与降级 | connections/api | connections/api/CONTRACT.md · API-09 | 部分 | 实验前置 | 仅模型请求有限重试；工具副作用不由API适配器重发。 |
 | F04-012 | 模型故障切换 | connections/api | connections/api/CONTRACT.md · API-10 | 部分 | 用户决策前置 | 故障切换是新请求/新快照；自动切换受PRD-D11及来源/权限政策。 |
 | F04-013 | 本地模型 Provider | connections/api | connections/api/CONTRACT.md · API-07 | 部分 | 补契约/语义评审后施工 | 本地模型服务和GPU进程资源需单独实验，不默认由WEX管理运行时。 |
-| F05-001 | Connection 生命周期 | connections | connections C01 | 覆盖 | 可直接施工（独立验收） | — |
-| F05-002 | 能力描述 | connections | connections C01/C02 | 覆盖 | 可直接施工（独立验收） | — |
-| F05-003 | 能力注册与发现 | connections | connections C01；app APP-02 | 覆盖 | 候选细化评审后施工 | — |
-| F05-004 | 能力就绪检查 | connections | connections C01/C03；app APP-02 | 覆盖 | 候选细化评审后施工 | — |
-| F05-005 | 连接配置与能力版本 | connections | connections C01/C02 | 覆盖 | 候选细化评审后施工 | — |
-| F05-006 | 受控调用入口 | connections | connections C02；permissions PER-01/03 | 覆盖 | 可直接施工（独立验收） | — |
-| F05-007 | Operation 尝试与回执 | connections | connections C02；shared SH-02 | 覆盖 | 可直接施工（独立验收） | — |
-| F05-008 | 结果查询与进度观察 | connections | connections C03 | 覆盖 | 可直接施工（独立验收） | — |
-| F05-009 | 取消与接续能力声明 | connections | connections C04 | 覆盖 | 实验前置 | — |
-| F05-010 | 外部事件与回调接入 | connections | connections C05；app APP-02；permissions PER-01 | 部分 | 实验前置 | 回调认证、重放、代次、顺序和撤权竞态仍需实验。 |
-| F05-011 | 外部 Agent 连接器 | connections | connections C01–04；connections/dsh README | 覆盖 | 可直接施工（独立验收） | — |
-| F05-012 | GitHub / Local 等系统适配 | connections | connections §3 api/github/local | 部分 | 补契约/语义评审后施工 | GitHub仅职责说明；Local缺子契约，不能将适配器等同。 |
-| F05-013 | 网络代理与连接策略 | connections | connections C01/C03；app APP-02 | 部分 | 实验前置 | 通用代理偏好与Provider专属代理/证书分层，离线重连按适配器验收。 |
-| F05-014 | 连接器错误规范化 | connections | connections C02/C03/C04 | 覆盖 | 可直接施工（独立验收） | — |
-| F05-015 | Service 生命周期与连接绑定 | connections | connections C01；app APP-02 | 部分 | 补契约/语义评审后施工 | Service定义/实例/代次、Connection绑定、Capability状态与卸载需独立样例。 |
-| F05-016 | 外部 Search / Fetch / Browser 适配 | connections | connections C01–03；permissions PER-01；F10-009 | 部分 | 补契约/语义评审后施工 | Search/Fetch/Browser不同于内部检索，当前为后续扩展。 |
+| F05-001 | Connection 生命周期 | connections | connections C01；模块编号：CONNECTIONS-CONNECTION-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F05-002 | 能力描述 | connections | connections C01/C02；模块编号：CONNECTIONS-CAPABILITY-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F05-003 | 能力注册与发现 | connections | connections C01；app APP-02；模块编号：CONNECTIONS-DISCOVERY-001 | 覆盖 | 候选细化评审后施工 | — |
+| F05-004 | 能力就绪检查 | connections | connections C01/C03；app APP-02；模块编号：CONNECTIONS-HEALTH-001 | 覆盖 | 候选细化评审后施工 | — |
+| F05-005 | 连接配置与能力版本 | connections | connections C01/C02；模块编号：CONNECTIONS-VERSION-001 | 覆盖 | 候选细化评审后施工 | — |
+| F05-006 | 受控调用入口 | connections | connections C02；permissions PER-01/03；模块编号：CONNECTIONS-ADMISSION-001、CONNECTIONS-RESOURCE-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F05-007 | Operation 尝试与回执 | connections | connections C02；shared SH-02；模块编号：CONNECTIONS-OPERATION-001、CONNECTIONS-IDEMPOTENCY-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F05-008 | 结果查询与进度观察 | connections | connections C03；模块编号：CONNECTIONS-OBSERVATION-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F05-009 | 取消与接续能力声明 | connections | connections C04；模块编号：CONNECTIONS-CONTROL-001、CONNECTIONS-RECOVERY-001 | 覆盖 | 实验前置 | — |
+| F05-010 | 外部事件与回调接入 | connections | connections C05；app APP-02；permissions PER-01；模块编号：CONNECTIONS-CALLBACK-001、CONNECTIONS-NOTIFICATION-001 | 部分 | 实验前置 | 回调认证、重放、代次、顺序和撤权竞态仍需实验。 |
+| F05-011 | 外部 Agent 连接器 | connections | connections C01–04；connections/dsh README；模块编号：CONNECTIONS-AGENT-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F05-012 | GitHub / Local 等系统适配 | connections | connections §3 api/github/local；模块编号：CONNECTIONS-ADAPTER-001 | 部分 | 补契约/语义评审后施工 | GitHub仅职责说明；Local缺子契约，不能将适配器等同。 |
+| F05-013 | 网络代理与连接策略 | connections | connections C01/C03；app APP-02；模块编号：CONNECTIONS-NETWORK-001 | 部分 | 实验前置 | 通用代理偏好与Provider专属代理/证书分层，离线重连按适配器验收。 |
+| F05-014 | 连接器错误规范化 | connections | connections C02/C03/C04；模块编号：CONNECTIONS-ERROR-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F05-015 | Service 生命周期与连接绑定 | connections | connections C01；app APP-02；模块编号：CONNECTIONS-SERVICE-001 | 部分 | 补契约/语义评审后施工 | Service定义/实例/代次、Connection绑定、Capability状态与卸载需独立样例。 |
+| F05-016 | 外部 Search / Fetch / Browser 适配 | connections | connections C01–03；permissions PER-01；F10-009；模块编号：CONNECTIONS-SEARCH-001 | 部分 | 补契约/语义评审后施工 | Search/Fetch/Browser不同于内部检索，当前为后续扩展。 |
 | F06-001 | 本地目录与资源选择 | connections/local | connections/local/CONTRACT.md · LOCAL-01 | 部分 | 补契约/语义评审后施工 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
 | F06-002 | 文件与目录查询 | connections/local | connections/local/CONTRACT.md · LOCAL-02 | 覆盖 | 可直接施工（独立验收） | Local子契约已覆盖主要业务输入输出。 |
 | F06-003 | 文件创建与修改 | connections/local | connections/local/CONTRACT.md · LOCAL-03 | 覆盖 | 可直接施工（独立验收） | Local子契约已覆盖主要业务输入输出。 |
@@ -380,6 +380,37 @@
 | VIEWS-PROJECTION-005 | 任务、进度与验收投影 | F11-014 | views/CONTRACT §5 | workflows、connections、permissions |
 
 布局归属提醒：节点位置/尺寸/viewport/视觉路径/自动布局结果归 views；节点业务身份/执行依赖归 workflows；交互手势归 workflows/editor；领域对象与专业关系归各自源 owner。
+
+## 3.5 CONNECTIONS 模块细分编号映射
+
+核心连接宿主独立编号由 `connections` owner 维护，不计入 F01–F15 的 216 项全局统计。C01–C05 保留为既有契约锚点；API/LOCAL 子模块编号不在本表重复。
+
+| 模块独立编号 | 模块细分能力 | 对应全局 F 索引 | 契约锚点 | 关键依赖/边界 |
+|---|---|---|---|---|
+| CONNECTIONS-CONNECTION-001 | Connection 生命周期 | F05-001 | connections/CONTRACT §7 | shared、permissions、app |
+| CONNECTIONS-CAPABILITY-001 | Capability 描述 | F05-002 | connections/CONTRACT §7 | 具体 connector、shared |
+| CONNECTIONS-DISCOVERY-001 | 能力注册与发现 | F05-003 | connections/CONTRACT §7 | app、具体 connector |
+| CONNECTIONS-HEALTH-001 | 连接与能力就绪检查 | F05-004 | connections/CONTRACT §7 | app、shared、具体 connector |
+| CONNECTIONS-VERSION-001 | 配置与适配器版本绑定 | F05-005 | connections/CONTRACT §7 | shared、app、具体 connector |
+| CONNECTIONS-CREDENTIAL-001 | 凭证引用与受控使用 | F05-001、F05-004 | connections/CONTRACT §7 | shared/credentials、permissions |
+| CONNECTIONS-ADMISSION-001 | 受控调用准入 | F05-006 | connections/CONTRACT §7 | permissions、app、workflows |
+| CONNECTIONS-RESOURCE-001 | 真实资源解析与定位 | F05-006、F05-012 | connections/CONTRACT §7 | 具体 connector、workflows/runtime、permissions |
+| CONNECTIONS-OPERATION-001 | Operation 意图、尝试与回执账本 | F05-007 | connections/CONTRACT §7 | shared/storage、permissions |
+| CONNECTIONS-OBSERVATION-001 | 结果查询与进度观察 | F05-008 | connections/CONTRACT §7 | 具体 connector、workflows |
+| CONNECTIONS-CONTROL-001 | 取消、分离与接续能力 | F05-009 | connections/CONTRACT §7 | 具体 connector、permissions、workflows |
+| CONNECTIONS-RECOVERY-001 | 未知结果恢复与外部核对 | F05-007～009 | connections/CONTRACT §7 | shared、app、workflows、具体 connector |
+| CONNECTIONS-IDEMPOTENCY-001 | 有限作用域去重与重试声明 | F05-007、F05-009 | connections/CONTRACT §7 | shared/storage、具体 connector |
+| CONNECTIONS-CALLBACK-001 | 外部回调与事件接入 | F05-010 | connections/CONTRACT §7 | app、permissions、shared |
+| CONNECTIONS-AGENT-001 | 外部 Agent 客户端连接 | F05-011 | connections/CONTRACT §7 | connections/dsh、workflows、permissions |
+| CONNECTIONS-ADAPTER-001 | 具体适配器装配与协议边界 | F05-012 | connections/CONTRACT §7 | connections/api、connections/local、connections/dsh、app |
+| CONNECTIONS-NETWORK-001 | 网络、代理与离线诊断 | F05-013 | connections/CONTRACT §7 | app、具体 connector |
+| CONNECTIONS-ERROR-001 | 连接器错误规范化 | F05-014 | connections/CONTRACT §7 | shared、workflows |
+| CONNECTIONS-SERVICE-001 | Service 实例生命周期与 Connection 绑定 | F05-015 | connections/CONTRACT §7 | app、具体 connector |
+| CONNECTIONS-SEARCH-001 | 外部 Search / Fetch / Browser 能力 | F05-016 | connections/CONTRACT §7 | permissions、app、具体 connector、views |
+| CONNECTIONS-EXCHANGE-001 | 双向最小能力交换 | F05-006、F05-010 | connections/CONTRACT §7 | app、permissions、各领域 owner |
+| CONNECTIONS-NOTIFICATION-001 | 状态变化通知与补读 | F05-008、F05-010 | connections/CONTRACT §7 | app、workflows、conversations、permissions |
+
+编号边界提醒：Operation/外部观察归 connections；Task、资源冲突协调和最终验收归 workflows；授权决定归 permissions；秘密归 shared/credentials；真实外部 Session/资源仍由外部系统拥有。
 
 ## 4. 必须优先补齐的模块契约
 
