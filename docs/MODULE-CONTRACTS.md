@@ -13,7 +13,7 @@
 |---|---|---|
 | [shared](../shared/README.md) | 已有公开 TypeScript 出口、SQLite 技术存储、根身份/路径检查、技术诊断；第八批在 Electron 45.2.1 内嵌 Node 24.22.1/Linux 中完成真实建库、事务、关闭与独立进程重启回读 | 完整备份/恢复、Windows ACL/句柄级锁、凭证生命周期与重装恢复未验收 |
 | [permissions](../permissions/README.md) | 已有公开授权服务、持久化授权/撤销、修订复核与拒绝默认；D01/D02已确认IV级全风险自主、工作流启动一次确认、主AI/秘书AI共享对话等级 | 当前代码仍对非对话入口返回 entry_policy_unresolved；AI资格、Context开关、工作流节点策略、对话等级策略和特殊信任边界尚未实现；Windows主体认证/IPC绑定/撤权竞态未验收 |
-| [app](../app/README.md) | 已有可信模块装配、生命周期释放/重试、无窗口诊断入口；第八批隔离 Electron 实验真实消费公开出口并验证启动/退出与占锁重试 | 正式 Electron 启动器、首次选根、正式 IPC 契约、安装升级及 Windows E4 未交付 |
+| [app](../app/README.md) | 已有可信模块装配、生命周期释放/重试、无窗口诊断入口；已补 APP-01～12 与 APP-* 细分契约；第八批隔离 Electron 实验真实消费公开出口 | 正式 Electron 启动器、首次选根、正式 IPC 契约、安装升级及 Windows E4 未交付 |
 | [UI](../UI/README.md) | 隔离 React Renderer 已验证窄 Preload 状态查询、错误反馈与无 Node 集成 | 完整产品页面、正式 IPC/页面协议、Windows 交互验收未实现 |
 | [connections](../connections/README.md) | 已有受控交换/协议夹具与 DSH headless 局部实验；已补 C01–C05、CONNECTIONS-* 核心宿主细分规格 | 完整产品级公共连接协议、真实 DSH 成功任务与恢复/停止闭环未验收 |
 | [workflows](../workflows/README.md) | 已有历史 React Flow 编辑实验；已确认自研自由格子方向，并补充 WORKFLOWS-* 业务细分与 WORKFLOWS-EDITOR-* 交互编号 | 正式工作流/Task/调度/验收产品代码未实现；真实自由画布交互与 Windows Electron 验收未通过 |
@@ -41,7 +41,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 
 | 模块/就近规格 | 唯一维护与公开能力摘要 | 明确不维护 | 准备程度与后续依赖 |
 |---|---|---|---|
-| [app](../app/CONTRACT.md) | 可信启动装配、数据根接入/诊断、退出恢复协调、安装升级重装屏障 | 各域业务状态/授权政策/主UI布局 | 基础装配与生命周期已实现并通过第七/八批验证；首次选根、Windows profile、安装关系及恢复 C/D 未关闭 |
+| [app](../app/CONTRACT.md) | APP-01～APP-12 + APP-*：安装/数据根/锁/装配/IPC/窗口/平台/凭证接线/更新/安全模式/健康诊断/备份恢复 | 各域业务状态/Operation/Task/授权政策/凭证秘密/主UI布局 | 基础装配与生命周期已实现；正式安装器、首次选根、Windows profile/IPC/进程树、更新卸载、备份恢复仍需C/E4；D04/D07/D05清理政策待决 |
 | [space](../space/CONTRACT.md) | 本体/放置/组合引用、组织配置、可见查询；独立删除单列 | 职责、会话背景、授权、外部文件 | 组织/引用可审阅；消费权限/存储/目标最小投影；实际删除与多目录迁移待C/D |
 | [AI与roles](../AI/CONTRACT.md) | AIC-01～09 + AI-*：Agent/角色/职责/工具资格/模型引用/配置快照/Runtime与Session映射/记忆来源 | Key/外部循环/Task分配/Context选择/授权账本 | 配置/职责/资格契约已细化；Agent Runtime、外部Session恢复C；D10派生记忆共享与D05保留政策待决 |
 | [conversations](../conversations/CONTRACT.md) | CV-01～CV-16 + CONVERSATIONS-*：会话/消息/序列项/分支/追加重发/流式/工具往返/局部修订 | Provider协议/Operation权威/Task验收/权限账本 | 业务编号与交互边界已细化；流式/取消/提交竞态C；片段保留D05 |
