@@ -204,3 +204,51 @@ connections 及具体适配器必须把真实能力与动作副作用描述清�
 - connections 唯一保存 Operation/attempt/receipt；授权决定归 permissions，Task/节点状态归 workflows。
 
 完整动作分类、高风险门及派发前验收见[ D01–D02 权限矩阵 ](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。
+
+
+## 7. 模块独立功能编号与细化契约
+
+本节为 `connections` 核心宿主的细粒度功能目录。C01–C05 保留为既有业务契约锚点；核心宿主新增功能使用 `CONNECTIONS-<子域>-NNN`。既有 `connections/api` 的 API-01～10 与 `connections/local` 的 LOCAL-01～10 继续由各自子模块维护，不在核心宿主重复编号。
+
+**权威边界：** connections 拥有连接配置/能力可用性、Operation 意图/attempt/外部观察/回执、连接器协议适配与受控调用边界。permissions 拥有授权决定，shared/credentials 拥有秘密，workflows 拥有 Task/资源协调/最终验收，外部服务拥有自己的 Session/Loop/真实资源状态。
+
+| 模块功能编号 | 功能 | 业务行为与边界 | 对应 F | 依赖 | 最低验收条件 | 状态 |
+|---|---|---|---|---|---|---|
+| CONNECTIONS-CONNECTION-001 | Connection 生命周期 | 创建、读取、修改、启用、停用、断开和移除连接配置；停用阻止新调用，不假称在途操作已停止。 | F05-001 | shared、permissions、app | 连接配置修订可回读；停用不删除历史 Operation 或外部事实。 | A |
+| CONNECTIONS-CAPABILITY-001 | Capability 描述 | 声明提供者、能力身份、输入输出、资源范围、副作用、可重试/取消/查询/接续支持及限制。 | F05-002 | 具体 connector、shared | 未支持能力不能伪装支持；能力描述可追溯到提供者和版本。 | A |
+| CONNECTIONS-DISCOVERY-001 | 能力注册与发现 | 登记、查询、刷新和注销能力描述；区分已发现、已安装、可用、已验证和获准调用。 | F05-003 | app、具体 connector | 发现不等于可用；可用不等于授权；注销不删除既有 Operation 证据。 | B |
+| CONNECTIONS-HEALTH-001 | 连接与能力就绪检查 | 检查依赖、凭证引用、网络、服务实例和本地工具环境；每个观察记录时间与证据来源。 | F05-004 | app、shared、具体 connector | 旧健康观察不得冒充实时可用；探测若联网/启动进程须单独判权并记录 Operation。 | A/B |
+| CONNECTIONS-VERSION-001 | 配置与适配器版本绑定 | 记录 Connection 配置修订、适配器版本、协议版本和 Capability 兼容范围；在途 Operation 绑定原修订。 | F05-005 | shared、app、具体 connector | 配置更新不重定向在途操作；不兼容版本明确阻止新派发。 | B |
+| CONNECTIONS-CREDENTIAL-001 | 凭证引用与受控使用 | 连接器只消费 shared/credentials 提供的秘密引用；connections 管理使用场景和必要可用性观察，不保存或返回秘密值。 | F05-001、F05-004 | shared/credentials、permissions | 日志/普通配置/Operation 回执中无明文秘密；凭证缺失或撤销时阻止新调用。 | A |
+| CONNECTIONS-ADMISSION-001 | 受控调用准入 | 绑定可信主体、真实入口、提供者/能力、目标、动作和输入依据；调用前判权，排队后派发前复核。 | F05-006 | permissions、app、workflows | 拒绝、审批中、不可判定、超时或依赖缺失时外部调用次数为 0。 | A |
+| CONNECTIONS-RESOURCE-001 | 真实资源解析与定位 | 适配器解析路径、仓库、远端对象、外部 Session 等实际目标身份和版本；资源冲突裁决/占用由 workflows/runtime 拥有。 | F05-006、F05-012 | 具体 connector、workflows/runtime、permissions | 同一资源的不同路径/别名不被误当成独立目标；身份不明且可能冲突时阻塞，不按 Context ID 推断资源。 | A/C |
+| CONNECTIONS-OPERATION-001 | Operation 意图、尝试与回执账本 | 宿主先保存单次操作意图/attempt，再派发并追加外部观察、结果和未知状态；适配器不另建第二份账本。 | F05-007 | shared/storage、permissions | attempt 保存失败不派发；外部已发生但结果保存失败时保留 observed 证据，不改称外部失败或自动重做。 | A |
+| CONNECTIONS-OBSERVATION-001 | 结果查询与进度观察 | 区分本地历史观察与主动远端查询；按原 Operation、实例/会话代次和外部定位获取状态。 | F05-008 | 具体 connector、workflows | 不支持远端查询时明确报告限制；历史观察带时间；迟到/乱序结果归属原 Operation。 | A |
+| CONNECTIONS-CONTROL-001 | 取消、分离与接续能力 | 分别声明 interrupt、detach、close、query、resume 等适配器实际支持的动作；控制目标绑定原实例/会话/尝试代次。 | F05-009 | 具体 connector、permissions、workflows | 请求停止不等于确认停止；detach 不等于取消；不支持的能力不能显示为成功。 | A/C |
+| CONNECTIONS-RECOVERY-001 | 未知结果恢复与外部核对 | 对超时、断连、回执保存失败和重启后的未知结果，先查询原 Operation/外部状态/实际资源，再决定是否可继续。 | F05-007～009 | shared、app、workflows、具体 connector | unknown 不盲重试；not found 不单独证明未执行；恢复线索不替代 Task/Acceptance 判断。 | A/C |
+| CONNECTIONS-IDEMPOTENCY-001 | 有限作用域去重与重试声明 | 按提供方可证明的主体/入口/能力/意图/payload/保留窗口声明去重范围；不能承诺全局恰好一次。 | F05-007、F05-009 | shared/storage、具体 connector | 同意图异 payload 拒绝；窗口外不伪称仍去重；未知副作用不因窗口到期自动重发。 | C |
+| CONNECTIONS-CALLBACK-001 | 外部回调与事件接入 | 接收回调时验证来源身份、签名/凭证、实例代次、原关联、目标范围、顺序和重放；回调内容仅作为外部观察或受控请求。 | F05-010 | app、permissions、shared | 伪造/重放/旧代次/跨目标回调被拒绝；迟到回调不能覆盖新 Operation。 | B/C |
+| CONNECTIONS-AGENT-001 | 外部 Agent 客户端连接 | 接入 DSH 等独立 Agent 客户端，记录外部实例、Session/Turn、backend、cwd 和可观察产物；外部 Loop/权限仍由外部系统拥有。 | F05-011 | connections/dsh、workflows、permissions | 只声明真实公开支持的 submit/observe/query/resume/interrupt；completed 不等于 WEX 验收。 | A/B |
+| CONNECTIONS-ADAPTER-001 | 具体适配器装配与协议边界 | 将 API、GitHub、Local、外部 Agent 等适配器接入宿主能力描述和 Operation 边界；不把所有协议压成同一万能 wire。 | F05-012 | connections/api、connections/local、connections/dsh、app | 每类适配器保留协议差异；本地 Git 与远端 GitHub 操作分开验收；无证据的适配器不标为可用。 | A/B |
+| CONNECTIONS-NETWORK-001 | 网络、代理与离线诊断 | 区分通用网络偏好、Provider/连接器专属代理、证书、离线、DNS 和重连观察；具体协议重试仍归适配器。 | F05-013 | app、具体 connector | 网络超时不推断外部操作未执行；不同 Provider 可有独立代理配置；诊断不泄露凭证。 | B/C |
+| CONNECTIONS-ERROR-001 | 连接器错误规范化 | 区分权限拒绝、未派发、能力不支持、限流、明确外部失败、超时、断连、结果未知和回执保存失败。 | F05-014 | shared、workflows | 原始证据和规范化结论可追溯；不同事实不能压成单一 failed。 | A |
+| CONNECTIONS-SERVICE-001 | Service 实例生命周期与 Connection 绑定 | 区分 Service 定义、运行实例、Connection 接入关系和 Capability；管理实例代次、就绪状态、绑定、停用、卸载和迟到回调。 | F05-015 | app、具体 connector | 同一 Service 可暴露多项 Capability；Connection 断开不删除 Service 定义；旧实例迟到结果不写入新实例。 | B |
+| CONNECTIONS-SEARCH-001 | 外部 Search / Fetch / Browser 能力 | 把互联网搜索、页面抓取和受控浏览器操作作为不同能力来源；与 views 内部资料检索分开。 | F05-016 | permissions、app、具体 connector、views | 外部搜索不绕过内部资料权限；浏览器能力按真实交互范围声明；不作为基础连接器前置。 | B |
+| CONNECTIONS-EXCHANGE-001 | 双向最小能力交换 | 向获准外部入口提供领域 owner 暴露的窄读写能力；内部普通调用不强制绕行公共连接层，外部请求不能拿宿主/数据库/权限账本对象。 | F05-006、F05-010 | app、permissions、各领域 owner | 外部 Context/Task 自报不作为身份；每次回调重新判权；跨目标调用被拒绝。 | B/C |
+| CONNECTIONS-NOTIFICATION-001 | 状态变化通知与补读 | 向获准消费者发送 Operation/能力状态变化提示；通知允许丢失、重复和乱序，最终事实仍从对应 owner 查询。 | F05-008、F05-010 | app、workflows、conversations、permissions | 漏通知后可补读已保存观察；重复通知不重复执行副作用；撤权后不泄露敏感摘要。 | B |
+
+### 7.1 现有子模块编号与维护边界
+
+- `connections/api` 继续使用 `API-01～API-10`，负责 Provider/模型协议适配；F04 不重复计入 CONNECTIONS 编号。
+- `connections/local` 继续使用 `LOCAL-01～LOCAL-10`，负责真实路径、文件、终端、进程、Git 和 Android 工具链事实；资源协调由 workflows/runtime 提供。
+- `connections/dsh` 是外部 DSH Agent 连接器，当前保留实验和 README 证据；DSH 专属能力细化后续单独建立子契约，不把它与 `dsh/` 原生插件宿主合并。
+- GitHub 适配器当前仍需独立契约/真实远端验收；本节的 CONNECTIONS-ADAPTER-001 只定义宿主适配边界，不声称 GitHub 业务契约已完整。
+- 网络/代理不提前建立万能网络子系统；只有多个适配器形成可复用且可验证的共同能力后再决定目录和协议。
+
+### 7.2 编号映射与维护
+
+- F05-001～016 由本节 CONNECTIONS 编号细化；C01～C05 继续作为上级业务行为章节锚点。
+- F04-001～013 由 API 子模块及 shared/credentials 细化；F06-001～015 由 LOCAL 子模块细化。
+- 新增、拆分或调整核心连接功能，只在 connections owner 范围内分配新编号；API/LOCAL/DSH 子模块分别维护自己的编号，不重排 F01–F15。
+- A/B/C/D 状态沿用产品总表与既有决策；编号建立不等于真实 Provider、GitHub、DSH 或 Windows 适配验收完成。
+
