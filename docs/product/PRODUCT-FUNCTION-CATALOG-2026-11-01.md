@@ -154,7 +154,7 @@
 | F02-004 | 职责范围绑定 | 在 Context、Task 或其他明确工作范围内绑定职责；选择关系与实际任务分配分开 | space、workflows | 选择角色不自动生成 Task、不自动派发、不扩权 | A |
 | F02-005 | 模型与连接引用 | Agent 配置可引用模型、Provider 或外部连接；不保存 Key/Token | connections/api、shared/credentials | 替换模型连接不改写历史调用和在途任务依据 | A/B |
 | F02-006 | Agent 配置修订 | 管理 Prompt、偏好、职责、模型引用等配置版本；新工作绑定明确修订 | shared/storage | 更新配置后，旧任务仍可追溯当时配置 | B |
-| F02-007 | Agent 实例生命周期 | 创建、启动、观察、暂停、恢复、释放 WEX 可管理的 Agent 实例；不强制自建完整 Agent Runtime | app、connections | 实例状态与 Agent 定义分开；释放失败保留可重试诊断 | B/C |
+| F02-007 | Agent 运行实例绑定与观察 | 将 Agent 配置绑定到受支持的内部/外部运行时实例并观察其可用状态；实际运行时生命周期由对应 Runtime/Connector 拥有 | connections、app | 不支持的启动/暂停/释放动作明确报告；不因 Agent 配置存在就假设有内部 Agent Loop | B/C |
 | F02-008 | Agent Session 映射 | 保存 WEX 任务/执行与外部 Agent Session 的映射；Session ID 不是主体身份或权限凭证 | connections/dsh 等 | 外部 Session 丢失或不可查询时保留未知，不伪造恢复成功 | A/B |
 | F02-009 | 外部 Agent 接入 | 将任务交给独立 DSH/Hermes 等外部客户端；WEX 不搬运其内部循环和会话结构 | connections 对应适配器 | 外部 Agent 只报告实际可观察能力；不支持的取消/恢复不假装支持 | A |
 | F02-010 | 执行者替换与交接 | 任务可更换执行者，保留旧执行者、旧轮次和已有证据 | workflows、connections | 更换 Agent 不删除旧结果、不重复执行未知副作用 | A/B |
