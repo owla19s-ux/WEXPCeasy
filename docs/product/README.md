@@ -19,7 +19,7 @@
 
 ## 模块契约补充
 
-第二轮已补齐shared SH-01～06、app APP-01～12、AI AIC-01～09、AI-*、conversations CV-01～16、connections C01–C05、CONNECTIONS-*、views VIEW-01～07、VIEWS-*、workflows WORKFLOWS-* 与 WORKFLOWS-EDITOR-* 及 API/LOCAL/MODE/SD 子契约。它们仍按B/C/D状态管理，不冻结实现签名，也不代表产品代码已完成。统一入口见[全模块业务契约索引](../MODULE-CONTRACTS.md)。
+第二轮已补齐shared SH-01～06、app APP-01～12、AI AIC-01～09、AI-*、conversations CV-01～16、CONVERSATIONS-*、connections C01–C05、CONNECTIONS-*、views VIEW-01～07、VIEWS-*、workflows WORKFLOWS-* 与 WORKFLOWS-EDITOR-* 及 API/LOCAL/MODE/SD 子契约。它们仍按B/C/D状态管理，不冻结实现签名，也不代表产品代码已完成。统一入口见[全模块业务契约索引](../MODULE-CONTRACTS.md)。
 
 ## 规格层级
 
