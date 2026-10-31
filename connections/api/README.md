@@ -21,6 +21,7 @@ API 配置与模型协议适配。AI 配置引用连接，不复制密钥；不�
 ## 上级契约与文档入口
 
 - **上级业务/职责契约：** [connections/CONTRACT.md](../../connections/CONTRACT.md)
+- **适配器子契约：** [Provider适配器子契约](CONTRACT.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [提供方边界 Walkthrough](../../docs/architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
 - [外部 Agent 生态与 Provider 观察](../../docs/research/AGENT-ECOSYSTEM-2026-10-31.md)

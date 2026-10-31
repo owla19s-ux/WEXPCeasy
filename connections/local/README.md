@@ -21,6 +21,7 @@
 ## 上级契约与文档入口
 
 - **上级业务/职责契约：** [connections/CONTRACT.md](../../connections/CONTRACT.md)
+- **适配器子契约：** [本地资源适配器子契约](CONTRACT.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [源码目录与 Windows 数据布局](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
 - [安全与数据持续性](../../docs/research/SECURITY-AND-PERSISTENCE-2026-10-31.md)

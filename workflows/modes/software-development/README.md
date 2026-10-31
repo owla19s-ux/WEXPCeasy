@@ -12,6 +12,7 @@
 ## 上级契约与文档入口
 
 - **上级业务/职责契约：** [workflows/modes/CONTRACT.md](../../../workflows/modes/CONTRACT.md)
+- **专业模式子契约：** [software-development CONTRACT](CONTRACT.md)
 - **全局文档总索引：** [docs/README.md](../../../docs/README.md)
 - [产品功能全景](../../../docs/research/PRODUCT-FUNCTION-LANDSCAPE-2026-10-31.md)
 - [研究决策](../../../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)

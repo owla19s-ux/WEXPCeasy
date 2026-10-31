@@ -197,3 +197,19 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 ## 第六批更新（2026-10-31）
 
 [最新收敛、实验及施工准备度](batch6/README.md)取代上述历史准备度结论；F01–F09均有处置，11域分范围准入。B/C/D仍分离，完整业务组合与Windows实机未通过。
+
+
+## 2026-11-01：F功能子契约补充入口
+
+以下子契约从属于既有模块owner，不新增顶层模块或第二权威：
+
+| 子契约 | 上级owner | 覆盖范围 | 状态 |
+|---|---|---|---|
+| [connections/api](../connections/api/CONTRACT.md) | connections | F04 Provider/Model/Capability/流式/usage/工具意图 | B候选，真实Provider待验 |
+| [connections/local](../connections/local/CONTRACT.md) | connections | F06 文件/目录/终端/进程/Git/Android/监控 | B候选，Windows实验待验 |
+| [software-development mode](../workflows/modes/software-development/CONTRACT.md) | workflows/modes | F07-013～020专业对象和关系 | B候选，未实现 |
+| conversations CV-01～CV-15 | conversations | F03逐项稳定锚点与输入输出 | B候选，流式/取消仍C |
+| views VIEW-01～VIEW-07 | views | F11投影/映射/布局/锚点 | B候选，多图/规模仍C |
+| AI AIC-05～08 | AI | Agent记忆对象、来源、共享、纠错 | B/C/D混合，D10/D05未决 |
+| shared SH-06 | shared | F15技术日志/追踪支持 | B候选，不拥有业务账本 |
+| app APP-05～09 | app | F15健康/诊断/恢复/通知/配置协调 | B/C混合，Windows待验 |
