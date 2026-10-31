@@ -60,18 +60,18 @@
 | F01-010 | 引用解除与本体删除分离 | space | space SPC-05；permissions PER-03；workflows W05 | 部分 | 实验 + 用户裁决 | 删除竞争屏障为C/D，实际删除延期。 |
 | F01-011 | Context 查询与可见性 | space | space SPC-04；permissions PER-01/04 | 覆盖 | 候选细化评审后施工 | — |
 | F01-012 | Context 接回与重定位 | space | space SPC-01；app APP-01；shared SH-01；connections/local README | 部分 | 实验前置 | 目录接回、身份冲突、重定位需子契约和Windows实验。 |
-| F02-001 | Agent 定义 | AI | AI AIC-01 | 覆盖 | 候选细化评审后施工 | — |
-| F02-002 | 角色定义 | AI | AI AIC-02 | 覆盖 | 可直接施工（独立验收） | — |
-| F02-003 | 职责配置 | AI | AI AIC-02 | 覆盖 | 可直接施工（独立验收） | — |
-| F02-004 | 职责范围绑定 | AI | AI AIC-02 | 覆盖 | 可直接施工（独立验收） | — |
-| F02-005 | 模型与连接引用 | AI | AI AIC-01；connections C01；shared SH-04 | 覆盖 | 候选细化评审后施工 | — |
-| F02-006 | Agent 配置修订 | AI | AI AIC-01 | 覆盖 | 候选细化评审后施工 | — |
-| F02-007 | Agent 运行实例绑定与观察 | AI | AI AIC-01/04；connections C01/03/04；app APP-02 | 部分 | 实验前置 | 缺Agent实例启动/暂停/释放/重连的完整生命周期契约。 |
-| F02-008 | Agent Session 映射 | AI | AI AIC-04；connections C01/03/04 | 部分 | 补契约/语义评审后施工 | 需外部实例代次、Session定位和可查询性子契约。 |
-| F02-009 | 外部 Agent 接入 | AI | AI AIC-04；connections C01/03/04 | 部分 | 补契约/语义评审后施工 | 需外部实例代次、Session定位和可查询性子契约。 |
-| F02-010 | 执行者替换与交接 | AI | AI AIC-04；workflows W02/W06；connections C04 | 覆盖 | 候选细化评审后施工 | — |
-| F02-011 | Agent 记忆策略配置 | AI | AI AIC-01/04；F10记忆契约缺口；permissions PER-01 | 缺失 | 用户决策前置 | AI契约没有记忆对象、来源、共享、撤回、纠错和过期能力。 |
-| F02-012 | Agent 状态与工作状态分离 | AI | AI AIC-03/04；connections C03/04；workflows W07 | 部分 | 补契约/语义评审后施工 | 需区分Agent配置、Runtime在线、Session可查询和Task状态的观察来源。 |
+| F02-001 | Agent 定义 | AI | AI AIC-01；模块编号：AI-AGENT-001 | 覆盖 | 候选细化评审后施工 | — |
+| F02-002 | 角色定义 | AI | AI AIC-02；模块编号：AI-ROLE-001、AI-TOOL-ELIGIBILITY-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F02-003 | 职责配置 | AI | AI AIC-02；模块编号：AI-RESPONSIBILITY-001、AI-TOOL-ELIGIBILITY-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F02-004 | 职责范围绑定 | AI | AI AIC-02；模块编号：AI-SCOPE-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F02-005 | 模型与连接引用 | AI | AI AIC-01；connections C01；shared SH-04；模块编号：AI-MODEL-001 | 覆盖 | 候选细化评审后施工 | — |
+| F02-006 | Agent 配置修订 | AI | AI AIC-01；模块编号：AI-AGENT-002、AI-PROMPT-001、AI-WORK-SNAPSHOT-001 | 覆盖 | 候选细化评审后施工 | — |
+| F02-007 | Agent 运行实例绑定与观察 | AI | AI AIC-01/04；connections C01/03/04；app APP-02；模块编号：AI-RUNTIME-001 | 部分 | 实验前置 | 缺Agent实例启动/暂停/释放/重连的完整生命周期契约。 |
+| F02-008 | Agent Session 映射 | AI | AI AIC-04；connections C01/03/04；模块编号：AI-SESSION-001 | 部分 | 补契约/语义评审后施工 | 需外部实例代次、Session定位和可查询性子契约。 |
+| F02-009 | 外部 Agent 接入 | AI | AI AIC-04；connections C01/03/04；模块编号：AI-EXTERNAL-001 | 部分 | 补契约/语义评审后施工 | 需外部实例代次、Session定位和可查询性子契约。 |
+| F02-010 | 执行者替换与交接 | AI | AI AIC-04；workflows W02/W06；connections C04；模块编号：AI-HANDOVER-001 | 覆盖 | 候选细化评审后施工 | — |
+| F02-011 | Agent 记忆策略配置 | AI | AI AIC-01/04；F10记忆契约缺口；permissions PER-01；模块编号：AI-MEMORY-SHARING-001 | 缺失 | 用户决策前置 | AI契约没有记忆对象、来源、共享、撤回、纠错和过期能力。 |
+| F02-012 | Agent 状态与工作状态分离 | AI | AI AIC-03/04；connections C03/04；workflows W07；模块编号：AI-STATUS-001 | 部分 | 补契约/语义评审后施工 | 需区分Agent配置、Runtime在线、Session可查询和Task状态的观察来源。 |
 | F03-001 | 独立会话生命周期 | conversations | conversations/CONTRACT.md · CV-01 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
 | F03-002 | 消息与轮次持久化 | conversations | conversations/CONTRACT.md · CV-02 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
 | F03-003 | 消息序列项 | conversations | conversations/CONTRACT.md · CV-03 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
@@ -193,12 +193,12 @@
 | F10-008 | 数据迁移 | app（数据迁移协调） | app/CONTRACT.md · APP-04；shared SH-03 | 部分 | 实验前置 | app协调迁移；各域拥有schema迁移；跨域回滚不假定原子，PRD-C07未关闭。 |
 | F10-009 | 内部检索 | views（获准检索聚合/投影） | views/CONTRACT.md · VIEW-01/03；各领域查询出口；模块编号：VIEWS-QUERY-001 | 部分 | 领域查询出口细化后施工 | views只聚合获准查询；各域提供权威查询出口，打开结果重判权限。 |
 | F10-010 | 知识资料管理 | space（知识资料记录/关联） | space/CONTRACT.md · SPC-03/04；connections/local LOCAL-01/02 | 部分 | 领域资源引用细化后施工 | space拥有知识资料记录/引用；原文件字节和内容版本归connections/local。 |
-| F10-011 | Agent 记忆 | AI | AI/CONTRACT.md · AIC-05；conversations/CONTRACT.md；connections Operation | 部分 | 远期研究/源记录先行 | 前期保存Agent关联的原始对话/操作记录，由源owner持有；AI派生长期记忆另行研究，不复制第二事实源。 |
-| F10-012 | 记忆来源与可信度 | AI | AI/CONTRACT.md · AIC-06 | 部分 | 补契约/语义评审后施工 | 可信来源由source owner提供；模型推断不能伪装用户确认。 |
-| F10-013 | 记忆共享与隔离 | AI | AI/CONTRACT.md · AIC-07；permissions PER-01 | 部分 | 远期研究 | 记忆共享政策暂缓；实际读取许可始终由permissions决定；PRD-D10前期不启用派生记忆共享。 |
+| F10-011 | Agent 记忆 | AI | AI/CONTRACT.md · AIC-05；conversations/CONTRACT.md；connections Operation；模块编号：AI-MEMORY-001 | 部分 | 远期研究/源记录先行 | 前期保存Agent关联的原始对话/操作记录，由源owner持有；AI派生长期记忆另行研究，不复制第二事实源。 |
+| F10-012 | 记忆来源与可信度 | AI | AI/CONTRACT.md · AIC-06；模块编号：AI-MEMORY-SOURCE-001 | 部分 | 补契约/语义评审后施工 | 可信来源由source owner提供；模型推断不能伪装用户确认。 |
+| F10-013 | 记忆共享与隔离 | AI | AI/CONTRACT.md · AIC-07；permissions PER-01；模块编号：AI-MEMORY-SHARING-001 | 部分 | 远期研究 | 记忆共享政策暂缓；实际读取许可始终由permissions决定；PRD-D10前期不启用派生记忆共享。 |
 | F10-014 | 公共策略与经验库 | 暂不分配（远期候选；Space为未来owner候选） | 无已批准契约；PRD-D13 | 缺失 | 远期候选/当前不施工 | 保留远期候选，优先评估Space公共知识集合；不先建独立Knowledge模块，最终owner契约留待后续研究。 |
-| F10-015 | 记忆纠错、过期和删除 | AI | AI/CONTRACT.md · AIC-08；PRD-D05/D10 | 部分 | 用户决策前置 | 只删除AI派生记忆；来源原件和审计保留政策独立。 |
-| F10-016 | 用户级偏好与跨项目记忆 | AI | AI/CONTRACT.md · AIC-09；PRD-D10 | 部分 | 远期研究 | 用户级偏好/跨项目记忆不属于前期原始记录存储承诺，需与Agent派生记忆及权限共享机制分开研究。 |
+| F10-015 | 记忆纠错、过期和删除 | AI | AI/CONTRACT.md · AIC-08；PRD-D05/D10；模块编号：AI-MEMORY-CORRECTION-001 | 部分 | 用户决策前置 | 只删除AI派生记忆；来源原件和审计保留政策独立。 |
+| F10-016 | 用户级偏好与跨项目记忆 | AI | AI/CONTRACT.md · AIC-09；PRD-D10；模块编号：AI-PREFERENCE-001 | 部分 | 远期研究 | 用户级偏好/跨项目记忆不属于前期原始记录存储承诺，需与Agent派生记忆及权限共享机制分开研究。 |
 | F11-001 | 视图定义 | views | views/CONTRACT.md · VIEW-01；模块编号：VIEWS-DEFINITION-001 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
 | F11-002 | 多种视图投影 | views | views/CONTRACT.md · VIEW-01；模块编号：VIEWS-PROJECTION-001 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
 | F11-003 | 对象映射 | views | views/CONTRACT.md · VIEW-02；模块编号：VIEWS-MAPPING-001 | 覆盖 | 可直接施工（独立验收） | 视图能力锚点已补，源对象owner保持不变。 |
@@ -411,6 +411,34 @@
 | CONNECTIONS-NOTIFICATION-001 | 状态变化通知与补读 | F05-008、F05-010 | connections/CONTRACT §7 | app、workflows、conversations、permissions |
 
 编号边界提醒：Operation/外部观察归 connections；Task、资源冲突协调和最终验收归 workflows；授权决定归 permissions；秘密归 shared/credentials；真实外部 Session/资源仍由外部系统拥有。
+
+## 3.6 AI 模块细分编号映射
+
+AI 模块独立编号由 `AI` owner 维护，不计入 F01–F15 的 216 项全局统计。AIC-01～09 是既有能力锚点；AI-* 用于细粒度施工和验收。F10-014 仍为无 owner 远期候选，不进入本表。
+
+| 模块独立编号 | 模块细分能力 | 对应全局 F 索引 | 契约锚点 | 关键依赖/边界 |
+|---|---|---|---|---|
+| AI-AGENT-001 | Agent 定义与生命周期 | F02-001 | AI/CONTRACT §8 | shared/storage、space |
+| AI-AGENT-002 | Agent 配置修订 | F02-006 | AI/CONTRACT §8 | shared/storage、permissions |
+| AI-ROLE-001 | 角色定义与生命周期 | F02-002 | AI/CONTRACT §8 | permissions |
+| AI-RESPONSIBILITY-001 | Agent 与角色职责关联 | F02-003 | AI/CONTRACT §8 | space、permissions |
+| AI-SCOPE-001 | 职责范围绑定 | F02-004 | AI/CONTRACT §8 | space、workflows、permissions |
+| AI-MODEL-001 | 模型与连接引用 | F02-005 | AI/CONTRACT §8 | connections/api、shared/credentials |
+| AI-PROMPT-001 | 提示与行为配置 | F02-006 | AI/CONTRACT §8 | shared/storage、permissions |
+| AI-WORK-SNAPSHOT-001 | 本次工作配置快照 | F02-006、F02-012 | AI/CONTRACT §8 | shared、workflows、connections |
+| AI-TOOL-ELIGIBILITY-001 | Agent/角色工具资格配置 | F02-002、F02-003；D01 | AI/CONTRACT §8 | connections、permissions、space |
+| AI-RUNTIME-001 | 运行实例绑定与观察引用 | F02-007 | AI/CONTRACT §8 | connections、app |
+| AI-SESSION-001 | 外部 Session 映射 | F02-008 | AI/CONTRACT §8 | connections、workflows |
+| AI-EXTERNAL-001 | 外部 Agent 类型与接入配置 | F02-009 | AI/CONTRACT §8 | connections、workflows |
+| AI-HANDOVER-001 | 执行者替换与交接引用 | F02-010 | AI/CONTRACT §8 | workflows、connections、permissions |
+| AI-STATUS-001 | Agent 配置与运行状态投影 | F02-012 | AI/CONTRACT §8 | connections、workflows、permissions |
+| AI-MEMORY-001 | Agent 派生记忆对象 | F10-011 | AI/CONTRACT §8 | conversations、connections、shared、permissions |
+| AI-MEMORY-SOURCE-001 | 记忆来源与可信度依据 | F10-012 | AI/CONTRACT §8 | conversations、connections、space、permissions |
+| AI-MEMORY-SHARING-001 | Agent 记忆共享范围 | F02-011、F10-013 | AI/CONTRACT §8 | permissions、space |
+| AI-MEMORY-CORRECTION-001 | 记忆纠错、过期与删除 | F10-015 | AI/CONTRACT §8 | permissions、shared |
+| AI-PREFERENCE-001 | 用户级偏好与跨项目记忆 | F10-016 | AI/CONTRACT §8 | permissions、shared、conversations |
+
+边界提醒：AI 保存职责与工具资格，不授予权限；Space 选择 Context，workflows 分配 Task/轮次，connections 管理真实 Runtime/Session/Operation，conversations 持有消息原文，permissions 独占授权决定。
 
 ## 4. 必须优先补齐的模块契约
 
