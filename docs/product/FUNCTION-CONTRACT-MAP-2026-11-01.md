@@ -29,7 +29,7 @@
 | workflows/editor | WORKFLOWS-EDITOR-001～011 | 自由格子交互子域编号；布局数据归 views |
 | software-development mode | SD-01–SD-07 | 已补专业模式子契约，未实现 |
 | permissions | PER-01–PER-04 + PERMISSIONS-* | 既有能力锚点保留；新增细粒度判权/策略/审计编号 |
-| shared | SH-01–SH-06 | SH-06已作为B候选技术日志能力写入 |
+| shared | SH-01–SH-06 + SHARED-* | 既有技术能力锚点保留；新增存储/路径/凭证/日志细分编号 |
 | views | VIEW-01–VIEW-07 + VIEWS-* | 既有能力锚点保留；新增细粒度视图/布局编号 |
 | app | APP-01–APP-12 + APP-* | 既有宿主能力锚点保留；新增安装/数据根/装配/平台/维护细分编号 |
 | UI | UI/CONTRACT及I01–I16 | UI只拥有交互/呈现，不拥有F业务事实 |
@@ -183,14 +183,14 @@
 | F09-012 | 数据读取与外发权限 | permissions | permissions PER-01–04；shared SH-04/05；模块编号：PERMISSIONS-DISCLOSURE-001、PERMISSIONS-SPECIAL-BOUNDARY-001 | 覆盖 | 候选细化评审后施工 | — |
 | F09-013 | 重装后的权限失效 | permissions | permissions PER-01–04；shared SH-04/05；模块编号：PERMISSIONS-REINSTALL-001 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-014 | 撤权竞态与有限授权 | permissions | permissions PER-02/03；shared SH-02；connections C02；模块编号：PERMISSIONS-RACE-001 | 部分 | 实验 + 用户裁决 | 有限次数并发消费和撤权/派发竞态为C/D，未证原子消费前不启用。 |
-| F10-001 | 业务数据持久化 | shared（持久化技术契约） | shared/CONTRACT.md · SH-02 | 覆盖 | 补契约/语义评审后施工 | shared只拥有技术持久化；各领域仍独立保存本域对象/状态/修订。 |
+| F10-001 | 业务数据持久化 | shared（持久化技术契约） | shared/CONTRACT.md · SH-02；shared模块编号：SHARED-STORE-001、SHARED-TRANSACTION-001 | 覆盖 | 补契约/语义评审后施工 | shared只拥有技术持久化；各领域仍独立保存本域对象/状态/修订。 |
 | F10-002 | 数据与程序分离 | app | app APP-01/04；shared SH-01/03；app模块编号：APP-INSTALL-002、APP-DATA-ROOT-001 | 覆盖 | 可直接施工（独立验收） | — |
-| F10-003 | 数据类别与存储形式 | shared（技术存储分类规则） | shared/CONTRACT.md · SH-02（存储类别） | 覆盖 | 补契约/语义评审后施工 | shared定义技术存储类别；各领域声明本域对象类别，不建立万能数据分类业务中心。 |
-| F10-004 | 稳定身份与引用 | shared（稳定引用/定位技术规则） | shared/CONTRACT.md · SH-01（稳定引用/路径定位） | 覆盖 | 补契约/语义评审后施工 | shared定义稳定引用表示/定位规则；对象ID归源owner，文件身份归connections/local。 |
-| F10-005 | 版本与并发修改 | shared（CAS/修订技术原语） | shared/CONTRACT.md · SH-02（CAS/意图） | 覆盖 | 补契约/语义评审后施工 | shared提供CAS/意图原语；业务冲突/合并语义归各领域。 |
+| F10-003 | 数据类别与存储形式 | shared（技术存储分类规则） | shared/CONTRACT.md · SH-02（存储类别）；shared模块编号：SHARED-CATEGORY-001 | 覆盖 | 补契约/语义评审后施工 | shared定义技术存储类别；各领域声明本域对象类别，不建立万能数据分类业务中心。 |
+| F10-004 | 稳定身份与引用 | shared（稳定引用/定位技术规则） | shared/CONTRACT.md · SH-01（稳定引用/路径定位）；shared模块编号：SHARED-PATH-001 | 覆盖 | 补契约/语义评审后施工 | shared定义稳定引用表示/定位规则；对象ID归源owner，文件身份归connections/local。 |
+| F10-005 | 版本与并发修改 | shared（CAS/修订技术原语） | shared/CONTRACT.md · SH-02（CAS/意图）；shared模块编号：SHARED-CAS-001、SHARED-INTENT-001 | 覆盖 | 补契约/语义评审后施工 | shared提供CAS/意图原语；业务冲突/合并语义归各领域。 |
 | F10-006 | 数据导入导出 | app（导入/导出作业协调） | app/CONTRACT.md · APP-11；各领域导入/导出出口；app模块编号：APP-IMPORT-EXPORT-001 | 部分 | 领域I/O细化后施工 | app协调作业；格式、对象冲突和本域导入校验由各领域提供，部分成功逐项报告。 |
-| F10-007 | 备份与恢复 | app（备份/恢复流程协调） | app/CONTRACT.md · APP-12；shared SH-03；app模块编号：APP-BACKUP-001 | 部分 | 实验前置 | app协调全局备份恢复；shared提供技术原语，各域提供一致性范围/钩子；PRD-C07未关闭。 |
-| F10-008 | 数据迁移 | app（数据迁移协调） | app/CONTRACT.md · APP-04；shared SH-03；app模块编号：APP-MIGRATION-001 | 部分 | 实验前置 | app协调迁移；各域拥有schema迁移；跨域回滚不假定原子，PRD-C07未关闭。 |
+| F10-007 | 备份与恢复 | app（备份/恢复流程协调） | app/CONTRACT.md · APP-12；shared SH-03；app模块编号：APP-BACKUP-001；shared模块编号：SHARED-BACKUP-001、SHARED-RESTORE-001 | 部分 | 实验前置 | app协调全局备份恢复；shared提供技术原语，各域提供一致性范围/钩子；PRD-C07未关闭。 |
+| F10-008 | 数据迁移 | app（数据迁移协调） | app/CONTRACT.md · APP-04；shared SH-03；app模块编号：APP-MIGRATION-001；shared模块编号：SHARED-MIGRATION-001 | 部分 | 实验前置 | app协调迁移；各域拥有schema迁移；跨域回滚不假定原子，PRD-C07未关闭。 |
 | F10-009 | 内部检索 | views（获准检索聚合/投影） | views/CONTRACT.md · VIEW-01/03；各领域查询出口；模块编号：VIEWS-QUERY-001 | 部分 | 领域查询出口细化后施工 | views只聚合获准查询；各域提供权威查询出口，打开结果重判权限。 |
 | F10-010 | 知识资料管理 | space（知识资料记录/关联） | space/CONTRACT.md · SPC-03/04；connections/local LOCAL-01/02 | 部分 | 领域资源引用细化后施工 | space拥有知识资料记录/引用；原文件字节和内容版本归connections/local。 |
 | F10-011 | Agent 记忆 | AI | AI/CONTRACT.md · AIC-05；conversations/CONTRACT.md；connections Operation；模块编号：AI-MEMORY-001 | 部分 | 远期研究/源记录先行 | 前期保存Agent关联的原始对话/操作记录，由源owner持有；AI派生长期记忆另行研究，不复制第二事实源。 |
@@ -246,16 +246,16 @@
 | F14-007 | 可信宿主通信 | app | app APP-02；UI CONTRACT；permissions PER-01；app模块编号：APP-IPC-001、APP-TRUSTED-IDENTITY-001 | 部分 | 实验前置 | IPC sender身份、参数schema、超时/取消/重放/撤权缓存需实验。 |
 | F14-008 | 窗口与应用生命周期 | app | app APP-03；PRD-D04；app模块编号：APP-WINDOW-001 | 部分 | 用户决策前置 | 关窗/退出/托盘/后台策略D04未决；技术行为可独立测试。 |
 | F14-009 | Windows 系统集成 | app | app APP-03；UI CONTRACT；PRD-D04；app模块编号：APP-PLATFORM-001 | 部分 | 用户决策前置 | 菜单/通知/文件关联/托盘/快捷键等平台能力与政策需细化。 |
-| F14-010 | 凭证平台接线 | app | app/CONTRACT.md · APP-02；shared/CONTRACT.md · SH-04/05；app模块编号：APP-CREDENTIAL-BRIDGE-001 | 部分 | 实验前置 | app负责可信平台接线；shared负责凭证引用/平台后端；permissions决定本次使用许可。 |
+| F14-010 | 凭证平台接线 | app | app/CONTRACT.md · APP-02；shared/CONTRACT.md · SH-04/05；app模块编号：APP-CREDENTIAL-BRIDGE-001；shared模块编号：SHARED-CREDENTIAL-001、SHARED-SECRET-001、SHARED-PLATFORM-CREDENTIAL-001 | 部分 | 实验前置 | app负责可信平台接线；shared负责凭证引用/平台后端；permissions决定本次使用许可。 |
 | F14-011 | 应用升级与卸载 | app | app APP-04；shared SH-03；PRD-D07；app模块编号：APP-UPDATE-001、APP-MIGRATION-001 | 部分 | 用户决策前置 | 程序回滚、数据迁移、插件兼容/卸载分离；自动更新D07待决。 |
 | F14-012 | 安全模式与启动降级 | app | app APP-02/03；plugins README；F15-006；app模块编号：APP-SAFE-MODE-001 | 部分 | 实验前置 | 安全模式需验证Renderer/主进程/插件宿主故障边界。 |
-| F15-001 | 结构化运行日志 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
-| F15-002 | 跨模块调用追踪 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-001 | 结构化运行日志 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06；shared模块编号：SHARED-LOG-001、SHARED-REDACTION-001 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-002 | 跨模块调用追踪 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06；shared模块编号：SHARED-TRACE-001 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-003 | 运行指标 | app（宿主运行保障） | app/CONTRACT.md · APP-05；app模块编号：APP-HEALTH-001 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-004 | 健康检查 | app（宿主运行保障） | app/CONTRACT.md · APP-05；app模块编号：APP-HEALTH-001 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
-| F15-005 | 故障诊断 | app（宿主运行保障） | app/CONTRACT.md · APP-06；app模块编号：APP-DIAGNOSTIC-001 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-005 | 故障诊断 | app（宿主运行保障） | app/CONTRACT.md · APP-06；app模块编号：APP-DIAGNOSTIC-001；shared模块编号：SHARED-DIAGNOSTIC-001、SHARED-REDACTION-001 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-006 | 崩溃与安全恢复 | app（宿主运行保障） | app/CONTRACT.md · APP-07；app模块编号：APP-RECOVERY-001 | 覆盖 | 实验前置 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
-| F15-007 | 数据容量与维护 | app（宿主运行保障） | app/CONTRACT.md · APP-05/APP-10；shared容量技术观察；app模块编号：APP-CAPACITY-001 | 部分 | 候选细化评审后施工 | app拥有容量维护入口；各owner决定本域可清理对象，不由app直接删除。 |
+| F15-007 | 数据容量与维护 | app（宿主运行保障） | app/CONTRACT.md · APP-05/APP-10；shared容量技术观察；app模块编号：APP-CAPACITY-001；shared模块编号：SHARED-CAPACITY-001 | 部分 | 候选细化评审后施工 | app拥有容量维护入口；各owner决定本域可清理对象，不由app直接删除。 |
 | F15-008 | 备份与恢复运行保障 | app（宿主运行保障） | app/CONTRACT.md · APP-12；shared SH-03；app模块编号：APP-BACKUP-001 | 部分 | 实验前置 | app协调备份任务和完整性检查；备份范围与数据语义由F10-007/各owner提供。 |
 | F15-009 | 网络与离线诊断 | app（宿主运行保障） | app/CONTRACT.md · APP-05；app模块编号：APP-HEALTH-001 | 覆盖 | 实验前置 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-010 | 进程与资源维护 | app（宿主进程协调） | app/CONTRACT.md · APP-05/APP-07；connections/local LOCAL-06；app模块编号：APP-PROCESS-001 | 部分 | 实验前置 | app拥有宿主协调；local提供进程树事实；Windows残留进程和退出确认需实验。 |
@@ -263,7 +263,7 @@
 | F15-012 | 通知事件来源保障 | app（宿主运行保障） | app/CONTRACT.md · APP-08；app模块编号：APP-NOTIFICATION-001 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-013 | 用户帮助与问题报告 | app（宿主运行保障） | app/CONTRACT.md · APP-06；app模块编号：APP-DIAGNOSTIC-001 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-014 | 配置完整性与恢复协调 | app（宿主运行保障） | app/CONTRACT.md · APP-09；app模块编号：APP-CONFIG-001 | 覆盖 | 实验前置 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
-| F15-015 | 日志配置与保留策略 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06；正式账本owner；PRD-D05 | 部分 | 用户决策前置 | shared只管理普通技术日志；权限审计/Operation/Task证据保留不归shared。 |
+| F15-015 | 日志配置与保留策略 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06；正式账本owner；PRD-D05；shared模块编号：SHARED-LOG-001、SHARED-REDACTION-001 | 部分 | 用户决策前置 | shared只管理普通技术日志；权限审计/Operation/Task证据保留不归shared。 |
 
 ## 3.1 SPACE 模块细分编号映射
 
@@ -527,6 +527,35 @@ app 模块独立编号由 `app` owner 维护，不计入 F01–F15 的 216 项�
 | APP-CONFIG-001 | 配置完整性与恢复协调 | F15-014 | app/CONTRACT §7 | 各模块、shared |
 
 边界提醒：app 提供可信宿主和跨域作业协调；shared 提供技术存储/路径/凭证；permissions 决定许可；各领域 owner 维护数据格式与业务事实；app 不接管 Task/Operation/授权账本。
+
+## 3.10 SHARED 模块细分编号映射
+
+shared 模块独立编号由 `shared` owner 维护，不计入 F01–F15 的 216 项全局统计。SH-01～SH-06 是既有技术能力锚点；SHARED-* 用于细粒度施工和验收。shared 不拥有领域业务对象或授权账本。
+
+| 模块独立编号 | 技术细分能力 | 对应全局 F 索引 | 契约锚点 | 关键依赖/边界 |
+|---|---|---|---|---|
+| SHARED-ROOT-001 | 数据根身份与格式观察 | F10-002、F14-003 | shared/CONTRACT §7 | app、Windows |
+| SHARED-PATH-001 | 路径规范化与受限定位 | F10-004 | shared/CONTRACT §7 | app、connections/local、各资源 owner |
+| SHARED-LOCK-001 | 跨进程合作锁 | F14-003、F14-004 | shared/CONTRACT §7 | app、Windows |
+| SHARED-STORE-001 | 命名空间持久化 | F10-001、F10-003 | shared/CONTRACT §7 | 各领域 owner |
+| SHARED-TRANSACTION-001 | 单命名空间事务 | F10-001、F10-005 | shared/CONTRACT §7 | 各领域 owner |
+| SHARED-CAS-001 | 修订与比较交换 | F10-005 | shared/CONTRACT §7 | 各领域 owner |
+| SHARED-INTENT-001 | 持久意图与提交三态 | F10-005、F15-002 | shared/CONTRACT §7 | connections、workflows、permissions |
+| SHARED-CATEGORY-001 | 技术存储类别 | F10-003 | shared/CONTRACT §7 | 各领域 owner |
+| SHARED-BACKUP-001 | 备份快照技术原语 | F10-007、F15-008 | shared/CONTRACT §7 | app、各领域 owner |
+| SHARED-RESTORE-001 | 恢复校验技术原语 | F10-007、F15-008 | shared/CONTRACT §7 | app、各领域 owner、connections |
+| SHARED-MIGRATION-001 | 存储格式迁移支撑 | F10-008 | shared/CONTRACT §7 | app、各领域 owner |
+| SHARED-CREDENTIAL-001 | 凭证引用与元数据 | F14-010、F02-005 | shared/CONTRACT §7 | app、connections、permissions |
+| SHARED-SECRET-001 | 受控秘密读取与交付 | F14-010 | shared/CONTRACT §7 | permissions、connections、app |
+| SHARED-PLATFORM-CREDENTIAL-001 | 平台凭证后端与生命周期 | F14-010 | shared/CONTRACT §7 | app、Windows、permissions |
+| SHARED-LOG-001 | 普通技术日志管道 | F15-001、F15-015 | shared/CONTRACT §7 | app、各模块 |
+| SHARED-TRACE-001 | 跨模块关联追踪 | F15-002 | shared/CONTRACT §7 | app、workflows、connections、permissions |
+| SHARED-DIAGNOSTIC-001 | 受限诊断事件接收 | F15-005、F15-013 | shared/CONTRACT §7 | app、permissions、各模块 |
+| SHARED-REDACTION-001 | 秘密与敏感内容脱敏 | F15-001、F15-005、F15-015 | shared/CONTRACT §7 | app、permissions、各领域 owner |
+| SHARED-CAPACITY-001 | 存储容量与占用观察 | F15-007、F15-011 | shared/CONTRACT §7 | app、各数据 owner |
+| SHARED-ERROR-001 | 技术错误与提交结果规范 | F10-001、F10-005、F10-007、F14-010 | shared/CONTRACT §7 | 各模块 |
+
+边界提醒：shared 提供存储/路径/凭证/日志技术原语；app 负责跨域作业协调；permissions 独占授权；各领域 owner 保存业务事实和保留策略。
 
 ## 4. 必须优先补齐的模块契约
 
