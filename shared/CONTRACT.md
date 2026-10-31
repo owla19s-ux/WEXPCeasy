@@ -49,3 +49,61 @@
 4. 凭证引用与秘密值分离；拒绝/无权时适配器未取得秘密；秘密不进入普通日志或备份。
 5. 备份恢复逐域验证范围、版本、附件、部分成功和外部事实核对。
 6. 普通日志轮转不删除正式审计/Operation/Evidence记录。
+
+
+## 7. 模块独立功能编号与细化契约
+
+本节为 `shared` 技术基础模块的细粒度功能目录。SH-01～SH-06 保留为既有能力契约锚点；新增细分能力使用 `SHARED-<子域>-NNN`。这些编号只细化技术原语，不改变领域 owner、F01–F15 或既有 SH 编号。
+
+**权威边界：** shared 拥有可复用的存储、路径/锁、CAS/意图、技术备份支撑、凭证引用/秘密后端、普通技术日志/追踪/诊断原语；不拥有任何领域业务对象、Task、Operation、授权政策、消息、Agent 记忆或专业关系。app 协调跨域安装/备份/迁移/恢复，permissions 独占授权，领域 owner 独占业务数据和保留政策。
+
+| 模块功能编号 | 功能 | 业务行为与边界 | 对应 F | 依赖 | 最低验收条件 | 状态 |
+|---|---|---|---|---|---|---|
+| SHARED-ROOT-001 | 数据根身份与格式观察 | 记录用户选定根的稳定身份、格式版本、挂载/可用性和观察时间；路径字符串不是根身份。 | F10-002、F14-003 | app、Windows | 缺盘、损坏、无权、格式不兼容和身份冲突分开；不创建空根覆盖旧资料。 | A/C |
+| SHARED-PATH-001 | 路径规范化与受限定位 | 提供路径规范化、相对定位、根内范围检查和定位观察；不声称已具备句柄级防重解析点/竞态安全。 | F10-004 | app、connections/local、各资源 owner | 路径逃逸、链接变化、盘符/大小写差异不被简单字符串比较掩盖；无法确认时阻塞。 | A/C |
+| SHARED-LOCK-001 | 跨进程合作锁 | 提供根/目录范围的合作锁与持有者观察；不把普通文件锁当作 Windows ACL/OS 安全沙箱。 | F14-003、F14-004 | app、Windows | 锁释放未知时保持 incomplete；不清理可能仍在使用的锁；多用户/句柄级行为需 Windows E4。 | A/C |
+| SHARED-STORE-001 | 命名空间持久化 | 提供受限命名空间内结构化数据读写；不解释领域 schema 或拥有领域对象身份。 | F10-001、F10-003 | 各领域 owner | 领域 owner 可独立读写自己的对象；读取失败不能冒充空库；不同命名空间互不越权。 | A |
+| SHARED-TRANSACTION-001 | 单命名空间事务 | 提供技术事务提交/回滚和提交观察；只保证已验证存储边界内的事务，不宣称跨库/跨文件/外部服务原子。 | F10-001、F10-005 | 各领域 owner | 事务内失败不暴露部分提交；提交未知可按原意图回读；外部副作用不由 SQLite 回滚。 | A |
+| SHARED-CAS-001 | 修订与比较交换 | 提供预期修订 CAS 原语；领域 owner 定义业务冲突、合并和版本有效性。 | F10-005 | 各领域 owner | 旧修订写入返回冲突；不采用最后写入者无条件覆盖；同一修订语义由 owner 解释。 | A |
+| SHARED-INTENT-001 | 持久意图与提交三态 | 保存稳定意图 ID、内容指纹和提交结果，区分 committed/not_committed/unknown；同意图异内容冲突。 | F10-005、F15-002 | connections、workflows、permissions | ACK 丢失后可按原意图回读；不创建新 ID 盲重试；shared 不决定副作用是否安全重试。 | A |
+| SHARED-CATEGORY-001 | 技术存储类别 | 提供权威结构化数据、持久文件/附件、可重建缓存/索引、普通技术日志、秘密凭证等技术类别约束。 | F10-003 | 各领域 owner | 类别不决定业务语义；领域 owner 必须声明自己的对象类别；普通配置导出不包含秘密。 | A |
+| SHARED-BACKUP-001 | 备份快照技术原语 | 为各领域提供快照/冻结/导出/完整性校验的技术支撑；范围和一致性由 app 与各领域 owner 定义。 | F10-007、F15-008 | app、各领域 owner | 缺少任一领域清单/钩子不能宣称完整备份；当前完整备份原语尚未实现。 | C |
+| SHARED-RESTORE-001 | 恢复校验技术原语 | 提供备份格式/校验和/恢复步骤的技术支撑；是否恢复、冲突裁决和外部事实重核由 app/领域 owner 负责。 | F10-007、F15-008 | app、各领域 owner、connections | 恢复逐项报告成功/失败/未知；旧备份不能覆盖更新的 Git/外部 Agent/远端事实。 | C |
+| SHARED-MIGRATION-001 | 存储格式迁移支撑 | 提供存储版本识别、迁移事务、回退点和部分失败记录；领域 schema 迁移由领域 owner，跨域编排由 app。 | F10-008 | app、各领域 owner | 迁移失败保留原数据和步骤依据；不假设跨领域原子；旧格式不兼容明确阻断。 | B/C |
+| SHARED-CREDENTIAL-001 | 凭证引用与元数据 | 保存不含秘密的凭证引用、用途标签、所属范围和代次元数据；不把可解密等同授权。 | F14-010、F02-005 | app、connections、permissions | 普通配置只存引用；元数据不暴露秘密；凭证引用不能跨用途/Context 自动扩权。 | A |
+| SHARED-SECRET-001 | 受控秘密读取与交付 | 在 permissions 当前判定和 connections 最小调用上下文下，向获准适配器短暂提供秘密；不把秘密返回 UI/模型/日志。 | F14-010 | permissions、connections、app | 拒绝/待批/不可判定时秘密不被读取或交付；超出用途/目标的请求被拒绝。 | A/C |
+| SHARED-PLATFORM-CREDENTIAL-001 | 平台凭证后端与生命周期 | 抽象 Windows Credential Manager/DPAPI/Electron safeStorage 等平台后端的保存、替换、删除、可用性和代次；具体技术选型未冻结。 | F14-010 | app、Windows、permissions | 平台后端不可用时不静默退回明文；重装/系统重装不自动恢复旧授权；当前未实现。 | C/D |
+| SHARED-LOG-001 | 普通技术日志管道 | 提供结构化技术事件、级别、模块、关联 ID、时间、限额与轮转机制；不承载正式账本。 | F15-001、F15-015 | app、各模块 | 普通日志轮转不删除 Operation/权限审计/Task/Evidence；写失败有诊断；日志不含秘密。 | B |
+| SHARED-TRACE-001 | 跨模块关联追踪 | 提供稳定关联 ID 和 trace context 传递，连接用户请求、Task、Operation、回执与验证的可追溯链。 | F15-002 | app、workflows、connections、permissions | 关联 ID 不替代各域状态；跨进程传递可追溯；旧代次/伪造关联不能冒充可信主体。 | B |
+| SHARED-DIAGNOSTIC-001 | 受限诊断事件接收 | 提供不含秘密的诊断事件 sink；模块只提交本域最小必要信息，app/permissions 决定导出和可见范围。 | F15-005、F15-013 | app、permissions、各模块 | 诊断失败不改变业务结果；不把当前受限 sink 宣称为持久日志/查询/导出平台。 | B |
+| SHARED-REDACTION-001 | 秘密与敏感内容脱敏 | 提供通用敏感字段屏蔽/截断工具；领域 owner 仍须标注私密正文、路径、Token 和不可信输出。 | F15-001、F15-005、F15-015 | app、permissions、各领域 owner | 已知秘密不出现在普通日志/诊断包；脱敏失败按失败关闭，不输出原始敏感字段。 | B/C |
+| SHARED-CAPACITY-001 | 存储容量与占用观察 | 提供数据库/数据根/缓存/日志等技术占用和容量观察；各领域定义可清理性和保留期限。 | F15-007、F15-011 | app、各数据 owner | 观察带时间/来源；unknown 不显示精确值；shared 不直接删除领域数据。 | B |
+| SHARED-ERROR-001 | 技术错误与提交结果规范 | 规范化根不可用、无权、格式损坏、存储失败、修订冲突、提交未知、凭证不可用、备份不完整等技术结果。 | F10-001、F10-005、F10-007、F14-010 | 各模块 | 读取失败不变成空数据；unknown 不被压成 failed/not_committed；领域 owner 可保留原始证据。 | A/B |
+
+### 7.1 技术原语与领域业务的分离
+
+- shared 提供事务、CAS、稳定定位和持久意图等技术机制；领域 owner 决定其对象身份、业务修订、冲突语义和可重试条件。
+- shared 提供备份/恢复/迁移的技术支撑；app 负责跨域作业协调；各领域提供范围清单、冻结/导出/校验/恢复钩子。
+- shared 提供凭证引用和秘密后端；permissions 决定能否读取/使用，connections 负责最小化交付，app 负责受信 OS 接线。
+- shared 提供普通日志/trace/诊断技术；Operation、权限审计、Task、Artifact、Verification 和 Acceptance 仍由各自 owner 保存。
+- 当前 SH-01/02 有部分真实实现；SH-03～05 完整备份/恢复/平台凭证/Windows ACL 仍未实现；SH-06 目前仅有受限诊断 sink，不是持久日志/轮转平台。
+
+### 7.2 编号映射与维护
+
+- SH-01～SH-06 是既有能力锚点；SHARED-* 是细粒度施工编号，不替换旧锚点。
+- F10-001/003/004/005 的通用技术原语由本节细化；F10-007/008 仅提供技术备份/迁移支撑，跨域协调归 app。
+- F14-010 的凭证引用/平台后端由本节细化，app 提供平台接线，permissions 判权。
+- F15-001/002/005/007/015 的普通技术日志、追踪、诊断、容量观察与轮转技术由本节细化；app 协调维护入口，各领域 owner 保留正式账本。
+- 新增、拆分或调整共享技术能力，只在 shared owner 范围内分配新编号；不得把领域业务状态、权限或保留政策移入 shared。
+- A/B/C/D 状态沿用产品总表和 D05/D12 等待决政策；本节不把未实现的备份、平台凭证和 Windows 安全能力标记为已交付。
+
+
+
+## 文档关联与施工入口
+
+- **模块导航**：[shared README](README.md) · [全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档总索引](../docs/README.md)
+- **产品需求**：[F01–F15 产品功能总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
+- **跨模块依据**：[app 契约](../app/CONTRACT.md) · [permissions 契约](../permissions/CONTRACT.md) · [connections 契约](../connections/CONTRACT.md) · [全局模块化架构](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
+- **待决政策**：PRD-D05 数据保留、PRD-D12 清理策略、PRD-C07 备份恢复与 Windows E4 平台实验。
+
+维护规则：shared 只实现技术原语；业务状态、领域 schema、资源可删除性、授权和审计保留规则必须回到对应 owner。
