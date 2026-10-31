@@ -50,15 +50,15 @@ F01–F15 可以继续作为产品功能域主骨架，但必须把基础功能�
 |---|---|---|---|
 | F01 Space / Context | 类别、Space、Group、独立 Context、关联关系 | 有效配置解析、关系失效、移动/解除/删除差异、目录身份恢复 | 在 space 契约补齐；不让 Context 成为权限总管 |
 | F02 Agent / Role | Agent 定义、角色职责、上下文内分配、外部 Agent | 实例/Session 生命周期、替换接续、记忆共享和责任归因 | AI 契约细化；不自建外部 Agent Loop |
-| F03 Conversations | 独立对话、消息、序列、分支、追加/重发 | 流式中断、局部采纳状态、附件来源、工具结果未知、跨会话检查点 | conversations 契约细化；消息状态不复制 Operation |
+| F03 Conversations | 独立对话、消息、序列、分支、追加/重发 | 流式中断、序列项独立采纳/拒绝与局部修订、附件来源、工具结果未知、跨会话检查点 | conversations 契约细化；消息状态不复制 Operation |
 | F04 Model | Provider、模型、凭证引用、调用适配 | 多账号、模型能力兼容、限额成本、故障切换和请求输入快照 | 归 connections/api 与 AI 配置，不建立第二套模型运行时 |
 | F05 Connections | 连接、能力描述、Service、Operation、回执、外部 Agent | 真实成功调用、能力可用性时效、回调身份、网络代理、外部 Search/Fetch/Browser 的边界、取消/接续差异 | 继续完善真实连接器；不把插件机制当连接前置 |
 | F06 Local Tools | 文件、终端、Git、开发环境 | 进程树、外部修改、文件版本、环境发现、Android 工具链、输出洪泛 | 具体本地适配器就近负责，Host/权限由 app/permissions 提供 |
-| F07 Workflow / Template | 定义、节点、流程依赖、模板和专业模式 | 触发、版本、循环/分支、模板继承冲突、编辑草稿和运行隔离 | workflows/modes 细化；视图布局不写进运行定义 |
-| F08 Task / Runtime | Task、轮次、分配、调度、资源协调、恢复 | 非 Task 副作用协调、并发配额、未知结果恢复、人工接管 | workflows/runtime 继续拥有任务与协调；connections 拥有 Operation |
+| F07 Workflow / Template | 定义、节点、流程依赖、模板、软件开发项目对象和专业模式 | 触发、版本、循环/分支、模板继承冲突、需求/功能/架构对象、资源映射、AI 结构草案 | workflows/modes 细化；视图布局不写进运行定义，项目对象不等同 Context/目录 |
+| F08 Task / Runtime | Task、轮次、分配、调度、资源协调、恢复、项目状态快照 | 非 Task 副作用协调、并发配额、未知结果恢复、人工接管、快照与真实资源差异 | workflows/runtime 继续拥有任务与协调；connections 拥有 Operation |
 | F09 Permissions | 三层约束、主体/入口/资源/动作、审批撤权 | 非对话入口策略、来源外发、撤权竞态、有限次数授权和审计保留 | 未决策略单独登记；缺事实时不可判定，不默认放行 |
 | F10 Data / Memory | 持久化、引用、记忆边界、来源 | 导入导出、备份一致性、知识索引、记忆冲突/过期/纠错、公共策略库 | 各 owner 持有业务数据；shared 只做技术存储 |
-| F11 Views | 对象映射、多视图投影、布局 | 多视图编辑冲突、来源失效、跨图映射、专业语义和大规模性能 | views 管投影/布局；UI 负责操作呈现 |
+| F11 Views | 对象映射、多视图投影、需求/功能树、架构关系、资源映射和布局 | 多视图编辑冲突、来源失效、跨图映射、专业语义和大规模性能 | views 管投影/布局；UI 负责操作呈现，专业对象由 modes/领域 owner 持有 |
 | F12 Plugins | WEX 插件预留、DSH 原生插件实验 | WEX 自有可信加载、隔离、依赖、升级/卸载、数据处理 | 长期研究；不列为当前启动前置 |
 | F13 Evidence | Artifact、Receipt 引用、Review、Verification、Acceptance | 证据来源完整性、版本漂移、验证环境、矛盾证据和独立验收权限 | workflows 持有验收记录；connections 持有 Operation 事实 |
 | F14 App Host | 启动装配、存储根锁、Electron/React 隔离实验 | 正式安装、首次选根、单实例、Windows IPC/ACL、升级卸载、崩溃安全模式 | app 补契约和 E4 证据；不把业务状态集中到宿主 |
