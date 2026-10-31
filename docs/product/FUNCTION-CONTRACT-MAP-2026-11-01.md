@@ -28,7 +28,7 @@
 | workflows/modes | MODE-01–MODE-06 | 已补稳定锚点，仍为B候选 |
 | workflows/editor | WORKFLOWS-EDITOR-001～011 | 自由格子交互子域编号；布局数据归 views |
 | software-development mode | SD-01–SD-07 | 已补专业模式子契约，未实现 |
-| permissions | PER-01–PER-04 | 稳定能力编号 |
+| permissions | PER-01–PER-04 + PERMISSIONS-* | 既有能力锚点保留；新增细粒度判权/策略/审计编号 |
 | shared | SH-01–SH-06 | SH-06已作为B候选技术日志能力写入 |
 | views | VIEW-01–VIEW-07 + VIEWS-* | 既有能力锚点保留；新增细粒度视图/布局编号 |
 | app | APP-01–APP-09 | 已补运行维护候选能力 |
@@ -169,20 +169,20 @@
 | F08-015 | 人工接管与交接 | workflows/runtime | workflows W02/W03/W04/W06；connections C02–04；模块编号：WORKFLOWS-HANDOVER-001 | 覆盖 | 候选细化评审后施工 | — |
 | F08-016 | 持续推进策略 | workflows/runtime | workflows W06；app APP-03；PRD-D04；模块编号：WORKFLOWS-CONTINUITY-001 | 部分 | 用户决策前置 | 持续推进能力与关窗/退出/休眠/后台政策分离；D04待决。 |
 | F08-017 | 项目状态快照 | workflows/runtime | workflows W02/W04/W07；shared SH-02；模块编号：WORKFLOWS-SNAPSHOT-001 | 部分 | 补契约/语义评审后施工 | 快照来源版本、失效、外部资源差异与恢复时效需定义。 |
-| F09-001 | 可信主体识别 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-002 | 可信入口识别 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-003 | 模块启用约束 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-004 | 全局访问约束 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-005 | 对话启用约束 | permissions | permissions PER-01；PRD-D01/D02 权限判定矩阵；conversations CONTRACT | 部分 | 可信事实/入口映射/四级策略实现前置 | 工具→AI→Context→执行位置逐层收敛；非对话入口仍拒绝，直至可信主体/入口事实及策略映射完成实现与验收。 |
-| F09-006 | 资源与动作判定 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-007 | 授权策略模式 | permissions | permissions PER-01–04；PRD-D01/D02 权限判定矩阵；shared SH-04/05 | 部分 | 四级与工作流启动授权语义已确认，待实现 | IV级在授权范围内全风险自主；工作流节点可手动/AI配置，启动时用户确认本次运行一次；主AI与秘书AI共享对话等级且须用户主动设置。 |
-| F09-008 | 授予与审批 | permissions | permissions PER-01–04；PRD-D01/D02 权限判定矩阵；shared SH-04/05 | 部分 | 特殊信任边界及needs-approval业务流待收敛 | 风险标签本身不阻止IV级范围内执行；Shell、插件来源信任、WEX自身权限策略和凭证边界仍待用户确认。 |
-| F09-009 | 授权撤销与收窄 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-010 | 执行前复核 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-011 | 权限审计 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-012 | 数据读取与外发权限 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 候选细化评审后施工 | — |
-| F09-013 | 重装后的权限失效 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-014 | 撤权竞态与有限授权 | permissions | permissions PER-02/03；shared SH-02；connections C02 | 部分 | 实验 + 用户裁决 | 有限次数并发消费和撤权/派发竞态为C/D，未证原子消费前不启用。 |
+| F09-001 | 可信主体识别 | permissions | permissions PER-01/04；app APP-02；模块编号：PERMISSIONS-SUBJECT-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F09-002 | 可信入口识别 | permissions | permissions PER-01/04；app APP-02；模块编号：PERMISSIONS-ENTRY-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F09-003 | 模块启用约束 | permissions | permissions PER-01/04；app APP-02；模块编号：PERMISSIONS-MODULE-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F09-004 | 全局访问约束 | permissions | permissions PER-01/04；app APP-02；模块编号：PERMISSIONS-GLOBAL-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F09-005 | 对话启用约束 | permissions | permissions PER-01；PRD-D01/D02 权限判定矩阵；conversations CONTRACT；模块编号：PERMISSIONS-CONVERSATION-001 | 部分 | 可信事实/入口映射/四级策略实现前置 | 工具→AI→Context→执行位置逐层收敛；非对话入口仍拒绝，直至可信主体/入口事实及策略映射完成实现与验收。 |
+| F09-006 | 资源与动作判定 | permissions | permissions PER-01–04；shared SH-04/05；模块编号：PERMISSIONS-RESOURCE-001、PERMISSIONS-EVALUATION-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F09-007 | 授权策略模式 | permissions | permissions PER-01–04；PRD-D01/D02 权限判定矩阵；shared SH-04/05；模块编号：PERMISSIONS-POLICY-001、PERMISSIONS-DIALOGUE-LEVEL-001、PERMISSIONS-WORKFLOW-START-001 | 部分 | 四级与工作流启动授权语义已确认，待实现 | IV级在授权范围内全风险自主；工作流节点可手动/AI配置，启动时用户确认本次运行一次；主AI与秘书AI共享对话等级且须用户主动设置。 |
+| F09-008 | 授予与审批 | permissions | permissions PER-01–04；PRD-D01/D02 权限判定矩阵；shared SH-04/05；模块编号：PERMISSIONS-GRANT-001、PERMISSIONS-SPECIAL-BOUNDARY-001 | 部分 | 特殊信任边界及needs-approval业务流待收敛 | 风险标签本身不阻止IV级范围内执行；Shell、插件来源信任、WEX自身权限策略和凭证边界仍待用户确认。 |
+| F09-009 | 授权撤销与收窄 | permissions | permissions PER-01–04；shared SH-04/05；模块编号：PERMISSIONS-REVOCATION-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F09-010 | 执行前复核 | permissions | permissions PER-01–04；shared SH-04/05；模块编号：PERMISSIONS-RECHECK-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F09-011 | 权限审计 | permissions | permissions PER-01–04；shared SH-04/05；模块编号：PERMISSIONS-AUDIT-001、PERMISSIONS-HISTORY-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F09-012 | 数据读取与外发权限 | permissions | permissions PER-01–04；shared SH-04/05；模块编号：PERMISSIONS-DISCLOSURE-001、PERMISSIONS-SPECIAL-BOUNDARY-001 | 覆盖 | 候选细化评审后施工 | — |
+| F09-013 | 重装后的权限失效 | permissions | permissions PER-01–04；shared SH-04/05；模块编号：PERMISSIONS-REINSTALL-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F09-014 | 撤权竞态与有限授权 | permissions | permissions PER-02/03；shared SH-02；connections C02；模块编号：PERMISSIONS-RACE-001 | 部分 | 实验 + 用户裁决 | 有限次数并发消费和撤权/派发竞态为C/D，未证原子消费前不启用。 |
 | F10-001 | 业务数据持久化 | shared（持久化技术契约） | shared/CONTRACT.md · SH-02 | 覆盖 | 补契约/语义评审后施工 | shared只拥有技术持久化；各领域仍独立保存本域对象/状态/修订。 |
 | F10-002 | 数据与程序分离 | app | app APP-01/04；shared SH-01/03 | 覆盖 | 可直接施工（独立验收） | — |
 | F10-003 | 数据类别与存储形式 | shared（技术存储分类规则） | shared/CONTRACT.md · SH-02（存储类别） | 覆盖 | 补契约/语义评审后施工 | shared定义技术存储类别；各领域声明本域对象类别，不建立万能数据分类业务中心。 |
@@ -466,6 +466,34 @@ AI 模块独立编号由 `AI` owner 维护，不计入 F01–F15 的 216 项全�
 | CONVERSATIONS-STATE-001 | 消息、生成、工具与定稿状态分离 | F03-002、F03-008、F03-009、F03-012 | conversations/CONTRACT §5 | connections、shared、permissions |
 
 边界提醒：消息/序列项/逻辑生成归 conversations；Provider 请求/Operation 归 connections；Agent/角色配置归 AI；Task 归 workflows；授权归 permissions；全局 I01–I16 不因本模块细化而重排。
+
+## 3.8 PERMISSIONS 模块细分编号映射
+
+权限模块独立编号由 `permissions` owner 维护，不计入 F01–F15 的 216 项全局统计。PER-01～PER-04 是既有稳定能力锚点；PERMISSIONS-* 用于细粒度施工和验收。授权账本只允许 permissions 维护。
+
+| 模块独立编号 | 模块细分能力 | 对应全局 F 索引 | 契约锚点 | 关键依赖/边界 |
+|---|---|---|---|---|
+| PERMISSIONS-SUBJECT-001 | 可信主体与安装关系识别 | F09-001 | permissions/CONTRACT §11 | app、shared、connections |
+| PERMISSIONS-ENTRY-001 | 可信入口与实例代次 | F09-002 | permissions/CONTRACT §11 | app、conversations、workflows、connections |
+| PERMISSIONS-MODULE-001 | 模块启用约束 | F09-003 | permissions/CONTRACT §11 | app |
+| PERMISSIONS-GLOBAL-001 | 全局访问约束 | F09-004 | permissions/CONTRACT §11 | app、space、AI |
+| PERMISSIONS-CONVERSATION-001 | 对话启用约束 | F09-005 | permissions/CONTRACT §11 | conversations、app |
+| PERMISSIONS-RESOURCE-001 | 真实资源身份与范围核对 | F09-006 | permissions/CONTRACT §11 | space、connections、各领域 owner |
+| PERMISSIONS-EVALUATION-001 | 主体/入口/资源/动作判定 | F09-006 | permissions/CONTRACT §11 | 各领域可信事实源 |
+| PERMISSIONS-POLICY-001 | 授权策略与结果优先级 | F09-007 | permissions/CONTRACT §11 | shared、app |
+| PERMISSIONS-DIALOGUE-LEVEL-001 | 对话四级执行模式 | F09-007 | permissions/CONTRACT §11 | conversations、AI、app |
+| PERMISSIONS-WORKFLOW-START-001 | 工作流节点方案一次性启动确认 | F09-007 | permissions/CONTRACT §11 | workflows、app、connections |
+| PERMISSIONS-GRANT-001 | 精确授权与审批 | F09-008 | permissions/CONTRACT §11 | app、shared |
+| PERMISSIONS-REVOCATION-001 | 授权撤销与收窄 | F09-009 | permissions/CONTRACT §11 | shared、connections、各领域 owner |
+| PERMISSIONS-RECHECK-001 | 副作用前复核 | F09-010 | permissions/CONTRACT §11 | connections、workflows、app |
+| PERMISSIONS-AUDIT-001 | 判定、审批与撤权审计 | F09-011 | permissions/CONTRACT §11 | shared、app |
+| PERMISSIONS-DISCLOSURE-001 | 读取、模型发送与外部披露分离 | F09-012 | permissions/CONTRACT §11 | conversations、AI、connections、space、views |
+| PERMISSIONS-REINSTALL-001 | 重装与安装代次失效 | F09-013 | permissions/CONTRACT §11 | app、shared、connections |
+| PERMISSIONS-RACE-001 | 撤权竞态、并发审批与有限许可 | F09-014 | permissions/CONTRACT §11 | connections、shared、app |
+| PERMISSIONS-SPECIAL-BOUNDARY-001 | 特殊信任根边界 | F09-008、F09-012 | permissions/CONTRACT §11 | app、connections、shared/credentials |
+| PERMISSIONS-HISTORY-001 | 许可历史与可见性查询 | F09-011 | permissions/CONTRACT §11 | shared、app |
+
+边界提醒：app 提供可信主体/入口事实；AI 提供职责/资格；Space 提供 Context 选择；workflows 提供节点与运行方案；permissions 独占授权/撤销/审计；connections 只执行受控调用并复核。
 
 ## 4. 必须优先补齐的模块契约
 
