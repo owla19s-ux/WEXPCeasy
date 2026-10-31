@@ -174,8 +174,8 @@
 | F09-004 | 全局访问约束 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-005 | 对话启用约束 | permissions | permissions PER-01；PRD-D01/D02 权限判定矩阵；conversations CONTRACT | 部分 | 可信事实/入口映射/四级策略实现前置 | 工具→AI→Context→执行位置逐层收敛；非对话入口仍拒绝，直至可信主体/入口事实及策略映射完成实现与验收。 |
 | F09-006 | 资源与动作判定 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-007 | 授权策略模式 | permissions | permissions PER-01–04；PRD-D01/D02 权限判定矩阵；shared SH-04/05 | 部分 | 四级对话/工作流节点策略细化后施工 | 对话四级与工作流位置权限分离；具体等级和预授权策略仍待用户确认。 |
-| F09-008 | 授予与审批 | permissions | permissions PER-01–04；PRD-D01/D02 权限判定矩阵；shared SH-04/05 | 部分 | needs-approval/高风险确认业务流细化后施工 | 审批须绑定精确主体、动作、资源、目标、来源与有效范围；高风险确认独立叠加。 |
+| F09-007 | 授权策略模式 | permissions | permissions PER-01–04；PRD-D01/D02 权限判定矩阵；shared SH-04/05 | 部分 | 四级与工作流启动授权语义已确认，待实现 | IV级在授权范围内全风险自主；工作流节点可手动/AI配置，启动时用户确认本次运行一次；主AI与秘书AI共享对话等级且须用户主动设置。 |
+| F09-008 | 授予与审批 | permissions | permissions PER-01–04；PRD-D01/D02 权限判定矩阵；shared SH-04/05 | 部分 | 特殊信任边界及needs-approval业务流待收敛 | 风险标签本身不阻止IV级范围内执行；Shell、插件来源信任、WEX自身权限策略和凭证边界仍待用户确认。 |
 | F09-009 | 授权撤销与收窄 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-010 | 执行前复核 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-011 | 权限审计 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |

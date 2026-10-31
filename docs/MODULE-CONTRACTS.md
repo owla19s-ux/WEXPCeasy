@@ -12,7 +12,7 @@
 | 功能域 | 当前代码/实验事实 | 明确未完成或证据边界 |
 |---|---|---|
 | [shared](../shared/README.md) | 已有公开 TypeScript 出口、SQLite 技术存储、根身份/路径检查、技术诊断；第八批在 Electron 45.2.1 内嵌 Node 24.22.1/Linux 中完成真实建库、事务、关闭与独立进程重启回读 | 完整备份/恢复、Windows ACL/句柄级锁、凭证生命周期与重装恢复未验收 |
-| [permissions](../permissions/README.md) | 已有公开授权服务、持久化授权/撤销、修订复核与拒绝默认；真实 SQLite 与替身共用行为样例；新增 D01/D02 产品级权限判定矩阵 | 当前代码仍对非对话入口返回 entry_policy_unresolved；AI资格、Context开关、工作流节点策略、对话四级及高风险确认尚未实现；Windows主体认证/IPC绑定/撤权竞态未验收 |
+| [permissions](../permissions/README.md) | 已有公开授权服务、持久化授权/撤销、修订复核与拒绝默认；D01/D02已确认IV级全风险自主、工作流启动一次确认、主AI/秘书AI共享对话等级 | 当前代码仍对非对话入口返回 entry_policy_unresolved；AI资格、Context开关、工作流节点策略、对话等级策略和特殊信任边界尚未实现；Windows主体认证/IPC绑定/撤权竞态未验收 |
 | [app](../app/README.md) | 已有可信模块装配、生命周期释放/重试、无窗口诊断入口；第八批隔离 Electron 实验真实消费公开出口并验证启动/退出与占锁重试 | 正式 Electron 启动器、首次选根、正式 IPC 契约、安装升级及 Windows E4 未交付 |
 | [UI](../UI/README.md) | 隔离 React Renderer 已验证窄 Preload 状态查询、错误反馈与无 Node 集成 | 完整产品页面、正式 IPC/页面协议、Windows 交互验收未实现 |
 | [connections](../connections/README.md) | 有受控交换/协议夹具与 DSH headless 局部实验 | 完整产品级公共连接协议、真实 DSH 成功任务与恢复/停止闭环未验收 |
@@ -238,3 +238,6 @@ Owner收敛和B/C/D处理状态见[完整产品需求基线收敛记录](product
 ## D01/D02 权限判定矩阵入口（2026-11-01）
 
 [产品级权限判定矩阵](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)是permissions及AI、space、workflows、conversations、connections共同遵循的业务规则候选。它不冻结实现接口；具体B候选须经用户确认后才能升级为A。当前代码与矩阵的差距见矩阵§9.1。
+
+
+D01/D02当前决策：IV级在用户明确授权范围内允许全部风险等级操作；工作流每次启动由用户确认本次完整节点权限方案一次；主AI与秘书AI共享同一个对话等级且须用户主动设置。Shell、插件信任、WEX自身权限策略和凭证的专门边界仍为待确认B项。代码实现状态以模块源码和测试为准，不因产品决策文档更新而视为已实现。
