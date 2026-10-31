@@ -15,7 +15,7 @@
 | [permissions](../permissions/README.md) | 已有公开授权服务、持久化授权/撤销、修订复核与拒绝默认；D01/D02已确认IV级全风险自主、工作流启动一次确认、主AI/秘书AI共享对话等级 | 当前代码仍对非对话入口返回 entry_policy_unresolved；AI资格、Context开关、工作流节点策略、对话等级策略和特殊信任边界尚未实现；Windows主体认证/IPC绑定/撤权竞态未验收 |
 | [app](../app/README.md) | 已有可信模块装配、生命周期释放/重试、无窗口诊断入口；第八批隔离 Electron 实验真实消费公开出口并验证启动/退出与占锁重试 | 正式 Electron 启动器、首次选根、正式 IPC 契约、安装升级及 Windows E4 未交付 |
 | [UI](../UI/README.md) | 隔离 React Renderer 已验证窄 Preload 状态查询、错误反馈与无 Node 集成 | 完整产品页面、正式 IPC/页面协议、Windows 交互验收未实现 |
-| [connections](../connections/README.md) | 有受控交换/协议夹具与 DSH headless 局部实验 | 完整产品级公共连接协议、真实 DSH 成功任务与恢复/停止闭环未验收 |
+| [connections](../connections/README.md) | 已有受控交换/协议夹具与 DSH headless 局部实验；已补 C01–C05、CONNECTIONS-* 核心宿主细分规格 | 完整产品级公共连接协议、真实 DSH 成功任务与恢复/停止闭环未验收 |
 | [workflows](../workflows/README.md) | 已有历史 React Flow 编辑实验；已确认自研自由格子方向，并补充 WORKFLOWS-* 业务细分与 WORKFLOWS-EDITOR-* 交互编号 | 正式工作流/Task/调度/验收产品代码未实现；真实自由画布交互与 Windows Electron 验收未通过 |
 | [space](../space/README.md)、[AI](../AI/README.md)、[conversations](../conversations/README.md)、[views](../views/README.md) | 已有职责与业务契约设计；views 已补 VIEW-01～07 与 VIEWS-* 细分规格 | 尚无对应完整产品业务实现；views 引擎及真实多视图/大规模交互未实现 |
 | [plugins](../plugins/README.md)、[dsh](../dsh/README.md)、[accounts](../accounts/README.md) | 分别保留 WEX 插件机制研究、DSH 原生 Core+Loader 独立兼容实验、账号身份预留 | DSH 原生插件实验不等于 WEX 插件系统或外部 DSH Agent 连接器已产品化 |
@@ -45,7 +45,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 | [space](../space/CONTRACT.md) | 本体/放置/组合引用、组织配置、可见查询；独立删除单列 | 职责、会话背景、授权、外部文件 | 组织/引用可审阅；消费权限/存储/目标最小投影；实际删除与多目录迁移待C/D |
 | [AI与roles](../AI/CONTRACT.md) | 可复用配置、职责关联、可见投影、当前工作依据与历史解释 | Key/外部循环/Task分配/Context选择 | 可先配置/职责/查询；消费连接元数据、权限/存储；历史依据保留与并发C/D |
 | [conversations](../conversations/CONTRACT.md) | 消息/段落版本、背景、逻辑生成、追加重发分支、定稿/恢复、显式转任务 | Provider协议/Operation权威/Task验收 | 无Context/Task可用；依赖连接/权限/存储；流与派发崩溃窗口待C |
-| [connections](../connections/CONTRACT.md) | 连接/能力、准入派发、Operation尝试/观察、查询控制与最小回调 | Task状态/权限政策/全局角色 | 宿主与适配分验；判权/存储/秘密/资源协调就绪后组合；DSH成功及控制C |
+| [connections](../connections/CONTRACT.md) | C01–C05 + CONNECTIONS-*：Connection/Capability/准入/Operation/观察/控制/回调/Service/外部Agent；API/LOCAL 子域保留 API-*/LOCAL-* | Task状态/权限政策/资源占用最终裁决/外部Session权威 | 宿主契约已细化；真实Provider/DSH成功任务、回调认证、持久去重、Windows进程树与GitHub远端仍需独立验收 |
 | [workflows](../workflows/CONTRACT.md) · [editor](../workflows/editor/README.md) | WORKFLOWS-* 细化定义/节点/依赖/Task/调度/恢复/证据；WORKFLOWS-EDITOR-* 细化自由格子交互；MODE/SD 保留专业子域编号 | 厂商协议/Operation正式状态/布局权威 | 定义、Task、证据可先本域；派发恢复依赖连接/授权/协调证据；资源冲突/容量C，后台策略D04；画布布局归 views |
 | [permissions](../permissions/CONTRACT.md) | 资格复核、审批授权/撤销、许可与审计查询 | AI职责/Context/Task/凭证秘密 | 基础授权账本、CAS、撤销/复核及真实 SQLite 消费测试已实现；非对话入口映射仍为 D，OS 身份/IPC 与在途竞态仍为 C |
 | [shared/storage与credentials](../shared/CONTRACT.md) | 限定技术读写/提交、备份恢复基础、受限秘密与使用关系机制 | Task/Operation/权限业务意义 | SQLite 单库事务及 Electron/Linux 运行时兼容已验证；备份恢复、Windows 凭证/ACL 与句柄级路径保护仍为 C |
