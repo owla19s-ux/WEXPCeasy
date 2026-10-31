@@ -4,7 +4,8 @@
 
 ## 文档
 
-- [WEXPC1 研究决策与当前边界（2026-10-30）](RESEARCH-DECISIONS-2026-10-30.md)
+- [工作流画布与节点工作界面方向决策（2026-11-01）](WORKFLOW-CANVAS-DIRECTION-2026-11-01.md)
+- [WEXPC1 研究决策与当前边界（2026-10-30，历史研究记录）](RESEARCH-DECISIONS-2026-10-30.md)
 - [边界决策记录 V0.1](BOUNDARY-DECISION-NOTES-V0.1.md)
 
 ## 决策状态约定
