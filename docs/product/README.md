@@ -10,12 +10,14 @@
 | [交互语义与 UI 映射边界](INTERACTION-AND-UI-BOUNDARY-2026-11-01.md) | 区分基础功能、交互语义和 UI 呈现；建立 I01–I16 语义目录 | 首轮整理，UI后置 |
 | [首轮需求对冲与遗漏审查](REQUIREMENT-REVIEW-2026-11-01.md) | 首轮跨域覆盖、H01–H30、GAP与C/D清单 | 历史审查记录 |
 | [第二轮逐项需求对冲审查](SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md) | 隐藏依赖、输入输出、生命周期、异常和owner冲突 | 第二轮静态审查完成 |
-| [F功能—模块契约逐项映射](FUNCTION-CONTRACT-MAP-2026-11-01.md) | 216项逐项对应模块CONTRACT，记录覆盖状态、owner和契约缺口 | 已更新，138项覆盖/66项部分/12项缺失，随契约同步维护 |
-| [基础功能施工准备度审查](FOUNDATION-READINESS-2026-11-01.md) | 区分可直接施工、补契约、实验和用户决策阻塞 | 第二轮初判，契约补充已回写，非版本表 |
+| [B级候选需求与模块契约评审](B-CONTRACT-REVIEW-2026-11-01.md) | 对全部122项含B状态的功能逐项分类：契约覆盖、施工准备度、C/D阻塞 | 技术评审分流完成；75覆盖、38部分、9缺失；B仍待用户批准 |
+| [F功能—模块契约逐项映射](FUNCTION-CONTRACT-MAP-2026-11-01.md) | 216项逐项对应模块CONTRACT，记录覆盖状态、owner和契约缺口 | 已更新，142项覆盖/62项部分/12项缺失，随契约同步维护 |
+| [基础功能施工准备度审查](FOUNDATION-READINESS-2026-11-01.md) | 区分可直接施工、补契约、实验和用户决策阻塞 | 第二轮初判，按Owner收敛更新，非版本表 |
+| [完整产品需求基线收敛记录](REQUIREMENT-BASELINE-RECONCILIATION-2026-11-01.md) | F10/F15唯一Owner、B契约评审、C实验状态、D用户决策与基线确认门槛 | Owner/B技术评审完成；C部分；D待用户确认 |
 
 ## 模块契约补充
 
-第二轮已在原owner下补充CV/API/LOCAL/MODE/SD/VIEW/AIC/SH/APP能力锚点和子契约。它们仍是B/C/D候选语义，不冻结实现签名，也不代表产品代码已完成。统一入口见[全模块业务契约索引](../MODULE-CONTRACTS.md)。
+第二轮已补齐shared SH-01～06、app APP-01～12、AI AIC-01～09、conversations CV-01～16、views VIEW-01～07及API/LOCAL/MODE/SD子契约。它们仍按B/C/D状态管理，不冻结实现签名，也不代表产品代码已完成。统一入口见[全模块业务契约索引](../MODULE-CONTRACTS.md)。
 
 ## 规格层级
 

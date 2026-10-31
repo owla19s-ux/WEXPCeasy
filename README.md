@@ -16,12 +16,12 @@
 
 ### 尚未建立的规划依据
 
-1. **产品功能与第二轮审查：** 已建立 [F01–F15基础功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)、[交互与UI边界](docs/product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、[第二轮需求对冲审查](docs/product/SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md)、[216项模块契约映射](docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)和[基础功能施工准备度审查](docs/product/FOUNDATION-READINESS-2026-11-01.md)。第二轮静态审查已完成；CV/API/LOCAL/MODE/SD/VIEW/AIC/SH/APP候选子契约已回写到原owner。当前仍需评审这些B语义、完成C实验/D决策，并收敛F10/F15复合owner。
+1. **产品功能与第二轮审查：** 已建立 [F01–F15基础功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)、[交互与UI边界](docs/product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、[第二轮需求对冲审查](docs/product/SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md)、[216项模块契约映射](docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)和[基础功能施工准备度审查](docs/product/FOUNDATION-READINESS-2026-11-01.md)。第二轮静态审查已完成；CV/API/LOCAL/MODE/SD/VIEW/AIC/SH/APP候选子契约已回写到原owner。F10/F15复合owner已收敛，B级契约已完成技术一致性评审并修订；C实验仍有部分未关闭，PRD-D01～D13等待用户确认。
 2. **基础模块施工与组合验收：** 需先关闭契约缺口和对应实验/决策门槛，再按模块独立施工并复用H01–H30开展组合验收。
 3. **UI与产品验收：** 基础功能及组合链路达到门槛后，才进行UI接线、真实用户操作和最终产品验收。
 4. **0.1.1版本计划：** 完整需求确认后再从产品功能底表推导，不提前裁剪完整产品范围。
 
-**当前规划顺序：契约候选评审与复合owner收敛 → 必要实验/用户决策 → 基础模块施工 → 组合验收 → UI接线与真实用户验收 → 完整需求确认后推导0.1.1版本表。**
+**当前规划顺序：用户确认D级产品政策/范围 → 在可用真实环境完成必要C实验或明确安全延期 → 确认完整需求基线 → 推导0.1.1版本表 → 基础模块施工与组合验收 → UI接线和产品验收。**
 
 ## AI / 协作者进入仓库的阅读顺序
 
@@ -59,7 +59,7 @@
 - [全局架构](docs/architecture/README.md)：跨模块架构和技术边界。
 - [架构决策](docs/decisions/README.md)：已确认约束、候选、实验门槛和用户待决事项。
 - [研究资料](docs/research/README.md) · [审查报告](docs/audits/README.md)：研究证据、缺口和验证结论。
-- [产品需求基线](docs/product/README.md)：F01–F15 基础功能、交互语义、UI 映射与需求审查。
+- [产品需求基线](docs/product/README.md)：F01–F15基础功能、交互语义、UI映射、Owner/B/C/D收敛与需求审查。
 - [G1–G7 基础能力落地映射](docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)：基础能力归属及跨对话持续工作要求。
 - [第八批交付报告](docs/batch8/REPORT.md)：最近已完成批次的结果与证据。
 

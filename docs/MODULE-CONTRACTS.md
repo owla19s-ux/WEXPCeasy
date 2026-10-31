@@ -209,8 +209,27 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 | [connections/local](../connections/local/CONTRACT.md) | connections | F06 文件/目录/终端/进程/Git/Android/监控 | B候选，Windows实验待验 |
 | [workflows/modes MODE-01～MODE-06](../workflows/modes/CONTRACT.md) | workflows/modes | F07-005～012模式发现/组合/规则/升级 | B候选，待评审 |
 | [software-development mode](../workflows/modes/software-development/CONTRACT.md) | workflows/modes | F07-013～020专业对象和关系 | B候选，未实现 |
-| conversations CV-01～CV-15 | conversations | F03逐项稳定锚点与输入输出 | B候选，流式/取消仍C |
+| conversations CV-01～CV-16 | conversations | F03逐项稳定锚点与输入输出 | B候选，流式/取消仍C |
 | views VIEW-01～VIEW-07 | views | F11投影/映射/布局/锚点 | B候选，多图/规模仍C |
-| AI AIC-05～08 | AI | Agent记忆对象、来源、共享、纠错 | B/C/D混合，D10/D05未决 |
-| shared SH-06 | shared | F15技术日志/追踪支持 | B候选，不拥有业务账本 |
-| app APP-05～09 | app | F15健康/诊断/恢复/通知/配置协调 | B/C混合，Windows待验 |
+| AI AIC-01～09 | AI | Agent配置、职责、工作依据、实例映射与记忆/偏好 | B/C/D混合，D10/D05/D13未决 |
+| shared SH-01～06 | shared | 持久化/路径/身份引用/备份技术/凭证/日志 | B候选，不拥有业务账本 |
+| app APP-01～12 | app | 安装/数据根/可信装配/生命周期/更新迁移/运维协调 | B/C混合，Windows待验 |
+
+
+## 2026-11-01：完整需求基线契约补齐与Owner收敛
+
+以下能力锚点现已在对应owner的CONTRACT正文中定义；编号只用于稳定追踪，B/C/D状态仍按产品决策记录执行。
+
+| 模块 | 当前契约锚点 | 责任范围 |
+|---|---|---|
+| shared | SH-01～SH-06 | 数据根/稳定引用、命名空间存储/CAS、备份技术原语、凭证引用、平台凭证后端、技术日志/追踪 |
+| app | APP-01～APP-12 | 安装/数据根、可信装配/通信、宿主生命周期、更新迁移、健康/诊断/恢复/通知/配置、维护清理、导入导出、备份恢复协调 |
+| AI | AIC-01～AIC-09 | Agent配置、角色职责、工作依据、Runtime/Session映射、Agent记忆、来源、共享、纠错、用户偏好 |
+| conversations | CV-01～CV-16 | 会话/消息/序列项/分支/输入附件/逻辑生成/工具往返/局部修订 |
+| connections/api | API-01～API-10 | Provider/Model/Capability、请求流式、工具意图、usage、路由、重试、故障切换 |
+| connections/local | LOCAL-01～LOCAL-10 | 目录/文件、终端/进程、环境、Git、Android工具链、产物定位和监控 |
+| workflows/modes | MODE-01～MODE-06 | 模式发现、实例化、专业规则、工作草案、覆盖升级 |
+| software-development mode | SD-01～SD-07 | 软件开发Project、Requirement、Architecture、资源映射、Task追溯、基准/决策 |
+| views | VIEW-01～VIEW-07 | 视图定义、出现映射、关系投影、布局、多视图刷新、规模降级、稳定锚点 |
+
+Owner收敛和B/C/D处理状态见[完整产品需求基线收敛记录](product/REQUIREMENT-BASELINE-RECONCILIATION-2026-11-01.md)。该记录不是0.1.1版本表。

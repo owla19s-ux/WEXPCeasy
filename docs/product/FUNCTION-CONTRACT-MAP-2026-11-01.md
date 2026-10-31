@@ -1,7 +1,7 @@
 # WEX F01–F15 功能—模块契约逐项映射（第二轮）
 
 - 日期：2026-11-01
-- 契约补充基线：`593c6fea40b9182e88434b1305735a0a580be05a`
+- 本轮复核基线：`faeefa8cb2cd56ca2e115ea1bd02844772577ff3`
 - 产品底表：[PRODUCT-FUNCTION-CATALOG-2026-11-01.md](PRODUCT-FUNCTION-CATALOG-2026-11-01.md)
 - 第二轮审查：[SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md](SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md)
 - 性质：逐项追踪与缺口登记；不是实现状态报告、接口签名批准书或0.1.1范围表。
@@ -10,7 +10,7 @@
 
 每项F功能只指定一个**主责owner**。其他模块只作为能力提供方、依赖方、平台支持方或证据来源，不因此共同拥有该项业务事实。
 
-若F项本身横跨多个业务事实，owner栏明确标为“复合/待拆分”，不把shared、app或workflows强行变成万能owner。该项拆分前不得进入跨模块代码施工。
+若F项涉及多个领域事实，仍只指定一个主责owner负责该功能的协调/技术规则/投影；领域提供方继续拥有本域事实。只有尚未定产品方向的远期候选F10-014暂留owner裁决，不将shared/app/workflows变成万能owner。
 
 “覆盖”只表示现有CONTRACT已描述主要业务行为；“部分”表示相关行为存在，但缺少该功能所需的输入输出、生命周期、异常或稳定锚点；“缺失”表示只有README/研究或没有可追踪业务契约。覆盖不代表已实现。
 
@@ -39,9 +39,9 @@
 ## 2. 映射统计
 
 - F功能项：**216项**，15个功能域。
-- 契约覆盖：覆盖 138；部分 66；缺失 12。
+- 契约覆盖：覆盖 142；部分 62；缺失 12。
 - 准备度初判：候选细化评审后施工 70；可直接施工（独立验收） 61；实验前置 32；实验 + 用户裁决 2；补契约/语义评审后施工 30；用户决策前置 14；产品方向/owner裁决前不施工 1；补契约后施工 6。
-- 主责复合/待拆分项目：6项，集中在F10/F15；F10-014另有未来owner未定。
+- 主责复合/待拆分项目：0项；F10-014为有意保留的远期owner/范围待决项（PRD-D13），不是当前基础模块的复合owner。
 
 ## 3. 216项逐项映射
 
@@ -86,7 +86,7 @@
 | F03-013 | 显式转为 Task | conversations | conversations/CONTRACT.md · CV-13 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
 | F03-014 | 会话检索与历史读取 | conversations | conversations/CONTRACT.md · CV-14 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
 | F03-015 | 序列项采纳/拒绝状态 | conversations | conversations/CONTRACT.md · CV-15 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-016 | 序列项局部补充与修订 | conversations | conversations/CONTRACT.md · CV-06 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-016 | 序列项局部补充与修订 | conversations | conversations/CONTRACT.md · CV-16 | 覆盖 | 候选细化评审后施工 | 序列项局部修订与历史消息重发分开；CV-16只修改单项版本。 |
 | F04-001 | Provider 配置 | connections/api | connections/api/CONTRACT.md · API-01 | 覆盖 | 可直接施工（独立验收） | API子契约已补，真实Provider仍需独立验收。 |
 | F04-002 | 账号与凭证引用 | connections/api | connections/api/CONTRACT.md · API-03 | 覆盖 | 可直接施工（独立验收） | API子契约已补，真实Provider仍需独立验收。 |
 | F04-003 | 模型目录 | connections/api | connections/api/CONTRACT.md · API-02 | 覆盖 | 候选细化评审后施工 | API子契约已补，真实Provider仍需独立验收。 |
@@ -95,11 +95,11 @@
 | F04-006 | 连接测试与诊断 | connections/api | connections/api/CONTRACT.md · API-03 | 覆盖 | 候选细化评审后施工 | API子契约已补，真实Provider仍需独立验收。 |
 | F04-007 | 模型调用与流式适配 | connections/api | connections/api/CONTRACT.md · API-04 | 覆盖 | 可直接施工（独立验收） | API子契约已补，真实Provider仍需独立验收。 |
 | F04-008 | 工具调用格式适配 | connections/api | connections/api/CONTRACT.md · API-05 | 覆盖 | 候选细化评审后施工 | API子契约已补，真实Provider仍需独立验收。 |
-| F04-009 | 模型路由与选择 | connections/api | connections/api/CONTRACT.md · API-01/API-02 | 部分 | 补契约/语义评审后施工 | 路由策略/usage/重试与费用策略仍受B/C/D约束。 |
-| F04-010 | 限额与用量记录 | connections/api | connections/api/CONTRACT.md · API-06 | 部分 | 补契约/语义评审后施工 | 路由策略/usage/重试与费用策略仍受B/C/D约束。 |
-| F04-011 | 超时、重试与降级 | connections/api | connections/api/CONTRACT.md · API-06 | 部分 | 实验前置 | 路由策略/usage/重试与费用策略仍受B/C/D约束。 |
-| F04-012 | 模型故障切换 | connections/api | connections/api/CONTRACT.md · API-06 | 部分 | 用户决策前置 | 路由策略/usage/重试与费用策略仍受B/C/D约束。 |
-| F04-013 | 本地模型 Provider | connections/api | connections/api/CONTRACT.md · API-07 | 部分 | 补契约/语义评审后施工 | 路由策略/usage/重试与费用策略仍受B/C/D约束。 |
+| F04-009 | 模型路由与选择 | connections/api | connections/api/CONTRACT.md · API-08 | 部分 | 补契约/语义评审后施工 | 路由独立于Provider目录；不能绕过能力、来源、授权和费用策略。 |
+| F04-010 | 限额与用量记录 | connections/api | connections/api/CONTRACT.md · API-06 | 部分 | 补契约/语义评审后施工 | 记录供应方usage与估算来源；未知费用保持未知，预算政策受PRD-D11。 |
+| F04-011 | 超时、重试与降级 | connections/api | connections/api/CONTRACT.md · API-09 | 部分 | 实验前置 | 仅模型请求有限重试；工具副作用不由API适配器重发。 |
+| F04-012 | 模型故障切换 | connections/api | connections/api/CONTRACT.md · API-10 | 部分 | 用户决策前置 | 故障切换是新请求/新快照；自动切换受PRD-D11及来源/权限政策。 |
+| F04-013 | 本地模型 Provider | connections/api | connections/api/CONTRACT.md · API-07 | 部分 | 补契约/语义评审后施工 | 本地模型服务和GPU进程资源需单独实验，不默认由WEX管理运行时。 |
 | F05-001 | Connection 生命周期 | connections | connections C01 | 覆盖 | 可直接施工（独立验收） | — |
 | F05-002 | 能力描述 | connections | connections C01/C02 | 覆盖 | 可直接施工（独立验收） | — |
 | F05-003 | 能力注册与发现 | connections | connections C01；app APP-02 | 覆盖 | 候选细化评审后施工 | — |
@@ -182,22 +182,22 @@
 | F09-012 | 数据读取与外发权限 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 候选细化评审后施工 | — |
 | F09-013 | 重装后的权限失效 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-014 | 撤权竞态与有限授权 | permissions | permissions PER-02/03；shared SH-02；connections C02 | 部分 | 实验 + 用户裁决 | 有限次数并发消费和撤权/派发竞态为C/D，未证原子消费前不启用。 |
-| F10-001 | 业务数据持久化 | 跨域对象owner（待拆分） | shared SH-01/02；各领域数据契约 | 部分 | 补契约/语义评审后施工 | 跨域能力；shared仅技术存储，F项本身没有单一业务owner。；主责目前非单一模块 |
+| F10-001 | 业务数据持久化 | shared（持久化技术契约） | shared/CONTRACT.md · SH-02 | 覆盖 | 补契约/语义评审后施工 | shared只拥有技术持久化；各领域仍独立保存本域对象/状态/修订。 |
 | F10-002 | 数据与程序分离 | app | app APP-01/04；shared SH-01/03 | 覆盖 | 可直接施工（独立验收） | — |
-| F10-003 | 数据类别与存储形式 | 跨域对象owner（待拆分） | shared SH-01/02；各领域数据契约 | 部分 | 补契约/语义评审后施工 | 数据分类/身份/版本属于各对象owner，不能转交shared；当前是跨域标准。；主责目前非单一模块 |
-| F10-004 | 稳定身份与引用 | 跨域对象owner（待拆分） | shared SH-01/02；各领域数据契约 | 部分 | 补契约/语义评审后施工 | 数据分类/身份/版本属于各对象owner，不能转交shared；当前是跨域标准。；主责目前非单一模块 |
-| F10-005 | 版本与并发修改 | 跨域对象owner（待拆分） | shared SH-01/02；各领域数据契约 | 部分 | 补契约/语义评审后施工 | 数据分类/身份/版本属于各对象owner，不能转交shared；当前是跨域标准。；主责目前非单一模块 |
-| F10-006 | 数据导入导出 | 跨域对象owner（待拆分） | shared SH-03；permissions PER-01；各领域数据契约 | 部分 | 补契约/语义评审后施工 | 导入导出格式/身份冲突/部分成功由数据owner定义；无单一owner。；主责目前非单一模块 |
-| F10-007 | 备份与恢复 | shared/storage（备份技术机制） | shared SH-03；app APP-01/04；各领域数据契约 | 部分 | 实验前置 | 一致性快照范围、各域冻结/恢复钩子和外部核对缺完整契约。 |
-| F10-008 | 数据迁移 | app（迁移协调） | app APP-04；shared SH-03；各领域数据契约 | 部分 | 实验前置 | app协调迁移，各域拥有自身schema迁移；跨域回滚不可假定原子。 |
-| F10-009 | 内部检索 | views（获准查询聚合） | 各领域获准查询出口；views/CONTRACT · VIEW-01 | 部分 | 补契约/语义评审后施工 | 各域仍拥有查询结果；views只负责聚合投影，不建立第二权威索引。 |
-| F10-010 | 知识资料管理 | space（仅资料关系/定位） | space SPC-03/04；connections/local README | 部分 | 补契约/语义评审后施工 | 需区分资料记录/外部引用/导入副本/内容版本；Space不拥有外部文件正文。 |
-| F10-011 | Agent 记忆 | AI（Agent记忆域） | AI/CONTRACT.md · AIC-05 | 部分 | 补契约/语义评审后施工 | 记忆子契约已补；共享/删除默认政策受D10/D05约束。 |
-| F10-012 | 记忆来源与可信度 | AI（Agent记忆域） | AI/CONTRACT.md · AIC-06 | 部分 | 补契约/语义评审后施工 | 记忆子契约已补；共享/删除默认政策受D10/D05约束。 |
-| F10-013 | 记忆共享与隔离 | AI（Agent记忆域） | AI/CONTRACT.md · AIC-07 | 部分 | 用户决策前置 | 记忆子契约已补；共享/删除默认政策受D10/D05约束。 |
-| F10-014 | 公共策略与经验库 | 未定：未来Knowledge owner | 无现有owner契约；远期候选 | 缺失 | 产品方向/owner裁决前不施工 | 先决定是否保留独立公共Knowledge能力及其owner；不得塞入shared或AI作为默认权威。 |
-| F10-015 | 记忆纠错、过期和删除 | AI（Agent记忆域） | AI/CONTRACT.md · AIC-08 | 部分 | 用户决策前置 | 记忆子契约已补；共享/删除默认政策受D10/D05约束。 |
-| F10-016 | 用户级偏好与跨项目记忆 | AI（Agent记忆域） | AI/CONTRACT.md · AIC-07 | 部分 | 用户决策前置 | 记忆子契约已补；共享/删除默认政策受D10/D05约束。 |
+| F10-003 | 数据类别与存储形式 | shared（技术存储分类规则） | shared/CONTRACT.md · SH-02（存储类别） | 覆盖 | 补契约/语义评审后施工 | shared定义技术存储类别；各领域声明本域对象类别，不建立万能数据分类业务中心。 |
+| F10-004 | 稳定身份与引用 | shared（稳定引用/定位技术规则） | shared/CONTRACT.md · SH-01（稳定引用/路径定位） | 覆盖 | 补契约/语义评审后施工 | shared定义稳定引用表示/定位规则；对象ID归源owner，文件身份归connections/local。 |
+| F10-005 | 版本与并发修改 | shared（CAS/修订技术原语） | shared/CONTRACT.md · SH-02（CAS/意图） | 覆盖 | 补契约/语义评审后施工 | shared提供CAS/意图原语；业务冲突/合并语义归各领域。 |
+| F10-006 | 数据导入导出 | app（导入/导出作业协调） | app/CONTRACT.md · APP-11；各领域导入/导出出口 | 部分 | 领域I/O细化后施工 | app协调作业；格式、对象冲突和本域导入校验由各领域提供，部分成功逐项报告。 |
+| F10-007 | 备份与恢复 | app（备份/恢复流程协调） | app/CONTRACT.md · APP-12；shared SH-03 | 部分 | 实验前置 | app协调全局备份恢复；shared提供技术原语，各域提供一致性范围/钩子；PRD-C07未关闭。 |
+| F10-008 | 数据迁移 | app（数据迁移协调） | app/CONTRACT.md · APP-04；shared SH-03 | 部分 | 实验前置 | app协调迁移；各域拥有schema迁移；跨域回滚不假定原子，PRD-C07未关闭。 |
+| F10-009 | 内部检索 | views（获准检索聚合/投影） | views/CONTRACT.md · VIEW-01/03；各领域查询出口 | 部分 | 领域查询出口细化后施工 | views只聚合获准查询；各域提供权威查询出口，打开结果重判权限。 |
+| F10-010 | 知识资料管理 | space（知识资料记录/关联） | space/CONTRACT.md · SPC-03/04；connections/local LOCAL-01/02 | 部分 | 领域资源引用细化后施工 | space拥有知识资料记录/引用；原文件字节和内容版本归connections/local。 |
+| F10-011 | Agent 记忆 | AI | AI/CONTRACT.md · AIC-05 | 部分 | 补契约/语义评审后施工 | Agent派生记忆归AI；原始消息/项目资料不复制为第二事实源。 |
+| F10-012 | 记忆来源与可信度 | AI | AI/CONTRACT.md · AIC-06 | 部分 | 补契约/语义评审后施工 | 可信来源由source owner提供；模型推断不能伪装用户确认。 |
+| F10-013 | 记忆共享与隔离 | AI | AI/CONTRACT.md · AIC-07；permissions PER-01 | 部分 | 用户决策前置 | 共享范围由AI记录，实际读取许可由permissions决定；PRD-D10未决。 |
+| F10-014 | 公共策略与经验库 | 待用户裁决：space公共知识集合或未来Knowledge owner | 无已批准契约；PRD-D13 | 缺失 | 产品方向/owner裁决前不施工 | 远期候选；PRD-D13确认是否纳入及owner方向前不施工。 |
+| F10-015 | 记忆纠错、过期和删除 | AI | AI/CONTRACT.md · AIC-08；PRD-D05/D10 | 部分 | 用户决策前置 | 只删除AI派生记忆；来源原件和审计保留政策独立。 |
+| F10-016 | 用户级偏好与跨项目记忆 | AI | AI/CONTRACT.md · AIC-09；PRD-D10 | 部分 | 用户决策前置 | 用户偏好记忆与Agent私有记忆分开；不自动复制到全部Context。 |
 | F11-001 | 视图定义 | views | views/CONTRACT.md · VIEW-01 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
 | F11-002 | 多种视图投影 | views | views/CONTRACT.md · VIEW-01 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
 | F11-003 | 对象映射 | views | views/CONTRACT.md · VIEW-02 | 覆盖 | 可直接施工（独立验收） | 视图能力锚点已补，源对象owner保持不变。 |
@@ -224,7 +224,7 @@
 | F12-009 | 插件 UI 扩展 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
 | F12-010 | 插件更新、卸载与回滚 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 实验前置 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
 | F12-011 | DSH 双路线边界 | plugins（预留） | plugins README；双插件边界设计；connections §3外部Agent | 覆盖 | 可直接施工（独立验收） | 仅覆盖双路线边界，不代表WEX插件或DSH连接器已完成。 |
-| F12-012 | 插件目录与重装重识别 | plugins（预留） | plugins README；app APP-04；shared SH-05；permissions PER-03 | 部分 | 实验前置 | 目录重识别方向已定，但没有产品插件契约和真实重装生命周期。 |
+| F12-012 | 插件目录与重装重识别 | plugins（预留） | plugins README；app/CONTRACT.md · APP-04；shared/CONTRACT.md · SH-01 | 部分 | 实验前置 | 插件目录重识别依赖根身份/应用更新协调；SH-05凭证能力不再错误映射到插件目录。 |
 | F13-001 | 产物登记 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 可直接施工（独立验收） | — |
 | F13-002 | 产物来源追踪 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 候选细化评审后施工 | — |
 | F13-003 | Receipt 关联 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 可直接施工（独立验收） | — |
@@ -245,7 +245,7 @@
 | F14-007 | 可信宿主通信 | app | app APP-02；UI CONTRACT；permissions PER-01 | 部分 | 实验前置 | IPC sender身份、参数schema、超时/取消/重放/撤权缓存需实验。 |
 | F14-008 | 窗口与应用生命周期 | app | app APP-03；PRD-D04 | 部分 | 用户决策前置 | 关窗/退出/托盘/后台策略D04未决；技术行为可独立测试。 |
 | F14-009 | Windows 系统集成 | app | app APP-03；UI CONTRACT；PRD-D04 | 部分 | 用户决策前置 | 菜单/通知/文件关联/托盘/快捷键等平台能力与政策需细化。 |
-| F14-010 | 凭证平台接线 | app | app APP-04；shared SH-04/05；permissions PER-01 | 部分 | 实验前置 | Windows Credential Manager、用户范围、重装凭证失效需实机实验。 |
+| F14-010 | 凭证平台接线 | app | app/CONTRACT.md · APP-02；shared/CONTRACT.md · SH-04/05 | 部分 | 实验前置 | app负责可信平台接线；shared负责凭证引用/平台后端；permissions决定本次使用许可。 |
 | F14-011 | 应用升级与卸载 | app | app APP-04；shared SH-03；PRD-D07 | 部分 | 用户决策前置 | 程序回滚、数据迁移、插件兼容/卸载分离；自动更新D07待决。 |
 | F14-012 | 安全模式与启动降级 | app | app APP-02/03；plugins README；F15-006 | 部分 | 实验前置 | 安全模式需验证Renderer/主进程/插件宿主故障边界。 |
 | F15-001 | 结构化运行日志 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
@@ -254,15 +254,15 @@
 | F15-004 | 健康检查 | app（宿主运行保障） | app/CONTRACT.md · APP-05 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-005 | 故障诊断 | app（宿主运行保障） | app/CONTRACT.md · APP-06 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-006 | 崩溃与安全恢复 | app（宿主运行保障） | app/CONTRACT.md · APP-07 | 覆盖 | 实验前置 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
-| F15-007 | 数据容量与维护 | app（宿主运行保障） | shared/CONTRACT.md · SH-03；app APP-04 | 部分 | 补契约/语义评审后施工 | 跨域保留/一致性或审计策略仍需实验/用户决策。 |
-| F15-008 | 备份与恢复运行保障 | app（宿主运行保障） | shared/CONTRACT.md · SH-03；app APP-04 | 部分 | 实验前置 | 跨域保留/一致性或审计策略仍需实验/用户决策。 |
+| F15-007 | 数据容量与维护 | app（宿主运行保障） | app/CONTRACT.md · APP-05/APP-10；shared容量技术观察 | 部分 | 候选细化评审后施工 | app拥有容量维护入口；各owner决定本域可清理对象，不由app直接删除。 |
+| F15-008 | 备份与恢复运行保障 | app（宿主运行保障） | app/CONTRACT.md · APP-12；shared SH-03 | 部分 | 实验前置 | app协调备份任务和完整性检查；备份范围与数据语义由F10-007/各owner提供。 |
 | F15-009 | 网络与离线诊断 | app（宿主运行保障） | app/CONTRACT.md · APP-05 | 覆盖 | 实验前置 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-010 | 进程与资源维护 | app（宿主进程协调） | app/CONTRACT.md · APP-05/APP-07；connections/local LOCAL-06 | 部分 | 实验前置 | app拥有宿主协调；local提供进程树事实；Windows残留进程和退出确认需实验。 |
-| F15-011 | 维护与清理策略 | 复合owner（待拆分） | 各数据owner；permissions PER-03；PRD-D05 | 部分 | 用户决策前置 | 跨域保留/一致性或审计策略仍需实验/用户决策。 |
+| F15-011 | 维护与清理策略 | app（维护/清理流程协调） | app/CONTRACT.md · APP-10；各数据owner清理出口；PRD-D05/D12 | 部分 | 用户决策前置 | app拥有清理流程编排；实际保留/删除由数据owner执行，PRD-D05/D12待决。 |
 | F15-012 | 通知事件来源保障 | app（宿主运行保障） | app/CONTRACT.md · APP-08 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-013 | 用户帮助与问题报告 | app（宿主运行保障） | app/CONTRACT.md · APP-06 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-014 | 配置完整性与恢复协调 | app（宿主运行保障） | app/CONTRACT.md · APP-09 | 覆盖 | 实验前置 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
-| F15-015 | 日志配置与保留策略 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06；permissions PER-04；PRD-D05 | 部分 | 用户决策前置 | 跨域保留/一致性或审计策略仍需实验/用户决策。 |
+| F15-015 | 日志配置与保留策略 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06；正式账本owner；PRD-D05 | 部分 | 用户决策前置 | shared只管理普通技术日志；权限审计/Operation/Task证据保留不归shared。 |
 
 ## 4. 必须优先补齐的模块契约
 
