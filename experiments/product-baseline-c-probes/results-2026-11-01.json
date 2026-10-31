@@ -1,14 +1,15 @@
 {
   "date": "2026-11-01",
+  "run": "experiments/product-baseline-c-probes/run.py",
   "environment": {
     "platform": "Linux x86_64",
     "python": "3.13.5",
     "sqlite": "3.46.1"
   },
   "C12_same_transaction": {
-    "outcomes": [["delete", "deleted"], ["ref", "rejected"]],
-    "objects": 0,
-    "refs": 0,
+    "outcomes": [["delete", "blocked"], ["ref", "referenced"]],
+    "objects": 1,
+    "refs": 1,
     "dangling": false,
     "pass": true
   },
@@ -20,12 +21,20 @@
     "pass_negative_control": true
   },
   "C11_atomic_consume": {
-    "distinct_intents": 8,
-    "consumed": 1,
-    "denied_exhausted": 7,
+    "outcomes": [
+      ["i0", "denied_exhausted"],
+      ["i1", "denied_exhausted"],
+      ["i2", "denied_exhausted"],
+      ["i3", "denied_exhausted"],
+      ["i4", "denied_exhausted"],
+      ["i5", "denied_exhausted"],
+      ["i6", "consumed"],
+      ["i7", "denied_exhausted"]
+    ],
+    "winner": "i6",
+    "same_intent_replay": ["i6", "replayed:consumed"],
     "remaining": 0,
     "use_records": 1,
-    "same_intent_replay": "replayed:consumed",
     "pass": true
   },
   "C07_sequential_backup_negative": {
