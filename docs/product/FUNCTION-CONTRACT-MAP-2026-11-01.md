@@ -412,7 +412,7 @@
 
 编号边界提醒：Operation/外部观察归 connections；Task、资源冲突协调和最终验收归 workflows；授权决定归 permissions；秘密归 shared/credentials；真实外部 Session/资源仍由外部系统拥有。
 
-## 3.6 AI 模块细分编号映射
+## 3.5 AI 模块细分编号映射
 
 AI 模块独立编号由 `AI` owner 维护，不计入 F01–F15 的 216 项全局统计。AIC-01～09 是既有能力锚点；AI-* 用于细粒度施工和验收。F10-014 仍为无 owner 远期候选，不进入本表。
 
