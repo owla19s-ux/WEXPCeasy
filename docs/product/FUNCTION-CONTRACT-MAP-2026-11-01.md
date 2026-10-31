@@ -41,7 +41,7 @@
 - F功能项：**216项**，15个功能域。
 - 契约覆盖：覆盖 142；部分 62；缺失 12。
 - 准备度初判：候选细化评审后施工 70；可直接施工（独立验收） 61；实验前置 32；实验 + 用户裁决 2；补契约/语义评审后施工 30；用户决策前置 14；产品方向/owner裁决前不施工 1；补契约后施工 6。
-- 主责复合/待拆分项目：0项；F10-014为有意保留的远期owner/范围待决项（PRD-D13），不是当前基础模块的复合owner。
+- 主责复合/待拆分项目：0项；F10-014为有意保留的远期候选，Space是未来owner候选但最终契约未定，不是当前基础模块的复合owner。
 
 ## 3. 216项逐项映射
 
@@ -172,7 +172,7 @@
 | F09-002 | 可信入口识别 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-003 | 模块启用约束 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-004 | 全局访问约束 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-005 | 对话启用约束 | permissions | permissions PER-01；conversations CONTRACT；PRD-D01 | 部分 | 用户决策前置 | 非对话入口策略D01未决，不能伪造Conversation ID或默认放行。 |
+| F09-005 | 对话启用约束 | permissions | permissions PER-01；conversations CONTRACT；PRD-D01 | 部分 | 入口映射/可信事实验证前置 | 分层授权链方向已确认；非对话入口仍须绑定可信主体/入口事实，不能伪造Conversation ID或默认放行。 |
 | F09-006 | 资源与动作判定 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-007 | 授权策略模式 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-008 | 授予与审批 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 候选细化评审后施工 | — |
@@ -192,12 +192,12 @@
 | F10-008 | 数据迁移 | app（数据迁移协调） | app/CONTRACT.md · APP-04；shared SH-03 | 部分 | 实验前置 | app协调迁移；各域拥有schema迁移；跨域回滚不假定原子，PRD-C07未关闭。 |
 | F10-009 | 内部检索 | views（获准检索聚合/投影） | views/CONTRACT.md · VIEW-01/03；各领域查询出口 | 部分 | 领域查询出口细化后施工 | views只聚合获准查询；各域提供权威查询出口，打开结果重判权限。 |
 | F10-010 | 知识资料管理 | space（知识资料记录/关联） | space/CONTRACT.md · SPC-03/04；connections/local LOCAL-01/02 | 部分 | 领域资源引用细化后施工 | space拥有知识资料记录/引用；原文件字节和内容版本归connections/local。 |
-| F10-011 | Agent 记忆 | AI | AI/CONTRACT.md · AIC-05 | 部分 | 补契约/语义评审后施工 | Agent派生记忆归AI；原始消息/项目资料不复制为第二事实源。 |
+| F10-011 | Agent 记忆 | AI | AI/CONTRACT.md · AIC-05；conversations/CONTRACT.md；connections Operation | 部分 | 远期研究/源记录先行 | 前期保存Agent关联的原始对话/操作记录，由源owner持有；AI派生长期记忆另行研究，不复制第二事实源。 |
 | F10-012 | 记忆来源与可信度 | AI | AI/CONTRACT.md · AIC-06 | 部分 | 补契约/语义评审后施工 | 可信来源由source owner提供；模型推断不能伪装用户确认。 |
-| F10-013 | 记忆共享与隔离 | AI | AI/CONTRACT.md · AIC-07；permissions PER-01 | 部分 | 用户决策前置 | 共享范围由AI记录，实际读取许可由permissions决定；PRD-D10未决。 |
-| F10-014 | 公共策略与经验库 | 待用户裁决：space公共知识集合或未来Knowledge owner | 无已批准契约；PRD-D13 | 缺失 | 产品方向/owner裁决前不施工 | 远期候选；PRD-D13确认是否纳入及owner方向前不施工。 |
+| F10-013 | 记忆共享与隔离 | AI | AI/CONTRACT.md · AIC-07；permissions PER-01 | 部分 | 远期研究 | 记忆共享政策暂缓；实际读取许可始终由permissions决定；PRD-D10前期不启用派生记忆共享。 |
+| F10-014 | 公共策略与经验库 | 暂不分配（远期候选；Space为未来owner候选） | 无已批准契约；PRD-D13 | 缺失 | 远期候选/当前不施工 | 保留远期候选，优先评估Space公共知识集合；不先建独立Knowledge模块，最终owner契约留待后续研究。 |
 | F10-015 | 记忆纠错、过期和删除 | AI | AI/CONTRACT.md · AIC-08；PRD-D05/D10 | 部分 | 用户决策前置 | 只删除AI派生记忆；来源原件和审计保留政策独立。 |
-| F10-016 | 用户级偏好与跨项目记忆 | AI | AI/CONTRACT.md · AIC-09；PRD-D10 | 部分 | 用户决策前置 | 用户偏好记忆与Agent私有记忆分开；不自动复制到全部Context。 |
+| F10-016 | 用户级偏好与跨项目记忆 | AI | AI/CONTRACT.md · AIC-09；PRD-D10 | 部分 | 远期研究 | 用户级偏好/跨项目记忆不属于前期原始记录存储承诺，需与Agent派生记忆及权限共享机制分开研究。 |
 | F11-001 | 视图定义 | views | views/CONTRACT.md · VIEW-01 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
 | F11-002 | 多种视图投影 | views | views/CONTRACT.md · VIEW-01 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
 | F11-003 | 对象映射 | views | views/CONTRACT.md · VIEW-02 | 覆盖 | 可直接施工（独立验收） | 视图能力锚点已补，源对象owner保持不变。 |
