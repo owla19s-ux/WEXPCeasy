@@ -112,10 +112,10 @@
 | F05-009 | 取消与接续能力声明 | connections | connections C04；模块编号：CONNECTIONS-CONTROL-001、CONNECTIONS-RECOVERY-001 | 覆盖 | 实验前置 | — |
 | F05-010 | 外部事件与回调接入 | connections | connections C05；app APP-02；permissions PER-01；模块编号：CONNECTIONS-CALLBACK-001、CONNECTIONS-NOTIFICATION-001 | 部分 | 实验前置 | 回调认证、重放、代次、顺序和撤权竞态仍需实验。 |
 | F05-011 | 外部 Agent 连接器 | connections | connections C01–04；connections/dsh README；模块编号：CONNECTIONS-AGENT-001 | 覆盖 | 可直接施工（独立验收） | — |
-| F05-012 | GitHub / Local 等系统适配 | connections | connections §3 api/github/local；模块编号：CONNECTIONS-ADAPTER-001 | 部分 | 补契约/语义评审后施工 | GitHub仅职责说明；Local缺子契约，不能将适配器等同。 |
+| F05-012 | GitHub / Local 等系统适配 | connections | connections §3；connections/local/CONTRACT.md · LOCAL-01～10；connections/github README；模块编号：CONNECTIONS-ADAPTER-001 | 部分 | 补契约/语义评审后施工 | Local子契约已补，Windows实测仍待验；GitHub仍需独立远端操作/冲突/回执契约与验收。 |
 | F05-013 | 网络代理与连接策略 | connections | connections C01/C03；app APP-02；模块编号：CONNECTIONS-NETWORK-001 | 部分 | 实验前置 | 通用代理偏好与Provider专属代理/证书分层，离线重连按适配器验收。 |
 | F05-014 | 连接器错误规范化 | connections | connections C02/C03/C04；模块编号：CONNECTIONS-ERROR-001 | 覆盖 | 可直接施工（独立验收） | — |
-| F05-015 | Service 生命周期与连接绑定 | connections | connections C01；app APP-02；模块编号：CONNECTIONS-SERVICE-001 | 部分 | 补契约/语义评审后施工 | Service定义/实例/代次、Connection绑定、Capability状态与卸载需独立样例。 |
+| F05-015 | Service 生命周期与连接绑定 | connections | connections C01；app APP-02；模块编号：CONNECTIONS-SERVICE-001 | 部分 | 补契约/语义评审后施工 | 契约已补；真实实例代次、停用/卸载、释放与迟到回调仍需独立实验。 |
 | F05-016 | 外部 Search / Fetch / Browser 适配 | connections | connections C01–03；permissions PER-01；F10-009；模块编号：CONNECTIONS-SEARCH-001 | 部分 | 补契约/语义评审后施工 | Search/Fetch/Browser不同于内部检索，当前为后续扩展。 |
 | F06-001 | 本地目录与资源选择 | connections/local | connections/local/CONTRACT.md · LOCAL-01 | 部分 | 补契约/语义评审后施工 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
 | F06-002 | 文件与目录查询 | connections/local | connections/local/CONTRACT.md · LOCAL-02 | 覆盖 | 可直接施工（独立验收） | Local子契约已覆盖主要业务输入输出。 |
@@ -381,7 +381,7 @@
 
 布局归属提醒：节点位置/尺寸/viewport/视觉路径/自动布局结果归 views；节点业务身份/执行依赖归 workflows；交互手势归 workflows/editor；领域对象与专业关系归各自源 owner。
 
-## 3.5 CONNECTIONS 模块细分编号映射
+## 3.4 CONNECTIONS 模块细分编号映射
 
 核心连接宿主独立编号由 `connections` owner 维护，不计入 F01–F15 的 216 项全局统计。C01–C05 保留为既有契约锚点；API/LOCAL 子模块编号不在本表重复。
 
