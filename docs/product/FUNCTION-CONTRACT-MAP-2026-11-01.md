@@ -136,12 +136,12 @@
 | F07-002 | 节点能力描述 | workflows/runtime | workflows W01/W03；模块编号：WORKFLOWS-NODE-001～003 | 覆盖 | 候选细化评审后施工 | — |
 | F07-003 | 流程依赖关系 | workflows/runtime | workflows W01/W03；模块编号：WORKFLOWS-EDGE-001/002 | 覆盖 | 候选细化评审后施工 | — |
 | F07-004 | 工作流校验 | workflows/runtime | workflows W01/W03；模块编号：WORKFLOWS-VALIDATION-001/002 | 覆盖 | 候选细化评审后施工 | — |
-| F07-005 | 模板与预设 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-01 | 覆盖 | 可直接施工（独立验收） | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
-| F07-006 | 模板实例化 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-02 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
-| F07-007 | 模板组合 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-02 | 覆盖 | 可直接施工（独立验收） | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
-| F07-008 | 模板保存与复用 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-06 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
+| F07-005 | 模板与预设 | workflows/modes | workflows/modes/CONTRACT.md · MODE-01 | 覆盖 | 可直接施工（独立验收） | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
+| F07-006 | 模板实例化 | workflows/modes | workflows/modes/CONTRACT.md · MODE-02 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
+| F07-007 | 模板组合 | workflows/modes | workflows/modes/CONTRACT.md · MODE-02 | 覆盖 | 可直接施工（独立验收） | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
+| F07-008 | 模板保存与复用 | workflows/modes | workflows/modes/CONTRACT.md · MODE-06 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
 | F07-009 | 工作流触发条件 | workflows/runtime | workflows W03/W06；app APP-03；PRD-D04；模块编号：WORKFLOWS-TRIGGER-001～003 | 部分 | 用户决策前置 | 触发来源、授权时点、重复触发和退出后运行策略需定义。 |
-| F07-010 | 定义修订与草稿 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-06；模块编号：WORKFLOWS-REVISION-001/002 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
+| F07-010 | 定义修订与草稿 | workflows/runtime | workflows W01；WORKFLOWS-REVISION-001/002 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
 | F07-011 | 工作流导入导出 | workflows/runtime | workflows W01；shared SH-02/03；permissions PER-01；模块编号：WORKFLOWS-TRANSFER-001/002 | 部分 | 补契约/语义评审后施工 | 定义修订与布局分离；导入导出需身份冲突/外部引用/部分成功语义。 |
 | F07-012 | 专业模式 | workflows/modes | workflows/modes/CONTRACT.md · MODE-01/MODE-04 | 覆盖 | 可直接施工（独立验收） | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
 | F07-013 | 软件开发项目对象 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-01 | 覆盖 | 可直接施工（独立验收） | 软件开发专业对象子契约已补，尚未实现。 |
