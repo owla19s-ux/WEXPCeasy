@@ -18,7 +18,7 @@
 | [connections](../connections/README.md) | 已有受控交换/协议夹具与 DSH headless 局部实验；已补 C01–C05、CONNECTIONS-* 核心宿主细分规格 | 完整产品级公共连接协议、真实 DSH 成功任务与恢复/停止闭环未验收 |
 | [workflows](../workflows/README.md) | 已有历史 React Flow 编辑实验；已确认自研自由格子方向，并补充 WORKFLOWS-* 业务细分与 WORKFLOWS-EDITOR-* 交互编号 | 正式工作流/Task/调度/验收产品代码未实现；真实自由画布交互与 Windows Electron 验收未通过 |
 | [space](../space/README.md)、[AI](../AI/README.md)、[conversations](../conversations/README.md)、[views](../views/README.md) | 已有职责与业务契约设计；AI 已补 AIC-01～09 与 AI-* 细分规格；views 已补 VIEW-01～07 与 VIEWS-* 细分规格 | 尚无对应完整产品业务实现；Agent引擎、AI派生记忆和views引擎未实现 |
-| [plugins](../plugins/README.md)、[dsh](../dsh/README.md)、[accounts](../accounts/README.md) | 分别保留 WEX 插件机制研究、DSH 原生 Core+Loader 独立兼容实验、账号身份预留 | DSH 原生插件实验不等于 WEX 插件系统或外部 DSH Agent 连接器已产品化 |
+| [plugins](../plugins/README.md)、[dsh](../dsh/README.md)、[accounts](../accounts/README.md) | plugins 已补 PLUGINS-* 候选业务契约；dsh 仍为独立 Core+Loader 兼容实验；accounts 保留身份预留 | WEX插件加载器未实现；DSH实验不等于WEX插件平台或外部Agent连接器产品化 |
 
 基础模块第八批证据与限制见[交付报告](batch8/REPORT.md)。本表描述 WEXPC1 当前实现状态；契约正文中的 A/B/C/D 等级仍按原定义解释，不能因代码或实验通过而自动升级。
 
@@ -52,7 +52,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 | [views](../views/CONTRACT.md) | VIEW-01～VIEW-07 + VIEWS-*：视图定义/投影/对象关系映射/布局/多视图/刷新/锚点/获准检索 | 专业关系/执行依赖/任务真相/真实资源内容 | 布局与投影契约已细化；多图/撤权缓存/异步布局与大规模性能C；专业规则由 modes/领域 owner 提供；自由格子交互归 workflows/editor |
 | [workflows/modes](../workflows/modes/CONTRACT.md) | 可选组合、专业对象/关系/规则身份、预设实例化/调整建议 | 通用Task/权限/连接/第二套Context | 软件开发为先验案例；先窄组合；跨域部分成功/版本升级C/D，不建完整市场 |
 | [UI](../UI/CONTRACT.md) | 导航、面板、临时输入/选择、窄桥动作与证据反馈 | 业务/回执/授权/验收真相 | 隔离 React/Preload/IPC 最小实验已通过；正式产品页面/IPC、Windows 与撤权缓存仍未验收 |
-| [plugins](../plugins/README.md) / [dsh](../dsh/README.md) / [accounts](../accounts/README.md) | 自有扩展研究 / 独立原生插件实验 / 未来身份预留 | 三者不承载所有连接器，也不是普通聊天/启动前置 | 仅边界与进一步证据门槛；本批不生成完整产品契约 |
+| [plugins](../plugins/README.md) / [dsh](../dsh/README.md) / [accounts](../accounts/README.md) | PLUGINS-* 候选契约 / DSH 原生 Core+Loader 实验 / 未来身份预留 | 三者不承载所有连接器，也不是普通聊天/启动前置 | plugins 业务边界已细化但不进入首期；dsh/accounts 仍保留各自实验/预留范围 |
 
 准备度仅评价设计输入，不是代码完成度。表中“可先”均需该范围B语义采纳、消费方核对后才进入实现接口；本任务没有授权正式业务施工。遇到影响行为的D不能让施工者自行猜值。
 
