@@ -18,7 +18,7 @@
 
 | 模块 | 当前锚点 | 映射说明 |
 |---|---|---|
-| space | SPC-01–SPC-05 | 稳定能力编号 |
+| space | SPC-01–SPC-07 | 稳定能力编号；SPC-06/07承接Context资源引用与工具组合细分 |
 | AI / roles | AIC-01–AIC-08 | 已补记忆子契约；D10/D05仍未决 |
 | connections | C01–C05 | 稳定编号；API/local子契约已分别补充 |
 | conversations | CV-01–CV-15 | 已补稳定锚点；B/C候选语义 |
@@ -54,8 +54,8 @@
 | F01-005 | Context 独立创建 | space | space/CONTRACT · SPC-01 | 覆盖 | 可直接施工（独立验收） | — |
 | F01-006 | Context 本体与配置 | space | space/CONTRACT · SPC-01 | 覆盖 | 候选细化评审后施工 | — |
 | F01-007 | Context 多处放置 | space | space/CONTRACT · SPC-02 | 覆盖 | 可直接施工（独立验收） | — |
-| F01-008 | Context 组合引用 | space | space/CONTRACT · SPC-03 | 覆盖 | 可直接施工（独立验收） | — |
-| F01-009 | Context 有效配置解析 | space | space/CONTRACT · SPC-03；AI AIC-03/04；connections C01；permissions PER-01 | 部分 | 实验前置 | 缺默认/覆盖优先级、冲突决议和失效重算契约。 |
+| F01-008 | Context 组合引用 | space | space/CONTRACT · SPC-03、SPC-06 | 覆盖 | 可直接施工（独立验收） | 资源引用条目细分见 SPACE-RESOURCE-001～007。 |
+| F01-009 | Context 有效配置解析 | space | space/CONTRACT · SPC-03、SPC-07；AI AIC-03/04；connections C01；permissions PER-01 | 部分 | 实验前置 | Context 工具组合细分见 SPACE-TOOL-001～003；跨域默认/覆盖优先级、冲突决议和失效重算仍需补齐。 |
 | F01-010 | 引用解除与本体删除分离 | space | space SPC-05；permissions PER-03；workflows W05 | 部分 | 实验 + 用户裁决 | 删除竞争屏障为C/D，实际删除延期。 |
 | F01-011 | Context 查询与可见性 | space | space SPC-04；permissions PER-01/04 | 覆盖 | 候选细化评审后施工 | — |
 | F01-012 | Context 接回与重定位 | space | space SPC-01；app APP-01；shared SH-01；connections/local README | 部分 | 实验前置 | 目录接回、身份冲突、重定位需子契约和Windows实验。 |
@@ -263,6 +263,25 @@
 | F15-013 | 用户帮助与问题报告 | app（宿主运行保障） | app/CONTRACT.md · APP-06 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-014 | 配置完整性与恢复协调 | app（宿主运行保障） | app/CONTRACT.md · APP-09 | 覆盖 | 实验前置 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
 | F15-015 | 日志配置与保留策略 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06；正式账本owner；PRD-D05 | 部分 | 用户决策前置 | shared只管理普通技术日志；权限审计/Operation/Task证据保留不归shared。 |
+
+## 3.1 SPACE 模块细分编号映射
+
+模块独立编号由 `space` owner 维护，不计入 F01–F15 的 216 项全局统计。下表把模块细分能力映射回产品总表与当前公开契约；“契约已补”不代表产品代码已实现。
+
+| 模块独立编号 | 模块细分能力 | 对应全局 F 索引 | 模块契约锚点 | 其他关键 owner/依赖 | 契约状态与说明 |
+|---|---|---|---|---|---|
+| SPACE-RESOURCE-001 | 多条资源引用集合 | F01-008 | space SPC-06 | 各资源 owner | 契约已补；支持一个 Context 多条独立引用 |
+| SPACE-RESOURCE-002 | 引用描述信息（名称/地址/备注等） | F01-008 | space SPC-06 | 各资源 owner | 契约已补；地址/显示名不等于永久身份 |
+| SPACE-RESOURCE-003 | 引用新增与编辑 | F01-008 | space SPC-06 | permissions、各资源 owner | 契约已补；修订冲突和目标身份变化需显式处理 |
+| SPACE-RESOURCE-004 | 单条引用解除 | F01-008、F01-010 | space SPC-06 | permissions、各资源 owner | 契约已补；解除关系不删除目标 |
+| SPACE-RESOURCE-005 | 引用状态与定位验证 | F01-008、F01-011 | space SPC-06 | permissions、各资源 owner | 契约已补；观察状态须区分失联、无权和来源变化 |
+| SPACE-RESOURCE-006 | 重复引用与别名识别 | F01-008 | space SPC-06 | connections/local、各资源 owner | 契约已补；不能仅凭路径/URL 字符串认定同一资源 |
+| SPACE-RESOURCE-007 | 来源版本与变化观察 | F01-008、F01-009 | space SPC-06 | 各资源 owner、workflows | 契约已补；版本事实由来源 owner 提供 |
+| SPACE-TOOL-001 | Context 工具选择与启停 | F01-009；关联 F05/F09 | space SPC-07 | connections、permissions | 契约已补；Context 关系不替代全局启停或最终判权 |
+| SPACE-TOOL-002 | Context 级工具配置 | F01-009；关联 F05 | space SPC-07 | connections、shared/credentials、permissions | 契约已补；不复制凭证，不改写全局 Connection |
+| SPACE-TOOL-003 | Context 工具集解析 | F01-009；关联 F02/F05/F07/F09 | space SPC-07 | AI、connections、workflows、permissions | 契约已补；仅输出 Context 侧选择事实，不代替 AI 资格/节点许可/操作授权 |
+
+模块编号的变更先在对应模块 CONTRACT 中维护，再同步本表；不得为了模块内部细化而重排 F01–F15。全局 F 项仍负责产品范围索引，模块编号负责局部施工与验收定位。
 
 ## 4. 必须优先补齐的模块契约
 
