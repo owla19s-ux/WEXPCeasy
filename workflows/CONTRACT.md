@@ -185,7 +185,8 @@ runtime窄配额owner仍B候选；同池原子预留、unknown不退、对账差
 - **全局架构**：
 - [全局契约地图](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
 - [模块局部性设计](../docs/architecture/MODULE-LOCALITY-DESIGN-V0.1.md)
-- [Space 与工作流编辑器设计](../docs/architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
+- [当前工作流自由画布与节点工作界面设计](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)
+- [Space 组织与目录接入历史共识](../docs/architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
 - **决策与研究**：
 - [研究决策与当前边界](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
 - **审查报告**：

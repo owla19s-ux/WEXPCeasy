@@ -1,5 +1,7 @@
 # WEX React Flow 独立编辑原型
 
+> **历史实验说明（2026-11-01）：** 本原型不再代表当前产品画布选型。当前方向已调整为 WEX 自研轻量自由画布；本目录保留原型代码、测试和验证证据供比较与追溯，不据此继续扩展产品工作流能力。见[当前设计](../../../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)。
+
 这是隔离的 React/Vite 草稿编辑原型，不是 Electron 主程序或工作流调度器。
 
 ## 当前验证（2026-10-30）

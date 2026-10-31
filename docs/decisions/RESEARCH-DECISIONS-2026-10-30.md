@@ -1,5 +1,7 @@
 # WEXPC1 当前研究共识与施工边界（2026-10-30）
 
+> **历史修订说明（2026-11-01）：** 本文关于 React Flow 作为当前工作流画布首选的结论已被新决策修订。当前方向为 WEX 自研轻量自由画布；React Flow 原型仅保留为历史技术样本。以[2026-11-01 工作流画布方向决策](WORKFLOW-CANVAS-DIRECTION-2026-11-01.md)和[当前架构设计](../architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)为准，其余历史研究结论仍按原证据范围理解。
+
 > **性质：研究决策摘要与第二批架构细化记录，不是新版本计划或已实现功能声明。** 用这一页汇总最近讨论，减少反复追加同一内容。详细技术证据仍以 [工作流编辑器](../../workflows/editor/README.md)、[DSH 双路线边界](../architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)、[DSH 运行报告](../../dsh/README.md) 为准。与先前“首版 WEX 插件采用 Cordis”“编辑器数据可直接作为 WEX 业务数据”的暗示冲突时，以本页最新边界为准。
 
 ## 1. 定位与分工

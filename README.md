@@ -35,7 +35,7 @@
 
 - WEX 是产品主体；仓库名、目录名和实验名称不改变产品身份。
 - 当前 PC 技术路线：**TypeScript + Electron（Windows 桌面宿主）+ React**。
-- React Flow 是工作流编辑器的图形交互组件，不是 WEX 的业务数据层或执行引擎。
+- 工作流编辑器当前方向是 WEX 自研轻量自由画布（React/DOM 节点 + SVG 正交连线为实现候选）；既有 React Flow 原型仅是历史技术实验。工作流业务数据与节点调度由 WEX 自主维护。
 - DSH 是独立外部 Agent 客户端；WEX 通过连接器研究任务交接与结果接收，不把 DSH 客户端/运行时搬入 WEX。
 - `dsh/` 的 DSH Core + Loader 原生插件兼容实验，与 `connections/dsh/` 的外部 Agent 连接器是两条不同路线。
 - SQLite 与用户选择的数据目录是当前持久化方向；具体产品实现与 Windows 行为仍需按实际证据验收。
