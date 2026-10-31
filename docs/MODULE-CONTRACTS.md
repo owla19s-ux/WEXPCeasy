@@ -17,7 +17,7 @@
 | [UI](../UI/README.md) | 隔离 React Renderer 已验证窄 Preload 状态查询、错误反馈与无 Node 集成 | 完整产品页面、正式 IPC/页面协议、Windows 交互验收未实现 |
 | [connections](../connections/README.md) | 有受控交换/协议夹具与 DSH headless 局部实验 | 完整产品级公共连接协议、真实 DSH 成功任务与恢复/停止闭环未验收 |
 | [workflows](../workflows/README.md) | 已有历史 React Flow 编辑实验；已确认自研自由格子方向，并补充 WORKFLOWS-* 业务细分与 WORKFLOWS-EDITOR-* 交互编号 | 正式工作流/Task/调度/验收产品代码未实现；真实自由画布交互与 Windows Electron 验收未通过 |
-| [space](../space/README.md)、[AI](../AI/README.md)、[conversations](../conversations/README.md)、[views](../views/README.md) | 已有职责与业务契约设计 | 尚无对应完整产品业务实现 |
+| [space](../space/README.md)、[AI](../AI/README.md)、[conversations](../conversations/README.md)、[views](../views/README.md) | 已有职责与业务契约设计；views 已补 VIEW-01～07 与 VIEWS-* 细分规格 | 尚无对应完整产品业务实现；views 引擎及真实多视图/大规模交互未实现 |
 | [plugins](../plugins/README.md)、[dsh](../dsh/README.md)、[accounts](../accounts/README.md) | 分别保留 WEX 插件机制研究、DSH 原生 Core+Loader 独立兼容实验、账号身份预留 | DSH 原生插件实验不等于 WEX 插件系统或外部 DSH Agent 连接器已产品化 |
 
 基础模块第八批证据与限制见[交付报告](batch8/REPORT.md)。本表描述 WEXPC1 当前实现状态；契约正文中的 A/B/C/D 等级仍按原定义解释，不能因代码或实验通过而自动升级。
@@ -49,7 +49,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 | [workflows](../workflows/CONTRACT.md) · [editor](../workflows/editor/README.md) | WORKFLOWS-* 细化定义/节点/依赖/Task/调度/恢复/证据；WORKFLOWS-EDITOR-* 细化自由格子交互；MODE/SD 保留专业子域编号 | 厂商协议/Operation正式状态/布局权威 | 定义、Task、证据可先本域；派发恢复依赖连接/授权/协调证据；资源冲突/容量C，后台策略D04；画布布局归 views |
 | [permissions](../permissions/CONTRACT.md) | 资格复核、审批授权/撤销、许可与审计查询 | AI职责/Context/Task/凭证秘密 | 基础授权账本、CAS、撤销/复核及真实 SQLite 消费测试已实现；非对话入口映射仍为 D，OS 身份/IPC 与在途竞态仍为 C |
 | [shared/storage与credentials](../shared/CONTRACT.md) | 限定技术读写/提交、备份恢复基础、受限秘密与使用关系机制 | Task/Operation/权限业务意义 | SQLite 单库事务及 Electron/Linux 运行时兼容已验证；备份恢复、Windows 凭证/ACL 与句柄级路径保护仍为 C |
-| [views](../views/CONTRACT.md) | 呈现映射/布局筛选、获准投影、领域编辑转交、草稿传播 | 专业关系/执行依赖/任务真相 | 单图实验仅参考；配置投影可先替身；多图/撤权/布局竞争C，专业模型D |
+| [views](../views/CONTRACT.md) | VIEW-01～VIEW-07 + VIEWS-*：视图定义/投影/对象关系映射/布局/多视图/刷新/锚点/获准检索 | 专业关系/执行依赖/任务真相/真实资源内容 | 布局与投影契约已细化；多图/撤权缓存/异步布局与大规模性能C；专业规则由 modes/领域 owner 提供；自由格子交互归 workflows/editor |
 | [workflows/modes](../workflows/modes/CONTRACT.md) | 可选组合、专业对象/关系/规则身份、预设实例化/调整建议 | 通用Task/权限/连接/第二套Context | 软件开发为先验案例；先窄组合；跨域部分成功/版本升级C/D，不建完整市场 |
 | [UI](../UI/CONTRACT.md) | 导航、面板、临时输入/选择、窄桥动作与证据反馈 | 业务/回执/授权/验收真相 | 隔离 React/Preload/IPC 最小实验已通过；正式产品页面/IPC、Windows 与撤权缓存仍未验收 |
 | [plugins](../plugins/README.md) / [dsh](../dsh/README.md) / [accounts](../accounts/README.md) | 自有扩展研究 / 独立原生插件实验 / 未来身份预留 | 三者不承载所有连接器，也不是普通聊天/启动前置 | 仅边界与进一步证据门槛；本批不生成完整产品契约 |
