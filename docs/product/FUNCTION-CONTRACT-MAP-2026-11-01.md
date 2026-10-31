@@ -172,10 +172,10 @@
 | F09-002 | 可信入口识别 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-003 | 模块启用约束 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-004 | 全局访问约束 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-005 | 对话启用约束 | permissions | permissions PER-01；conversations CONTRACT；PRD-D01 | 部分 | 入口映射/可信事实验证前置 | 分层授权链方向已确认；非对话入口仍须绑定可信主体/入口事实，不能伪造Conversation ID或默认放行。 |
+| F09-005 | 对话启用约束 | permissions | permissions PER-01；PRD-D01/D02 权限判定矩阵；conversations CONTRACT | 部分 | 可信事实/入口映射/四级策略实现前置 | 工具→AI→Context→执行位置逐层收敛；非对话入口仍拒绝，直至可信主体/入口事实及策略映射完成实现与验收。 |
 | F09-006 | 资源与动作判定 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-007 | 授权策略模式 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
-| F09-008 | 授予与审批 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 候选细化评审后施工 | — |
+| F09-007 | 授权策略模式 | permissions | permissions PER-01–04；PRD-D01/D02 权限判定矩阵；shared SH-04/05 | 部分 | 四级对话/工作流节点策略细化后施工 | 对话四级与工作流位置权限分离；具体等级和预授权策略仍待用户确认。 |
+| F09-008 | 授予与审批 | permissions | permissions PER-01–04；PRD-D01/D02 权限判定矩阵；shared SH-04/05 | 部分 | needs-approval/高风险确认业务流细化后施工 | 审批须绑定精确主体、动作、资源、目标、来源与有效范围；高风险确认独立叠加。 |
 | F09-009 | 授权撤销与收窄 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-010 | 执行前复核 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-011 | 权限审计 | permissions | permissions PER-01–04；shared SH-04/05 | 覆盖 | 可直接施工（独立验收） | — |
