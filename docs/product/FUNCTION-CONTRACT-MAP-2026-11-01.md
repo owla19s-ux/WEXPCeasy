@@ -214,18 +214,18 @@
 | F11-013 | 功能与资源映射视图 | views | views/CONTRACT.md · VIEW-03；模块编号：VIEWS-PROJECTION-004 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
 | F11-014 | 任务与进度投影 | views | views/CONTRACT.md · VIEW-03；模块编号：VIEWS-PROJECTION-005 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
 | F11-015 | 稳定对象定位与对话锚点 | views | views/CONTRACT.md · VIEW-07；模块编号：VIEWS-ANCHOR-001 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F12-001 | 插件描述清单 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
-| F12-002 | 插件发现与登记 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
-| F12-003 | 安装、启用与停用 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
-| F12-004 | 插件能力提供 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
-| F12-005 | 插件依赖与版本兼容 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 实验前置 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
-| F12-006 | 插件信任与完整性 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 实验前置 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
-| F12-007 | 插件隔离 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 实验前置 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
-| F12-008 | 插件配置与数据 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
-| F12-009 | 插件 UI 扩展 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
-| F12-010 | 插件更新、卸载与回滚 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 实验前置 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
-| F12-011 | DSH 双路线边界 | plugins（预留） | plugins README；双插件边界设计；connections §3外部Agent | 覆盖 | 可直接施工（独立验收） | 仅覆盖双路线边界，不代表WEX插件或DSH连接器已完成。 |
-| F12-012 | 插件目录与重装重识别 | plugins（预留） | plugins README；app/CONTRACT.md · APP-04；shared/CONTRACT.md · SH-01 | 部分 | 实验前置 | 插件目录重识别依赖根身份/应用更新协调；SH-05凭证能力不再错误映射到插件目录。 |
+| F12-001 | 插件描述清单 | plugins | plugins/CONTRACT.md §2；模块编号：PLUGINS-MANIFEST-001 | 部分 | 候选细化评审后施工 | 契约已补；Manifest字段、签名/权限声明格式未冻结。 |
+| F12-002 | 插件发现与登记 | plugins | plugins/CONTRACT.md §2；模块编号：PLUGINS-DISCOVERY-001 | 部分 | 候选细化评审后施工 | 发现不等于信任、安装、启用或授权。 |
+| F12-003 | 安装、启用与停用 | plugins | plugins/CONTRACT.md §2；模块编号：PLUGINS-INSTALL-001、PLUGINS-LIFECYCLE-001 | 部分 | 候选细化评审后施工 | 安装/启用/加载分离；停用不代表在途操作已停止。 |
+| F12-004 | 插件能力提供 | plugins | plugins/CONTRACT.md §2；模块编号：PLUGINS-CAPABILITY-001 | 部分 | 候选细化评审后施工 | 必须经connections与permissions受控边界，不得直连模块私有实现。 |
+| F12-005 | 插件依赖与版本兼容 | plugins | plugins/CONTRACT.md §2；模块编号：PLUGINS-DEPENDENCY-001 | 部分 | 候选细化评审后施工 | 依赖解析和升级兼容需真实插件样本与Windows证据。 |
+| F12-006 | 插件信任与完整性 | plugins | plugins/CONTRACT.md §2；模块编号：PLUGINS-TRUST-001 | 部分 | D09/C06政策与Windows隔离实验前置 | D09信任来源/签名/审批政策待确认。 |
+| F12-007 | 插件隔离 | plugins | plugins/CONTRACT.md §2；模块编号：PLUGINS-ISOLATION-001 | 部分 | D09/C06政策与Windows隔离实验前置 | C06 Windows OS隔离实验未完成；进程/IPC不等于沙箱。 |
+| F12-008 | 插件配置与数据 | plugins | plugins/CONTRACT.md §2；模块编号：PLUGINS-CONFIG-001、PLUGINS-DATA-001 | 部分 | 候选细化评审后施工 | 插件数据/配置归属已界定；具体格式和迁移尚未定。 |
+| F12-009 | 插件 UI 扩展 | plugins | plugins/CONTRACT.md §2；模块编号：PLUGINS-UI-001 | 部分 | 候选细化评审后施工 | UI扩展点与受限Renderer边界待UI/宿主设计。 |
+| F12-010 | 插件更新、卸载与回滚 | plugins | plugins/CONTRACT.md §2；模块编号：PLUGINS-UPDATE-001、PLUGINS-UNINSTALL-001、PLUGINS-RECOVERY-001 | 部分 | D09/C06政策与Windows隔离实验前置 | 更新/卸载/回滚与共享依赖/在途Operation需实验。 |
+| F12-011 | DSH 双路线边界 | plugins（双路线边界owner） | plugins/CONTRACT.md §2；模块编号：PLUGINS-BOUNDARY-001 | 覆盖 | 独立路线验收（不代表实现） | 只覆盖三条路线的责任边界；WEX插件平台、DSH宿主和外部Agent连接器仍分别验收。 |
+| F12-012 | 插件目录与重装重识别 | plugins | plugins/CONTRACT.md §2；模块编号：PLUGINS-DATA-ROOT-001 | 部分 | 候选细化评审后施工 | 插件目录规划与app/shared根身份接线已界定；重装重识别需E4验证. |
 | F13-001 | 产物登记 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-ARTIFACT-001 | 覆盖 | 可直接施工（独立验收） | — |
 | F13-002 | 产物来源追踪 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-ARTIFACT-002 | 覆盖 | 候选细化评审后施工 | — |
 | F13-003 | Receipt 关联 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-RECEIPT-001 | 覆盖 | 可直接施工（独立验收） | — |
@@ -556,6 +556,31 @@ shared 模块独立编号由 `shared` owner 维护，不计入 F01–F15 的 216
 | SHARED-ERROR-001 | 技术错误与提交结果规范 | F10-001、F10-005、F10-007、F14-010 | shared/CONTRACT §7 | 各模块 |
 
 边界提醒：shared 提供存储/路径/凭证/日志技术原语；app 负责跨域作业协调；permissions 独占授权；各领域 owner 保存业务事实和保留策略。
+
+## 3.11 PLUGINS 模块细分编号映射
+
+WEX 自有插件模块独立编号由 `plugins` owner 维护，不计入 F01–F15 的 216 项全局统计。PLUGINS-* 描述候选业务语义，不代表动态插件加载器已实现或已获准进入首期。DSH 原生插件与外部 DSH Agent 连接器分别由 dsh/ 与 connections/dsh/ 管理。
+
+| 模块独立编号 | 模块细分能力 | 对应全局 F 索引 | 契约锚点 | 关键依赖/边界 |
+|---|---|---|---|---|
+| PLUGINS-MANIFEST-001 | 插件描述清单 | F12-001 | plugins/CONTRACT §2 | app、connections、permissions |
+| PLUGINS-DISCOVERY-001 | 插件发现与登记 | F12-002 | plugins/CONTRACT §2 | app、shared |
+| PLUGINS-INSTALL-001 | 插件安装与来源接入 | F12-003 | plugins/CONTRACT §2 | app、shared、permissions |
+| PLUGINS-LIFECYCLE-001 | 插件启用、加载、停用与释放 | F12-003 | plugins/CONTRACT §2 | app、connections、permissions |
+| PLUGINS-CAPABILITY-001 | 插件能力发布与受控消费 | F12-004 | plugins/CONTRACT §2 | connections、permissions、各领域 owner |
+| PLUGINS-DEPENDENCY-001 | 依赖解析与版本兼容 | F12-005 | plugins/CONTRACT §2 | app、connections、shared |
+| PLUGINS-TRUST-001 | 来源信任与完整性校验 | F12-006 | plugins/CONTRACT §2 | app、permissions、shared |
+| PLUGINS-ISOLATION-001 | 插件权限与运行隔离 | F12-007 | plugins/CONTRACT §2 | app、permissions、Windows |
+| PLUGINS-CONFIG-001 | 插件专属配置 | F12-008 | plugins/CONTRACT §2 | shared、app |
+| PLUGINS-DATA-001 | 插件专属数据与保留 | F12-008、F12-010 | plugins/CONTRACT §2 | shared、permissions、app |
+| PLUGINS-UI-001 | 受控 UI 扩展 | F12-009 | plugins/CONTRACT §2 | app、views、UI、permissions |
+| PLUGINS-UPDATE-001 | 插件更新与兼容升级 | F12-010 | plugins/CONTRACT §2 | app、shared、connections、workflows |
+| PLUGINS-UNINSTALL-001 | 插件卸载与依赖释放 | F12-010 | plugins/CONTRACT §2 | app、shared、connections、permissions |
+| PLUGINS-RECOVERY-001 | 崩溃隔离与安全恢复 | F12-003、F12-010 | plugins/CONTRACT §2 | app、shared、permissions |
+| PLUGINS-DATA-ROOT-001 | 插件目录与安装位置 | F12-012 | plugins/CONTRACT §2 | app、shared |
+| PLUGINS-BOUNDARY-001 | WEX/DSH 双插件路线边界 | F12-011 | plugins/CONTRACT §2 | dsh、connections/dsh、app、permissions |
+
+边界提醒：plugins 只拥有 WEX 自有插件机制；app 提供宿主，connections 提供受控能力出口，permissions 独占授权，shared 提供技术原语；dsh/ 与 connections/dsh/ 不并入本模块。
 
 ## 4. 必须优先补齐的模块契约
 
