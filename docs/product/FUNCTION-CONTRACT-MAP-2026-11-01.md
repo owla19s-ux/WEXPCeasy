@@ -24,8 +24,9 @@
 | conversations | CV-01–CV-15 | 已补稳定锚点；B/C候选语义 |
 | connections/api | API-01–API-07 | 已补适配器子契约，真实Provider待验 |
 | connections/local | LOCAL-01–LOCAL-10 | 已补适配器子契约，Windows实测待验 |
-| workflows/runtime | W01–W07 | 稳定能力编号 |
+| workflows | W01–W07 + WORKFLOWS-* | 核心业务细分编号；W01–W07 保留为契约章节锚点 |
 | workflows/modes | MODE-01–MODE-06 | 已补稳定锚点，仍为B候选 |
+| workflows/editor | WORKFLOWS-EDITOR-001～011 | 自由格子交互子域编号；布局数据归 views |
 | software-development mode | SD-01–SD-07 | 已补专业模式子契约，未实现 |
 | permissions | PER-01–PER-04 | 稳定能力编号 |
 | shared | SH-01–SH-06 | SH-06已作为B候选技术日志能力写入 |
@@ -131,17 +132,17 @@
 | F06-013 | Android 工具链与模拟器 | connections/local | connections/local/CONTRACT.md · LOCAL-09 | 部分 | 补契约/语义评审后施工 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
 | F06-014 | 本地运行产物定位 | connections/local | connections/local/CONTRACT.md · LOCAL-10 | 覆盖 | 候选细化评审后施工 | Local子契约已覆盖主要业务输入输出。 |
 | F06-015 | 文件监控与外部修改检测 | connections/local | connections/local/CONTRACT.md · LOCAL-04 | 部分 | 实验前置 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
-| F07-001 | 工作流定义 | workflows/runtime | workflows W01/W03 | 覆盖 | 可直接施工（独立验收） | — |
-| F07-002 | 节点能力描述 | workflows/runtime | workflows W01/W03 | 覆盖 | 候选细化评审后施工 | — |
-| F07-003 | 流程依赖关系 | workflows/runtime | workflows W01/W03 | 覆盖 | 候选细化评审后施工 | — |
-| F07-004 | 工作流校验 | workflows/runtime | workflows W01/W03 | 覆盖 | 候选细化评审后施工 | — |
+| F07-001 | 工作流定义 | workflows/runtime | workflows W01/W03；模块编号：WORKFLOWS-DEFINITION-001、WORKFLOWS-REVISION-001/002 | 覆盖 | 可直接施工（独立验收） | — |
+| F07-002 | 节点能力描述 | workflows/runtime | workflows W01/W03；模块编号：WORKFLOWS-NODE-001～003 | 覆盖 | 候选细化评审后施工 | — |
+| F07-003 | 流程依赖关系 | workflows/runtime | workflows W01/W03；模块编号：WORKFLOWS-EDGE-001/002 | 覆盖 | 候选细化评审后施工 | — |
+| F07-004 | 工作流校验 | workflows/runtime | workflows W01/W03；模块编号：WORKFLOWS-VALIDATION-001/002 | 覆盖 | 候选细化评审后施工 | — |
 | F07-005 | 模板与预设 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-01 | 覆盖 | 可直接施工（独立验收） | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
 | F07-006 | 模板实例化 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-02 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
 | F07-007 | 模板组合 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-02 | 覆盖 | 可直接施工（独立验收） | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
 | F07-008 | 模板保存与复用 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-06 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
-| F07-009 | 工作流触发条件 | workflows/runtime | workflows W03/W06；app APP-03；PRD-D04 | 部分 | 用户决策前置 | 触发来源、授权时点、重复触发和退出后运行策略需定义。 |
-| F07-010 | 定义修订与草稿 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-06 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
-| F07-011 | 工作流导入导出 | workflows/runtime | workflows W01；shared SH-02/03；permissions PER-01 | 部分 | 补契约/语义评审后施工 | 定义修订与布局分离；导入导出需身份冲突/外部引用/部分成功语义。 |
+| F07-009 | 工作流触发条件 | workflows/runtime | workflows W03/W06；app APP-03；PRD-D04；模块编号：WORKFLOWS-TRIGGER-001～003 | 部分 | 用户决策前置 | 触发来源、授权时点、重复触发和退出后运行策略需定义。 |
+| F07-010 | 定义修订与草稿 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-06；模块编号：WORKFLOWS-REVISION-001/002 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
+| F07-011 | 工作流导入导出 | workflows/runtime | workflows W01；shared SH-02/03；permissions PER-01；模块编号：WORKFLOWS-TRANSFER-001/002 | 部分 | 补契约/语义评审后施工 | 定义修订与布局分离；导入导出需身份冲突/外部引用/部分成功语义。 |
 | F07-012 | 专业模式 | workflows/modes | workflows/modes/CONTRACT.md · MODE-01/MODE-04 | 覆盖 | 可直接施工（独立验收） | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
 | F07-013 | 软件开发项目对象 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-01 | 覆盖 | 可直接施工（独立验收） | 软件开发专业对象子契约已补，尚未实现。 |
 | F07-014 | 需求与功能对象 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-02 | 覆盖 | 候选细化评审后施工 | 需求/功能对象身份和修订已定义。 |
@@ -151,23 +152,23 @@
 | F07-018 | AI 结构建议草案 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-06 | 覆盖 | 候选细化评审后施工 | AI建议保持草案，显式采纳后才调用owner。 |
 | F07-019 | 从模板创建或关联既有项目 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-01/SD-04 | 覆盖 | 可直接施工（独立验收） | 专业Project与Context/物理目录分离。 |
 | F07-020 | 项目基准与决策记录 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-07 | 覆盖 | 候选细化评审后施工 | Baseline/Decision不覆盖Git/文件当前事实。 |
-| F08-001 | Task 创建与读取 | workflows/runtime | workflows W02/W03/W04 | 覆盖 | 可直接施工（独立验收） | — |
-| F08-002 | Task 修订 | workflows/runtime | workflows W02/W03/W04 | 覆盖 | 候选细化评审后施工 | — |
-| F08-003 | 责任分配 | workflows/runtime | workflows W02/W03/W04 | 覆盖 | 可直接施工（独立验收） | — |
-| F08-004 | 工作轮次 | workflows/runtime | workflows W02/W03/W04 | 覆盖 | 可直接施工（独立验收） | — |
-| F08-005 | 任务队列与优先级 | workflows/runtime | workflows W03；connections C02；permissions PER-01 | 覆盖 | 候选细化评审后施工 | — |
-| F08-006 | 依赖与条件推进 | workflows/runtime | workflows W03；connections C02；permissions PER-01 | 覆盖 | 候选细化评审后施工 | — |
-| F08-007 | 执行者选择与路由 | workflows/runtime | workflows W03；connections C02；permissions PER-01 | 覆盖 | 候选细化评审后施工 | — |
-| F08-008 | 调度与派发 | workflows/runtime | workflows W03；connections C02；permissions PER-01 | 覆盖 | 可直接施工（独立验收） | — |
-| F08-009 | 资源冲突协调 | workflows/runtime | workflows W05/W03；connections C02；app APP-02 | 部分 | 实验前置 | 资源身份/别名、租约/fencing、跨Context冲突和容量策略待实验。 |
-| F08-010 | 并发与容量调度 | workflows/runtime | workflows W05/W03；connections C02；app APP-02 | 部分 | 实验前置 | 资源身份/别名、租约/fencing、跨Context冲突和容量策略待实验。 |
-| F08-011 | Task 状态与推进 | workflows/runtime | workflows W02/W03/W04/W06；connections C02–04 | 覆盖 | 可直接施工（独立验收） | — |
-| F08-012 | 暂停、继续和停止 | workflows/runtime | workflows W02/W03/W04/W06；connections C02–04 | 覆盖 | 可直接施工（独立验收） | — |
-| F08-013 | 失败、重试与升级 | workflows/runtime | workflows W02/W03/W04/W06；connections C02–04 | 覆盖 | 可直接施工（独立验收） | — |
-| F08-014 | 检查点与跨会话接续 | workflows/runtime | workflows W02/W03/W04/W06；connections C02–04 | 覆盖 | 可直接施工（独立验收） | — |
-| F08-015 | 人工接管与交接 | workflows/runtime | workflows W02/W03/W04/W06；connections C02–04 | 覆盖 | 候选细化评审后施工 | — |
-| F08-016 | 持续推进策略 | workflows/runtime | workflows W06；app APP-03；PRD-D04 | 部分 | 用户决策前置 | 持续推进能力与关窗/退出/休眠/后台政策分离；D04待决。 |
-| F08-017 | 项目状态快照 | workflows/runtime | workflows W02/W04/W07；shared SH-02 | 部分 | 补契约/语义评审后施工 | 快照来源版本、失效、外部资源差异与恢复时效需定义。 |
+| F08-001 | Task 创建与读取 | workflows/runtime | workflows W02/W03/W04；模块编号：WORKFLOWS-TASK-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F08-002 | Task 修订 | workflows/runtime | workflows W02/W03/W04；模块编号：WORKFLOWS-TASK-001 | 覆盖 | 候选细化评审后施工 | — |
+| F08-003 | 责任分配 | workflows/runtime | workflows W02/W03/W04；模块编号：WORKFLOWS-TASK-002 | 覆盖 | 可直接施工（独立验收） | — |
+| F08-004 | 工作轮次 | workflows/runtime | workflows W02/W03/W04；模块编号：WORKFLOWS-TASK-002、WORKFLOWS-RUN-002 | 覆盖 | 可直接施工（独立验收） | — |
+| F08-005 | 任务队列与优先级 | workflows/runtime | workflows W03；connections C02；permissions PER-01；模块编号：WORKFLOWS-QUEUE-001 | 覆盖 | 候选细化评审后施工 | — |
+| F08-006 | 依赖与条件推进 | workflows/runtime | workflows W03；connections C02；permissions PER-01；模块编号：WORKFLOWS-EDGE-001/002、WORKFLOWS-VALIDATION-002 | 覆盖 | 候选细化评审后施工 | — |
+| F08-007 | 执行者选择与路由 | workflows/runtime | workflows W03；connections C02；permissions PER-01；模块编号：WORKFLOWS-DISPATCH-001 | 覆盖 | 候选细化评审后施工 | — |
+| F08-008 | 调度与派发 | workflows/runtime | workflows W03；connections C02；permissions PER-01；模块编号：WORKFLOWS-DISPATCH-002 | 覆盖 | 可直接施工（独立验收） | — |
+| F08-009 | 资源冲突协调 | workflows/runtime | workflows W05/W03；connections C02；app APP-02；模块编号：WORKFLOWS-RESOURCE-001 | 部分 | 实验前置 | 资源身份/别名、租约/fencing、跨Context冲突和容量策略待实验。 |
+| F08-010 | 并发与容量调度 | workflows/runtime | workflows W05/W03；connections C02；app APP-02；模块编号：WORKFLOWS-CAPACITY-001 | 部分 | 实验前置 | 资源身份/别名、租约/fencing、跨Context冲突和容量策略待实验。 |
+| F08-011 | Task 状态与推进 | workflows/runtime | workflows W02/W03/W04/W06；connections C02–04；模块编号：WORKFLOWS-RUN-001/002、WORKFLOWS-PROJECTION-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F08-012 | 暂停、继续和停止 | workflows/runtime | workflows W02/W03/W04/W06；connections C02–04；模块编号：WORKFLOWS-CONTROL-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F08-013 | 失败、重试与升级 | workflows/runtime | workflows W02/W03/W04/W06；connections C02–04；模块编号：WORKFLOWS-FAILURE-001、WORKFLOWS-RECOVERY-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F08-014 | 检查点与跨会话接续 | workflows/runtime | workflows W02/W03/W04/W06；connections C02–04；模块编号：WORKFLOWS-CHECKPOINT-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F08-015 | 人工接管与交接 | workflows/runtime | workflows W02/W03/W04/W06；connections C02–04；模块编号：WORKFLOWS-HANDOVER-001 | 覆盖 | 候选细化评审后施工 | — |
+| F08-016 | 持续推进策略 | workflows/runtime | workflows W06；app APP-03；PRD-D04；模块编号：WORKFLOWS-CONTINUITY-001 | 部分 | 用户决策前置 | 持续推进能力与关窗/退出/休眠/后台政策分离；D04待决。 |
+| F08-017 | 项目状态快照 | workflows/runtime | workflows W02/W04/W07；shared SH-02；模块编号：WORKFLOWS-SNAPSHOT-001 | 部分 | 补契约/语义评审后施工 | 快照来源版本、失效、外部资源差异与恢复时效需定义。 |
 | F09-001 | 可信主体识别 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-002 | 可信入口识别 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
 | F09-003 | 模块启用约束 | permissions | permissions PER-01/04；app APP-02 | 覆盖 | 可直接施工（独立验收） | — |
@@ -225,17 +226,17 @@
 | F12-010 | 插件更新、卸载与回滚 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 实验前置 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
 | F12-011 | DSH 双路线边界 | plugins（预留） | plugins README；双插件边界设计；connections §3外部Agent | 覆盖 | 可直接施工（独立验收） | 仅覆盖双路线边界，不代表WEX插件或DSH连接器已完成。 |
 | F12-012 | 插件目录与重装重识别 | plugins（预留） | plugins README；app/CONTRACT.md · APP-04；shared/CONTRACT.md · SH-01 | 部分 | 实验前置 | 插件目录重识别依赖根身份/应用更新协调；SH-05凭证能力不再错误映射到插件目录。 |
-| F13-001 | 产物登记 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 可直接施工（独立验收） | — |
-| F13-002 | 产物来源追踪 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 候选细化评审后施工 | — |
-| F13-003 | Receipt 关联 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 可直接施工（独立验收） | — |
-| F13-004 | Evidence 收集 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 候选细化评审后施工 | — |
-| F13-005 | Review 记录 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 可直接施工（独立验收） | — |
-| F13-006 | Verification 规则 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 候选细化评审后施工 | — |
-| F13-007 | Verification 执行 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 可直接施工（独立验收） | — |
-| F13-008 | Acceptance 决策 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 用户决策前置 | — |
-| F13-009 | 版本漂移失效 | workflows | workflows W04；connections C02/C03；permissions PER-01 | 覆盖 | 可直接施工（独立验收） | — |
-| F13-010 | 证据包与导出 | workflows | workflows W04；shared SH-03；permissions PER-01 | 部分 | 补契约/语义评审后施工 | 证据包导出需定义范围、脱敏、缺失附件、引用快照和部分失败。 |
-| F13-011 | 证据冲突处理 | workflows | workflows W04；connections C03 | 覆盖 | 候选细化评审后施工 | — |
+| F13-001 | 产物登记 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-ARTIFACT-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F13-002 | 产物来源追踪 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-ARTIFACT-002 | 覆盖 | 候选细化评审后施工 | — |
+| F13-003 | Receipt 关联 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-RECEIPT-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F13-004 | Evidence 收集 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-EVIDENCE-001 | 覆盖 | 候选细化评审后施工 | — |
+| F13-005 | Review 记录 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-REVIEW-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F13-006 | Verification 规则 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-VERIFY-001 | 覆盖 | 候选细化评审后施工 | — |
+| F13-007 | Verification 执行 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-VERIFY-002 | 覆盖 | 可直接施工（独立验收） | — |
+| F13-008 | Acceptance 决策 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-ACCEPT-001 | 覆盖 | 用户决策前置 | — |
+| F13-009 | 版本漂移失效 | workflows | workflows W04；connections C02/C03；permissions PER-01；模块编号：WORKFLOWS-VALIDITY-001 | 覆盖 | 可直接施工（独立验收） | — |
+| F13-010 | 证据包与导出 | workflows | workflows W04；shared SH-03；permissions PER-01；模块编号：WORKFLOWS-EVIDENCE-PACK-001 | 部分 | 补契约/语义评审后施工 | 证据包导出需定义范围、脱敏、缺失附件、引用快照和部分失败。 |
+| F13-011 | 证据冲突处理 | workflows | workflows W04；connections C03；模块编号：WORKFLOWS-EVIDENCE-CONFLICT-001 | 覆盖 | 候选细化评审后施工 | — |
 | F14-001 | Windows 安装交付 | app | app APP-01/04；shared SH-01/03/05 | 部分 | 实验前置 | APP有安装/根接入边界，但Windows安装器、双用户/单实例、升级和凭证仍未E4验证。 |
 | F14-002 | 安装位置选择 | app | app APP-01/04；shared SH-01/03/05 | 部分 | 补契约/语义评审后施工 | APP有安装/根接入边界，但Windows安装器、双用户/单实例、升级和凭证仍未E4验证。 |
 | F14-003 | 首次启动初始化 | app | app APP-01/04；shared SH-01/03/05 | 部分 | 补契约/语义评审后施工 | APP有安装/根接入边界，但Windows安装器、双用户/单实例、升级和凭证仍未E4验证。 |
@@ -282,6 +283,74 @@
 | SPACE-TOOL-003 | Context 工具集解析 | F01-009；关联 F02/F05/F07/F09 | space SPC-07 | AI、connections、workflows、permissions | 契约已补；仅输出 Context 侧选择事实，不代替 AI 资格/节点许可/操作授权 |
 
 模块编号的变更先在对应模块 CONTRACT 中维护，再同步本表；不得为了模块内部细化而重排 F01–F15。全局 F 项仍负责产品范围索引，模块编号负责局部施工与验收定位。
+
+## 3.2 WORKFLOWS 模块细分编号映射
+
+核心业务细分编号归 `workflows` owner 维护，不计入 F01–F15 的 216 项全局统计；`WORKFLOWS-EDITOR-*` 只标识自由格子交互，不是业务数据 owner。以下映射与上方 F07/F08/F13 逐项映射相互补充。
+
+| 模块独立编号 | 模块细分能力 | 对应全局 F 索引 | 契约锚点 | 关键依赖/边界 |
+|---|---|---|---|---|
+| WORKFLOWS-DEFINITION-001 | 工作流定义生命周期 | F07-001 | workflows/CONTRACT §6 | shared、permissions |
+| WORKFLOWS-REVISION-001 | 定义草稿与修订提交 | F07-010 | workflows/CONTRACT §6 | shared/storage、permissions |
+| WORKFLOWS-REVISION-002 | 修订冲突与提交未知恢复 | F07-001、F07-010 | workflows/CONTRACT §6 | shared/storage |
+| WORKFLOWS-NODE-001 | 节点身份与生命周期 | F07-002 | workflows/CONTRACT §6 | shared、permissions |
+| WORKFLOWS-NODE-002 | 节点能力、输入输出与配置 | F07-002 | workflows/CONTRACT §6 | connections、AI、modes |
+| WORKFLOWS-NODE-003 | 节点位置权限策略 | F07-002、F09-007 | workflows/CONTRACT §6 | permissions、space、connections |
+| WORKFLOWS-EDGE-001 | 执行依赖关系 | F07-003 | workflows/CONTRACT §6 | permissions |
+| WORKFLOWS-EDGE-002 | 端口、数据流与控制流语义 | F07-002、F07-003 | workflows/CONTRACT §6 | modes、connections |
+| WORKFLOWS-VALIDATION-001 | 定义结构校验 | F07-004 | workflows/CONTRACT §6 | shared、modes |
+| WORKFLOWS-VALIDATION-002 | 启动前执行就绪检查 | F07-004、F08-008 | workflows/CONTRACT §6 | AI、space、connections、permissions |
+| WORKFLOWS-TRIGGER-001 | 人工触发 | F07-009 | workflows/CONTRACT §6 | app、permissions |
+| WORKFLOWS-TRIGGER-002 | 对话与 Task 触发 | F07-009、F08-001 | workflows/CONTRACT §6 | conversations、permissions |
+| WORKFLOWS-TRIGGER-003 | 外部事件与定时触发 | F07-009、F08-016 | workflows/CONTRACT §6 | connections、app、permissions |
+| WORKFLOWS-TRANSFER-001 | 工作流定义导出 | F07-011 | workflows/CONTRACT §6 | shared、permissions |
+| WORKFLOWS-TRANSFER-002 | 工作流定义导入 | F07-011 | workflows/CONTRACT §6 | shared、connections、permissions |
+| WORKFLOWS-RUN-001 | 运行实例创建与定义绑定 | F08-011 | workflows/CONTRACT §6 | shared、permissions |
+| WORKFLOWS-RUN-002 | 节点运行与迭代/尝试身份 | F08-011、F08-013 | workflows/CONTRACT §6 | connections、shared |
+| WORKFLOWS-TASK-001 | Task 创建、读取与修订 | F08-001、F08-002 | workflows/CONTRACT §6 | conversations、space、shared、permissions |
+| WORKFLOWS-TASK-002 | 责任分配与工作轮次 | F08-003、F08-004 | workflows/CONTRACT §6 | AI、connections、permissions |
+| WORKFLOWS-QUEUE-001 | 就绪队列与优先级 | F08-005、F08-006 | workflows/CONTRACT §6 | permissions、connections |
+| WORKFLOWS-DISPATCH-001 | 执行者选择与能力路由 | F08-007 | workflows/CONTRACT §6 | AI、connections、permissions |
+| WORKFLOWS-DISPATCH-002 | 受控派发与 Operation 关联 | F08-008 | workflows/CONTRACT §6 | connections、permissions、shared |
+| WORKFLOWS-RESOURCE-001 | 真实资源冲突协调 | F08-009 | workflows/CONTRACT §6 | connections/local、app、shared、permissions |
+| WORKFLOWS-CAPACITY-001 | 并发与容量准入 | F08-010 | workflows/CONTRACT §6 | app、connections、shared |
+| WORKFLOWS-CONTROL-001 | 暂停、继续与停止请求 | F08-012 | workflows/CONTRACT §6 | connections、permissions、app |
+| WORKFLOWS-FAILURE-001 | 失败分类、重试与升级 | F08-013 | workflows/CONTRACT §6 | connections、permissions |
+| WORKFLOWS-RECOVERY-001 | 崩溃与重启恢复 | F08-013、F08-014 | workflows/CONTRACT §6 | app、shared、connections、permissions |
+| WORKFLOWS-CHECKPOINT-001 | 跨对话检查点与接续 | F08-014 | workflows/CONTRACT §6 | shared、conversations、AI、connections |
+| WORKFLOWS-HANDOVER-001 | 人工接管与责任交接 | F08-015 | workflows/CONTRACT §6 | AI、connections、permissions |
+| WORKFLOWS-CONTINUITY-001 | 持续推进与后台策略适配 | F08-016、F07-009 | workflows/CONTRACT §6 | app、permissions |
+| WORKFLOWS-SNAPSHOT-001 | 项目/工作状态快照 | F08-017 | workflows/CONTRACT §6 | shared、space、connections、views |
+| WORKFLOWS-PROJECTION-001 | 状态投影、诊断与通知 | F08-011、F13 | workflows/CONTRACT §6 | views、UI、permissions、connections |
+| WORKFLOWS-ARTIFACT-001 | 产物登记与引用 | F13-001 | workflows/CONTRACT §6 | connections/local、permissions |
+| WORKFLOWS-ARTIFACT-002 | 产物来源与版本追踪 | F13-002 | workflows/CONTRACT §6 | connections、shared、permissions |
+| WORKFLOWS-RECEIPT-001 | Operation Receipt 关联 | F13-003 | workflows/CONTRACT §6 | connections、shared |
+| WORKFLOWS-EVIDENCE-001 | 证据收集与引用 | F13-004 | workflows/CONTRACT §6 | connections/local、connections/GitHub、permissions |
+| WORKFLOWS-REVIEW-001 | Review 记录 | F13-005 | workflows/CONTRACT §6 | AI、permissions |
+| WORKFLOWS-VERIFY-001 | Verification 规则定义 | F13-006 | workflows/CONTRACT §6 | connections/local、permissions |
+| WORKFLOWS-VERIFY-002 | Verification 执行与结果 | F13-007 | workflows/CONTRACT §6 | connections、permissions |
+| WORKFLOWS-ACCEPT-001 | 最终 Acceptance 决策 | F13-008 | workflows/CONTRACT §6 | permissions、connections |
+| WORKFLOWS-VALIDITY-001 | 版本漂移与结论失效 | F13-009 | workflows/CONTRACT §6 | connections/local、connections/GitHub |
+| WORKFLOWS-EVIDENCE-PACK-001 | 证据包汇总与导出 | F13-010 | workflows/CONTRACT §6 | shared、permissions、connections |
+| WORKFLOWS-EVIDENCE-CONFLICT-001 | 证据冲突、重复与迟到处理 | F13-011 | workflows/CONTRACT §6 | connections、shared、permissions |
+
+### 自由格子交互编号（不计入 F 功能统计）
+
+| 模块独立编号 | 交互能力 | 对应 F 映射 | owner 边界 |
+|---|---|---|---|
+| WORKFLOWS-EDITOR-001 | 自由画布投影与渲染 | F07-001～004、F11-002/004 | workflows 提供业务投影；editor 不拥有状态 |
+| WORKFLOWS-EDITOR-002 | 节点选择、拖动与尺寸调整 | F11-005 | 坐标和尺寸由 views 保存 |
+| WORKFLOWS-EDITOR-003 | 连接端口与建边手势 | F07-002/003、F11-004 | 正式业务关系由 workflows 校验和提交 |
+| WORKFLOWS-EDITOR-004 | 正交连线与方向箭头 | F11-002/004/005 | 视觉路径归 views，业务边归 workflows |
+| WORKFLOWS-EDITOR-005 | 节点/关系新增、编辑与删除入口 | F07-001～004 | 通过 workflows 受控写入口 |
+| WORKFLOWS-EDITOR-006 | 画布平移与缩放 | F11-005 | viewport 归 views |
+| WORKFLOWS-EDITOR-007 | 手动布局管理 | F11-005 | 布局修订归 views |
+| WORKFLOWS-EDITOR-008 | 自动布局预览、应用与撤销 | F11-005 | 布局算法/结果归 views；不改变执行依赖 |
+| WORKFLOWS-EDITOR-009 | 节点卡片状态与任务摘要 | F08-011、F13 | 只读 workflows 权威投影 |
+| WORKFLOWS-EDITOR-010 | 打开节点工作界面 | F03、F06、F07 | 对话/代码/文件界面由相应 owner 提供 |
+| WORKFLOWS-EDITOR-011 | 撤销/重做与历史隔离 | F07-010、F11-008 | 定义历史与布局历史分离 |
+
+`WORKFLOWS-EDITOR-001～011` 是交互规格编号，不增加 216 项统计。坐标、尺寸、viewport、视觉路径和布局方案仍由 views 拥有；节点业务身份/依赖由 workflows 拥有。
 
 ## 4. 必须优先补齐的模块契约
 
