@@ -21,7 +21,7 @@
 | space | SPC-01–SPC-07 | 稳定能力编号；SPC-06/07承接Context资源引用与工具组合细分 |
 | AI / roles | AIC-01–AIC-08 | 已补记忆子契约；D10/D05仍未决 |
 | connections | C01–C05 + CONNECTIONS-* | 核心宿主细分编号；API/LOCAL 子模块独立维护 |
-| conversations | CV-01–CV-15 | 已补稳定锚点；B/C候选语义 |
+| conversations | CV-01–CV-16 + CONVERSATIONS-* | 既有业务锚点保留；新增细粒度对话业务编号 |
 | connections/api | API-01–API-07 | 已补适配器子契约，真实Provider待验 |
 | connections/local | LOCAL-01–LOCAL-10 | 已补适配器子契约，Windows实测待验 |
 | workflows | W01–W07 + WORKFLOWS-* | 核心业务细分编号；W01–W07 保留为契约章节锚点 |
@@ -72,22 +72,22 @@
 | F02-010 | 执行者替换与交接 | AI | AI AIC-04；workflows W02/W06；connections C04；模块编号：AI-HANDOVER-001 | 覆盖 | 候选细化评审后施工 | — |
 | F02-011 | Agent 记忆策略配置 | AI | AI AIC-01/04；F10记忆契约缺口；permissions PER-01；模块编号：AI-MEMORY-SHARING-001 | 缺失 | 用户决策前置 | AI契约没有记忆对象、来源、共享、撤回、纠错和过期能力。 |
 | F02-012 | Agent 状态与工作状态分离 | AI | AI AIC-03/04；connections C03/04；workflows W07；模块编号：AI-STATUS-001 | 部分 | 补契约/语义评审后施工 | 需区分Agent配置、Runtime在线、Session可查询和Task状态的观察来源。 |
-| F03-001 | 独立会话生命周期 | conversations | conversations/CONTRACT.md · CV-01 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-002 | 消息与轮次持久化 | conversations | conversations/CONTRACT.md · CV-02 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-003 | 消息序列项 | conversations | conversations/CONTRACT.md · CV-03 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-004 | 局部选择与引用 | conversations | conversations/CONTRACT.md · CV-04 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-005 | 分支讨论 | conversations | conversations/CONTRACT.md · CV-05 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-006 | 已发送消息修改与重发 | conversations | conversations/CONTRACT.md · CV-06 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-007 | 生成期间追加与排队 | conversations | conversations/CONTRACT.md · CV-07 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-008 | 流式输出与定稿 | conversations | conversations/CONTRACT.md · CV-08 | 覆盖 | 实验前置 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-009 | 停止生成 | conversations | conversations/CONTRACT.md · CV-09 | 覆盖 | 实验前置 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-010 | 对话背景与模型选择 | conversations | conversations/CONTRACT.md · CV-10 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-011 | 输入附件与来源 | conversations | conversations/CONTRACT.md · CV-11 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-012 | 工具意图往返 | conversations | conversations/CONTRACT.md · CV-12 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-013 | 显式转为 Task | conversations | conversations/CONTRACT.md · CV-13 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-014 | 会话检索与历史读取 | conversations | conversations/CONTRACT.md · CV-14 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-015 | 序列项采纳/拒绝状态 | conversations | conversations/CONTRACT.md · CV-15 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
-| F03-016 | 序列项局部补充与修订 | conversations | conversations/CONTRACT.md · CV-16 | 覆盖 | 候选细化评审后施工 | 序列项局部修订与历史消息重发分开；CV-16只修改单项版本。 |
+| F03-001 | 独立会话生命周期 | conversations | conversations/CONTRACT.md · CV-01；模块编号：CONVERSATIONS-THREAD-001 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-002 | 消息与轮次持久化 | conversations | conversations/CONTRACT.md · CV-02；模块编号：CONVERSATIONS-MESSAGE-001、CONVERSATIONS-GENERATION-001、CONVERSATIONS-STATE-001 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-003 | 消息序列项 | conversations | conversations/CONTRACT.md · CV-03；模块编号：CONVERSATIONS-SEQUENCE-001 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-004 | 局部选择与引用 | conversations | conversations/CONTRACT.md · CV-04；模块编号：CONVERSATIONS-REFERENCE-001 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-005 | 分支讨论 | conversations | conversations/CONTRACT.md · CV-05；模块编号：CONVERSATIONS-BRANCH-001 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-006 | 已发送消息修改与重发 | conversations | conversations/CONTRACT.md · CV-06；模块编号：CONVERSATIONS-RESUBMIT-001 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-007 | 生成期间追加与排队 | conversations | conversations/CONTRACT.md · CV-07；模块编号：CONVERSATIONS-QUEUE-001 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-008 | 流式输出与定稿 | conversations | conversations/CONTRACT.md · CV-08；模块编号：CONVERSATIONS-GENERATION-001、CONVERSATIONS-STREAM-001、CONVERSATIONS-STATE-001 | 覆盖 | 实验前置 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-009 | 停止生成 | conversations | conversations/CONTRACT.md · CV-09；模块编号：CONVERSATIONS-STOP-001、CONVERSATIONS-STATE-001 | 覆盖 | 实验前置 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-010 | 对话背景与模型选择 | conversations | conversations/CONTRACT.md · CV-10；模块编号：CONVERSATIONS-CONTEXT-001 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-011 | 输入附件与来源 | conversations | conversations/CONTRACT.md · CV-11；模块编号：CONVERSATIONS-ATTACHMENT-001 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-012 | 工具意图往返 | conversations | conversations/CONTRACT.md · CV-12；模块编号：CONVERSATIONS-TOOL-001 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-013 | 显式转为 Task | conversations | conversations/CONTRACT.md · CV-13；模块编号：CONVERSATIONS-TASK-001 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-014 | 会话检索与历史读取 | conversations | conversations/CONTRACT.md · CV-14；模块编号：CONVERSATIONS-SEARCH-001 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-015 | 序列项采纳/拒绝状态 | conversations | conversations/CONTRACT.md · CV-15；模块编号：CONVERSATIONS-DECISION-001 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-016 | 序列项局部补充与修订 | conversations | conversations/CONTRACT.md · CV-16；模块编号：CONVERSATIONS-ITEM-REVISION-001 | 覆盖 | 候选细化评审后施工 | 序列项局部修订与历史消息重发分开；CV-16只修改单项版本。 |
 | F04-001 | Provider 配置 | connections/api | connections/api/CONTRACT.md · API-01 | 覆盖 | 可直接施工（独立验收） | API子契约已补，真实Provider仍需独立验收。 |
 | F04-002 | 账号与凭证引用 | connections/api | connections/api/CONTRACT.md · API-03 | 覆盖 | 可直接施工（独立验收） | API子契约已补，真实Provider仍需独立验收。 |
 | F04-003 | 模型目录 | connections/api | connections/api/CONTRACT.md · API-02 | 覆盖 | 候选细化评审后施工 | API子契约已补，真实Provider仍需独立验收。 |
@@ -439,6 +439,33 @@ AI 模块独立编号由 `AI` owner 维护，不计入 F01–F15 的 216 项全�
 | AI-PREFERENCE-001 | 用户级偏好与跨项目记忆 | F10-016 | AI/CONTRACT §8 | permissions、shared、conversations |
 
 边界提醒：AI 保存职责与工具资格，不授予权限；Space 选择 Context，workflows 分配 Task/轮次，connections 管理真实 Runtime/Session/Operation，conversations 持有消息原文，permissions 独占授权决定。
+
+## 3.7 CONVERSATIONS 模块细分编号映射
+
+对话模块独立编号由 `conversations` owner 维护，不计入 F01–F15 的 216 项全局统计。CV-01～CV-16 是既有稳定能力锚点；CONVERSATIONS-* 用于细粒度施工和验收；I01–I16 仍为全局交互语义目录。
+
+| 模块独立编号 | 模块细分能力 | 对应全局 F 索引 | 契约锚点 | 关键依赖/边界 |
+|---|---|---|---|---|
+| CONVERSATIONS-THREAD-001 | Conversation 生命周期 | F03-001 | conversations/CONTRACT §5 | shared、permissions |
+| CONVERSATIONS-MESSAGE-001 | 消息与轮次持久化 | F03-002 | conversations/CONTRACT §5 | shared/storage、connections/api |
+| CONVERSATIONS-GENERATION-001 | 逻辑生成身份与请求关联 | F03-002、F03-008、F03-012 | conversations/CONTRACT §5 | connections/api、connections、shared |
+| CONVERSATIONS-SEQUENCE-001 | 稳定序列项 | F03-003 | conversations/CONTRACT §5 | shared、views/UI |
+| CONVERSATIONS-REFERENCE-001 | 局部选择与版本引用 | F03-004 | conversations/CONTRACT §5 | permissions、source owner |
+| CONVERSATIONS-BRANCH-001 | 分支讨论与回链 | F03-005 | conversations/CONTRACT §5 | shared、permissions |
+| CONVERSATIONS-RESUBMIT-001 | 历史消息修改与重发 | F03-006 | conversations/CONTRACT §5 | connections、permissions、shared |
+| CONVERSATIONS-QUEUE-001 | 生成期间追加与排队 | F03-007 | conversations/CONTRACT §5 | connections/api、shared |
+| CONVERSATIONS-STREAM-001 | 流式片段接收与定稿 | F03-008 | conversations/CONTRACT §5 | connections/api、shared |
+| CONVERSATIONS-STOP-001 | 停止等待、停止显示与远端取消 | F03-009 | conversations/CONTRACT §5 | connections、permissions |
+| CONVERSATIONS-CONTEXT-001 | 对话背景与模型输入快照 | F03-010 | conversations/CONTRACT §5 | space、AI、connections/api、permissions |
+| CONVERSATIONS-ATTACHMENT-001 | 输入附件与来源 | F03-011 | conversations/CONTRACT §5 | connections/local、space、permissions |
+| CONVERSATIONS-TOOL-001 | 工具意图往返 | F03-012 | conversations/CONTRACT §5 | connections/api、connections、permissions |
+| CONVERSATIONS-TASK-001 | 显式转为 Task | F03-013 | conversations/CONTRACT §5 | workflows、permissions |
+| CONVERSATIONS-SEARCH-001 | 会话检索与历史读取 | F03-014 | conversations/CONTRACT §5 | permissions、views |
+| CONVERSATIONS-DECISION-001 | 序列项采纳、拒绝与待讨论 | F03-015 | conversations/CONTRACT §5 | permissions、workflows |
+| CONVERSATIONS-ITEM-REVISION-001 | 序列项局部补充与修订 | F03-016 | conversations/CONTRACT §5 | shared、permissions |
+| CONVERSATIONS-STATE-001 | 消息、生成、工具与定稿状态分离 | F03-002、F03-008、F03-009、F03-012 | conversations/CONTRACT §5 | connections、shared、permissions |
+
+边界提醒：消息/序列项/逻辑生成归 conversations；Provider 请求/Operation 归 connections；Agent/角色配置归 AI；Task 归 workflows；授权归 permissions；全局 I01–I16 不因本模块细化而重排。
 
 ## 4. 必须优先补齐的模块契约
 
