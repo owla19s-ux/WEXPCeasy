@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-01",
+  "environment": {
+    "platform": "Linux x86_64",
+    "python": "3.13.5",
+    "sqlite": "3.46.1"
+  },
+  "C12_same_transaction": {
+    "outcomes": [["delete", "deleted"], ["ref", "rejected"]],
+    "objects": 0,
+    "refs": 0,
+    "dangling": false,
+    "pass": true
+  },
+  "C12_separate_store_negative": {
+    "events": [["delete-check", 0], ["reference", "inserted"], ["delete", "deleted-after-stale-check"]],
+    "objects": 0,
+    "refs": 1,
+    "dangling": true,
+    "pass_negative_control": true
+  },
+  "C11_atomic_consume": {
+    "distinct_intents": 8,
+    "consumed": 1,
+    "denied_exhausted": 7,
+    "remaining": 0,
+    "use_records": 1,
+    "same_intent_replay": "replayed:consumed",
+    "pass": true
+  },
+  "C07_sequential_backup_negative": {
+    "backup_revisions": [1, 2],
+    "mixed_generation": true,
+    "pass_negative_control": true
+  },
+  "product_integration": false,
+  "closes_prd_C": []
+}

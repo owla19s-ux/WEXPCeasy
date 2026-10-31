@@ -14,6 +14,7 @@
 | [F功能—模块契约逐项映射](FUNCTION-CONTRACT-MAP-2026-11-01.md) | 216项逐项对应模块CONTRACT，记录覆盖状态、owner和契约缺口 | 已更新，142项覆盖/62项部分/12项缺失，随契约同步维护 |
 | [基础功能施工准备度审查](FOUNDATION-READINESS-2026-11-01.md) | 区分可直接施工、补契约、实验和用户决策阻塞 | 第二轮初判，按Owner收敛更新，非版本表 |
 | [完整产品需求基线收敛记录](REQUIREMENT-BASELINE-RECONCILIATION-2026-11-01.md) | F10/F15唯一Owner、B契约评审、C实验状态、D用户决策与基线确认门槛 | Owner/B技术评审完成；C部分；D待用户确认 |
+| [C级机制实验探针](../../experiments/product-baseline-c-probes/README.md) | C07备份混代负向对照、C11有限次数并发、C12删除/引用竞态机制实验 | E2机制证据；不是WEX产品集成验收 |
 
 ## 模块契约补充
 
