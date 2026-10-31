@@ -16,7 +16,7 @@
 | [app](../app/README.md) | 已有可信模块装配、生命周期释放/重试、无窗口诊断入口；第八批隔离 Electron 实验真实消费公开出口并验证启动/退出与占锁重试 | 正式 Electron 启动器、首次选根、正式 IPC 契约、安装升级及 Windows E4 未交付 |
 | [UI](../UI/README.md) | 隔离 React Renderer 已验证窄 Preload 状态查询、错误反馈与无 Node 集成 | 完整产品页面、正式 IPC/页面协议、Windows 交互验收未实现 |
 | [connections](../connections/README.md) | 有受控交换/协议夹具与 DSH headless 局部实验 | 完整产品级公共连接协议、真实 DSH 成功任务与恢复/停止闭环未验收 |
-| [workflows](../workflows/README.md) | 有独立 React Flow 编辑原型与机制实验 | 正式工作流/Task/调度/验收产品代码未实现 |
+| [workflows](../workflows/README.md) | 已有历史 React Flow 编辑实验；已确认自研自由格子方向，并补充 WORKFLOWS-* 业务细分与 WORKFLOWS-EDITOR-* 交互编号 | 正式工作流/Task/调度/验收产品代码未实现；真实自由画布交互与 Windows Electron 验收未通过 |
 | [space](../space/README.md)、[AI](../AI/README.md)、[conversations](../conversations/README.md)、[views](../views/README.md) | 已有职责与业务契约设计 | 尚无对应完整产品业务实现 |
 | [plugins](../plugins/README.md)、[dsh](../dsh/README.md)、[accounts](../accounts/README.md) | 分别保留 WEX 插件机制研究、DSH 原生 Core+Loader 独立兼容实验、账号身份预留 | DSH 原生插件实验不等于 WEX 插件系统或外部 DSH Agent 连接器已产品化 |
 
@@ -46,7 +46,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 | [AI与roles](../AI/CONTRACT.md) | 可复用配置、职责关联、可见投影、当前工作依据与历史解释 | Key/外部循环/Task分配/Context选择 | 可先配置/职责/查询；消费连接元数据、权限/存储；历史依据保留与并发C/D |
 | [conversations](../conversations/CONTRACT.md) | 消息/段落版本、背景、逻辑生成、追加重发分支、定稿/恢复、显式转任务 | Provider协议/Operation权威/Task验收 | 无Context/Task可用；依赖连接/权限/存储；流与派发崩溃窗口待C |
 | [connections](../connections/CONTRACT.md) | 连接/能力、准入派发、Operation尝试/观察、查询控制与最小回调 | Task状态/权限政策/全局角色 | 宿主与适配分验；判权/存储/秘密/资源协调就绪后组合；DSH成功及控制C |
-| [workflows/runtime](../workflows/CONTRACT.md) | 定义/Task/轮次、推进、资源协调、产物核验与验收、恢复投影 | 厂商协议/Operation正式状态 | 定义任务核验可先本域；派发恢复依赖连接/授权/协调证据；自动验收D |
+| [workflows](../workflows/CONTRACT.md) · [editor](../workflows/editor/README.md) | WORKFLOWS-* 细化定义/节点/依赖/Task/调度/恢复/证据；WORKFLOWS-EDITOR-* 细化自由格子交互；MODE/SD 保留专业子域编号 | 厂商协议/Operation正式状态/布局权威 | 定义、Task、证据可先本域；派发恢复依赖连接/授权/协调证据；资源冲突/容量C，后台策略D04；画布布局归 views |
 | [permissions](../permissions/CONTRACT.md) | 资格复核、审批授权/撤销、许可与审计查询 | AI职责/Context/Task/凭证秘密 | 基础授权账本、CAS、撤销/复核及真实 SQLite 消费测试已实现；非对话入口映射仍为 D，OS 身份/IPC 与在途竞态仍为 C |
 | [shared/storage与credentials](../shared/CONTRACT.md) | 限定技术读写/提交、备份恢复基础、受限秘密与使用关系机制 | Task/Operation/权限业务意义 | SQLite 单库事务及 Electron/Linux 运行时兼容已验证；备份恢复、Windows 凭证/ACL 与句柄级路径保护仍为 C |
 | [views](../views/CONTRACT.md) | 呈现映射/布局筛选、获准投影、领域编辑转交、草稿传播 | 专业关系/执行依赖/任务真相 | 单图实验仅参考；配置投影可先替身；多图/撤权/布局竞争C，专业模型D |
