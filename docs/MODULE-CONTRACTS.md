@@ -44,7 +44,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 | [app](../app/CONTRACT.md) | 可信启动装配、数据根接入/诊断、退出恢复协调、安装升级重装屏障 | 各域业务状态/授权政策/主UI布局 | 基础装配与生命周期已实现并通过第七/八批验证；首次选根、Windows profile、安装关系及恢复 C/D 未关闭 |
 | [space](../space/CONTRACT.md) | 本体/放置/组合引用、组织配置、可见查询；独立删除单列 | 职责、会话背景、授权、外部文件 | 组织/引用可审阅；消费权限/存储/目标最小投影；实际删除与多目录迁移待C/D |
 | [AI与roles](../AI/CONTRACT.md) | AIC-01～09 + AI-*：Agent/角色/职责/工具资格/模型引用/配置快照/Runtime与Session映射/记忆来源 | Key/外部循环/Task分配/Context选择/授权账本 | 配置/职责/资格契约已细化；Agent Runtime、外部Session恢复C；D10派生记忆共享与D05保留政策待决 |
-| [conversations](../conversations/CONTRACT.md) | 消息/段落版本、背景、逻辑生成、追加重发分支、定稿/恢复、显式转任务 | Provider协议/Operation权威/Task验收 | 无Context/Task可用；依赖连接/权限/存储；流与派发崩溃窗口待C |
+| [conversations](../conversations/CONTRACT.md) | CV-01～CV-16 + CONVERSATIONS-*：会话/消息/序列项/分支/追加重发/流式/工具往返/局部修订 | Provider协议/Operation权威/Task验收/权限账本 | 业务编号与交互边界已细化；流式/取消/提交竞态C；片段保留D05 |
 | [connections](../connections/CONTRACT.md) | C01–C05 + CONNECTIONS-*：Connection/Capability/准入/Operation/观察/控制/回调/Service/外部Agent；API/LOCAL 子域保留 API-*/LOCAL-* | Task状态/权限政策/资源占用最终裁决/外部Session权威 | 宿主契约已细化；真实Provider/DSH成功任务、回调认证、持久去重、Windows进程树与GitHub远端仍需独立验收 |
 | [workflows](../workflows/CONTRACT.md) · [editor](../workflows/editor/README.md) | WORKFLOWS-* 细化定义/节点/依赖/Task/调度/恢复/证据；WORKFLOWS-EDITOR-* 细化自由格子交互；MODE/SD 保留专业子域编号 | 厂商协议/Operation正式状态/布局权威 | 定义、Task、证据可先本域；派发恢复依赖连接/授权/协调证据；资源冲突/容量C，后台策略D04；画布布局归 views |
 | [permissions](../permissions/CONTRACT.md) | 资格复核、审批授权/撤销、许可与审计查询 | AI职责/Context/Task/凭证秘密 | 基础授权账本、CAS、撤销/复核及真实 SQLite 消费测试已实现；非对话入口映射仍为 D，OS 身份/IPC 与在途竞态仍为 C |
@@ -209,7 +209,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 | [connections/local](../connections/local/CONTRACT.md) | connections | F06 文件/目录/终端/进程/Git/Android/监控 | B候选，Windows实验待验 |
 | [workflows/modes MODE-01～MODE-06](../workflows/modes/CONTRACT.md) | workflows/modes | F07-005～012模式发现/组合/规则/升级 | B候选，待评审 |
 | [software-development mode](../workflows/modes/software-development/CONTRACT.md) | workflows/modes | F07-013～020专业对象和关系 | B候选，未实现 |
-| conversations CV-01～CV-16 | conversations | F03逐项稳定锚点与输入输出 | B候选，流式/取消仍C |
+| conversations CV-01～CV-16 + CONVERSATIONS-* | conversations | F03逐项稳定锚点与对话业务细分；I01–I16 交互语义另行维护 | B候选，流式/取消仍C |
 | views VIEW-01～VIEW-07 | views | F11投影/映射/布局/锚点 | B候选，多图/规模仍C |
 | AI AIC-01～09 | AI | Agent配置、职责、工作依据、实例映射与记忆/偏好 | B/C/D混合，D10/D05/D13未决 |
 | shared SH-01～06 | shared | 持久化/路径/身份引用/备份技术/凭证/日志 | B候选，不拥有业务账本 |
