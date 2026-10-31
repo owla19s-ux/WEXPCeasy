@@ -440,7 +440,7 @@ AI 模块独立编号由 `AI` owner 维护，不计入 F01–F15 的 216 项全�
 
 边界提醒：AI 保存职责与工具资格，不授予权限；Space 选择 Context，workflows 分配 Task/轮次，connections 管理真实 Runtime/Session/Operation，conversations 持有消息原文，permissions 独占授权决定。
 
-## 3.7 CONVERSATIONS 模块细分编号映射
+## 3.6 CONVERSATIONS 模块细分编号映射
 
 对话模块独立编号由 `conversations` owner 维护，不计入 F01–F15 的 216 项全局统计。CV-01～CV-16 是既有稳定能力锚点；CONVERSATIONS-* 用于细粒度施工和验收；I01–I16 仍为全局交互语义目录。
 
@@ -467,7 +467,7 @@ AI 模块独立编号由 `AI` owner 维护，不计入 F01–F15 的 216 项全�
 
 边界提醒：消息/序列项/逻辑生成归 conversations；Provider 请求/Operation 归 connections；Agent/角色配置归 AI；Task 归 workflows；授权归 permissions；全局 I01–I16 不因本模块细化而重排。
 
-## 3.8 PERMISSIONS 模块细分编号映射
+## 3.7 PERMISSIONS 模块细分编号映射
 
 权限模块独立编号由 `permissions` owner 维护，不计入 F01–F15 的 216 项全局统计。PER-01～PER-04 是既有稳定能力锚点；PERMISSIONS-* 用于细粒度施工和验收。授权账本只允许 permissions 维护。
 
@@ -495,7 +495,7 @@ AI 模块独立编号由 `AI` owner 维护，不计入 F01–F15 的 216 项全�
 
 边界提醒：app 提供可信主体/入口事实；AI 提供职责/资格；Space 提供 Context 选择；workflows 提供节点与运行方案；permissions 独占授权/撤销/审计；connections 只执行受控调用并复核。
 
-## 3.9 APP 模块细分编号映射
+## 3.8 APP 模块细分编号映射
 
 app 模块独立编号由 `app` owner 维护，不计入 F01–F15 的 216 项全局统计。APP-01～APP-12 是既有能力锚点；APP-* 用于宿主、安装、平台、恢复和跨域维护细分。F15-001/002/015 仍归 shared/各账本 owner。
 
@@ -528,7 +528,7 @@ app 模块独立编号由 `app` owner 维护，不计入 F01–F15 的 216 项�
 
 边界提醒：app 提供可信宿主和跨域作业协调；shared 提供技术存储/路径/凭证；permissions 决定许可；各领域 owner 维护数据格式与业务事实；app 不接管 Task/Operation/授权账本。
 
-## 3.10 SHARED 模块细分编号映射
+## 3.9 SHARED 模块细分编号映射
 
 shared 模块独立编号由 `shared` owner 维护，不计入 F01–F15 的 216 项全局统计。SH-01～SH-06 是既有技术能力锚点；SHARED-* 用于细粒度施工和验收。shared 不拥有领域业务对象或授权账本。
 
@@ -557,7 +557,7 @@ shared 模块独立编号由 `shared` owner 维护，不计入 F01–F15 的 216
 
 边界提醒：shared 提供存储/路径/凭证/日志技术原语；app 负责跨域作业协调；permissions 独占授权；各领域 owner 保存业务事实和保留策略。
 
-## 3.11 PLUGINS 模块细分编号映射
+## 3.10 PLUGINS 模块细分编号映射
 
 WEX 自有插件模块独立编号由 `plugins` owner 维护，不计入 F01–F15 的 216 项全局统计。PLUGINS-* 描述候选业务语义，不代表动态插件加载器已实现或已获准进入首期。DSH 原生插件与外部 DSH Agent 连接器分别由 dsh/ 与 connections/dsh/ 管理。
 
