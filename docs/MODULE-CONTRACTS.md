@@ -11,7 +11,7 @@
 
 | 功能域 | 当前代码/实验事实 | 明确未完成或证据边界 |
 |---|---|---|
-| [shared](../shared/README.md) | 已有公开 TypeScript 出口、SQLite 技术存储、根身份/路径检查、技术诊断；第八批在 Electron 45.2.1 内嵌 Node 24.22.1/Linux 中完成真实建库、事务、关闭与独立进程重启回读 | 完整备份/恢复、Windows ACL/句柄级锁、凭证生命周期与重装恢复未验收 |
+| [shared](../shared/README.md) | 已有公开 TypeScript 出口、SQLite 技术存储、根身份/路径检查、技术诊断；已补 SH-01～06 与 SHARED-* 细分契约；第八批完成 Electron/Linux 真实建库、事务、关闭与独立进程重启回读 | 完整备份/恢复、Windows ACL/句柄级锁、凭证生命周期与重装恢复未验收 |
 | [permissions](../permissions/README.md) | 已有公开授权服务、持久化授权/撤销、修订复核与拒绝默认；D01/D02已确认IV级全风险自主、工作流启动一次确认、主AI/秘书AI共享对话等级 | 当前代码仍对非对话入口返回 entry_policy_unresolved；AI资格、Context开关、工作流节点策略、对话等级策略和特殊信任边界尚未实现；Windows主体认证/IPC绑定/撤权竞态未验收 |
 | [app](../app/README.md) | 已有可信模块装配、生命周期释放/重试、无窗口诊断入口；已补 APP-01～12 与 APP-* 细分契约；第八批隔离 Electron 实验真实消费公开出口 | 正式 Electron 启动器、首次选根、正式 IPC 契约、安装升级及 Windows E4 未交付 |
 | [UI](../UI/README.md) | 隔离 React Renderer 已验证窄 Preload 状态查询、错误反馈与无 Node 集成 | 完整产品页面、正式 IPC/页面协议、Windows 交互验收未实现 |
@@ -48,7 +48,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 | [connections](../connections/CONTRACT.md) | C01–C05 + CONNECTIONS-*：Connection/Capability/准入/Operation/观察/控制/回调/Service/外部Agent；API/LOCAL 子域保留 API-*/LOCAL-* | Task状态/权限政策/资源占用最终裁决/外部Session权威 | 宿主契约已细化；真实Provider/DSH成功任务、回调认证、持久去重、Windows进程树与GitHub远端仍需独立验收 |
 | [workflows](../workflows/CONTRACT.md) · [editor](../workflows/editor/README.md) | WORKFLOWS-* 细化定义/节点/依赖/Task/调度/恢复/证据；WORKFLOWS-EDITOR-* 细化自由格子交互；MODE/SD 保留专业子域编号 | 厂商协议/Operation正式状态/布局权威 | 定义、Task、证据可先本域；派发恢复依赖连接/授权/协调证据；资源冲突/容量C，后台策略D04；画布布局归 views |
 | [permissions](../permissions/CONTRACT.md) | PER-01～04 + PERMISSIONS-*：主体/入口/模块/全局/对话约束、资源判定、IV级/节点启动确认、Grant/撤权/复核/审计/披露 | AI职责/Context/Task/凭证秘密/Operation账本 | 基础授权账本、CAS、撤销/复核及真实 SQLite 消费测试已实现；D01/D02完整映射未落地；非对话入口D，OS身份/IPC、撤权竞态和有限次数C/D |
-| [shared/storage与credentials](../shared/CONTRACT.md) | 限定技术读写/提交、备份恢复基础、受限秘密与使用关系机制 | Task/Operation/权限业务意义 | SQLite 单库事务及 Electron/Linux 运行时兼容已验证；备份恢复、Windows 凭证/ACL 与句柄级路径保护仍为 C |
+| [shared](../shared/CONTRACT.md) | SH-01～06 + SHARED-*：根/路径/锁、命名空间存储、事务/CAS/意图、类别、备份恢复迁移原语、凭证/秘密/平台后端、日志/追踪/诊断/容量 | Task/Operation/权限业务意义/领域schema/保留政策 | SQLite单库事务与CAS/意图已验证；备份恢复、Windows凭证/ACL/句柄级路径安全、持久日志轮转仍为C/D |
 | [views](../views/CONTRACT.md) | VIEW-01～VIEW-07 + VIEWS-*：视图定义/投影/对象关系映射/布局/多视图/刷新/锚点/获准检索 | 专业关系/执行依赖/任务真相/真实资源内容 | 布局与投影契约已细化；多图/撤权缓存/异步布局与大规模性能C；专业规则由 modes/领域 owner 提供；自由格子交互归 workflows/editor |
 | [workflows/modes](../workflows/modes/CONTRACT.md) | 可选组合、专业对象/关系/规则身份、预设实例化/调整建议 | 通用Task/权限/连接/第二套Context | 软件开发为先验案例；先窄组合；跨域部分成功/版本升级C/D，不建完整市场 |
 | [UI](../UI/CONTRACT.md) | 导航、面板、临时输入/选择、窄桥动作与证据反馈 | 业务/回执/授权/验收真相 | 隔离 React/Preload/IPC 最小实验已通过；正式产品页面/IPC、Windows 与撤权缓存仍未验收 |
