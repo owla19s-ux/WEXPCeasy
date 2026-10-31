@@ -1,6 +1,6 @@
 # workflows — 工作流、任务状态与调度职责
 
-**状态（2026-11-01）**：workflows 是 WEX 工作流业务数据与运行调度的权威 owner；现有 React Flow 仅为历史交互实验。当前画布方向调整为自研轻量自由画布，设计见 [当前工作流画布架构](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)。本域尚无正式工作流调度产品代码。
+**状态（2026-11-01）**：workflows 是 WEX 工作流业务数据与运行调度的权威 owner；现有 React Flow 仅为历史交互实验；模块细分使用 WORKFLOWS-* 编号，模式和软件开发子域保留 MODE-*、SD-*。当前画布方向调整为自研轻量自由画布，设计见 [当前工作流画布架构](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)。本域尚无正式工作流调度产品代码。
 
 ## 职责
 
@@ -8,7 +8,14 @@
 - 执行工作流与**非执行**的需求树、架构树、进度图是不同概念；广义视图体系的研究归 [views/](../views/README.md)，不把所有专业视图强塞进调度器。
 - 简单连线不代表执行可靠：未来须研究断连/重试/结果未知、并发配额、文件资源冲突、重启恢复与跨 Context 的任务一致性。关闭编辑器窗口不应自动等于取消任务。
 - 调度/运行语义与 UI 节点显示分开，使用哪个 Agent/连接器由 WEX 控制，具体通信在 [connections/](../connections/README.md)。
-- 工作流定义与运行状态、视图布局不能合并成 React Flow JSON。
+- 工作流定义与运行状态、视图布局不能合并成任何画布库内部 JSON。
+
+## 模块编号规则
+
+- 核心工作流业务能力：`WORKFLOWS-<子域>-NNN`，详细清单见 [CONTRACT 第 6 节](CONTRACT.md#6-模块独立功能编号与细化契约)。
+- 自由格子交互：`WORKFLOWS-EDITOR-NNN`，由本目录承接交互意图，不拥有布局数据或工作流业务状态。
+- 专业模式继续使用 `MODE-01～06`；软件开发专业对象继续使用 `SD-01～07`。
+- W01～W07 是既有业务契约章节锚点，不作为新增细分功能编号。
 
 ## 实验入口
 
