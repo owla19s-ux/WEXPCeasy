@@ -1,7 +1,7 @@
 # WEX F01–F15 功能—模块契约逐项映射（第二轮）
 
 - 日期：2026-11-01
-- 仓库基线：`96efc908ad0bb75b91a01bb929237f3b5a27af88`
+- 契约补充基线：`593c6fea40b9182e88434b1305735a0a580be05a`
 - 产品底表：[PRODUCT-FUNCTION-CATALOG-2026-11-01.md](PRODUCT-FUNCTION-CATALOG-2026-11-01.md)
 - 第二轮审查：[SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md](SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md)
 - 性质：逐项追踪与缺口登记；不是实现状态报告、接口签名批准书或0.1.1范围表。
@@ -19,18 +19,18 @@
 | 模块 | 当前锚点 | 映射说明 |
 |---|---|---|
 | space | SPC-01–SPC-05 | 稳定能力编号 |
-| AI / roles | AIC-01–AIC-04 | 稳定编号；不包含完整记忆数据契约 |
+| AI / roles | AIC-01–AIC-08 | 已补记忆子契约；D10/D05仍未决 |
 | connections | C01–C05 | 稳定编号；API/local适配器细节需就近补充 |
-| conversations | 公开能力表、G1/G2/G5/G7补充 | 未编号；CV-xx为建议锚点，尚非正式编号 |
-| connections/api | connections C01–C04、§3 api、api README | 无独立CONTRACT；API-xx为建议子契约锚点 |
-| connections/local | connections §3 local、local README | 无独立CONTRACT；LOCAL-xx为建议子契约锚点 |
+| conversations | CV-01–CV-15 | 已补稳定锚点；B/C候选语义 |
+| connections/api | API-01–API-07 | 已补适配器子契约，真实Provider待验 |
+| connections/local | LOCAL-01–LOCAL-10 | 已补适配器子契约，Windows实测待验 |
 | workflows/runtime | W01–W07 | 稳定能力编号 |
-| workflows/modes | 公开能力表 | 未编号；MODE-xx为建议锚点 |
-| software-development mode | 仅README | 无专业模式子契约 |
+| workflows/modes | MODE-01–MODE-06 | 已补稳定锚点，仍为B候选 |
+| software-development mode | SD-01–SD-07 | 已补专业模式子契约，未实现 |
 | permissions | PER-01–PER-04 | 稳定能力编号 |
-| shared | SH-01–SH-05 | 稳定能力编号；无正式日志/追踪能力 |
-| views | 公开能力表 | 未编号；VIEW-xx为建议锚点 |
-| app | APP-01–APP-04 | 稳定能力编号 |
+| shared | SH-01–SH-06 | SH-06已作为B候选技术日志能力写入 |
+| views | VIEW-01–VIEW-07 | 已补稳定能力锚点 |
+| app | APP-01–APP-09 | 已补运行维护候选能力 |
 | UI | UI/CONTRACT及I01–I16 | UI只拥有交互/呈现，不拥有F业务事实 |
 | plugins/accounts/dsh | README与研究文档 | 预留/独立路线；不是已建立WEX业务契约 |
 
@@ -39,8 +39,8 @@
 ## 2. 映射统计
 
 - F功能项：**216项**，15个功能域。
-- 契约覆盖：覆盖 80；部分 121；缺失 15。
-- 准备度初判：候选细化评审后施工 30；可直接施工（独立验收） 46；实验前置 32；实验 + 用户裁决 2；补契约/语义评审后施工 82；用户决策前置 14；补契约后施工 10。
+- 契约覆盖：覆盖 138；部分 66；缺失 12。
+- 准备度初判：候选细化评审后施工 70；可直接施工（独立验收） 61；实验前置 32；实验 + 用户裁决 2；补契约/语义评审后施工 30；用户决策前置 14；补契约后施工 7。
 - 主责复合/待拆分项目：6项，集中在F10/F15；F10-014另有未来owner未定。
 
 ## 3. 216项逐项映射
@@ -71,35 +71,35 @@
 | F02-010 | 执行者替换与交接 | AI | AI AIC-04；workflows W02/W06；connections C04 | 覆盖 | 候选细化评审后施工 | — |
 | F02-011 | Agent 记忆策略配置 | AI | AI AIC-01/04；F10记忆契约缺口；permissions PER-01 | 缺失 | 用户决策前置 | AI契约没有记忆对象、来源、共享、撤回、纠错和过期能力。 |
 | F02-012 | Agent 状态与工作状态分离 | AI | AI AIC-03/04；connections C03/04；workflows W07 | 部分 | 补契约/语义评审后施工 | 需区分Agent配置、Runtime在线、Session可查询和Task状态的观察来源。 |
-| F03-001 | 独立会话生命周期 | conversations | conversations CONTRACT公开能力第1行（建议CV-01） | 覆盖 | 可直接施工（独立验收） | — |
-| F03-002 | 消息与轮次持久化 | conversations | conversations公开能力第3–4行（建议CV-03/04） | 覆盖 | 候选细化评审后施工 | — |
-| F03-003 | 消息序列项 | conversations | conversations公开能力第4/6行（建议CV-04/06） | 部分 | 补契约/语义评审后施工 | 需定义序列项稳定身份、排序、修订和删除/合并语义。 |
-| F03-004 | 局部选择与引用 | conversations | conversations公开能力第6行（建议CV-06）；permissions PER-01 | 部分 | 补契约/语义评审后施工 | 独立序列项来源范围、采纳决议和局部修订未拆成可验契约。 |
-| F03-005 | 分支讨论 | conversations | conversations公开能力第6行（建议CV-06）；permissions PER-01 | 部分 | 补契约/语义评审后施工 | 独立序列项来源范围、采纳决议和局部修订未拆成可验契约。 |
-| F03-006 | 已发送消息修改与重发 | conversations | conversations公开能力第6行（建议CV-06）；permissions PER-01 | 部分 | 补契约/语义评审后施工 | 独立序列项来源范围、采纳决议和局部修订未拆成可验契约。 |
-| F03-007 | 生成期间追加与排队 | conversations | conversations公开能力第5行（建议CV-05） | 覆盖 | 可直接施工（独立验收） | — |
-| F03-008 | 流式输出与定稿 | conversations | conversations公开能力第4行（建议CV-04）；connections C03 | 覆盖 | 实验前置 | — |
-| F03-009 | 停止生成 | conversations | conversations公开能力第7行（建议CV-07）；connections C04 | 覆盖 | 实验前置 | — |
-| F03-010 | 对话背景与模型选择 | conversations | conversations公开能力第2行（建议CV-02）；AI AIC-04 | 覆盖 | 候选细化评审后施工 | — |
-| F03-011 | 输入附件与来源 | conversations | conversations G1/G7（建议CV-09）；connections/local README；permissions PER-01 | 部分 | 补契约/语义评审后施工 | 附件字节/引用/导入副本/临时附件/版本快照/授权范围缺独立契约。 |
-| F03-012 | 工具意图往返 | conversations | conversations G2（建议CV-08）；connections C02/C05；permissions PER-01 | 覆盖 | 候选细化评审后施工 | — |
-| F03-013 | 显式转为 Task | conversations | conversations公开能力第8行（建议CV-11）；workflows W02 | 覆盖 | 可直接施工（独立验收） | — |
-| F03-014 | 会话检索与历史读取 | conversations | conversations G5（建议CV-10）；permissions PER-01/04 | 部分 | 补契约/语义评审后施工 | 索引新鲜度、分页、跨域聚合和撤权缓存未形成完整契约。 |
-| F03-015 | 序列项采纳/拒绝状态 | conversations | conversations公开能力第6/8行（建议CV-08）；workflows W02 | 部分 | 补契约/语义评审后施工 | 采纳/拒绝与正式对象修改、Task创建和权限审批需分开；局部修订需独立修订关系。 |
-| F03-016 | 序列项局部补充与修订 | conversations | conversations公开能力第6/8行（建议CV-08）；workflows W02 | 部分 | 补契约/语义评审后施工 | 采纳/拒绝与正式对象修改、Task创建和权限审批需分开；局部修订需独立修订关系。 |
-| F04-001 | Provider 配置 | connections/api | connections §3 api/C01；api README（无子CONTRACT） | 部分 | 补契约/语义评审后施工 | Provider字段、协议版本、端点变更和配置修订需API子契约。 |
-| F04-002 | 账号与凭证引用 | connections/api | shared SH-04/05；connections C01 | 覆盖 | 可直接施工（独立验收） | — |
-| F04-003 | 模型目录 | connections/api | connections C01/§3 api；api README（无子CONTRACT） | 部分 | 补契约/语义评审后施工 | Model目录、能力证据来源/时效和未知能力未独立定义。 |
-| F04-004 | 模型能力描述 | connections/api | connections C01/§3 api；api README（无子CONTRACT） | 部分 | 补契约/语义评审后施工 | Model目录、能力证据来源/时效和未知能力未独立定义。 |
-| F04-005 | 调用参数配置 | connections/api | AI AIC-01/04；connections C01；shared SH-02 | 部分 | 补契约/语义评审后施工 | 需区分AI提示配置与Provider参数，定义在途请求快照。 |
-| F04-006 | 连接测试与诊断 | connections/api | connections C01/03；permissions PER-01；shared SH-04 | 覆盖 | 候选细化评审后施工 | — |
-| F04-007 | 模型调用与流式适配 | connections/api | connections C02/03/§3 api；conversations G2 | 部分 | 补契约/语义评审后施工 | API流式、usage、工具意图与逻辑生成/Operation映射需子契约。 |
-| F04-008 | 工具调用格式适配 | connections/api | connections C02/03/§3 api；conversations G2 | 部分 | 补契约/语义评审后施工 | API流式、usage、工具意图与逻辑生成/Operation映射需子契约。 |
-| F04-009 | 模型路由与选择 | connections/api | AI AIC-04；connections C01/02 | 部分 | 补契约/语义评审后施工 | 路由输入、约束优先级、失败返回和在途模型依据需细化。 |
-| F04-010 | 限额与用量记录 | connections/api | connections C03/§3 api；F15-003；PRD-D11 | 部分 | 补契约/语义评审后施工 | 供应方usage、估算费用、预算账本与系统指标分离；D11未决。 |
-| F04-011 | 超时、重试与降级 | connections/api | connections C02/03/04；workflows W03 | 部分 | 实验前置 | 模型请求重试与工具副作用重试分离；限流/退避/断路缺API语义。 |
-| F04-012 | 模型故障切换 | connections/api | AI AIC-04；connections C01/02；PRD-D11 | 部分 | 用户决策前置 | 自动切换条件、费用和责任限制需策略；不能由适配器代定。 |
-| F04-013 | 本地模型 Provider | connections/api | connections §3 api；app APP-02；F06 | 缺失 | 补契约后施工 | 本地模型Provider无运行时/资源占用/版本能力子契约。 |
+| F03-001 | 独立会话生命周期 | conversations | conversations/CONTRACT.md · CV-01 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-002 | 消息与轮次持久化 | conversations | conversations/CONTRACT.md · CV-02 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-003 | 消息序列项 | conversations | conversations/CONTRACT.md · CV-03 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-004 | 局部选择与引用 | conversations | conversations/CONTRACT.md · CV-04 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-005 | 分支讨论 | conversations | conversations/CONTRACT.md · CV-05 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-006 | 已发送消息修改与重发 | conversations | conversations/CONTRACT.md · CV-06 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-007 | 生成期间追加与排队 | conversations | conversations/CONTRACT.md · CV-07 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-008 | 流式输出与定稿 | conversations | conversations/CONTRACT.md · CV-08 | 覆盖 | 实验前置 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-009 | 停止生成 | conversations | conversations/CONTRACT.md · CV-09 | 覆盖 | 实验前置 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-010 | 对话背景与模型选择 | conversations | conversations/CONTRACT.md · CV-10 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-011 | 输入附件与来源 | conversations | conversations/CONTRACT.md · CV-11 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-012 | 工具意图往返 | conversations | conversations/CONTRACT.md · CV-12 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-013 | 显式转为 Task | conversations | conversations/CONTRACT.md · CV-13 | 覆盖 | 可直接施工（独立验收） | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-014 | 会话检索与历史读取 | conversations | conversations/CONTRACT.md · CV-14 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-015 | 序列项采纳/拒绝状态 | conversations | conversations/CONTRACT.md · CV-15 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F03-016 | 序列项局部补充与修订 | conversations | conversations/CONTRACT.md · CV-06 | 覆盖 | 候选细化评审后施工 | 已补逐项锚点；流式/取消/提交未知仍按原C样例验收。 |
+| F04-001 | Provider 配置 | connections/api | connections/api/CONTRACT.md · API-01 | 覆盖 | 可直接施工（独立验收） | API子契约已补，真实Provider仍需独立验收。 |
+| F04-002 | 账号与凭证引用 | connections/api | connections/api/CONTRACT.md · API-03 | 覆盖 | 可直接施工（独立验收） | API子契约已补，真实Provider仍需独立验收。 |
+| F04-003 | 模型目录 | connections/api | connections/api/CONTRACT.md · API-02 | 覆盖 | 候选细化评审后施工 | API子契约已补，真实Provider仍需独立验收。 |
+| F04-004 | 模型能力描述 | connections/api | connections/api/CONTRACT.md · API-02 | 覆盖 | 候选细化评审后施工 | API子契约已补，真实Provider仍需独立验收。 |
+| F04-005 | 调用参数配置 | connections/api | connections/api/CONTRACT.md · API-01/API-04；AI AIC-01/04 | 覆盖 | 候选细化评审后施工 | API子契约已补，真实Provider仍需独立验收。 |
+| F04-006 | 连接测试与诊断 | connections/api | connections/api/CONTRACT.md · API-03 | 覆盖 | 候选细化评审后施工 | API子契约已补，真实Provider仍需独立验收。 |
+| F04-007 | 模型调用与流式适配 | connections/api | connections/api/CONTRACT.md · API-04 | 覆盖 | 可直接施工（独立验收） | API子契约已补，真实Provider仍需独立验收。 |
+| F04-008 | 工具调用格式适配 | connections/api | connections/api/CONTRACT.md · API-05 | 覆盖 | 候选细化评审后施工 | API子契约已补，真实Provider仍需独立验收。 |
+| F04-009 | 模型路由与选择 | connections/api | connections/api/CONTRACT.md · API-01/API-02 | 部分 | 补契约/语义评审后施工 | 路由策略/usage/重试与费用策略仍受B/C/D约束。 |
+| F04-010 | 限额与用量记录 | connections/api | connections/api/CONTRACT.md · API-06 | 部分 | 补契约/语义评审后施工 | 路由策略/usage/重试与费用策略仍受B/C/D约束。 |
+| F04-011 | 超时、重试与降级 | connections/api | connections/api/CONTRACT.md · API-06 | 部分 | 实验前置 | 路由策略/usage/重试与费用策略仍受B/C/D约束。 |
+| F04-012 | 模型故障切换 | connections/api | connections/api/CONTRACT.md · API-06 | 部分 | 用户决策前置 | 路由策略/usage/重试与费用策略仍受B/C/D约束。 |
+| F04-013 | 本地模型 Provider | connections/api | connections/api/CONTRACT.md · API-07 | 部分 | 补契约/语义评审后施工 | 路由策略/usage/重试与费用策略仍受B/C/D约束。 |
 | F05-001 | Connection 生命周期 | connections | connections C01 | 覆盖 | 可直接施工（独立验收） | — |
 | F05-002 | 能力描述 | connections | connections C01/C02 | 覆盖 | 可直接施工（独立验收） | — |
 | F05-003 | 能力注册与发现 | connections | connections C01；app APP-02 | 覆盖 | 候选细化评审后施工 | — |
@@ -116,41 +116,41 @@
 | F05-014 | 连接器错误规范化 | connections | connections C02/C03/C04 | 覆盖 | 可直接施工（独立验收） | — |
 | F05-015 | Service 生命周期与连接绑定 | connections | connections C01；app APP-02 | 部分 | 补契约/语义评审后施工 | Service定义/实例/代次、Connection绑定、Capability状态与卸载需独立样例。 |
 | F05-016 | 外部 Search / Fetch / Browser 适配 | connections | connections C01–03；permissions PER-01；F10-009 | 部分 | 补契约/语义评审后施工 | Search/Fetch/Browser不同于内部检索，当前为后续扩展。 |
-| F06-001 | 本地目录与资源选择 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-002 | 文件与目录查询 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-003 | 文件创建与修改 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-004 | 文件删除 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-005 | 文件版本与变化检测 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 实验前置 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-006 | 文件内容解析 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-007 | 终端命令执行 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-008 | 进程生命周期管理 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 实验前置 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-009 | 开发环境发现 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-010 | 开发环境配置与选择 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-011 | 项目运行、构建和测试 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-012 | 本地 Git 操作 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-013 | Android 工具链与模拟器 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-014 | 本地运行产物定位 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 补契约/语义评审后施工 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
-| F06-015 | 文件监控与外部修改检测 | connections/local | connections §3 local；local README；permissions PER-01；workflows W05 | 部分 | 实验前置 | connections/local没有独立CONTRACT；文件/终端/进程/Git/环境/Android/监控的I/O和异常需补。 |
+| F06-001 | 本地目录与资源选择 | connections/local | connections/local/CONTRACT.md · LOCAL-01 | 部分 | 补契约/语义评审后施工 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
+| F06-002 | 文件与目录查询 | connections/local | connections/local/CONTRACT.md · LOCAL-02 | 覆盖 | 可直接施工（独立验收） | Local子契约已覆盖主要业务输入输出。 |
+| F06-003 | 文件创建与修改 | connections/local | connections/local/CONTRACT.md · LOCAL-03 | 覆盖 | 可直接施工（独立验收） | Local子契约已覆盖主要业务输入输出。 |
+| F06-004 | 文件删除 | connections/local | connections/local/CONTRACT.md · LOCAL-03 | 部分 | 补契约/语义评审后施工 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
+| F06-005 | 文件版本与变化检测 | connections/local | connections/local/CONTRACT.md · LOCAL-04 | 部分 | 实验前置 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
+| F06-006 | 文件内容解析 | connections/local | connections/local/CONTRACT.md · LOCAL-02 | 覆盖 | 候选细化评审后施工 | Local子契约已覆盖主要业务输入输出。 |
+| F06-007 | 终端命令执行 | connections/local | connections/local/CONTRACT.md · LOCAL-05 | 部分 | 补契约/语义评审后施工 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
+| F06-008 | 进程生命周期管理 | connections/local | connections/local/CONTRACT.md · LOCAL-06 | 部分 | 实验前置 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
+| F06-009 | 开发环境发现 | connections/local | connections/local/CONTRACT.md · LOCAL-07 | 覆盖 | 可直接施工（独立验收） | Local子契约已覆盖主要业务输入输出。 |
+| F06-010 | 开发环境配置与选择 | connections/local | connections/local/CONTRACT.md · LOCAL-07 | 覆盖 | 候选细化评审后施工 | Local子契约已覆盖主要业务输入输出。 |
+| F06-011 | 项目运行、构建和测试 | connections/local | connections/local/CONTRACT.md · LOCAL-05/07 | 部分 | 补契约/语义评审后施工 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
+| F06-012 | 本地 Git 操作 | connections/local | connections/local/CONTRACT.md · LOCAL-08 | 部分 | 补契约/语义评审后施工 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
+| F06-013 | Android 工具链与模拟器 | connections/local | connections/local/CONTRACT.md · LOCAL-09 | 部分 | 补契约/语义评审后施工 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
+| F06-014 | 本地运行产物定位 | connections/local | connections/local/CONTRACT.md · LOCAL-10 | 覆盖 | 候选细化评审后施工 | Local子契约已覆盖主要业务输入输出。 |
+| F06-015 | 文件监控与外部修改检测 | connections/local | connections/local/CONTRACT.md · LOCAL-04 | 部分 | 实验前置 | Windows/进程树/删除或真实工具链仍需C/D验证。 |
 | F07-001 | 工作流定义 | workflows/runtime | workflows W01/W03 | 覆盖 | 可直接施工（独立验收） | — |
 | F07-002 | 节点能力描述 | workflows/runtime | workflows W01/W03 | 覆盖 | 候选细化评审后施工 | — |
 | F07-003 | 流程依赖关系 | workflows/runtime | workflows W01/W03 | 覆盖 | 候选细化评审后施工 | — |
 | F07-004 | 工作流校验 | workflows/runtime | workflows W01/W03 | 覆盖 | 候选细化评审后施工 | — |
-| F07-005 | 模板与预设 | workflows/runtime | modes CONTRACT公开能力（建议MODE-01/02）；workflows W01 | 部分 | 补契约/语义评审后施工 | 模式能力无稳定编号；模板组合/实例化/升级部分成功需明确回读。 |
-| F07-006 | 模板实例化 | workflows/runtime | modes CONTRACT公开能力（建议MODE-01/02）；workflows W01 | 部分 | 补契约/语义评审后施工 | 模式能力无稳定编号；模板组合/实例化/升级部分成功需明确回读。 |
-| F07-007 | 模板组合 | workflows/runtime | modes CONTRACT公开能力（建议MODE-01/02）；workflows W01 | 部分 | 补契约/语义评审后施工 | 模式能力无稳定编号；模板组合/实例化/升级部分成功需明确回读。 |
-| F07-008 | 模板保存与复用 | workflows/runtime | modes CONTRACT公开能力（建议MODE-01/02）；workflows W01 | 部分 | 补契约/语义评审后施工 | 模式能力无稳定编号；模板组合/实例化/升级部分成功需明确回读。 |
+| F07-005 | 模板与预设 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-01 | 覆盖 | 可直接施工（独立验收） | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
+| F07-006 | 模板实例化 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-02 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
+| F07-007 | 模板组合 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-02 | 覆盖 | 可直接施工（独立验收） | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
+| F07-008 | 模板保存与复用 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-06 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
 | F07-009 | 工作流触发条件 | workflows/runtime | workflows W03/W06；app APP-03；PRD-D04 | 部分 | 用户决策前置 | 触发来源、授权时点、重复触发和退出后运行策略需定义。 |
-| F07-010 | 定义修订与草稿 | workflows/runtime | workflows W01；shared SH-02/03；permissions PER-01 | 部分 | 补契约/语义评审后施工 | 定义修订与布局分离；导入导出需身份冲突/外部引用/部分成功语义。 |
+| F07-010 | 定义修订与草稿 | workflows/runtime | workflows/modes/CONTRACT.md · MODE-06 | 覆盖 | 候选细化评审后施工 | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
 | F07-011 | 工作流导入导出 | workflows/runtime | workflows W01；shared SH-02/03；permissions PER-01 | 部分 | 补契约/语义评审后施工 | 定义修订与布局分离；导入导出需身份冲突/外部引用/部分成功语义。 |
-| F07-012 | 专业模式 | workflows/modes | modes CONTRACT公开能力（建议MODE-01/04） | 部分 | 补契约/语义评审后施工 | 专业规则版本/升级覆盖策略未稳定编号。 |
-| F07-013 | 软件开发项目对象 | workflows/modes | modes CONTRACT；software-development README（无子CONTRACT）；workflows W01/W04/W07 | 部分 | 补契约/语义评审后施工 | 软件开发专业对象、需求/架构关系、资源映射/追溯缺专属契约。 |
-| F07-014 | 需求与功能对象 | workflows/modes | modes CONTRACT；software-development README（无子CONTRACT）；workflows W01/W04/W07 | 部分 | 补契约/语义评审后施工 | 软件开发专业对象、需求/架构关系、资源映射/追溯缺专属契约。 |
-| F07-015 | 架构与组件关系 | workflows/modes | modes CONTRACT；software-development README（无子CONTRACT）；workflows W01/W04/W07 | 部分 | 补契约/语义评审后施工 | 软件开发专业对象、需求/架构关系、资源映射/追溯缺专属契约。 |
-| F07-016 | 项目资源映射 | workflows/modes | modes CONTRACT；software-development README（无子CONTRACT）；workflows W01/W04/W07 | 部分 | 补契约/语义评审后施工 | 软件开发专业对象、需求/架构关系、资源映射/追溯缺专属契约。 |
-| F07-017 | 工作项追溯关系 | workflows/modes | modes CONTRACT；software-development README（无子CONTRACT）；workflows W01/W04/W07 | 部分 | 补契约/语义评审后施工 | 软件开发专业对象、需求/架构关系、资源映射/追溯缺专属契约。 |
-| F07-018 | AI 结构建议草案 | workflows/modes | modes CONTRACT；software-development README（无子CONTRACT）；workflows W01/W04/W07 | 部分 | 补契约/语义评审后施工 | 软件开发专业对象、需求/架构关系、资源映射/追溯缺专属契约。 |
-| F07-019 | 从模板创建或关联既有项目 | workflows/modes | modes CONTRACT；software-development README（无子CONTRACT）；workflows W01/W04/W07 | 部分 | 补契约/语义评审后施工 | 软件开发专业对象、需求/架构关系、资源映射/追溯缺专属契约。 |
-| F07-020 | 项目基准与决策记录 | workflows/modes | modes CONTRACT；software-development README（无子CONTRACT）；workflows W01/W04/W07 | 部分 | 补契约/语义评审后施工 | 软件开发专业对象、需求/架构关系、资源映射/追溯缺专属契约。 |
+| F07-012 | 专业模式 | workflows/modes | workflows/modes/CONTRACT.md · MODE-01/MODE-04 | 覆盖 | 可直接施工（独立验收） | 已补稳定模式能力锚点；专业模式仍为可选组合。 |
+| F07-013 | 软件开发项目对象 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-01 | 覆盖 | 可直接施工（独立验收） | 软件开发专业对象子契约已补，尚未实现。 |
+| F07-014 | 需求与功能对象 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-02 | 覆盖 | 候选细化评审后施工 | 需求/功能对象身份和修订已定义。 |
+| F07-015 | 架构与组件关系 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-03 | 覆盖 | 候选细化评审后施工 | 专业关系不得自动变成执行依赖。 |
+| F07-016 | 项目资源映射 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-04 | 覆盖 | 候选细化评审后施工 | 资源内容/版本仍归真实资源owner。 |
+| F07-017 | 工作项追溯关系 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-05 | 覆盖 | 可直接施工（独立验收） | Task/Artifact事实仍归workflows。 |
+| F07-018 | AI 结构建议草案 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-06 | 覆盖 | 候选细化评审后施工 | AI建议保持草案，显式采纳后才调用owner。 |
+| F07-019 | 从模板创建或关联既有项目 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-01/SD-04 | 覆盖 | 可直接施工（独立验收） | 专业Project与Context/物理目录分离。 |
+| F07-020 | 项目基准与决策记录 | workflows/modes | workflows/modes/software-development/CONTRACT.md · SD-07 | 覆盖 | 候选细化评审后施工 | Baseline/Decision不覆盖Git/文件当前事实。 |
 | F08-001 | Task 创建与读取 | workflows/runtime | workflows W02/W03/W04 | 覆盖 | 可直接施工（独立验收） | — |
 | F08-002 | Task 修订 | workflows/runtime | workflows W02/W03/W04 | 覆盖 | 候选细化评审后施工 | — |
 | F08-003 | 责任分配 | workflows/runtime | workflows W02/W03/W04 | 覆盖 | 可直接施工（独立验收） | — |
@@ -190,29 +190,29 @@
 | F10-006 | 数据导入导出 | 跨域对象owner（待拆分） | shared SH-03；permissions PER-01；各领域数据契约 | 部分 | 补契约/语义评审后施工 | 导入导出格式/身份冲突/部分成功由数据owner定义；无单一owner。；主责目前非单一模块 |
 | F10-007 | 备份与恢复 | shared/storage（备份技术机制） | shared SH-03；app APP-01/04；各领域数据契约 | 部分 | 实验前置 | 一致性快照范围、各域冻结/恢复钩子和外部核对缺完整契约。 |
 | F10-008 | 数据迁移 | app（迁移协调） | app APP-04；shared SH-03；各领域数据契约 | 部分 | 实验前置 | app协调迁移，各域拥有自身schema迁移；跨域回滚不可假定原子。 |
-| F10-009 | 内部检索 | views（获准查询聚合） | 各领域获准查询出口；views CONTRACT打开/查询 | 部分 | 补契约/语义评审后施工 | 无全局内容owner；各域提供获准查询，聚合层不能建立第二权威索引。；主责目前非单一模块 |
+| F10-009 | 内部检索 | views（获准查询聚合） | 各领域获准查询出口；views/CONTRACT · VIEW-01 | 部分 | 补契约/语义评审后施工 | 各域仍拥有查询结果；views只负责聚合投影，不建立第二权威索引。 |
 | F10-010 | 知识资料管理 | space（仅资料关系/定位） | space SPC-03/04；connections/local README | 部分 | 补契约/语义评审后施工 | 需区分资料记录/外部引用/导入副本/内容版本；Space不拥有外部文件正文。 |
-| F10-011 | Agent 记忆 | AI（Agent记忆域） | AI AIC-01/04（不含完整记忆数据）；permissions PER-01 | 部分 | 补契约/语义评审后施工 | 缺记忆对象、来源、检索、共享、撤回和版本生命周期。 |
-| F10-012 | 记忆来源与可信度 | AI（Agent记忆域） | AI AIC-01/04（不含完整记忆数据）；permissions PER-01 | 部分 | 补契约/语义评审后施工 | 缺记忆对象、来源、检索、共享、撤回和版本生命周期。 |
-| F10-013 | 记忆共享与隔离 | AI（Agent记忆域） | AI AIC-01/04（不含完整记忆数据）；permissions PER-01 | 部分 | 用户决策前置 | 缺记忆对象、来源、检索、共享、撤回和版本生命周期。 |
+| F10-011 | Agent 记忆 | AI（Agent记忆域） | AI/CONTRACT.md · AIC-05 | 部分 | 补契约/语义评审后施工 | 记忆子契约已补；共享/删除默认政策受D10/D05约束。 |
+| F10-012 | 记忆来源与可信度 | AI（Agent记忆域） | AI/CONTRACT.md · AIC-06 | 部分 | 补契约/语义评审后施工 | 记忆子契约已补；共享/删除默认政策受D10/D05约束。 |
+| F10-013 | 记忆共享与隔离 | AI（Agent记忆域） | AI/CONTRACT.md · AIC-07 | 部分 | 用户决策前置 | 记忆子契约已补；共享/删除默认政策受D10/D05约束。 |
 | F10-014 | 公共策略与经验库 | 未定：未来Knowledge owner | 无现有owner契约；远期候选 | 缺失 | 补契约后施工 | 公共策略/经验库没有确定owner，不得塞入shared或AI作为默认权威。 |
-| F10-015 | 记忆纠错、过期和删除 | AI（Agent记忆域） | AI AIC-01/04；permissions PER-01；shared SH-02 | 部分 | 用户决策前置 | 记忆纠错/过期/删除与跨Context共享依赖D10；区分派生记忆与来源原件。 |
-| F10-016 | 用户级偏好与跨项目记忆 | AI（Agent记忆域） | AI AIC-01/04；permissions PER-01；shared SH-02 | 部分 | 用户决策前置 | 记忆纠错/过期/删除与跨Context共享依赖D10；区分派生记忆与来源原件。 |
-| F11-001 | 视图定义 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-002 | 多种视图投影 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-003 | 对象映射 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-004 | 关系映射 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-005 | 布局与筛选配置 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-006 | 多视图关联 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-007 | 视图投影刷新 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-008 | 草稿与提交映射 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-009 | 专业视图规则 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-010 | 视图性能与大规模数据 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 实验前置 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-011 | 需求/功能树投影 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-012 | 架构关系视图 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-013 | 功能与资源映射视图 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-014 | 任务与进度投影 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
-| F11-015 | 稳定对象定位与对话锚点 | views | views CONTRACT公开能力第1–6行（建议VIEW-01–07）；UI CONTRACT；各域投影出口 | 部分 | 补契约/语义评审后施工 | 有投影/布局/编辑/恢复行为但缺稳定编号；锚点/性能/专业关系仍需补充或实验。 |
+| F10-015 | 记忆纠错、过期和删除 | AI（Agent记忆域） | AI/CONTRACT.md · AIC-08 | 部分 | 用户决策前置 | 记忆子契约已补；共享/删除默认政策受D10/D05约束。 |
+| F10-016 | 用户级偏好与跨项目记忆 | AI（Agent记忆域） | AI/CONTRACT.md · AIC-07 | 部分 | 用户决策前置 | 记忆子契约已补；共享/删除默认政策受D10/D05约束。 |
+| F11-001 | 视图定义 | views | views/CONTRACT.md · VIEW-01 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-002 | 多种视图投影 | views | views/CONTRACT.md · VIEW-01 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-003 | 对象映射 | views | views/CONTRACT.md · VIEW-02 | 覆盖 | 可直接施工（独立验收） | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-004 | 关系映射 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 可直接施工（独立验收） | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-005 | 布局与筛选配置 | views | views/CONTRACT.md · VIEW-04 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-006 | 多视图关联 | views | views/CONTRACT.md · VIEW-05 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-007 | 视图投影刷新 | views | views/CONTRACT.md · VIEW-05 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-008 | 草稿与提交映射 | views | views/CONTRACT.md · VIEW-05 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-009 | 专业视图规则 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-010 | 视图性能与大规模数据 | views | views/CONTRACT.md · VIEW-06 | 部分 | 实验前置 | 性能阈值与大规模降级仍需实测。 |
+| F11-011 | 需求/功能树投影 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-012 | 架构关系视图 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-013 | 功能与资源映射视图 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-014 | 任务与进度投影 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-015 | 稳定对象定位与对话锚点 | views | views/CONTRACT.md · VIEW-07 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
 | F12-001 | 插件描述清单 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
 | F12-002 | 插件发现与登记 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
 | F12-003 | 安装、启用与停用 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
@@ -248,31 +248,31 @@
 | F14-010 | 凭证平台接线 | app | app APP-04；shared SH-04/05；permissions PER-01 | 部分 | 实验前置 | Windows Credential Manager、用户范围、重装凭证失效需实机实验。 |
 | F14-011 | 应用升级与卸载 | app | app APP-04；shared SH-03；PRD-D07 | 部分 | 用户决策前置 | 程序回滚、数据迁移、插件兼容/卸载分离；自动更新D07待决。 |
 | F14-012 | 安全模式与启动降级 | app | app APP-02/03；plugins README；F15-006 | 部分 | 实验前置 | 安全模式需验证Renderer/主进程/插件宿主故障边界。 |
-| F15-001 | 结构化运行日志 | shared（技术日志/追踪） | shared CONTRACT（缺正式日志/trace能力，建议SH-06）；app APP-02 | 缺失 | 补契约后施工 | 无正式SH日志/trace契约；各域继续拥有Operation/权限审计/Task证据。 |
-| F15-002 | 跨模块调用追踪 | shared（技术日志/追踪） | shared CONTRACT（缺正式日志/trace能力，建议SH-06）；app APP-02 | 缺失 | 补契约后施工 | 无正式SH日志/trace契约；各域继续拥有Operation/权限审计/Task证据。 |
-| F15-003 | 运行指标 | app（宿主运行保障） | app APP-02；connections C03 | 部分 | 补契约/语义评审后施工 | 区分主机指标、连接健康和Provider usage；F04-010拥有模型用量。 |
-| F15-004 | 健康检查 | app（宿主运行保障） | app APP-02/03；workflows W06；connections C03/C04 | 部分 | 补契约/语义评审后施工 | 健康/诊断/恢复为宿主协调，不反写领域状态；崩溃先核对unknown。 |
-| F15-005 | 故障诊断 | app（宿主运行保障） | app APP-02/03；workflows W06；connections C03/C04 | 部分 | 补契约/语义评审后施工 | 健康/诊断/恢复为宿主协调，不反写领域状态；崩溃先核对unknown。 |
-| F15-006 | 崩溃与安全恢复 | app（宿主运行保障） | app APP-02/03；workflows W06；connections C03/C04 | 部分 | 实验前置 | 健康/诊断/恢复为宿主协调，不反写领域状态；崩溃先核对unknown。 |
-| F15-007 | 数据容量与维护 | app（宿主运行保障） | shared SH-03；app APP-01/04；各领域数据契约 | 部分 | 补契约/语义评审后施工 | 容量/备份尊重owner数据分类和外部资源边界；跨域一致性仍C。 |
-| F15-008 | 备份与恢复运行保障 | app（宿主运行保障） | shared SH-03；app APP-01/04；各领域数据契约 | 部分 | 实验前置 | 容量/备份尊重owner数据分类和外部资源边界；跨域一致性仍C。 |
-| F15-009 | 网络与离线诊断 | app（宿主运行保障） | app APP-02/03；connections C01/C03/C04；connections/local README | 部分 | 实验前置 | 网络/子进程分层；外部进程unknown不等于停止。 |
-| F15-010 | 进程与资源维护 | app（宿主进程协调） | app APP-02/03；connections C01/C03/C04；connections/local README | 部分 | 实验前置 | 网络/子进程分层；外部进程unknown不等于停止。；主责目前非单一模块 |
-| F15-011 | 维护与清理策略 | 复合owner（待拆分） | 各数据owner；permissions PER-03；PRD-D05 | 部分 | 用户决策前置 | 清理与保留按owner分散；当前F项没有单一owner，D05未决。；主责目前非单一模块 |
-| F15-012 | 通知事件来源保障 | app（宿主运行保障） | app APP-03；UI CONTRACT；各领域事件来源 | 部分 | 补契约/语义评审后施工 | 建议app拥有通知投递，领域owner拥有事件事实。 |
-| F15-013 | 用户帮助与问题报告 | app（宿主运行保障） | app APP-03；shared诊断技术边界 | 部分 | 补契约/语义评审后施工 | 诊断包内容、用户确认、脱敏、导出位置和上传策略需明确。 |
-| F15-014 | 配置完整性与恢复协调 | app（宿主运行保障） | app APP-01/04；各模块配置owner | 部分 | 实验前置 | app只协调完整性/恢复；模块owner校验自身schema。 |
-| F15-015 | 日志配置与保留策略 | shared（技术日志/追踪） | shared CONTRACT（建议SH-06）；permissions PER-04；各领域正式账本；PRD-D05 | 部分 | 用户决策前置 | 普通日志轮转；审计/Operation/Task/Evidence按owner保留；D05未决。 |
+| F15-001 | 结构化运行日志 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-002 | 跨模块调用追踪 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-003 | 运行指标 | app（宿主运行保障） | app/CONTRACT.md · APP-05 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-004 | 健康检查 | app（宿主运行保障） | app/CONTRACT.md · APP-05 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-005 | 故障诊断 | app（宿主运行保障） | app/CONTRACT.md · APP-06 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-006 | 崩溃与安全恢复 | app（宿主运行保障） | app/CONTRACT.md · APP-07 | 覆盖 | 实验前置 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-007 | 数据容量与维护 | app（宿主运行保障） | shared/CONTRACT.md · SH-03；app APP-04 | 部分 | 补契约/语义评审后施工 | 跨域保留/一致性或审计策略仍需实验/用户决策。 |
+| F15-008 | 备份与恢复运行保障 | app（宿主运行保障） | shared/CONTRACT.md · SH-03；app APP-04 | 部分 | 实验前置 | 跨域保留/一致性或审计策略仍需实验/用户决策。 |
+| F15-009 | 网络与离线诊断 | app（宿主运行保障） | app/CONTRACT.md · APP-05 | 覆盖 | 实验前置 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-010 | 进程与资源维护 | app（宿主进程协调） | app/CONTRACT.md · APP-05/APP-07；connections/local LOCAL-06 | 部分 | 实验前置 | 跨域保留/一致性或审计策略仍需实验/用户决策。 |
+| F15-011 | 维护与清理策略 | 复合owner（待拆分） | 各数据owner；permissions PER-03；PRD-D05 | 部分 | 用户决策前置 | 跨域保留/一致性或审计策略仍需实验/用户决策。 |
+| F15-012 | 通知事件来源保障 | app（宿主运行保障） | app/CONTRACT.md · APP-08 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-013 | 用户帮助与问题报告 | app（宿主运行保障） | app/CONTRACT.md · APP-06 | 覆盖 | 候选细化评审后施工 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-014 | 配置完整性与恢复协调 | app（宿主运行保障） | app/CONTRACT.md · APP-09 | 覆盖 | 实验前置 | 运行保障候选契约已补，正式账本仍归各领域owner。 |
+| F15-015 | 日志配置与保留策略 | shared（技术日志/追踪） | shared/CONTRACT.md · SH-06；permissions PER-04；PRD-D05 | 部分 | 用户决策前置 | 跨域保留/一致性或审计策略仍需实验/用户决策。 |
 
 ## 4. 必须优先补齐的模块契约
 
-1. **conversations**：补稳定能力编号；拆分序列项采纳/拒绝、局部修订、附件/来源、会话检索和显式转Task。
-2. **connections/api**：在connections owner下补Provider/Account/Model/Capability、请求快照、流式、工具意图、usage、限流、重试和故障切换；不另建Operation账本。
-3. **connections/local**：在connections owner下补文件/目录、资源身份/别名、终端/进程树、环境、Git、Android工具链、文件监控及Windows异常。
-4. **workflows/modes/software-development**：补Project/Requirement/Function/Architecture/Resource Mapping/Work Item/Baseline/Decision身份、关系、版本和生命周期；专业关系不自动成为执行依赖。
-5. **views**：给投影、映射、布局、草稿、来源刷新、多视图和稳定锚点补稳定能力编号。
-6. **AI记忆**：补记忆对象、来源引用、版本、共享范围、撤回、纠错、过期和删除；记忆权限不等于资源权限。
-7. **shared日志技术能力**：评估SH-06，定义结构化日志/trace、脱敏、容量和轮转；不接管权限审计、Operation或Task/Evidence。
+1. **conversations**：已补CV-01～CV-15；下一步按稳定输入输出和失败样例实现并测试。
+2. **connections/api**：已补API-01～API-07；下一步用真实Provider验证流式、usage、限流和错误映射，不另建Operation账本。
+3. **connections/local**：已补LOCAL-01～LOCAL-10；下一步做Windows路径/ACL/进程树实验，终端/Git/Android能力按证据分阶段开放。
+4. **workflows/modes/software-development**：已补SD-01～SD-07；继续验证专业关系、资源映射与执行依赖严格分离。
+5. **views**：已补VIEW-01～VIEW-07；多图传播、撤权缓存和规模性能仍需实验。
+6. **AI记忆**：已补AIC-05～AIC-08；共享默认值与删除/保留政策仍受D10/D05约束。
+7. **shared日志技术能力**：已补SH-06候选契约；不接管权限审计、Operation或Task/Evidence。
 8. **app运行维护**：将健康、诊断、崩溃恢复、通知投递、配置恢复协调补入APP契约；各模块仍拥有自身配置语义。
 9. **connections Service生命周期**：定义Service实例/代次、Connection绑定、Capability状态、停用/卸载和迟到回调。
 10. **F10/F15复合项**：分离横向技术标准与领域业务事实，必要时拆分功能项，确保唯一主责。

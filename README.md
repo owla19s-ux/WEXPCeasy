@@ -16,12 +16,12 @@
 
 ### 尚未建立的规划依据
 
-1. **产品功能与第二轮审查：** 已建立 [F01–F15基础功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)、[交互与UI边界](docs/product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、[第二轮需求对冲审查](docs/product/SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md)、[216项模块契约映射](docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)和[基础功能施工准备度审查](docs/product/FOUNDATION-READINESS-2026-11-01.md)。第二轮静态审查已完成，但API/local/对话/模式/视图/记忆/日志等契约补充及F10/F15复合owner处理仍未完成。
+1. **产品功能与第二轮审查：** 已建立 [F01–F15基础功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)、[交互与UI边界](docs/product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、[第二轮需求对冲审查](docs/product/SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md)、[216项模块契约映射](docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)和[基础功能施工准备度审查](docs/product/FOUNDATION-READINESS-2026-11-01.md)。第二轮静态审查已完成；CV/API/LOCAL/MODE/SD/VIEW/AIC/SH/APP候选子契约已回写到原owner。当前仍需评审这些B语义、完成C实验/D决策，并收敛F10/F15复合owner。
 2. **基础模块施工与组合验收：** 需先关闭契约缺口和对应实验/决策门槛，再按模块独立施工并复用H01–H30开展组合验收。
 3. **UI与产品验收：** 基础功能及组合链路达到门槛后，才进行UI接线、真实用户操作和最终产品验收。
 4. **0.1.1版本计划：** 完整需求确认后再从产品功能底表推导，不提前裁剪完整产品范围。
 
-**当前规划顺序：第二轮需求对冲 → 模块契约补齐/owner收敛 → 基础模块施工 → 组合验收 → UI接线与真实用户验收 → 推导0.1.1版本表。**
+**当前规划顺序：契约候选评审与复合owner收敛 → 必要实验/用户决策 → 基础模块施工 → 组合验收 → UI接线与真实用户验收 → 完整需求确认后推导0.1.1版本表。**
 
 ## AI / 协作者进入仓库的阅读顺序
 
