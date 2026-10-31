@@ -17,7 +17,7 @@
 | [UI](../UI/README.md) | 隔离 React Renderer 已验证窄 Preload 状态查询、错误反馈与无 Node 集成 | 完整产品页面、正式 IPC/页面协议、Windows 交互验收未实现 |
 | [connections](../connections/README.md) | 已有受控交换/协议夹具与 DSH headless 局部实验；已补 C01–C05、CONNECTIONS-* 核心宿主细分规格 | 完整产品级公共连接协议、真实 DSH 成功任务与恢复/停止闭环未验收 |
 | [workflows](../workflows/README.md) | 已有历史 React Flow 编辑实验；已确认自研自由格子方向，并补充 WORKFLOWS-* 业务细分与 WORKFLOWS-EDITOR-* 交互编号 | 正式工作流/Task/调度/验收产品代码未实现；真实自由画布交互与 Windows Electron 验收未通过 |
-| [space](../space/README.md)、[AI](../AI/README.md)、[conversations](../conversations/README.md)、[views](../views/README.md) | 已有职责与业务契约设计；views 已补 VIEW-01～07 与 VIEWS-* 细分规格 | 尚无对应完整产品业务实现；views 引擎及真实多视图/大规模交互未实现 |
+| [space](../space/README.md)、[AI](../AI/README.md)、[conversations](../conversations/README.md)、[views](../views/README.md) | 已有职责与业务契约设计；AI 已补 AIC-01～09 与 AI-* 细分规格；views 已补 VIEW-01～07 与 VIEWS-* 细分规格 | 尚无对应完整产品业务实现；Agent引擎、AI派生记忆和views引擎未实现 |
 | [plugins](../plugins/README.md)、[dsh](../dsh/README.md)、[accounts](../accounts/README.md) | 分别保留 WEX 插件机制研究、DSH 原生 Core+Loader 独立兼容实验、账号身份预留 | DSH 原生插件实验不等于 WEX 插件系统或外部 DSH Agent 连接器已产品化 |
 
 基础模块第八批证据与限制见[交付报告](batch8/REPORT.md)。本表描述 WEXPC1 当前实现状态；契约正文中的 A/B/C/D 等级仍按原定义解释，不能因代码或实验通过而自动升级。
@@ -43,7 +43,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 |---|---|---|---|
 | [app](../app/CONTRACT.md) | 可信启动装配、数据根接入/诊断、退出恢复协调、安装升级重装屏障 | 各域业务状态/授权政策/主UI布局 | 基础装配与生命周期已实现并通过第七/八批验证；首次选根、Windows profile、安装关系及恢复 C/D 未关闭 |
 | [space](../space/CONTRACT.md) | 本体/放置/组合引用、组织配置、可见查询；独立删除单列 | 职责、会话背景、授权、外部文件 | 组织/引用可审阅；消费权限/存储/目标最小投影；实际删除与多目录迁移待C/D |
-| [AI与roles](../AI/CONTRACT.md) | 可复用配置、职责关联、可见投影、当前工作依据与历史解释 | Key/外部循环/Task分配/Context选择 | 可先配置/职责/查询；消费连接元数据、权限/存储；历史依据保留与并发C/D |
+| [AI与roles](../AI/CONTRACT.md) | AIC-01～09 + AI-*：Agent/角色/职责/工具资格/模型引用/配置快照/Runtime与Session映射/记忆来源 | Key/外部循环/Task分配/Context选择/授权账本 | 配置/职责/资格契约已细化；Agent Runtime、外部Session恢复C；D10派生记忆共享与D05保留政策待决 |
 | [conversations](../conversations/CONTRACT.md) | 消息/段落版本、背景、逻辑生成、追加重发分支、定稿/恢复、显式转任务 | Provider协议/Operation权威/Task验收 | 无Context/Task可用；依赖连接/权限/存储；流与派发崩溃窗口待C |
 | [connections](../connections/CONTRACT.md) | C01–C05 + CONNECTIONS-*：Connection/Capability/准入/Operation/观察/控制/回调/Service/外部Agent；API/LOCAL 子域保留 API-*/LOCAL-* | Task状态/权限政策/资源占用最终裁决/外部Session权威 | 宿主契约已细化；真实Provider/DSH成功任务、回调认证、持久去重、Windows进程树与GitHub远端仍需独立验收 |
 | [workflows](../workflows/CONTRACT.md) · [editor](../workflows/editor/README.md) | WORKFLOWS-* 细化定义/节点/依赖/Task/调度/恢复/证据；WORKFLOWS-EDITOR-* 细化自由格子交互；MODE/SD 保留专业子域编号 | 厂商协议/Operation正式状态/布局权威 | 定义、Task、证据可先本域；派发恢复依赖连接/授权/协调证据；资源冲突/容量C，后台策略D04；画布布局归 views |
