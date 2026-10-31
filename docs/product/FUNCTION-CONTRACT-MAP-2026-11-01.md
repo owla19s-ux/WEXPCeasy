@@ -30,7 +30,7 @@
 | software-development mode | SD-01–SD-07 | 已补专业模式子契约，未实现 |
 | permissions | PER-01–PER-04 | 稳定能力编号 |
 | shared | SH-01–SH-06 | SH-06已作为B候选技术日志能力写入 |
-| views | VIEW-01–VIEW-07 | 已补稳定能力锚点 |
+| views | VIEW-01–VIEW-07 + VIEWS-* | 既有能力锚点保留；新增细粒度视图/布局编号 |
 | app | APP-01–APP-09 | 已补运行维护候选能力 |
 | UI | UI/CONTRACT及I01–I16 | UI只拥有交互/呈现，不拥有F业务事实 |
 | plugins/accounts/dsh | README与研究文档 | 预留/独立路线；不是已建立WEX业务契约 |
@@ -191,7 +191,7 @@
 | F10-006 | 数据导入导出 | app（导入/导出作业协调） | app/CONTRACT.md · APP-11；各领域导入/导出出口 | 部分 | 领域I/O细化后施工 | app协调作业；格式、对象冲突和本域导入校验由各领域提供，部分成功逐项报告。 |
 | F10-007 | 备份与恢复 | app（备份/恢复流程协调） | app/CONTRACT.md · APP-12；shared SH-03 | 部分 | 实验前置 | app协调全局备份恢复；shared提供技术原语，各域提供一致性范围/钩子；PRD-C07未关闭。 |
 | F10-008 | 数据迁移 | app（数据迁移协调） | app/CONTRACT.md · APP-04；shared SH-03 | 部分 | 实验前置 | app协调迁移；各域拥有schema迁移；跨域回滚不假定原子，PRD-C07未关闭。 |
-| F10-009 | 内部检索 | views（获准检索聚合/投影） | views/CONTRACT.md · VIEW-01/03；各领域查询出口 | 部分 | 领域查询出口细化后施工 | views只聚合获准查询；各域提供权威查询出口，打开结果重判权限。 |
+| F10-009 | 内部检索 | views（获准检索聚合/投影） | views/CONTRACT.md · VIEW-01/03；各领域查询出口；模块编号：VIEWS-QUERY-001 | 部分 | 领域查询出口细化后施工 | views只聚合获准查询；各域提供权威查询出口，打开结果重判权限。 |
 | F10-010 | 知识资料管理 | space（知识资料记录/关联） | space/CONTRACT.md · SPC-03/04；connections/local LOCAL-01/02 | 部分 | 领域资源引用细化后施工 | space拥有知识资料记录/引用；原文件字节和内容版本归connections/local。 |
 | F10-011 | Agent 记忆 | AI | AI/CONTRACT.md · AIC-05；conversations/CONTRACT.md；connections Operation | 部分 | 远期研究/源记录先行 | 前期保存Agent关联的原始对话/操作记录，由源owner持有；AI派生长期记忆另行研究，不复制第二事实源。 |
 | F10-012 | 记忆来源与可信度 | AI | AI/CONTRACT.md · AIC-06 | 部分 | 补契约/语义评审后施工 | 可信来源由source owner提供；模型推断不能伪装用户确认。 |
@@ -199,21 +199,21 @@
 | F10-014 | 公共策略与经验库 | 暂不分配（远期候选；Space为未来owner候选） | 无已批准契约；PRD-D13 | 缺失 | 远期候选/当前不施工 | 保留远期候选，优先评估Space公共知识集合；不先建独立Knowledge模块，最终owner契约留待后续研究。 |
 | F10-015 | 记忆纠错、过期和删除 | AI | AI/CONTRACT.md · AIC-08；PRD-D05/D10 | 部分 | 用户决策前置 | 只删除AI派生记忆；来源原件和审计保留政策独立。 |
 | F10-016 | 用户级偏好与跨项目记忆 | AI | AI/CONTRACT.md · AIC-09；PRD-D10 | 部分 | 远期研究 | 用户级偏好/跨项目记忆不属于前期原始记录存储承诺，需与Agent派生记忆及权限共享机制分开研究。 |
-| F11-001 | 视图定义 | views | views/CONTRACT.md · VIEW-01 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-002 | 多种视图投影 | views | views/CONTRACT.md · VIEW-01 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-003 | 对象映射 | views | views/CONTRACT.md · VIEW-02 | 覆盖 | 可直接施工（独立验收） | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-004 | 关系映射 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 可直接施工（独立验收） | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-005 | 布局与筛选配置 | views | views/CONTRACT.md · VIEW-04 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-006 | 多视图关联 | views | views/CONTRACT.md · VIEW-05 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-007 | 视图投影刷新 | views | views/CONTRACT.md · VIEW-05 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-008 | 草稿与提交映射 | views | views/CONTRACT.md · VIEW-05 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-009 | 专业视图规则 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-010 | 视图性能与大规模数据 | views | views/CONTRACT.md · VIEW-06 | 部分 | 实验前置 | 性能阈值与大规模降级仍需实测。 |
-| F11-011 | 需求/功能树投影 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-012 | 架构关系视图 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-013 | 功能与资源映射视图 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-014 | 任务与进度投影 | views | views/CONTRACT.md · VIEW-03 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
-| F11-015 | 稳定对象定位与对话锚点 | views | views/CONTRACT.md · VIEW-07 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-001 | 视图定义 | views | views/CONTRACT.md · VIEW-01；模块编号：VIEWS-DEFINITION-001 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-002 | 多种视图投影 | views | views/CONTRACT.md · VIEW-01；模块编号：VIEWS-PROJECTION-001 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-003 | 对象映射 | views | views/CONTRACT.md · VIEW-02；模块编号：VIEWS-MAPPING-001 | 覆盖 | 可直接施工（独立验收） | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-004 | 关系映射 | views | views/CONTRACT.md · VIEW-03；模块编号：VIEWS-RELATION-001 | 覆盖 | 可直接施工（独立验收） | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-005 | 布局与筛选配置 | views | views/CONTRACT.md · VIEW-04；模块编号：VIEWS-LAYOUT-001～004 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-006 | 多视图关联 | views | views/CONTRACT.md · VIEW-05；模块编号：VIEWS-ASSOCIATION-001 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-007 | 视图投影刷新 | views | views/CONTRACT.md · VIEW-05；模块编号：VIEWS-REFRESH-001、VIEWS-SECURITY-001 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-008 | 草稿与提交映射 | views | views/CONTRACT.md · VIEW-05；模块编号：VIEWS-EDIT-001 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-009 | 专业视图规则 | views | views/CONTRACT.md · VIEW-03；模块编号：VIEWS-SEMANTIC-001 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-010 | 视图性能与大规模数据 | views | views/CONTRACT.md · VIEW-06；模块编号：VIEWS-PERFORMANCE-001 | 部分 | 实验前置 | 性能阈值与大规模降级仍需实测。 |
+| F11-011 | 需求/功能树投影 | views | views/CONTRACT.md · VIEW-03；模块编号：VIEWS-PROJECTION-002 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-012 | 架构关系视图 | views | views/CONTRACT.md · VIEW-03；模块编号：VIEWS-PROJECTION-003 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-013 | 功能与资源映射视图 | views | views/CONTRACT.md · VIEW-03；模块编号：VIEWS-PROJECTION-004 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-014 | 任务与进度投影 | views | views/CONTRACT.md · VIEW-03；模块编号：VIEWS-PROJECTION-005 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
+| F11-015 | 稳定对象定位与对话锚点 | views | views/CONTRACT.md · VIEW-07；模块编号：VIEWS-ANCHOR-001 | 覆盖 | 候选细化评审后施工 | 视图能力锚点已补，源对象owner保持不变。 |
 | F12-001 | 插件描述清单 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
 | F12-002 | 插件发现与登记 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
 | F12-003 | 安装、启用与停用 | plugins（预留） | plugins README（无CONTRACT）；app APP-02；connections C01/C02；permissions PER-01 | 缺失 | 补契约后施工 | WEX插件平台预留；D09信任政策和C06 Windows隔离未完成，不得以DSH实验代替。 |
@@ -351,6 +351,35 @@
 | WORKFLOWS-EDITOR-011 | 撤销/重做与历史隔离 | F07-010、F11-008 | 定义历史与布局历史分离 |
 
 `WORKFLOWS-EDITOR-001～011` 是交互规格编号，不增加 216 项统计。坐标、尺寸、viewport、视觉路径和布局方案仍由 views 拥有；节点业务身份/依赖由 workflows 拥有。
+
+## 3.3 VIEWS 模块细分编号映射
+
+视图模块独立编号由 `views` owner 维护，不计入 F01–F15 的 216 项全局统计。VIEW-01～VIEW-07 是既有稳定能力锚点；VIEWS-* 用于细粒度施工和验收。自由格子交互编号 WORKFLOWS-EDITOR-* 不属于本模块。
+
+| 模块独立编号 | 模块细分能力 | 对应全局 F 索引 | 契约锚点 | 关键依赖/边界 |
+|---|---|---|---|---|
+| VIEWS-DEFINITION-001 | 视图定义生命周期 | F11-001 | views/CONTRACT §5 | 各领域查询出口、shared、permissions |
+| VIEWS-PROJECTION-001 | 通用多形态投影 | F11-002 | views/CONTRACT §5 | 各领域 owner、UI |
+| VIEWS-MAPPING-001 | 对象出现与稳定映射 | F11-003 | views/CONTRACT §5 | 各领域 owner、shared |
+| VIEWS-RELATION-001 | 关系类型与关系投影 | F11-004 | views/CONTRACT §5 | space、workflows、modes、permissions |
+| VIEWS-LAYOUT-001 | 视图布局配置 | F11-005 | views/CONTRACT §5 | shared/storage、UI、workflows/editor |
+| VIEWS-LAYOUT-002 | 手动布局与并发修订 | F11-005 | views/CONTRACT §5 | shared/storage |
+| VIEWS-LAYOUT-003 | 自动布局预览、应用与撤销 | F11-005 | views/CONTRACT §5 | workflows 查询投影、shared/storage |
+| VIEWS-LAYOUT-004 | 视觉连线路径与端口几何 | F11-005、F11-004 | views/CONTRACT §5 | workflows/editor、workflows |
+| VIEWS-ASSOCIATION-001 | 多视图关联 | F11-006 | views/CONTRACT §5 | 各领域 owner、shared |
+| VIEWS-REFRESH-001 | 来源修订刷新与新鲜度 | F11-007 | views/CONTRACT §5 | 各领域 owner、shared |
+| VIEWS-EDIT-001 | 草稿与领域写入转交 | F11-008 | views/CONTRACT §5 | permissions、各领域 owner |
+| VIEWS-SEMANTIC-001 | 专业语境与投影规则 | F11-009 | views/CONTRACT §5 | workflows/modes、领域 owner |
+| VIEWS-PERFORMANCE-001 | 大规模视图加载与降级 | F11-010 | views/CONTRACT §5 | 各领域查询出口、UI、shared |
+| VIEWS-ANCHOR-001 | 稳定对象定位与对话锚点 | F11-015 | views/CONTRACT §5 | shared、conversations、各领域 owner |
+| VIEWS-QUERY-001 | 获准内部检索聚合 | F10-009 | views/CONTRACT §5 | 各领域查询出口、permissions、UI |
+| VIEWS-SECURITY-001 | 投影可见性与撤权缓存失效 | F11-007、F10-009 | views/CONTRACT §5 | permissions、各领域 owner、shared |
+| VIEWS-PROJECTION-002 | 需求与功能树投影 | F11-011 | views/CONTRACT §5 | workflows/modes/software-development |
+| VIEWS-PROJECTION-003 | 架构关系视图 | F11-012 | views/CONTRACT §5 | workflows/modes/software-development、领域 owner |
+| VIEWS-PROJECTION-004 | 功能与资源映射视图 | F11-013 | views/CONTRACT §5 | workflows/modes、connections/local、connections/GitHub、workflows |
+| VIEWS-PROJECTION-005 | 任务、进度与验收投影 | F11-014 | views/CONTRACT §5 | workflows、connections、permissions |
+
+布局归属提醒：节点位置/尺寸/viewport/视觉路径/自动布局结果归 views；节点业务身份/执行依赖归 workflows；交互手势归 workflows/editor；领域对象与专业关系归各自源 owner。
 
 ## 4. 必须优先补齐的模块契约
 
