@@ -39,6 +39,12 @@
 **黄**：按本目录[CONTRACT第六批条款](CONTRACT.md)执行上述稳定范围；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
+## 模块编号规则
+
+- shared 技术基础细分使用 `SHARED-<子域>-NNN`，详见 [CONTRACT 第 7 节](CONTRACT.md#7-模块独立功能编号与细化契约)。
+- SH-01～SH-06 保留为既有能力锚点。
+- shared 只提供技术原语；领域业务状态、权限决定、Operation/Task/验收账本和数据保留政策不归 shared。
+
 ## 文档入口
 
 - [本域契约及关联依据](CONTRACT.md#文档关联与施工入口)
