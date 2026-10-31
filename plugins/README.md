@@ -1,6 +1,12 @@
 # plugins — WEX 自有插件机制（预留研究）
 
-**状态：机制尚未研究定型，无产品级动态插件加载器。当前不作为 WEX 首期前置。** 不预设 Cordis、DSH Service 或其他框架是 WEX 自有插件的必选底层。
+**状态：已建立 PLUGINS-* 候选业务契约；机制仍未研究定型，无产品级动态插件加载器。当前不作为 WEX 首期前置。** 不预设 Cordis、DSH Service 或其他框架是 WEX 自有插件的必选底层。
+
+## 模块编号规则
+
+- WEX 自有插件功能使用 `PLUGINS-<子域>-NNN`，详见 [CONTRACT 第 2 节](CONTRACT.md#2-模块独立功能编号与细化契约)。
+- 本模块的契约是候选业务语义，不代表插件加载器、包格式、沙箱或市场已确定。
+- DSH 原生插件与外部 DSH Agent 连接器继续使用独立目录和验收路线。
 
 ## 研究边界
 
@@ -19,6 +25,8 @@
 
 
 ## 文档入口与证据边界
+
+- [WEX 自有插件业务契约](CONTRACT.md)
 
 - [文档体系总索引](../docs/README.md)
 - [全局架构：双插件体系边界](../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)
