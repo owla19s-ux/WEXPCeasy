@@ -8,7 +8,7 @@
 
 **A** workflows 维护工作流定义及修订、Task 与工作轮次/分配、流程运行/步骤进展、产物引用、Review/Verification/Acceptance 记录。runtime 在本域承接派发、等待、继续、退回、恢复、资源及并发协调。connections 宿主唯一维护 Operation 意图/尝试/观察/回执，本域保存引用及“为何据此推进”的业务依据，不复制其正式状态。真实文件、提交、远端产物仍以来源系统为准。
 
-**A** 定义不是运行实例，节点不是 Task，Task 不是 Operation；外部 completed、退出 0、回执保存、Review 通过、Verification 通过、最终 Acceptance 分别成立。React Flow 负责交互/呈现，不拥有业务事实；编辑定义和移动节点不触发执行。广义专业视图归 views，专业模式不把展示连线自动变成执行依赖。
+**A** 定义不是运行实例，节点不是 Task，Task 不是 Operation；外部 completed、退出 0、回执保存、Review 通过、Verification 通过、最终 Acceptance 分别成立。`workflows/editor` 负责交互/呈现，不拥有业务事实；当前产品方向为 WEX 自研轻量自由格子画布。编辑定义和移动节点不触发执行。广义专业视图归 views，专业模式不把展示连线自动变成执行依赖。
 
 可信入口由 app 建立主体与动作/目标范围。Context 可空；Context/角色名/分配记录不能授权。Task 可独立于工作流存在，普通聊天及单次调用无需 Task。**A** runtime 的资源协调以真实冲突资源为依据，可经宿主按需注入到 connections 普通副作用入口，不以前置完整调度器为条件、不造 Task；本域不得因拥有协调职责而实现 DSH/其他 Agent 协议。
 
@@ -22,7 +22,7 @@
 
 本域保存定义权威；运行绑定明确修订，后续编辑不默默改写在途执行依据。能力不支持的节点或规则阻止该修订启动，不能因画布能渲染就可执行。取消编辑是取消未提交修改，不能终止旧运行；timeout/断连后先查询目标修订是否已提交，不重复提交未知写入。
 
-断言：两个编辑者基于 r4 修改，首个提交 r5，第二个冲突且 r5 不丢失；编辑/拖动后外部 dispatch 次数为 0；运行 x 绑定 r4，发布 r5 后 x 仍引用 r4；恢复编辑器不从 React Flow JSON 倒写任务真相；保存已提交但ACK丢失后，原意图读回仍只有一个新修订，不能再提交一次。通知仅含可见变更提示/修订，消费者重新读取。
+断言：两个编辑者基于 r4 修改，首个提交 r5，第二个冲突且 r5 不丢失；编辑/拖动后外部 dispatch 次数为 0；运行 x 绑定 r4，发布 r5 后 x 仍引用 r4；恢复编辑器不从任何画布库内部 JSON 倒写任务真相；保存已提交但ACK丢失后，原意图读回仍只有一个新修订，不能再提交一次。通知仅含可见变更提示/修订，消费者重新读取。
 
 ### W02 Task 建立、范围/职责分配与工作轮次
 
@@ -175,6 +175,102 @@ runtime唯一拥有WEX内推进/等待决定及资源协调记录；适配器提
 runtime窄配额owner仍B候选；同池原子预留、unknown不退、对账差额和重试新成本为验收条件，无Task调用不依赖完整流程。可先施工定义/实例/Task/轮次/证据记录、等待诊断；X01/02/05/06/07只证局部持久模型，真实派发/资源别名/回调重入/快照待C，D03/04/07阻受影响动作。
 
 本域独立输入/输出、取消/失败/超时/unknown及双方替身样例沿用上文；下一批先真实本域测试，再真实提供/消费与装配，不用实验替代。[全域准备度与独立入口](../docs/batch6/READINESS.md)、[局部证据与未验证条件](../docs/batch6/EXPERIMENTS.md)、[集中待决](../docs/batch6/DECISIONS.md)。
+
+
+## 6. 模块独立功能编号与细化契约
+
+本节为 `workflows` 模块的细粒度功能目录。全局 F07/F08/F13 编号继续稳定；本节编号用于模块内部施工、审查和验收定位，采用 `WORKFLOWS-<子域>-NNN`。W01–W07 继续作为既有契约章节锚点，不替换；`workflows/modes` 的 MODE-01～06 与 software-development 的 SD-01～07 也继续使用各自既有编号。
+
+**归属原则：** 工作流定义、节点业务身份、执行关系、Task/Run、调度、产物和验收由 workflows 拥有；自由格子交互由 workflows/editor 承接；坐标、尺寸、视口、视觉路径和布局方案由 views 拥有。编辑器不持有业务状态副本，不直接派发连接器，不把图形组件 JSON 作为持久化格式。
+
+### 定义、节点、关系与校验
+
+| 模块功能编号 | 功能 | 业务行为与边界 | 对应 F | 依赖 | 最低验收条件 | 状态 |
+|---|---|---|---|---|---|---|
+| WORKFLOWS-DEFINITION-001 | 工作流定义生命周期 | 创建、读取、修改、归档工作流定义；定义与运行实例分离，归档不删除历史运行。 | F07-001 | shared、permissions | 可独立创建/读取/修改/归档；归档不删除已存在运行和证据。 | A |
+| WORKFLOWS-REVISION-001 | 定义草稿与修订提交 | 编辑先形成草稿，校验后提交为新修订；草稿不影响已发布定义和在途运行。 | F07-010 | shared/storage、permissions | 两个编辑者基于同一旧修订提交时，后提交者收到冲突而非覆盖。 | A |
+| WORKFLOWS-REVISION-002 | 修订冲突与提交未知恢复 | 定义写入使用预期修订；ACK 丢失或超时后按原意图回读，区分未提交、已提交和未知。 | F07-001、F07-010 | shared/storage | 同一提交意图重查不会产生第二个修订；旧修订不能静默覆盖新修订。 | A |
+| WORKFLOWS-NODE-001 | 节点身份与生命周期 | 节点具有稳定业务身份；新增、修改、移除节点均由 workflows 受控编辑。节点不是 Task、Step Run 或 Operation。 | F07-002 | shared、permissions | 节点重命名/移动后身份不变；删除定义节点不删除历史运行记录或外部操作。 | A |
+| WORKFLOWS-NODE-002 | 节点能力、输入输出与配置 | 节点声明类型/能力、输入输出、参数、前置条件和结果约束；未知能力或不兼容配置不能仅因可渲染就启动。 | F07-002 | connections、AI、modes | 缺少必需输入、能力或不兼容配置时返回诊断，不触发外部调用。 | B |
+| WORKFLOWS-NODE-003 | 节点位置权限策略 | 节点策略绑定稳定节点身份、定义修订、工具/动作/资源/目标范围；AI 生成配置只是提案，不能视为授权。 | F07-002、F09-007 | permissions、space、connections | 移动节点或改变画布颜色不改变权限；超出启动确认范围的动作在派发前被拒绝。 | A/D |
+| WORKFLOWS-EDGE-001 | 执行依赖关系 | 工作流业务关系由 workflows 保存；新增、删除、修改依赖须走受控编辑、版本校验和规则校验。 | F07-003 | permissions | 视觉连线改道不改变依赖；仅正式提交的业务关系才影响运行计划。 | A |
+| WORKFLOWS-EDGE-002 | 端口、数据流与控制流语义 | 为节点输入输出及控制关系提供可区分表达；数据传递、执行依赖、条件分支、循环和汇合不得仅凭线条外观推断。 | F07-002、F07-003 | modes、connections | 未定义或不兼容的关系类型阻止启动；完整端口/循环/汇合语义仍需实验。 | B/C |
+| WORKFLOWS-VALIDATION-001 | 定义结构校验 | 检查节点身份唯一性、引用完整性、端口/参数约束、依赖合法性和未支持结构。 | F07-004 | shared、modes | 重复身份、悬空引用、无效依赖和未知规则返回明确诊断；不写入运行实例。 | B |
+| WORKFLOWS-VALIDATION-002 | 启动前执行就绪检查 | 启动前检查定义修订、节点能力、输入、Context 工具组合、执行者资格、权限方案和必要资源条件；结构有效不等于可运行。 | F07-004、F08-008 | AI、space、connections、permissions | 缺少必要条件或判权不明确时不派发；诊断区分结构错误、能力不可用、权限拒绝和资源阻塞。 | A/B |
+| WORKFLOWS-TRIGGER-001 | 人工触发 | 支持可信用户入口明确启动工作流，并记录触发主体、入口、目标修订和启动意图。 | F07-009 | app、permissions | 无可信入口或未完成启动授权时运行创建/派发为零；重复请求可查询原启动意图。 | A |
+| WORKFLOWS-TRIGGER-002 | 对话与 Task 触发 | 允许对话或既有 Task 显式请求启动/关联工作流；普通对话和单次工具调用不强制创建 Task/Workflow。 | F07-009、F08-001 | conversations、permissions | 同一 Task 可明确关联指定定义修订；普通聊天不因任务措辞自动启动流程。 | B |
+| WORKFLOWS-TRIGGER-003 | 外部事件与定时触发 | 外部事件、文件变化或定时触发作为可选来源；需校验来源身份、去重、重放、授权时点和后台策略。 | F07-009、F08-016 | connections、app、permissions | 未批准的定时/后台策略默认关闭；伪造、重放和超范围事件不得启动运行。 | B/D |
+| WORKFLOWS-TRANSFER-001 | 工作流定义导出 | 导出获准的定义、修订、节点配置和必要引用元数据；不导出凭证明文、有效授权或运行时秘密。 | F07-011 | shared、permissions | 导出范围可说明并完成脱敏；外部引用保留来源标识，不伪造目标资源。 | B |
+| WORKFLOWS-TRANSFER-002 | 工作流定义导入 | 导入时检查格式/版本/身份冲突/缺失引用/未知节点；支持逐项报告部分成功，不自动启用或执行。 | F07-011 | shared、connections、permissions | 冲突身份不静默合并；缺失资源和不兼容节点明确报告；导入后仍需用户启动与授权。 | B |
+
+### 运行、Task 与调度
+
+| 模块功能编号 | 功能 | 业务行为与边界 | 对应 F | 依赖 | 最低验收条件 | 状态 |
+|---|---|---|---|---|---|---|
+| WORKFLOWS-RUN-001 | 运行实例创建与定义绑定 | 每次运行绑定不可变的定义修订、节点配置/权限修订、触发来源、目标范围和运行身份。 | F08-011 | shared、permissions | 发布新定义不改写旧运行；运行记录可证明启动时使用的修订。 | A |
+| WORKFLOWS-RUN-002 | 节点运行与迭代/尝试身份 | 节点每次执行形成独立 Step Run；循环迭代、工作轮次和同轮重试 attempt 分开，迟到结果只能归属原身份。 | F08-011、F08-013 | connections、shared | 旧迭代/旧 attempt 的迟到回执不能完成新迭代或覆盖当前状态。 | B/C |
+| WORKFLOWS-TASK-001 | Task 创建、读取与修订 | 记录目标、范围、输入依据和验收条件；Task 可独立存在，不要求必须挂靠 Workflow。 | F08-001、F08-002 | conversations、space、shared、permissions | 普通对话不自动创建 Task；重复意图可回读；修订保留目标和范围历史。 | A |
+| WORKFLOWS-TASK-002 | 责任分配与工作轮次 | 记录 Agent/岗位/外部执行者分配、责任变更、执行/返工/审查轮次；分配不等于授权或派发。 | F08-003、F08-004 | AI、connections、permissions | 改派后旧轮次、Operation 和证据保留；角色名称不能替代当前资格判定。 | A |
+| WORKFLOWS-QUEUE-001 | 就绪队列与优先级 | 管理待处理、就绪、等待、排队和阻塞的工作项及调度优先级；排队不代表获得授权。 | F08-005、F08-006 | permissions、connections | 依赖未满足、能力不可用或授权缺失时不进入可派发状态；优先级变化有修订依据。 | B |
+| WORKFLOWS-DISPATCH-001 | 执行者选择与能力路由 | 根据节点要求、任务范围、Agent 资格、连接可用性和职责修订选择候选执行者。 | F08-007 | AI、connections、permissions | 能力不匹配或连接不可用时明确阻塞；不按名称相同推断能力等价。 | B |
+| WORKFLOWS-DISPATCH-002 | 受控派发与 Operation 关联 | 在依赖、定义修订、资源协调和权限复核通过后，经 connections 创建/派发 Operation；本域只保存关联与业务依据。 | F08-008 | connections、permissions、shared | attempt 未成功持久化或权限非明确允许时外部派发次数为零；不复制 Operation 状态。 | A |
+| WORKFLOWS-RESOURCE-001 | 真实资源冲突协调 | 以实际文件/目录/Git 元数据/远端对象等资源身份判断冲突，不按 Context 或 Agent 名称隔离；未知占用不得自动释放。 | F08-009 | connections/local、app、shared、permissions | 两个 Context 指向同一真实资源仍识别冲突；未知或停止未确认时阻止冲突新派发。 | C |
+| WORKFLOWS-CAPACITY-001 | 并发与容量准入 | 管理可并发工作量、执行能力配额及候选预留；与权限许可、外部费用观察分开。 | F08-010 | app、connections、shared | 超限时排队或明确拒绝；不能用未验证的租约/额度声称硬性封顶。 | C |
+| WORKFLOWS-CONTROL-001 | 暂停、继续与停止请求 | 分别处理未派发队列项、运行推进和已派发外部操作；停止请求、外部确认停止和补偿是不同事实。 | F08-012 | connections、permissions、app | 关闭画布/窗口不等于取消；不支持中断的连接器明确报告限制。 | A |
+| WORKFLOWS-FAILURE-001 | 失败分类、重试与升级 | 区分未派发、明确失败、阻塞、结果未知、待修复和最终失败；重试保留原尝试并说明安全依据。 | F08-013 | connections、permissions | 超时/断连不自动判失败；unknown 不盲重试；新尝试不覆盖旧证据。 | A |
+| WORKFLOWS-RECOVERY-001 | 崩溃与重启恢复 | 恢复先读本地提交依据，再查询 Operation/外部 Session/真实资源，重新核验版本、权限和冲突；不从缺少回执推断未执行。 | F08-013、F08-014 | app、shared、connections、permissions | 准备记录存在但派发未知时不自动重发；查询超时保留未决状态。 | A/C |
+| WORKFLOWS-CHECKPOINT-001 | 跨对话检查点与接续 | 保存目标、范围、定义/Task 修订、轮次、输入引用、Operation 引用、产物、阻塞和下一步。 | F08-014 | shared、conversations、AI、connections | 新对话/模型/Agent 可核对最新事实后接续，不依赖旧模型隐藏上下文。 | A |
+| WORKFLOWS-HANDOVER-001 | 人工接管与责任交接 | 记录原执行者、新执行者、责任代次、已完成/未完成项、旧执行停止证据及待核对 Operation。 | F08-015 | AI、connections、permissions | 改派不把前任产物改署名给后任；旧执行未知时阻止同资源冲突新执行。 | B |
+| WORKFLOWS-CONTINUITY-001 | 持续推进与后台策略适配 | 表达持续推进能力与运行策略；窗口关闭、应用退出、休眠、后台常驻和重启后恢复分别处理。 | F08-016、F07-009 | app、permissions | 技术能力不自动决定后台政策；D04 未确认前不得默认关窗后持续执行。 | D/C |
+| WORKFLOWS-SNAPSHOT-001 | 项目/工作状态快照 | 形成可回读的状态观察，记录来源修订、资源版本、采集时间、缺失项和过期条件；快照不是业务事实替身。 | F08-017 | shared、space、connections、views | 外部资源变化使快照标记过期；不能以旧快照覆盖最新 Task/Operation/文件事实。 | B/C |
+| WORKFLOWS-PROJECTION-001 | 状态投影、诊断与通知 | 向 UI/views/对话提供按权限过滤的定义、Task、运行、节点状态和证据投影；通知允许丢失/重复，消费者按修订回读。 | F08-011、F13 | views、UI、permissions、connections | 撤权后不继续展示缓存敏感信息；漏通知后可重新查询到已提交状态。 | A |
+
+### 产物、证据与验收
+
+| 模块功能编号 | 功能 | 业务行为与边界 | 对应 F | 依赖 | 最低验收条件 | 状态 |
+|---|---|---|---|---|---|---|
+| WORKFLOWS-ARTIFACT-001 | 产物登记与引用 | 登记本轮产物及其真实来源定位；产物正文仍归文件/Git/远端来源系统。 | F13-001 | connections/local、permissions | 引用可定位来源；解除引用不删除真实产物。 | A |
+| WORKFLOWS-ARTIFACT-002 | 产物来源与版本追踪 | 记录产物来源 Operation/attempt、执行轮次、输入版本、工具/环境和可验证内容依据。 | F13-002 | connections、shared、permissions | 产物能追溯到来源和具体版本；路径或外部自报不单独证明归因。 | A/B |
+| WORKFLOWS-RECEIPT-001 | Operation Receipt 关联 | 将连接宿主回执与 Task、轮次、Step Run 和产物关联；不复制或改写 connections 的 Operation 账本。 | F13-003 | connections、shared | 重复/迟到回执可按原 Operation 身份归属；回执保存不等于 Task 完成。 | A |
+| WORKFLOWS-EVIDENCE-001 | 证据收集与引用 | 收集文件版本、Commit、测试结果、日志片段、外部回执和人工确认等证据引用，记录来源、观察时间和可见性。 | F13-004 | connections/local、connections/GitHub、permissions | 每条证据有来源和适用范围；无权读取的内容不因 Task 分配而可见。 | A/B |
+| WORKFLOWS-REVIEW-001 | Review 记录 | 保存审查主体、审查对象版本、结论、问题和建议；Review 与 Verification、Acceptance 分离。 | F13-005 | AI、permissions | 审查结论绑定被审查版本；AI 给出通过意见不自动形成最终 Acceptance。 | A |
+| WORKFLOWS-VERIFY-001 | Verification 规则定义 | 定义可执行/人工核验条件、输入清单、目标版本、环境约束和通过标准。 | F13-006 | connections/local、permissions | 规则版本可追踪；缺少输入或规则未知时不能给出通过。 | A/B |
+| WORKFLOWS-VERIFY-002 | Verification 执行与结果 | 调用获准的本地/远端验证能力，记录命令/环境/输出/退出状态和证据引用。 | F13-007 | connections、permissions | 模型判断不代替真实执行证据；timeout/断连记为未完成或未知，不当成通过。 | A |
+| WORKFLOWS-ACCEPT-001 | 最终 Acceptance 决策 | 根据目标、证据、Review、Verification 和授权主体形成接受/拒绝/待定记录；自动验收边界仍受产品决策约束。 | F13-008 | permissions、connections | Acceptance 主体与规则明确；模型不能自批；未批准的自动验收策略不默认启用。 | A/D |
+| WORKFLOWS-VALIDITY-001 | 版本漂移与结论失效 | 当产物、输入、规则或环境变化时，旧结论仅适用于原版本；当前版本转为待重核。 | F13-009 | connections/local、connections/GitHub | v7 通过后变为 v8，v8 不继承 v7 的通过结论；历史记录保留。 | A |
+| WORKFLOWS-EVIDENCE-PACK-001 | 证据包汇总与导出 | 按 Task/轮次汇总产物、回执、Review、Verification 和 Acceptance；导出前按当前权限重新过滤和脱敏。 | F13-010 | shared、permissions、connections | 明确导出范围、缺失附件和部分失败；不导出秘密或有效授权。 | B |
+| WORKFLOWS-EVIDENCE-CONFLICT-001 | 证据冲突、重复与迟到处理 | 保留重复、矛盾、无法归因、迟到或跨轮次证据的来源与冲突，不以最后到达覆盖历史。 | F13-011 | connections、shared、permissions | 旧轮次迟到回执不能覆盖新轮次；冲突保持可见并要求显式核对。 | A/B |
+
+### 6.4 自由格子编辑交互（workflows/editor）
+
+以下 `WORKFLOWS-EDITOR-*` 是编辑交互子域编号，不计入 F01–F15 的 216 项基础业务功能数量，也不建立第二份业务数据权威。交互意图由 editor 发起，正式定义/关系修改交由 workflows，布局写入交由 views。
+
+| 模块功能编号 | 交互能力 | 归属与边界 | 对应功能 | 最低验收条件 | 状态 |
+|---|---|---|---|---|---|
+| WORKFLOWS-EDITOR-001 | 自由画布投影与渲染 | 将获准工作流定义、节点、业务依赖和运行摘要投影为矩形格子与有向连线；不拥有源状态 | F07-001～004、F11-002/004 | 画布重建后仍从 owner 读取同一业务事实；无权对象不泄露 | A |
+| WORKFLOWS-EDITOR-002 | 节点选择、拖动与尺寸调整 | 提供节点选择、移动、调整尺寸；位置和尺寸由 views 保存，不改变节点身份或执行关系 | F11-005 | 拖动/缩放只产生布局修订，执行依赖与派发次数不变 | A |
+| WORKFLOWS-EDITOR-003 | 连接端口与建边手势 | 选择节点端口并形成新增关系意图；边的业务类型/合法性由 workflows 校验，坐标与端口视觉由 editor/views 呈现 | F07-002/003、F11-004 | 不兼容端口或未授权修改被拒绝；未提交手势不改变定义 | B |
+| WORKFLOWS-EDITOR-004 | 正交连线与方向箭头 | 仅呈现水平/垂直线段及 90° 转角，显示方向；视觉路径归 views，业务关系归 workflows | F11-002/004/005 | 修改弯折点不改变依赖方向、端点或运行行为；不产生自由曲线边 | A |
+| WORKFLOWS-EDITOR-005 | 节点/关系新增、编辑与删除入口 | 通过受控 owner 命令提交节点和业务关系变更；布局对象删除与业务节点删除分离 | F07-001～004 | 取消草稿不写入；提交冲突不覆盖；删除节点不删除旧运行和外部产物 | A |
+| WORKFLOWS-EDITOR-006 | 画布平移与缩放 | 提供二维画布导航和视口操作；viewport 由 views 保存 | F11-005 | 平移/缩放只改变视图配置，不改变定义修订或运行状态 | A |
+| WORKFLOWS-EDITOR-007 | 手动布局管理 | 提供手动整理、节点分组/对齐等布局意图；布局数据由 views 管理 | F11-005 | 手动布局修订可回读；不影响无关业务对象 | B |
+| WORKFLOWS-EDITOR-008 | 自动布局预览、应用与撤销 | 提供横向/纵向、依赖分层、并行分支分栏、汇合对齐、局部/全局整理；算法与布局结果由 views 提供 | F11-005 | 先预览再应用；应用可撤销；局部整理不重排无关区域；执行依赖不变 | B/C |
+| WORKFLOWS-EDITOR-009 | 节点卡片状态与任务摘要 | 显示名称、详情、状态颜色、任务总数/完成/执行/等待、当前任务和结果摘要；数据来自 workflows 投影 | F08-011、F13 | 卡片只读投影；颜色变化不能完成 Task 或验收产物 | A |
+| WORKFLOWS-EDITOR-010 | 打开节点工作界面 | 根据节点工作类型打开通用对话、任务、代码、审查、文件或数据工作界面；不强制所有节点使用同一详情弹窗 | F03、F06、F07 | 打开界面不隐式执行节点；返回时保留原节点身份与定义修订 | A |
+| WORKFLOWS-EDITOR-011 | 撤销/重做与历史隔离 | 区分工作流定义编辑历史与视图布局编辑历史；一次布局撤销不得撤销业务关系，反之亦然 | F07-010、F11-008 | 两类历史分别撤销/重做；旧修订冲突仍走 owner 版本校验 | B |
+
+**自由画布基础规则：** 二维自由摆放，不是固定行列网格或固定流水线；节点为可调整矩形格子；连线只允许正交路径和方向箭头。自动布局是辅助而非唯一布局。移动节点、改线条弯折、平移/缩放、自动整理均不得修改业务依赖、节点权限或运行状态。
+
+**明确不在 editor：** Workflow/Node/Edge 业务身份与持久化、Task/Run/StepRun 状态、Operation 账本、授权判定、资源冲突协调、节点工作内容和最终验收；这些分别归 workflows、connections、permissions、views 或对应工作界面 owner。
+
+### 6.5 编号映射与维护
+
+- F07-001～004、F07-009～011 映射本节 WORKFLOWS 定义/节点/关系/校验/触发/传输编号。
+- F07-005～008、F07-012 继续映射 `workflows/modes` 的 MODE-01～06；F07-013～020 继续映射 software-development 的 SD-01～07，不在核心 workflows 中重复编号。
+- F08-001～017 映射本节 Task、Run、Dispatch、Resource、Recovery 等编号。
+- F13-001～011 映射本节 Artifact、Receipt、Evidence、Review、Verification、Acceptance 编号。
+- 新增、拆分或调整模块细分功能，只在 workflows owner 范围内分配新编号；F01–F15 和其他模块编号不重排。
+- A/B/C/D 状态沿用产品总表与既有决策；本节的编号和验收条件不把 B/C/D 自动升级为 A。
 
 
 ## 文档关联与施工入口
