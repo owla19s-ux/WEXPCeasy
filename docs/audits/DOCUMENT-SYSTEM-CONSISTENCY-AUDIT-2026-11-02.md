@@ -1,0 +1,50 @@
+# WEXPCeasy 非代码文档体系一致性审查（2026-11-02）
+
+> **性质：** 仅根据远端 main 的文档目录与抽样正文进行的静态文档审查。**不宣称已逐字比对全部 119 份文档，不校验任何代码运行。** 不删历史、不改产品决策。审查范围：根 README/AGENTS、docs、references；不将模块内 README/CONTRACT 纳入直接整理对象，但必要时作为事实权威进行交叉引用。
+
+## 1. 范围与首轮结论
+
+- main 递归树包含约 221 份 Markdown；本次非代码文档范围 119 份（根目录说明、docs 和 references）。
+- 根目录 docs 旧路径与 architecture/decisions/audits 中新路径**多为独立的短跳转页**，不是正文两份复制。它们声明“只在新位置维护”，应保留兼容直到全仓链接迁移经证实。
+- 真正的主要风险是**时间状态漂移、多个权威入口不清、旧计划被当作当前派工、研究建议被当成确定方案、以及索引叙述滞后**。以下以风险等级标记。
+
+## 2. 证据化问题清单
+
+| 编号 | 风险 | 位置/证据 | 问题 | 建议动作 |
+|---|---|---|---|---|
+| DOC-01 | 高 | [根 README](../../README.md)“尚未建立的规划依据”条目仍称“PRD-D01～D13等待用户确认”；[产品 README](../product/README.md) 则已明确 D01/D02 的 IV 级、工作流启动授权与主/秘书等级核心语义已确认 | 总入口的当前待决状态与较新产品记录有显著时间漂移；并非全部 D 项都还“等待确认” | 根据产品决策矩阵重新表述“哪些已确认、哪些特殊边界仍未定”，同时保留其历史时间 |
+| DOC-02 | 高 | [根 README](../../README.md)“已建立...基础功能总表”与 [产品总表](../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 已有 216 条统一注释、F04 细化 | 根入口未体现最新功能规格工作状态；下轮 AI 只看 README 会以为总表仍停留于 11/1 初版 | 在根 README 中加当前完整功能注释与仍待深审的状态导航 |
+| DOC-03 | 高 | [阶段路线图](../planning/PHASE-ROADMAP-2026-10-31.md) 自述 main 基线 4e783826，宣称“Electron 主进程/Renderer 尚未形成”，但 [根 README](../../README.md) 与 [第八批报告](../batch8/REPORT.md) 已记录 Electron/React 宿主隔离实验，且 Windows E4 仍未验 | 不是同一时间的事实，若无“历史快照”标识容易误用；不能因此反推已形成正式产品 Electron UI | 给旧路线图添加“基线日期/当前非派工依据/需核查最新报告”的明显警示；不重写旧研究结果 |
+| DOC-04 | 中 | [docs/README](../README.md) 将 10/31 阶段路线图与施工计划列为醒目入口，而 [11/1 模块优先级](../planning/EXECUTION-MODULE-PRIORITY-2026-11-01.md) 已有较新优先次序 | 新旧计划同时存在但显著性反向 | 将“最新优先级”置顶，旧计划明确历史参考；尚未批准的批次不能由目录位置推断获批 |
+| DOC-05 | 高 | [跨代 API 历史索引](../research/API-HISTORY-APS-WEX-WEXPC-2026-11-01.md) 与 [Pi AI 实验决策](../research/api/API-IMPLEMENTATION-DECISION.md) | 历史索引说“Pi 候选尚未运行证明”，而后续专门实验已提出有条件 C 技术推荐及已测/未测差异；若无最新指针，AI 会错误地停在旧结论 | 给历史索引标注“该结论截止于研究时点”，指向最新模拟实验、条件决策；**不能**把 C 推荐提升成已批准正式重构 |
+| DOC-06 | 高 | [Pi AI 决策](../research/api/API-IMPLEMENTATION-DECISION.md)：明确“有实测依据的技术推荐，不是批准正式 API 产品重构”，且存在 DONE 后数据、Google 自定义 fetch、多模态、usage 缺口 | 现有报告已防范误读，但从普通 API 总表阅读未必能看到，未来重复研究/直接 SDK 替换风险高 | 统一入口引用技术建议和退化风险；保持产品功能定义与技术选型权威分离 |
+| DOC-07 | 中 | 根 docs 下 [旧全局契约地图](../WEXPC-GLOBAL-CONTRACT-MAP-V0.1.md) 与 [新位置](../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)；[旧 Provider 文档](../WEXPC-PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md) 与 [新位置](../architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)；[旧研究决策](../WEXPC1-RESEARCH-DECISIONS-2026-10-30.md) 与 [新位置](../decisions/RESEARCH-DECISIONS-2026-10-30.md) | 已逐对抽样：旧文件是约 150–190 字的跳转页，新文件包含实际正文，不是两份可修改的重复源 | 保留跳转；有条件地做旧链入度扫描后再决定能否清理，绝不批量删 |
+| DOC-08 | 中 | [旧研究压力审查](../research/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md) 与 [审查目录正文](COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)；Views/Evidence 同类 | 旧 research 文件已变成跳转页，属于已完成归档操作；看见重复文件名不能当作“内容重复” | 在文档治理规则中登记“短跳转页不是重复正文” |
+| DOC-09 | 中 | [旧研究决策正文](../decisions/RESEARCH-DECISIONS-2026-10-30.md) 已有 11/1 修订说明“React Flow 首选”被自研自由画布方向取代 | 历史结论被推翻，但仍可能通过搜索被 AI 截取为当前决策 | 决策入口优先引用 [工作流画布方向决策](../decisions/WORKFLOW-CANVAS-DIRECTION-2026-11-01.md)；全文搜索必须校验文档状态与时间 |
+| DOC-10 | 中 | [F01–F15 总表](../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 与 [模块映射](../product/FUNCTION-CONTRACT-MAP-2026-11-01.md)、[B 评审](../product/B-CONTRACT-REVIEW-2026-11-01.md)、[需求复核](../product/REQUIREMENT-REVIEW-2026-11-01.md) 等 | 这些文档对象不同，**不是简单重复**；但 216 项注释更新后，旧 B/映射审查覆盖率统计未重跑，不能把旧统计当成新深拆完成度 | 给审查报告加“依据当时总表版本”的标签，标清需重审的功能编号，不重写历史计数 |
+| DOC-11 | 中 | [外部 DSH 研究](../../references/dsh/README.md)、[整合版](../../references/dsh/%E6%95%B4%E5%90%88%E7%89%88/README.md)、[source-snapshot](../../references/dsh/source-snapshot/README.md) | 25 份材料包括逐节研究、汇编、上游快照，属于**用途不同的可能交叉内容**；当前未逐字比对，不得判定重复并删除 | 建立原始参考/摘要汇编/上游镜像的来源与更新方向，仅保留一个对 WEX 有效的决策出口 |
+| DOC-12 | 中 | [文档索引](../README.md)、[产品索引](../product/README.md)、[根 README](../../README.md) | 三个入口承担层次不同但同时描述当前阶段，容易时间漂移；当前文档量大时 AI 容易只读任意其中一个 | 根 README 仅存产品身份、最新事实和链接；docs README 存导航；product README 存功能范围/状态，禁止重复维护可变数字和结论 |
+
+## 3. 分类建议：禁止批量合并
+
+| 类型 | 处理 |
+|---|---|
+| 现行功能规范 | [product/PRODUCT-FUNCTION-CATALOG](../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 是功能名称+注释的**单一正文**；不要恢复独立注释表 |
+| 当前模块契约 | 各模块自有 CONTRACT，不被文档中心二次复制 |
+| 决策 | decisions 中明确“已确认/候选/被取代”；旧决策保留时间轴 |
+| 实验报告 | 原始命令、断言、环境和失败结果不可被归纳式摘要替代 |
+| 历史审查/路线图 | 保留当时基线与时间，不自动当今天的施工指令 |
+| 短跳转页 | 保留兼容，除非有链接影响检查 |
+| 外部资料 | upstream/source snapshot/研究整合分层保存；外部事实不可成为 WEX 权威 Owner |
+
+## 4. 后续复核清单
+
+1. 机械检查全部非代码 Markdown 的**相对链接与目标存在性**（含有空格、中文和锚点），输出不存在路径；跳转页不直接视为错误。
+2. 按内容哈希/近重复段落检索真正的正文复制，区分标题重名、导航链接和同题多版本。
+3. 逐项核对 D 级产品决策、API Pi 技术选择、Runtime、GitHub 连接策略、工作流画布方向以及 Windows E4 的**当前决策/候选/历史/实测**四个维度。
+4. 先修**当前入口的过期状态**，再考虑历史归档标记；不批量改原始验收报告。
+5. 独立复核后形成“可以修复/需要用户决策/必须保留”的清单，再执行删除或合并。
+
+## 5. 此次实际边界
+
+本轮已审查 119 份文档的**目录归属和路径分类**，逐字抽读了根入口、产品/规划/API 等关键文件，并核对 7 对疑似重复文件。**未执行全量内容语义 diff、全部链接验证或所有正文冲突证明**。本报告中的 DOC-01～12 是可追溯的首轮风险发现，不是全仓无遗漏证明。
