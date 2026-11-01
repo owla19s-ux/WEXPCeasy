@@ -17,6 +17,10 @@
 | [C级机制实验探针](../../experiments/product-baseline-c-probes/README.md) | C07备份混代负向对照、C11有限次数并发、C12删除/引用竞态机制实验 | E2机制证据；不是WEX产品集成验收 |
 | [D01–D02 权限判定矩阵](PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md) | 工具分层资格、入口隔离、IV级全风险自主、工作流启动一次确认、主AI/秘书AI共享等级、特殊安全边界和验收矩阵 | 核心执行语义已确认；Shell/插件/权限策略/凭证边界待用户确认 |
 
+## 最新施工重点
+
+- [Runtime、GitHub 复用、API/Local/MODE/SD 验收与 Accounts 预留优先级](../planning/EXECUTION-MODULE-PRIORITY-2026-11-01.md)。DSH 原生插件宿主暂缓，旧 GitHub 实现先复用评审再决定移植，保持全局 216 项需求基线不变。
+
 ## 模块契约补充
 
 第二轮已补齐shared SH-01～06、SHARED-*、app APP-01～12、APP-*、AI AIC-01～09、AI-*、conversations CV-01～16、CONVERSATIONS-*、connections C01–C05、CONNECTIONS-*、views VIEW-01～07、VIEWS-*、workflows WORKFLOWS-* 与 WORKFLOWS-EDITOR-*、permissions PER-01～04、PERMISSIONS-*、plugins PLUGINS-* 及 API/LOCAL/MODE/SD 子契约。它们仍按B/C/D状态管理，不冻结实现签名，也不代表产品代码已完成。统一入口见[全模块业务契约索引](../MODULE-CONTRACTS.md)。
