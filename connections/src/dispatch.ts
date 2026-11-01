@@ -21,7 +21,7 @@ export function createDispatchBoundary(permission:PermissionReader,ledger:Ledger
    const decision=permission.evaluate(request);
    if(decision.status!=='allow')return blocked('authorization_'+decision.status);
    if(decision.scope.resource!==adapter.id||decision.scope.target!==target||decision.scope.action!=='write')return blocked('scope_mismatch');
-   const boundFingerprint=createHash('sha256').update(canonical([decision.scope.subject,decision.scope.entry,decision.scope.conversation,decision.scope.context,adapter.id,target,decision.scope.action,fingerprint,payload])).digest('hex');
+   const boundFingerprint=createHash('sha256').update(canonical([decision.scope.subject,decision.scope.entry,decision.scope.conversation,decision.scope.context,decision.scope.relationship,decision.scope.relationshipGeneration,adapter.id,target,decision.scope.action,fingerprint,payload])).digest('hex');
    const prior=ledger.get(id);
    if(prior)return prior.fingerprint!==boundFingerprint?blocked('intent_conflict'):blocked('already_recorded_no_automatic_retry');
    const current=permission.recheck(request,decision);
