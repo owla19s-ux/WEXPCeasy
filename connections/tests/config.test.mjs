@@ -7,3 +7,12 @@ test('configuration persists with revision',()=>{const c=createConnectionConfigs
 test('stale revision rejected',()=>{const c=createConnectionConfigs(store());c.put(sample,0,'put:1');assert.equal(c.put({...sample,enabled:false},0,'put:2').reason,'revision_conflict');assert.equal(c.get('api').enabled,true);});
 test('invalid configuration rejected',()=>{const c=createConnectionConfigs(store());assert.equal(c.put({...sample,id:''},0,'put:1').reason,'invalid_request');assert.equal(c.read().items.length,0);});
 test('returned objects are isolated',()=>{const c=createConnectionConfigs(store());c.put(sample,0,'put:1');c.get('api').enabled=false;assert.equal(c.get('api').enabled,true);});
+
+test('same intent cannot silently accept different config',()=>{
+ const c=createConnectionConfigs(store());
+ assert.equal(c.put(sample,0,'same').status,'ok');
+ const altered={...sample,enabled:false};
+ const result=c.put(altered,1,'same');
+ assert.notEqual(result.status,'ok');
+ assert.equal(c.get('api').enabled,true);
+});
