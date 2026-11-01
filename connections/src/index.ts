@@ -19,3 +19,6 @@ export function createReadBoundary(permission:PermissionReader,adapter:ReadAdapt
 
 export {createOperationLedger} from './operations.js';
 export type {Operation,OperationResult,OperationPhase} from './operations.js';
+
+export {createDispatchBoundary} from './dispatch.js';
+export type {DispatchAdapter,DispatchResult} from './dispatch.js';
