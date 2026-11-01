@@ -1,4 +1,6 @@
 # DSH / Cordis 插件机制源码快照与 WEXPC1 适配审查
+> **本地链接说明（2026-11-02 文档检查）：** 这里是按文件选择性保存的**非完整上游快照**。原始 `docs/architecture.md`、`cordis-primer.md`、`cordis-README.md`、`scope-README.md` 中大量相对链接指向未复制的 DSH/Cordis 文件，因此这些链接在本仓库内无法打开。**这是快照覆盖不完整，不是 WEX 站内索引错误。** 请从上游仓库的对应路径/固定 blob SHA 查询，勿批量创建占位文档或随意修改上游原文。
+
 
 - 日期：2026-10-30
 - 上游：[DeepSeek-AI/deepseek-harness](https://github.com/DeepSeek-AI/deepseek-harness)
