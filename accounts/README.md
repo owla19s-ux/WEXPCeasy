@@ -10,6 +10,10 @@
 第六批：[最新准备度/证据及限制](../docs/batch6/READINESS.md)。原生Core+Loader实验、WEX外部DSH连接和Windows实机证据分别验收；预留平台不因局部实验通过进入正式施工。
 
 
+## 身份边界预留
+
+- [Accounts 身份与账号边界](BOUNDARY.md)：本地可离线启动、可信 OS/安装主体由 app 提供、权限归 permissions；云账号与同步不进入首期。
+
 ## 文档入口与证据边界
 
 - [文档体系总索引](../docs/README.md)
