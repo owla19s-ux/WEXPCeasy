@@ -1,13 +1,18 @@
-# GitHub 连接器｜旧成熟能力复用与独立验收（2026-11-01）
+# GitHub 连接器｜GitHub 官方完整能力接入与独立验收（2026-11-01）
 
 状态：**复用评审与移植规格；WEXPCeasy 目前无 GitHub 产品连接器实现**。上位 owner 为 connections；这份文件只细化 GitHub 适配器，不建立另一套 Operation 或授权系统。
 
-## 一、已检查来源与复用结论
+## 一、官方能力作为产品实现基线（用户最新决策）
 
-- WEXPC Rust 实现：[github_dispatch.rs](https://github.com/owla19s-ux/wexpc/blob/main/crates/wex-desktop-service/src/connectors/github_dispatch.rs)。可见的 read_approved_github_file 已有可信 Dispatch 匹配、资源/路径校验、意图参数绑定、凭证不可用诊断、HTTP 超时与响应大小限制。此为旧实现源码存在的证据，不是 WEXPCeasy 测试通过的证据。
-- WEX 旧 Flutter/Dart 连接：[github_extension.dart](https://github.com/owla19s-ux/WEX/blob/main/apps/wex/lib/extensions/android_connectors/github_extension.dart)、[github_tool_session.dart](https://github.com/owla19s-ux/WEX/blob/main/apps/wex/lib/extensions/android_connectors/github_tool_session.dart)；可作为功能与交互行为参考，**不按原语言直接纳入 TypeScript/Electron 主线**。
-- 复用路线：复用经实测证实的**业务规则、请求参数校验、GitHub API 行为、错误分类、测试样本和边界条件**。直接复用 Rust 二进制或移植实现必须比较 FFI/子进程/Node 实现成本、宿主集成、平台打包、取消与权限风险；未选定之前不重写，也不宣布可即插即用。
-- GitHub Connector 与 Local Git 分开：前者为远端 GitHub API 仓库/PR/Actions/Commit/分支/内容；后者处理本地工作树、index、HEAD、git commit；git push 属于明确远端副作用，不能靠本地 Git 授权放行。
+**明确选择：GitHub 官方组件作为功能提供方，WEX 只实现 Connector Adapter。** 不把旧 WEX/WEXPC 自研 GitHub 模块迁移作为首选，更不重写官方已提供的 REST/GraphQL 工具集。
+
+- **首选 AI 工具接口：** [github/github-mcp-server](https://github.com/github/github-mcp-server)，官方 MCP Server。支持远程或本地部署；按工具集暴露 repos、git、pull_requests、issues、actions、projects、orgs、notifications、discussions、security 等公开能力，工具列表以实际版本和权限的发现结果为准。
+- **完整 GitHub API 补全：** [octokit/octokit.js](https://github.com/octokit/octokit.js)，官方 JavaScript/TypeScript SDK。其 REST endpoint methods 根据 GitHub OpenAPI 生成，支持 GraphQL；官方 MCP 未暴露的 API 可通过 Octokit 适配。两者都不能保证某一 Token 或部署下拥有所有能力。
+- **能力层次：** GitHub 官方 MCP/Octokit → `connections/github` 统一 Capability/Request/Result Adapter → connections Operation/Receipt → permissions 判权 → workflows Task/Verification/Acceptance。两个官方入口不是两份业务账本，也不能绕开同一授权与操作边界。
+- **完整覆盖目标：** 不把既有 GH-01～12 当作所有 GitHub 功能清单的上限。基于官方 MCP toolsets 与 REST OpenAPI/GraphQL 能力发现，形成随版本可更新的能力目录；支持分页、请求限流、认证范围、扩展域和接口弃用识别。未暴露/无权限的能力明确展示 unsupported/unauthorized，不自行伪造“已完整支持”。
+- **已有旧代码：** WEXPC Rust [github_dispatch.rs](https://github.com/owla19s-ux/wexpc/blob/main/crates/wex-desktop-service/src/connectors/github_dispatch.rs) 和 WEX Flutter GitHub 连接器降为安全案例及既有测试参考，不作为 GitHub API 功能实现基线，不预设 Rust FFI/旧代码移植。
+- **本地 Git 分开：** connections/local 管理本地工作树/index/HEAD；GitHub 远端 API 归此连接器。涉及 push、分支、PR、Actions 的真实远端副作用必须按动作授权。
+- **许可与集成：** 接入前核对官方项目许可证、版本兼容、远程 MCP 的认证/网络条件，及 WEXPCeasy Electron 主进程的秘密隔离；Renderer 不直连带凭证的 SDK。
 
 ## 二、功能和验收映射
 
@@ -26,14 +31,14 @@
 | GH-11 | 远端产物与证据引用 | commit SHA、PR、run、文件版本与目标仓库 | workflow Artifact/Verification/Acceptance 自有归属；路径/文本自报不算验证 |
 | GH-12 | 适配器版本、配置与卸载 | 连接修订、GitHub API 版本、Capabilities | 更新配置不改在途 Operation；停用阻止新调用不删除历史 |
 
-## 三、先复用，后移植
+## 三、官方接入优先实施顺序
 
-G-B1 **旧代码能力盘点**：逐项读取 WEXPC Rust dispatch 源码和测试、WEX Flutter 旧模块与对应报告，形成“可复用规则/测试、需移植代码、不可复用 UI/宿主耦合、缺失功能”矩阵。现仅确认上述 Rust 读取适配的部分安全检查；不得把写入/PR/Actions 整体称作成熟产品实现。
+G-B1 **官方能力清单**：读取 GitHub MCP Server 当前工具集/工具 schema、Octokit REST/OpenAPI 与 GraphQL 公开范围，形成“官方 MCP 已覆盖 / Octokit 补全 / 受 API 权限或版本限制 / 不可用”能力矩阵。不得将 GH-01～12 当作固定上限。
 
-G-B2 **宿主适配与替身验收**：以 connections 的 Operation/permissions 接口接入能力，不直接继承旧客户端内部判权；先测 GH-01～03/09/10 的失败、版本、速率限制、伪造参数和未知结果。
+G-B2 **连接器基础**：支持受信的远程或本地官方 MCP 连接方式、OAuth/PAT/GitHub App 的适用认证路径及受控凭证引用；能力动态发现、只读操作、限流/分页、错误与结果未知、安全授权。Octokit 作为可选补全适配层，共用 connections Operation。
 
-G-B3 **写入能力与真实远端验收**：按 GH-04～08 分功能在用户明确许可的测试仓库验证；旧 WEXPC 的操作成功经验不代表新的宿主已通过。不要为了验收自动触发 GitHub Actions，优先本地和伪造响应验证。
+G-B3 **操作功能验收**：按工具组分批验证仓库/Git/Issue/PR/Actions/Projects/Organization/安全等能力。高危写入、删除、管理类操作按权限精确划分，不因官方模块提供就全部放行。真实 Actions 触发前核对现有 runs 和用户授权，避免额度损耗。
 
-G-B4 **组合验收**：Workflow/Task → GitHub Operation → 远端 SHA/PR/CI 证据 → 独立 Verification/Acceptance；不得混淆请求返回成功和最终验收完成。
+G-B4 **完整覆盖与组合验收**：对照官方当前 API/Toolset 能力目录审查缺口；Workflow/Task → GitHub Adapter → Operation/Receipt → 独立 Verification/Acceptance；能力未覆盖、调用未授权、权限不足必须分别报告。
 
-停止条件：必须先锁定旧代码对应 commit/测试证据，避免仅凭文件存在复制。架构保持单 owner、单 Operation 账本、单权限源，不额外造 GitHub 专用授权数据库。
+**验收口径：** “完整 GitHub 官方能力接入”表示尽量覆盖官方支持的接口/工具集合并可随官方版本更新，不是保证所有 API 永远可用，更不是 GitHub 认证可绕过。正式产品代码与真实认证/Windows 验收仍未完成。
