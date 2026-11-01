@@ -24,6 +24,11 @@
 第六批：[最新准备度/证据及限制](../../docs/batch6/CONVERGENCE.md)。原生Core+Loader实验、WEX外部DSH连接和Windows实机证据分别验收；预留平台不因局部实验通过进入正式施工。
 
 
+## 本轮独立验收规格
+
+- [Runtime/调度施工与验收规格](ACCEPTANCE.md)（R01～R11，R-B1～R-B4）；这是待实施规格，不代表生产调度器已运行。
+- DSH 原生插件宿主研究暂缓，不是本域施工前置；连接器协议由 connections 负责。
+
 ## 上级契约与文档入口
 
 - **上级业务/职责契约：** [workflows/CONTRACT.md](../../workflows/CONTRACT.md)
