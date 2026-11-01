@@ -1,0 +1,32 @@
+import type {Store,Json,CommitResult} from '../../shared/src/index.js';
+export interface ConnectionConfig {id:string;adapter:string;endpoint:string;credentialRef:string|null;enabled:boolean}
+interface State {format:1;items:ConnectionConfig[]}
+export type ConfigResult={status:'ok';revision:number;config:ConnectionConfig}|{status:'conflict'|'unavailable'|'unknown';reason:string};
+function valid(x:ConnectionConfig):boolean {return !!x&&typeof x.id==='string'&&x.id.length>0&&typeof x.adapter==='string'&&x.adapter.length>0&&typeof x.endpoint==='string'&&x.endpoint.length>0&&(x.credentialRef===null||typeof x.credentialRef==='string')&&typeof x.enabled==='boolean';}
+function decode(value:Json):State {
+ if(value===null)return {format:1,items:[]};
+ if(!value||typeof value!=='object'||Array.isArray(value))throw Error('invalid_config_state');
+ const s=value as unknown as State;
+ if(s.format!==1||!Array.isArray(s.items)||s.items.some(x=>!valid(x))||new Set(s.items.map(x=>x.id)).size!==s.items.length)throw Error('invalid_config_state');
+ return s;
+}
+/** Host-owned configuration store. Caller must authorize configuration access. */
+export function createConnectionConfigs(store:Store){
+ const read=()=>{const s=store.read();return {revision:s.revision,items:structuredClone(decode(s.value).items)};};
+ return Object.freeze({
+  read,
+  get(id:string){return read().items.find(x=>x.id===id);},
+  put(config:ConnectionConfig,expectedRevision:number,intent:string):ConfigResult{
+   if(!valid(config)||!intent||!Number.isSafeInteger(expectedRevision)||expectedRevision<0)return {status:'conflict',reason:'invalid_request'};
+   try{
+    const s=read();
+    if(s.revision!==expectedRevision)return {status:'conflict',reason:'revision_conflict'};
+    const items=[...s.items.filter(x=>x.id!==config.id),structuredClone(config)];
+    const result:CommitResult=store.commit({intent,expectedRevision,value:{format:1,items} as unknown as Json});
+    if(result.status==='committed')return {status:'ok',revision:result.revision,config:structuredClone(config)};
+    if(result.status==='unknown')return {status:'unknown',reason:'commit_unknown'};
+    return {status:'conflict',reason:result.reason};
+   }catch{return {status:'unavailable',reason:'store_failed'};}
+  }
+ });
+}
