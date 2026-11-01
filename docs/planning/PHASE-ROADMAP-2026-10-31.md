@@ -1,5 +1,7 @@
 # WEX 阶段路线图（面向首版可用目标）
 
+> **历史规划快照说明（2026-11-02）：** 本文事实依据截止 2026-10-31 的旧 main；后续第八批 Electron/React 隔离实验、功能注释、Pi AI 验证和执行优先级已发生变化。请先读 [根 README](../../README.md)、[最新优先级](EXECUTION-MODULE-PRIORITY-2026-11-01.md) 和 [文档审查](../audits/DOCUMENT-SYSTEM-CONSISTENCY-AUDIT-2026-11-02.md)，不要把本文旧状态作为当前代码事实或自动派工依据。
+
 - 日期：2026-10-31
 - 规划基线：`main` `4e78382670875628e2675f43c71afa78fabfbcec`
 - 状态：工程路线规划；不替代正式产品基线，不自动批准 A/B/C/D 中的待决事项。
