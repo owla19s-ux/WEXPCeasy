@@ -5,7 +5,7 @@ function fixture(action='write'){
  let revision=0,value=null,calls=0;
  const store={read(){return {revision,value};},query(){return undefined;},commit(c){if(c.expectedRevision!==revision)return {status:'not_committed',reason:'revision_conflict'};value=c.value;revision++;return {status:'committed',intent:c.intent,revision};}};
  const ledger=createOperationLedger(store);
- const scope={resource:'fixture',target:'item',action};
+ const scope={subject:'user',entry:'conversation',conversation:'c1',context:null,resource:'fixture',target:'item',action,relationship:'direct',relationshipGeneration:1};
  const permission={evaluate(){return {status:'allow',scope,revision:1,generation:1};},recheck(){return this.evaluate();}};
  const boundary=createDispatchBoundary(permission,ledger,{id:'fixture',async execute(){calls++;return {ok:true};}});
  return {boundary,ledger,count(){return calls;}};
