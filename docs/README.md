@@ -7,9 +7,12 @@
 本页是仓库设计、架构、研究、审查、阶段规划与批次交付的统一入口。源码功能域仍按模块就近维护；这里不复制模块私有契约。
 
 
-**文档体系冲突与重复风险审查：** [2026-11-02 静态审查](audits/DOCUMENT-SYSTEM-CONSISTENCY-AUDIT-2026-11-02.md)。
+**文档一致性：** [2026-11-02 风险审查](audits/DOCUMENT-SYSTEM-CONSISTENCY-AUDIT-2026-11-02.md)；[文档权威与整理规则](DOCUMENT-AUTHORITY-AND-MAINTENANCE-2026-11-02.md)。
 
 ## AI 阅读与文档权威顺序
+
+**遇到冲突：** 先核对实际 main 代码与测试证据；产品功能/注释以 [统一 216 项功能总表](product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 为单一正文，职责及公开能力依模块 CONTRACT；产品政策以用户明确批准和现行决策矩阵为准。技术研究推荐、旧路线图及批次报告不得替代用户授权。详细规则见[文档权威说明](DOCUMENT-AUTHORITY-AND-MAINTENANCE-2026-11-02.md)。
+
 
 AI/协作者进入仓库时，先读根目录 [README](../README.md) 了解产品身份与当前状态，再读根目录 [AGENTS.md](../AGENTS.md) 确认工作边界，然后按具体任务读取本索引和目标模块文档。任务范围以用户明确指派及后续正式任务总表/施工卡为准；历史批次任务书只记录当时范围，不自动构成当前派工。
 
