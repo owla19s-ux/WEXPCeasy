@@ -1,0 +1,98 @@
+wex-configured-red.log
+✖ configured dispatch binds persisted revision and adapter version (28.253074ms)
+✖ unauthorized caller cannot inspect configuration existence (6.418689ms)
+✖ configured dispatch blocks disabled (2.0384ms)
+✖ configured dispatch blocks removed (3.329675ms)
+✖ configured dispatch blocks different adapter (9.839665ms)
+✖ stale configuration revision blocks before intent is recorded (7.552121ms)
+✖ empty adapter version is not executable (7.674211ms)
+✖ disable during dispatch reservation prevents external execution (5.769943ms)
+✖ remove during dispatch reservation prevents external execution (6.809167ms)
+✖ version during dispatch reservation prevents external execution (6.849093ms)
+✖ revoke during dispatch reservation prevents external execution (1.793025ms)
+✖ in-flight configuration stays bound while later edits block replay (2.764019ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 0
+ℹ fail 12
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 303.954695
+✖ failing tests:
+✖ configured dispatch binds persisted revision and adapter version (28.253074ms)
+✖ unauthorized caller cannot inspect configuration existence (6.418689ms)
+✖ configured dispatch blocks disabled (2.0384ms)
+✖ configured dispatch blocks removed (3.329675ms)
+✖ configured dispatch blocks different adapter (9.839665ms)
+✖ stale configuration revision blocks before intent is recorded (7.552121ms)
+✖ empty adapter version is not executable (7.674211ms)
+✖ disable during dispatch reservation prevents external execution (5.769943ms)
+✖ remove during dispatch reservation prevents external execution (6.809167ms)
+✖ version during dispatch reservation prevents external execution (6.849093ms)
+✖ revoke during dispatch reservation prevents external execution (1.793025ms)
+✖ in-flight configuration stays bound while later edits block replay (2.764019ms)
+
+wex-payload-red.log
+✖ payload mutation during permission checks cannot change dispatched input (3.383186ms)
+✖ invalid dispatch payload is rejected: sparse array (4.167964ms)
+✖ invalid dispatch payload is rejected: undefined value (0.323871ms)
+✖ invalid dispatch payload is rejected: cyclic object (3.928199ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 4
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 207.750151
+✖ failing tests:
+✖ payload mutation during permission checks cannot change dispatched input (3.383186ms)
+✖ invalid dispatch payload is rejected: sparse array (4.167964ms)
+✖ invalid dispatch payload is rejected: undefined value (0.323871ms)
+✖ invalid dispatch payload is rejected: cyclic object (3.928199ms)
+
+wex-configured-snapshot-red.log
+✖ configured entry snapshots payload before consulting permission dependencies (9.704363ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 12
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 604.07712
+✖ failing tests:
+✖ configured entry snapshots payload before consulting permission dependencies (9.704363ms)
+
+wex-blocked-receipt-red.log
+✖ disable during dispatch reservation prevents external execution (7.02494ms)
+✖ remove during dispatch reservation prevents external execution (6.574062ms)
+✖ version during dispatch reservation prevents external execution (3.436007ms)
+✖ revoke during dispatch reservation prevents external execution (4.052834ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 9
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 205.24604
+✖ failing tests:
+✖ disable during dispatch reservation prevents external execution (7.02494ms)
+✖ remove during dispatch reservation prevents external execution (6.574062ms)
+✖ version during dispatch reservation prevents external execution (3.436007ms)
+✖ revoke during dispatch reservation prevents external execution (4.052834ms)
+
+wex-configured-input-red.log
+✖ uncloneable configured payload is a rejected input, not an unknown external result (2.925726ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 14
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 221.361871
+✖ failing tests:
+✖ uncloneable configured payload is a rejected input, not an unknown external result (2.925726ms)

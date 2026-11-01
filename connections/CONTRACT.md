@@ -254,7 +254,9 @@ connections 及具体适配器必须把真实能力与动作副作用描述清�
 
 
 
-## 8. 当前最小实现与本批施工事实（2026-11-02）
+## 8. 最小持久链路施工事实（2026-11-02；上一批快照）
+
+后续配置绑定接线见第 9 节，本节保留上一批范围。
 
 `src/index.ts` 为当前公开出口，持久技术机制通过 `shared/src/index.ts` 注入；未建立新权威状态或扩展权限政策。
 
@@ -262,3 +264,18 @@ connections 及具体适配器必须把真实能力与动作副作用描述清�
 - **Operation**：`createOperationLedger(Store)` 提供 `read/get/prepare/markDispatched/observe`。当前单次派发实现最多预留一次尝试；prepared 为 0 次且无观察，dispatched 为 1 次且无观察，observed/unknown 必须带对应合法观察。观察提交意图使用独立 v2 前缀和 JSON 元组，避免 Operation/Observation ID 内含分隔符导致碰撞；不改既有观察身份。重复 Operation/Observation ID、空身份、非法 JSON、阶段/次数/观察矛盾均拒绝读取和后续派发；不把坏账本当空库、不自动修复。未知观察不会被迟到成功清除。此处次数是宿主预留记录，不证明外部实际执行次数；未提供主动远端核对/恢复授权。
 - **边界**：`createReadBoundary` 与 `createDispatchBoundary` 已存在；写边界绑定主体/入口/资源/目标/payload、检查权限、持久预留后最多调用一次。现有实现仍未接入生产 Connection 配置/版本、资源协调、凭证后端、实际 Provider/GitHub/DSH、通用回调或通知；不承诺完整 C01–C05 已实现。
 - **验证**：新增真实 SQLite 配置移除/命名空间隔离，以及不同 Node 进程间权限+账本+文件副作用组合，覆盖重启后不重复执行、撤权零写入和未知结果不重派。外部适配器仅为测试内文件夹具，Linux 证据不能替代真实服务或 Windows E4。原始命令与结果见 [本批回执](IMPLEMENTATION-2026-11-02.md)。
+
+
+## 9. 配置绑定写派发（2026-11-02）
+
+公开入口 `createConfiguredDispatchBoundary(permission, ledger, configs, adapter)`；`adapter` 为可信宿主装配的 `ConfiguredDispatchAdapter`（id、version、execute）。调用 `dispatch(request, operationId, connectionId, expectedRevision, target, fingerprint, payload)`；expectedRevision 是当前**整个配置命名空间**的修订，非单个 Connection 修订。
+
+1. 先捕获输入副本；未获当前 permissions 明确允许、适配器资源/目标/write 动作不匹配时，不查询配置、不建立 Operation、不执行适配器。此入口不自授配置修改权限。
+2. 查询配置时检查预期修订、目标存在、enabled、adapter id 和非空 version；过期、停用、移除或不匹配均零派发。建立 Operation 前及持久派发预留后再复核配置和版本；预留后再复核当前权限。读取/提交依赖异常保持不确定，不视为允许。
+3. `Operation.connection` 为可选不可变历史依据：connectionId、configRevision、adapterId、adapterVersion、endpoint；不写入 payload 正文或凭证引用。新指纹绑定该依据与原主体/入口/动作/实际目标和输入副本。重复 prepare 不能以相同 fingerprint 换掉 binding；旧无 binding 记录继续读取，不自动补造原版本。
+4. 适配器只接收捕获的只读配置副本、目标和输入副本。配置在调用开始后变化不重定向在途动作；回执仍归原 Operation。相同 Operation 换端点/修订/版本会冲突，不用新绑定重发旧未知操作。
+5. 预留后确认被当前权限或配置拦住时，保存 `host-not-dispatched` 观察（externalDispatched=false）并返回 blocked。观察保存不确定则返回 unknown，外部调用仍为零；预留记录不是外发证明，observed 也不等于外部成功或 Task 验收。
+6. 原 `createDispatchBoundary` 继续作为显式无配置兼容入口，旧调用的指纹保持原规则；生产装配不能把它冒称已执行配置检查。当前未做 app/UI 装配、读取边界的配置接线、资源解析/占用、秘密读取、Provider/GitHub/DSH 实配、主动查询或取消。
+7. 可信宿主仍须把 target 绑定为含真实 backend/对象身份的已授权目标，适配器不得将获准目标重定向到其他资源；配置绑定不替代该解析/授权责任。此处没有增加配置专属授权维度、自动升级兼容范围或跨进程撤权/派发原子性承诺。全命名空间修订使无关连接修改也可能暂时阻塞新派发，当前采用保守冲突拒绝。
+
+对应 C01/C02、CONNECTIONS-CONNECTION-001、CONNECTIONS-VERSION-001、CONNECTIONS-ADMISSION-001、CONNECTIONS-OPERATION-001 的最小本域实现；不将 B/C/D 或完整功能域标记为验收完成。证据及已知限制见 [本批回执](CONFIGURED-DISPATCH-2026-11-02.md)。

@@ -18,10 +18,13 @@ export function createReadBoundary(permission:PermissionReader,adapter:ReadAdapt
 }
 
 export {createOperationLedger} from './operations.js';
-export type {Operation,OperationResult,OperationPhase} from './operations.js';
+export type {Operation,OperationResult,OperationPhase,OperationConnection} from './operations.js';
 
 export {createDispatchBoundary} from './dispatch.js';
 export type {DispatchAdapter,DispatchResult} from './dispatch.js';
 
 export {createConnectionConfigs} from './config.js';
 export type {ConnectionConfig,ConfigResult,ConfigRemovalResult} from './config.js';
+
+export {createConfiguredDispatchBoundary} from './configured-dispatch.js';
+export type {ConfiguredDispatchAdapter} from './configured-dispatch.js';

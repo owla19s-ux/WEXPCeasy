@@ -1,0 +1,26 @@
+✔ configured dispatch binds persisted revision and adapter version (198.71978ms)
+✔ unauthorized caller cannot inspect configuration existence (7.676103ms)
+✔ configured dispatch blocks disabled (2.704729ms)
+✔ configured dispatch blocks removed (7.547152ms)
+✔ configured dispatch blocks different adapter (5.815415ms)
+✔ stale configuration revision blocks before intent is recorded (16.09338ms)
+✔ empty adapter version is not executable (253.654927ms)
+✔ disable during dispatch reservation prevents external execution (37.160626ms)
+✔ remove during dispatch reservation prevents external execution (13.321493ms)
+✔ version during dispatch reservation prevents external execution (12.37715ms)
+✔ revoke during dispatch reservation prevents external execution (16.203857ms)
+✔ in-flight configuration stays bound while later edits block replay (11.559874ms)
+✔ configured entry snapshots payload before consulting permission dependencies (7.666445ms)
+✔ uncloneable configured payload is a rejected input, not an unknown external result (1.423817ms)
+✔ failed not-dispatched receipt remains unknown while the adapter stays uncalled (6.063876ms)
+✔ process restart preserves authorization, observed receipt and no-replay guarantee (1019.10471ms)
+✔ unknown external outcome survives restart without repeating its side effect (943.360572ms)
+✔ configured dispatch reopens its original binding and refuses a new endpoint for the same intent (1688.218156ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5542.648266

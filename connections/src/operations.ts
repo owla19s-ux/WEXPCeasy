@@ -1,7 +1,8 @@
 import type {Store,Json,CommitResult} from '../../shared/src/index.js';
 export type OperationPhase='prepared'|'dispatched'|'observed'|'unknown';
 export interface Observation {id:string;phase:'observed'|'unknown';value:Json}
-export interface Operation {id:string;fingerprint:string;phase:OperationPhase;attempts:number;observations:Observation[]}
+export interface OperationConnection {connectionId:string;configRevision:number;adapterId:string;adapterVersion:string;endpoint:string}
+export interface Operation {connection?:OperationConnection;id:string;fingerprint:string;phase:OperationPhase;attempts:number;observations:Observation[]}
 interface State {format:1;operations:Operation[]}
 export type OperationResult={status:'ok';operation:Operation;revision:number}|{status:'conflict'|'unavailable'|'unknown';reason:string};
 const clone=<T>(v:T):T=>structuredClone(v);
@@ -18,8 +19,12 @@ function canonical(v:Json,ancestors=new Set<object>()):string {
 }
 function validJson(value:Json):boolean {try{canonical(value);return true;}catch{return false;}}
 function nonempty(value:unknown):value is string {return typeof value==='string'&&value.length>0;}
+function validConnection(c:OperationConnection):boolean {
+ return !!c&&nonempty(c.connectionId)&&Number.isSafeInteger(c.configRevision)&&c.configRevision>0&&nonempty(c.adapterId)&&nonempty(c.adapterVersion)&&nonempty(c.endpoint);
+}
 function validOperation(o:Operation):boolean {
  if(!o||typeof o!=='object'||!nonempty(o.id)||!nonempty(o.fingerprint)||!Array.isArray(o.observations))return false;
+ if(o.connection!==undefined&&!validConnection(o.connection))return false;
  if(o.observations.some(x=>!x||!nonempty(x.id)||!['observed','unknown'].includes(x.phase)||!validJson(x.value)))return false;
  if(new Set(o.observations.map(x=>x.id)).size!==o.observations.length)return false;
  if(o.phase==='prepared')return o.attempts===0&&o.observations.length===0;
@@ -50,11 +55,11 @@ export function createOperationLedger(store:Store){
  return Object.freeze({
   read,
   get(id:string){return read().operations.find(o=>o.id===id);},
-  prepare(id:string,fingerprint:string):OperationResult {
-   if(!nonempty(id)||!nonempty(fingerprint))return {status:'conflict',reason:'invalid_request'};
+  prepare(id:string,fingerprint:string,connection?:OperationConnection):OperationResult {
+   if(!nonempty(id)||!nonempty(fingerprint)||(connection!==undefined&&!validConnection(connection)))return {status:'conflict',reason:'invalid_request'};
    try{const s=read(),prior=s.operations.find(o=>o.id===id);
-    if(prior)return prior.fingerprint===fingerprint?{status:'ok',operation:prior,revision:s.revision}:{status:'conflict',reason:'intent_conflict'};
-    const op:Operation={id,fingerprint,phase:'prepared',attempts:0,observations:[]};
+    if(prior)return prior.fingerprint===fingerprint&&canonical((prior.connection??null) as unknown as Json)===canonical((connection??null) as unknown as Json)?{status:'ok',operation:prior,revision:s.revision}:{status:'conflict',reason:'intent_conflict'};
+    const op:Operation={id,fingerprint,phase:'prepared',attempts:0,observations:[],...(connection?{connection:clone(connection)}:{})};
     return result(write('operation:prepare:'+id,s.revision,[...s.operations,op]),op);
    }catch{return {status:'unavailable',reason:'store_failed'};}
   },

@@ -57,3 +57,30 @@ test('different operation and observation pairs cannot collide in persistence in
  assert.deepEqual(ledger.get('a:b').observations,[{id:'c',phase:'observed',value:{source:'first'}}]);
  assert.deepEqual(ledger.get('a').observations,[{id:'b:c',phase:'observed',value:{source:'second'}}]);
 });
+
+const binding={connectionId:'connection',configRevision:1,adapterId:'fixture',adapterVersion:'1.0',endpoint:'local:original'};
+test('operation binding survives reopening and cannot be changed by a duplicate prepare',t=>{
+ const open=database(t),ledger=createOperationLedger(open('operations'));
+ assert.equal(ledger.prepare('bound','same-fingerprint',binding).status,'ok');
+ const restored=createOperationLedger(open('operations'));
+ assert.deepEqual(restored.get('bound').connection,binding);
+ assert.equal(restored.prepare('bound','same-fingerprint',{...binding,endpoint:'local:other'}).reason,'intent_conflict');
+ const projection=restored.get('bound');projection.connection.endpoint='changed';
+ assert.equal(restored.get('bound').connection.endpoint,'local:original');
+ assert.equal(restored.prepare('bound','same-fingerprint',binding).status,'ok');
+});
+test('legacy operation remains readable and cannot be silently rebound',t=>{
+ const ledger=createOperationLedger(database(t)('operations'));
+ ledger.prepare('legacy','same-fingerprint');
+ assert.equal(ledger.prepare('legacy','same-fingerprint',binding).reason,'intent_conflict');
+ assert.equal(ledger.get('legacy').connection,undefined);
+});
+test('invalid operation bindings cannot be persisted or accepted from storage',t=>{
+ const open=database(t),store=open('operations'),ledger=createOperationLedger(store);
+ for(const invalid of [{...binding,configRevision:0},{...binding,adapterVersion:''},{...binding,endpoint:''},null]){
+  assert.equal(ledger.prepare('bound','fp',invalid).reason,'invalid_request');
+ }
+ assert.equal(store.read().revision,0);
+ store.commit({intent:'corrupt',expectedRevision:0,value:{format:1,operations:[{id:'bad',fingerprint:'fp',phase:'prepared',attempts:0,observations:[],connection:{...binding,configRevision:0}}]}});
+ assert.throws(()=>ledger.read(),/invalid_operation_state/);
+});
