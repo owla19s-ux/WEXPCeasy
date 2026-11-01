@@ -22,3 +22,6 @@ export type {Operation,OperationResult,OperationPhase} from './operations.js';
 
 export {createDispatchBoundary} from './dispatch.js';
 export type {DispatchAdapter,DispatchResult} from './dispatch.js';
+
+export {createConnectionConfigs} from './config.js';
+export type {ConnectionConfig,ConfigResult} from './config.js';
