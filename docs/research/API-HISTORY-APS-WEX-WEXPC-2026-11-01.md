@@ -1,4 +1,6 @@
 # WEX API 历史成果提取与复用基线（APS → WEX → WEXPC → WEXPCeasy）
+
+> **后续更新（2026-11-02）：** 本文中关于 Pi AI“尚未运行验证”的判断仅对应本文写作时点。仓库后来已有 [Pi AI 独立实验报告](api/PI-AI-TEST-REPORT.md) 与 [有条件技术实现建议](api/API-IMPLEMENTATION-DECISION.md)。实验不代表已批准正式重构，Windows/真实 Provider 门槛仍未通过。
 日期：2026-11-01。性质：跨仓库历史证据索引与研究提取，**不是新 API 设计、不是实现验收，也不变更现有用户决策**。
 
 ## 一、阅读优先级与防止重复研究
