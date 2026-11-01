@@ -48,7 +48,8 @@ export function createOperationLedger(store:Store){
     if(op.phase==='prepared')return {status:'conflict',reason:'not_dispatched'};
     const previous=op.observations.find(o=>o.id===observationId);
     if(previous)return previous.phase===phase&&canonical(previous.value)===canonical(value)?{status:'ok',operation:op,revision:s.revision}:{status:'conflict',reason:'observation_conflict'};
-    const next:Operation={...op,phase,observations:[...op.observations,{id:observationId,phase,value:clone(value)}]};
+    const nextObservations=[...op.observations,{id:observationId,phase,value:clone(value)}];
+    const next:Operation={...op,phase:nextObservations.some(o=>o.phase==='unknown')?'unknown':'observed',observations:nextObservations};
     return result(write('operation:observe:'+id+':'+observationId,s.revision,s.operations.map(o=>o.id===id?next:o)),next);
    }catch{return {status:'unavailable',reason:'store_failed'};}
   }
