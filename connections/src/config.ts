@@ -17,13 +17,17 @@ export function createConnectionConfigs(store:Store){
   read,
   get(id:string){return read().items.find(x=>x.id===id);},
   put(config:ConnectionConfig,expectedRevision:number,intent:string):ConfigResult{
-   if(!valid(config)||!intent||!Number.isSafeInteger(expectedRevision)||expectedRevision<0)return {status:'conflict',reason:'invalid_request'};
+   if(!valid(config)||!intent||intent.length>256||!Number.isSafeInteger(expectedRevision)||expectedRevision<0)return {status:'conflict',reason:'invalid_request'};
    try{
     const s=read();
     if(s.revision!==expectedRevision)return {status:'conflict',reason:'revision_conflict'};
     const items=[...s.items.filter(x=>x.id!==config.id),structuredClone(config)];
     const result:CommitResult=store.commit({intent,expectedRevision,value:{format:1,items} as unknown as Json});
-    if(result.status==='committed')return {status:'ok',revision:result.revision,config:structuredClone(config)};
+    if(result.status==='committed'){
+     const persisted=read().items.find(x=>x.id===config.id);
+     if(!persisted||JSON.stringify(persisted)!==JSON.stringify(config))return {status:'conflict',reason:'intent_conflict'};
+     return {status:'ok',revision:result.revision,config:structuredClone(persisted)};
+    }
     if(result.status==='unknown')return {status:'unknown',reason:'commit_unknown'};
     return {status:'conflict',reason:result.reason};
    }catch{return {status:'unavailable',reason:'store_failed'};}
