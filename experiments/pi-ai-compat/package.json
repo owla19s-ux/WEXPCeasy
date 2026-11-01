@@ -1,0 +1,1 @@
+{"name":"wex-pi-ai-compat-experiment","private":true,"type":"module","engines":{"node":">=24.9.0"},"scripts":{"test":"node --test --test-concurrency=1 *.test.mjs"},"dependencies":{"@earendil-works/pi-ai":"1.4.0","typebox":"1.3.27"}}

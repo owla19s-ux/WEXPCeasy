@@ -1,0 +1,92 @@
+# Historical Rust CI excerpt (read-only retrieval)
+
+Source: https://github.com/owla19s-ux/wexpc/actions/runs/40527701505/job/122271653337
+Commit: c1ff8d9e83c920fb3a531926e5dc6aa47039f805
+Retrieved 2026-11-01; NOT a rerun at current HEAD.
+
+2026-10-27T15:07:15.0190472Z      Running tests/decoder.rs (target/debug/deps/decoder-d94485dad467e5cd)
+2026-10-27T15:07:15.0198774Z 
+2026-10-27T15:07:15.0198925Z running 30 tests
+2026-10-27T15:07:15.0201486Z test cancellation_is_observed ... ok
+2026-10-27T15:07:15.0207297Z test comments_and_named_fields_are_ignored ... ok
+2026-10-27T15:07:15.0207920Z test conflicting_terminal_frame_is_rejected ... ok
+2026-10-27T15:07:15.0210039Z test continuation_exactly_at_limit_is_allowed ... ok
+2026-10-27T15:07:15.0210657Z test content_after_terminal_fails ... ok
+2026-10-27T15:07:15.0211227Z test credential_debug_is_redacted ... ok
+2026-10-27T15:07:15.0211771Z test crlf_and_multiline_data_are_accepted ... ok
+2026-10-27T15:07:15.0212421Z test duplicate_primary_choice_in_one_frame_is_rejected ... ok
+2026-10-27T15:07:15.0213062Z test continuation_size_is_bounded ... ok
+2026-10-27T15:07:15.0213600Z test eof_without_terminal_frame_fails ... ok
+2026-10-27T15:07:15.0214172Z test duplicate_terminal_frame_fails ... ok
+2026-10-27T15:07:15.0214721Z test duplicate_tool_call_ids_are_rejected ... ok
+2026-10-27T15:07:15.0215251Z test frames_after_done_fail_immediately ... ok
+2026-10-27T15:07:15.0215637Z test invalid_json_frame_fails ... ok
+2026-10-27T15:07:15.0216016Z test incomplete_tool_call_missing_name_fails ... ok
+2026-10-27T15:07:15.0216370Z test response_size_limit_is_enforced ... ok
+2026-10-27T15:07:15.0216637Z test proxy_validation_rejects_userinfo ... ok
+2026-10-27T15:07:15.0216903Z test reasoning_requires_scope_and_is_redacted ... ok
+2026-10-27T15:07:15.0217199Z test request_validation_rejects_reserved_parameters ... ok
+2026-10-27T15:07:15.0217492Z test stop_with_pending_tool_calls_fails ... ok
+2026-10-27T15:07:15.0217764Z test text_stream_produces_deltas_and_completion ... ok
+2026-10-27T15:07:15.0218209Z test tool_call_fragments_aggregate_by_index ... ok
+2026-10-27T15:07:15.0218780Z test tool_message_requires_tool_call_id ... ok
+2026-10-27T15:07:15.0219192Z test truncated_finish_reason_is_not_success ... ok
+2026-10-27T15:07:15.0219602Z test split_invariance_one_byte_at_a_time ... ok
+2026-10-27T15:07:15.0220000Z test unexpected_delta_role_is_rejected ... ok
+2026-10-27T15:07:15.0220407Z test usage_tail_after_terminal_is_allowed_once ... ok
+2026-10-27T15:07:15.0220681Z test utf8_split_across_network_chunks ... ok
+2026-10-27T15:07:15.0220938Z test unterminated_frame_limit_is_enforced ... ok
+2026-10-27T15:07:15.0450660Z test split_invariance_at_every_byte_boundary ... ok
+2026-10-27T15:07:15.0450981Z 
+2026-10-27T15:07:15.0451282Z test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+2026-10-27T15:07:15.0453050Z      Running tests/encode.rs (target/debug/deps/encode-4a45cff986724be3)
+2026-10-27T15:07:15.0462251Z 
+2026-10-27T15:07:15.0462475Z running 17 tests
+2026-10-27T15:07:15.0465842Z test continuation_can_be_disabled ... ok
+2026-10-27T15:07:15.0466297Z test continuation_scope_mismatch_is_rejected ... ok
+2026-10-27T15:07:15.0466681Z test continuation_tool_ids_mismatch_is_rejected ... ok
+2026-10-27T15:07:15.0467119Z test encodes_basic_streaming_text_request ... ok
+2026-10-27T15:07:15.0467469Z test encodes_tools_and_assistant_tool_calls ... ok
+2026-10-27T15:07:15.0467858Z test http_status_maps_to_stable_kinds ... ok
+2026-10-27T15:07:15.0468289Z test merges_parameters_into_body ... ok
+2026-10-27T15:07:15.0468828Z test non_streaming_request_omits_stream_fields ... ok
+2026-10-27T15:07:15.0469179Z test ordinary_body_is_not_mistaken_for_error ... ok
+2026-10-27T15:07:15.0470187Z test rate_limit_keeps_bounded_retry_after ... ok
+2026-10-27T15:07:15.0470583Z test provider_codes_classify_stably ... ok
+2026-10-27T15:07:15.0471071Z test provider_error_body_is_classified_without_echoing_text ... ok
+2026-10-27T15:07:15.0471741Z test replays_continuation_into_originating_assistant_message ... ok
+2026-10-27T15:07:15.0472203Z test reserved_parameters_are_rejected ... ok
+2026-10-27T15:07:15.0472735Z test retry_after_is_bounded_at_error_mapping_boundary ... ok
+2026-10-27T15:07:15.0473235Z test tool_message_keeps_tool_call_id ... ok
+2026-10-27T15:07:15.0473656Z test stream_options_cannot_override_usage_policy ... ok
+2026-10-27T15:07:15.0473948Z 
+2026-10-27T15:07:15.0474248Z test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+2026-10-27T15:07:30.3209389Z      Running tests/api.rs (target/debug/deps/api-d34b935cf51e7615)
+2026-10-27T15:07:30.3221827Z 
+2026-10-27T15:07:30.3221949Z running 21 tests
+2026-10-27T15:07:30.3232180Z test both_transports_reject_unsupported_transcript_roles_before_network ... ok
+2026-10-27T15:07:30.3238294Z test endpoint_preserves_proxy_prefix_and_explicit_version ... ok
+2026-10-27T15:07:30.3257970Z test legacy_function_call_cannot_be_committed_as_plain_text ... ok
+2026-10-27T15:07:30.3269095Z test approved_tool_round_trip_sends_exact_tool_receipt_to_next_model_step ... ok
+2026-10-27T15:07:30.3284064Z test compatible_http_request_and_response_are_real_and_provider_errors_are_sanitized ... ok
+2026-10-27T15:07:30.3289890Z test both_transports_encode_the_same_ordered_transcript ... ok
+2026-10-27T15:07:30.3291649Z test non_streaming_accepts_explicit_stop_finish_reason ... ok
+2026-10-27T15:07:30.3292257Z test non_streaming_malformed_tool_calls_never_become_text_success ... ok
+2026-10-27T15:07:30.3292931Z test non_streaming_rejects_truncated_reply_even_with_text ... ok
+2026-10-27T15:07:30.3293955Z test non_streaming_valid_tool_intent_is_not_executed_or_committed_as_text ... ok
+2026-10-27T15:07:30.3294633Z test non_streaming_rejects_tool_finish_reason_without_tool_payload ... ok
+2026-10-27T15:07:30.3295324Z test non_streaming_rejects_multiple_candidates_and_unknown_finish_reason ... ok
+2026-10-27T15:07:30.3306895Z test streaming_adapter_redacts_provider_http_errors ... ok
+2026-10-27T15:07:30.3308133Z test progress_is_provisional_until_a_terminal_frame ... ok
+2026-10-27T15:07:30.3310489Z test streaming_adapter_decodes_fragmented_sse_and_sends_stream_request ... ok
+2026-10-27T15:07:30.3311434Z test streaming_adapter_does_not_execute_provider_tool_calls ... ok
+2026-10-27T15:07:30.3321244Z test streaming_adapter_rejects_missing_credential_before_network ... ok
+2026-10-27T15:07:30.3323228Z test streaming_adapter_rejects_json_success_body ... ok
+2026-10-27T15:07:30.3323980Z test streaming_adapter_rejects_missing_terminal_frame ... ok
+2026-10-27T15:07:30.3325497Z test streaming_adapter_rejects_incomplete_tool_calls ... ok
+2026-10-27T15:07:30.3332017Z test tool_round_rejection_must_not_issue_second_api_request ... ok
+2026-10-27T15:07:30.3332360Z 
+2026-10-27T15:07:30.3332683Z test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

@@ -1,0 +1,58 @@
+Test-first safeguards evidence; synthetic values only.
+
+Initial unguarded candidate:
+ℹ tests 16
+ℹ suites 0
+ℹ pass 0
+ℹ fail 16
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 210.182213
+
+Hardening RED (before error whitelist/model-default checks):
+✖ REG raw transport errors must not echo secret text (15.537793ms)
+✖ REG model defaults cannot bypass reserved parameter checks (16.352335ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 337.626228
+✖ failing tests:
+✖ REG raw transport errors must not echo secret text (15.537793ms)
+✖ REG model defaults cannot bypass reserved parameter checks (16.352335ms)
+
+GREEN: npm test -> evidence/tests.txt (37/37).
+
+Independent review regressions (auth header, compat terminal, immutable snapshot):
+✖ REVIEW auth model headers cannot override controlled credential or reach permission callback (27.751432ms)
+✖ REVIEW compat cannot synthesize success for a stream missing terminal (5.502689ms)
+✖ REVIEW callbacks cannot mutate authorized snapshot endpoint, scope or content (0.599847ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 0
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 452.034347
+✖ failing tests:
+✖ REVIEW auth model headers cannot override controlled credential or reach permission callback (27.751432ms)
+✖ REVIEW compat cannot synthesize success for a stream missing terminal (5.502689ms)
+✖ REVIEW callbacks cannot mutate authorized snapshot endpoint, scope or content (0.599847ms)
+
+After fixes:
+✔ REVIEW auth model headers cannot override controlled credential or reach permission callback (2.193686ms)
+✔ REVIEW compat cannot synthesize success for a stream missing terminal (0.292873ms)
+✔ REVIEW callbacks cannot mutate authorized snapshot endpoint, scope or content (25.10958ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 391.509967

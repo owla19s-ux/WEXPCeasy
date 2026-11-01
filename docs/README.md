@@ -65,3 +65,5 @@ AI/协作者进入仓库时，先读根目录 [README](../README.md) 了解产�
 6. 任何报告、实验或测试通过都不能自动改变用户批准的产品范围、权限政策或正式决策。
 
 - **基础能力落地规格**：[G1–G7 模块落地映射与跨对话持续工作](planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)：将基础能力逐项归入现有 owner，并规定跨 Conversation/模型/Agent 的持久检查点与恢复验收。
+
+- [API 历史复用与 Pi AI 独立验证](research/api/README.md)：历史矩阵、逐项兼容、DEC 对抗实验与 A/B/C 决策；非正式 API 重构。

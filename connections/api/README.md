@@ -33,3 +33,7 @@ API 配置与模型协议适配。AI 配置引用连接，不复制密钥；不�
 API 适配器负责 Provider/Model 配置、鉴权适配、请求和流式解析；工具意图只作为结构化提议返回给 Conversations，不在本目录直接执行。Conversations 组织逻辑生成，Permissions 判权，Connections 宿主边界记录 Operation 并派发实际工具。Provider 配置保存非秘密参数和受控凭证引用；Key 由 shared/credentials 保管。新会话/新模型不得继承旧 Operation 或旧授权。
 
 见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+
+## 独立研究与兼容证据
+
+[历史复用与 Pi AI 验证](../../docs/research/api/README.md)及[隔离实验](../../experiments/pi-ai-compat/README.md)：未修改本域正式契约，未替换产品实现。整体无退化替换未通过，具体可复用能力与缺口以报告为准。

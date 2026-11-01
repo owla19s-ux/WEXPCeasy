@@ -1,0 +1,50 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> test
+> node --test --test-concurrency=1 *.test.mjs
+
+✔ DEC-03 guarded truncation, filter, duplicate and conflicting terminals fail (39.624095ms)
+✔ DEC-04 guarded malformed, array, duplicate tool ID, missing name, out-of-order index (55.189928ms)
+✔ DEC-05 guarded multiple choices, role conflict and post-terminal content fail (6.704316ms)
+✔ DEC-06 independent raw frame, response and buffered event limits (11.42348ms)
+✔ DEC-07 continuation exact bytes accepted, byte overflow rejected without truncation (1.125702ms)
+✔ DEC-08 continuation bound to full request identity and ordered tools (0.245732ms)
+✔ DEC-09 HTTP 200 error and 401/403/429/500 redacted, no retry (12.345885ms)
+✔ DEC-10 cancellation while SDK waits for network; bounded consumer abort and late events (39.657536ms)
+✔ DEC-11 header/connect, idle and total deadlines classified separately (injected transport) (49.511243ms)
+✔ DEC-12 credential URL rejected before network; proxy fail closed; redirects not followed (7.272904ms)
+✔ DEC-13 partial then EOF is incomplete, never completed (4.374363ms)
+✔ DEC-14 generation cancellation does not mutate tool write outcome (boundary substitute) (0.372083ms)
+✔ DEC-15 two overlapping tool intentions are returned, never executed by API (18.21026ms)
+✔ DEC-16 unknown options/tool fields, reserved overrides, invalid tool args rejected (9.691602ms)
+✔ REG unsupported image user/tool history fails before credential and dispatch; text-only model succeeds (6.873913ms)
+✔ REG provider switch requires actual target authorization; config remains immutable; receipt failure is not retry (17.676424ms)
+✔ KNOWN GAP: bytes after DONE are ignored by SDK; candidate cannot certify strict post-DONE rejection (1.980895ms)
+✔ REG raw transport errors must not echo secret text (0.649182ms)
+✔ REG model defaults cannot bypass reserved parameter checks (0.200763ms)
+✔ REVIEW auth model headers cannot override controlled credential or reach permission callback (0.288506ms)
+✔ REVIEW compat cannot synthesize success for a stream missing terminal (0.129375ms)
+✔ REVIEW callbacks cannot mutate authorized snapshot endpoint, scope or content (1.970239ms)
+✔ A: official Faux custom provider registers multiple manual models, stream and collected completion (6.413556ms)
+✔ A: custom Provider and independent Connection model snapshots do not require tool support (42.468621ms)
+✔ DEC-01 native byte splits, UTF8, CRLF, comments and multiline data (5.306477ms)
+✔ DEC-02 native EOF and DONE alone fail (4.805235ms)
+✔ DEC-03 native observed gap: duplicate terminals accepted; length is done(length) (7.721734ms)
+✔ DEC-04 native malformed JSON flagged on tool, never implicitly valid (4.000348ms)
+✔ DEC-05 native observed gap: extra choices and content after terminal accepted (4.752606ms)
+✔ REG image: native replaces unsupported user image rather than rejecting (2.180567ms)
+✔ REG parameters: native unknown option silently ignored; samplingParams can override model (7.342069ms)
+✔ REG usage: omitted usage becomes zero-filled, not proof of zero billing (1.456822ms)
+✔ A Responses native typed terminal and early EOF (injected HTTP stream) (18.948177ms)
+✔ A Anthropic native text and budget request (injected HTTP SSE) (12.754994ms)
+✔ A DeepSeek thinking/tool roundtrip keeps same-model reasoning payload; cross-model strips thinking (10.120561ms)
+✔ A vision image is encoded for a declared vision model, no capability inference from name (1.866071ms)
+✔ A Google custom fetch cannot carry WEX HTTP guards: explicit SDK rejection (51.993155ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1327.200176

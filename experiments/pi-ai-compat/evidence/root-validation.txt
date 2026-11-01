@@ -1,0 +1,13 @@
+npm ci --ignore-scripts; npm test
+Final verification on integrated main baseline 819bcf6 plus research deliverables
+Linux x64 Node v24.22.1
+
+ℹ tests 50
+ℹ suites 0
+ℹ pass 50
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1273.411125
+Boundary check: errors=[]; exit 0
