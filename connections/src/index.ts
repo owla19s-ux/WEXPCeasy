@@ -24,4 +24,4 @@ export {createDispatchBoundary} from './dispatch.js';
 export type {DispatchAdapter,DispatchResult} from './dispatch.js';
 
 export {createConnectionConfigs} from './config.js';
-export type {ConnectionConfig,ConfigResult} from './config.js';
+export type {ConnectionConfig,ConfigResult,ConfigRemovalResult} from './config.js';

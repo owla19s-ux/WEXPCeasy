@@ -1,0 +1,354 @@
+✖ corrupted ledger fails closed: duplicate operation ids (3.047573ms)
+✖ corrupted ledger fails closed: empty identity (0.559041ms)
+✖ corrupted ledger fails closed: empty fingerprint (0.169392ms)
+✖ corrupted ledger fails closed: negative attempts (0.139429ms)
+✖ corrupted ledger fails closed: prepared with dispatched attempt (0.182538ms)
+✖ corrupted ledger fails closed: dispatched without attempt (0.127108ms)
+✖ corrupted ledger fails closed: more than one dispatch (0.626246ms)
+✖ corrupted ledger fails closed: prepared with observation (0.29983ms)
+✖ corrupted ledger fails closed: dispatched with observation (0.183496ms)
+✖ corrupted ledger fails closed: observed with no evidence (0.436373ms)
+✖ corrupted ledger fails closed: invalid observation phase (0.519178ms)
+✖ corrupted ledger fails closed: missing observation value (0.16037ms)
+✖ corrupted ledger fails closed: duplicate observation ids (0.268986ms)
+✖ corrupted ledger fails closed: unknown hidden by observed phase (0.13383ms)
+✖ corrupted ledger fails closed: unknown without unknown evidence (2.315472ms)
+✖ corrupted ledger fails closed: nonfinite stored JSON (0.154508ms)
+✖ invalid observation inputs never reach persistence (1.000002ms)
+✖ corrupted ledger blocks adapter dispatch (1.314555ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 0
+ℹ fail 18
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 157.663146
+
+✖ failing tests:
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: duplicate operation ids (3.047573ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: empty identity (0.559041ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: empty fingerprint (0.169392ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: negative attempts (0.139429ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: prepared with dispatched attempt (0.182538ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: dispatched without attempt (0.127108ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: more than one dispatch (0.626246ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: prepared with observation (0.29983ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: dispatched with observation (0.183496ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: observed with no evidence (0.436373ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: invalid observation phase (0.519178ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: missing observation value (0.16037ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: duplicate observation ids (0.268986ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: unknown hidden by observed phase (0.13383ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: unknown without unknown evidence (2.315472ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:25:40
+✖ corrupted ledger fails closed: nonfinite stored JSON (0.154508ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /invalid_operation_state/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:31:1
+✖ invalid observation inputs never reach persistence (1.000002ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'commit_unknown'
+  - 'invalid_request'
+
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:35:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'commit_unknown',
+    expected: 'invalid_request',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at connections/tests/ledger-validation.test.mjs:39:1
+✖ corrupted ledger blocks adapter dispatch (1.314555ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  1 !== 0
+
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/ledger-validation.test.mjs:45:31)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -5,16 +5,35 @@ export interface Operation {id:string;fingerprint:string;phase:OperationPhase;at
 interface State {format:1;operations:Operation[]}
 export type OperationResult={status:'ok';operation:Operation;revision:number}|{status:'conflict'|'unavailable'|'unknown';reason:string};
 const clone=<T>(v:T):T=>structuredClone(v);
+function canonical(v:Json,ancestors=new Set<object>()):string {
+ if(v===null||typeof v==='string'||typeof v==='boolean')return JSON.stringify(v);
+ if(typeof v==='number'){if(!Number.isFinite(v))throw Error('invalid_json');return JSON.stringify(v);}
+ if(typeof v!=='object'||ancestors.has(v))throw Error('invalid_json');
+ ancestors.add(v);
+ try{
+  if(Array.isArray(v))return '['+Array.from(v,x=>canonical(x,ancestors)).join(',')+']';
+  if(Object.getPrototypeOf(v)!==Object.prototype)throw Error('invalid_json');
+  return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k]!,ancestors)).join(',')+'}';
+ }finally{ancestors.delete(v);}
+}
+function validJson(value:Json):boolean {try{canonical(value);return true;}catch{return false;}}
+function nonempty(value:unknown):value is string {return typeof value==='string'&&value.length>0;}
+function validOperation(o:Operation):boolean {
+ if(!o||typeof o!=='object'||!nonempty(o.id)||!nonempty(o.fingerprint)||!Array.isArray(o.observations))return false;
+ if(o.observations.some(x=>!x||!nonempty(x.id)||!['observed','unknown'].includes(x.phase)||!validJson(x.value)))return false;
+ if(new Set(o.observations.map(x=>x.id)).size!==o.observations.length)return false;
+ if(o.phase==='prepared')return o.attempts===0&&o.observations.length===0;
+ if(o.attempts!==1)return false;
+ if(o.phase==='dispatched')return o.observations.length===0;
+ if(!o.observations.length)return false;
+ const hasUnknown=o.observations.some(x=>x.phase==='unknown');
+ return o.phase===(hasUnknown?'unknown':'observed');
+}
 function decode(v:Json):State {
  if(v===null)return {format:1,operations:[]};
  const s=v as unknown as State;
- if(s.format!==1||!Array.isArray(s.operations)||s.operations.some(o=>typeof o.id!=='string'||typeof o.fingerprint!=='string'||!Array.isArray(o.observations)||!Number.isSafeInteger(o.attempts)||!['prepared','dispatched','observed','unknown'].includes(o.phase)))throw Error('invalid_operation_state');
+ if(!s||s.format!==1||!Array.isArray(s.operations)||s.operations.some(o=>!validOperation(o))||new Set(s.operations.map(o=>o.id)).size!==s.operations.length)throw Error('invalid_operation_state');
  return s;
-}
-function canonical(v:Json):string {
- if(v===null||typeof v!=='object')return JSON.stringify(v);
- if(Array.isArray(v))return '['+v.map(canonical).join(',')+']';
- return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k]!)).join(',')+'}';
 }
 export function createOperationLedger(store:Store){
  function read(){const s=store.read();return {revision:s.revision,operations:clone(decode(s.value).operations)};}
@@ -32,7 +51,7 @@ export function createOperationLedger(store:Store){
   read,
   get(id:string){return read().operations.find(o=>o.id===id);},
   prepare(id:string,fingerprint:string):OperationResult {
-   if(!id||!fingerprint)return {status:'conflict',reason:'invalid_request'};
+   if(!nonempty(id)||!nonempty(fingerprint))return {status:'conflict',reason:'invalid_request'};
    try{const s=read(),prior=s.operations.find(o=>o.id===id);
     if(prior)return prior.fingerprint===fingerprint?{status:'ok',operation:prior,revision:s.revision}:{status:'conflict',reason:'intent_conflict'};
     const op:Operation={id,fingerprint,phase:'prepared',attempts:0,observations:[]};
@@ -48,7 +67,7 @@ export function createOperationLedger(store:Store){
    }catch{return {status:'unavailable',reason:'store_failed'};}
   },
   observe(id:string,observationId:string,value:Json,phase:'observed'|'unknown'):OperationResult {
-   if(!id||!observationId)return {status:'conflict',reason:'invalid_request'};
+   if(!nonempty(id)||!nonempty(observationId)||!['observed','unknown'].includes(phase)||!validJson(value))return {status:'conflict',reason:'invalid_request'};
    try{const s=read(),op=s.operations.find(o=>o.id===id);
     if(!op)return {status:'conflict',reason:'not_prepared'};
     if(op.phase==='prepared')return {status:'conflict',reason:'not_dispatched'};
@@ -56,7 +75,7 @@ export function createOperationLedger(store:Store){
     if(previous)return previous.phase===phase&&canonical(previous.value)===canonical(value)?{status:'ok',operation:op,revision:s.revision}:{status:'conflict',reason:'observation_conflict'};
     const nextObservations=[...op.observations,{id:observationId,phase,value:clone(value)}];
     const next:Operation={...op,phase:nextObservations.some(o=>o.phase==='unknown')?'unknown':'observed',observations:nextObservations};
-    return result(write('operation:observe:'+id+':'+observationId,s.revision,s.operations.map(o=>o.id===id?next:o)),next);
+    return result(write('operation:observation-v2:'+JSON.stringify([id,observationId]),s.revision,s.operations.map(o=>o.id===id?next:o)),next);
    }catch{return {status:'unavailable',reason:'store_failed'};}
   }
  });

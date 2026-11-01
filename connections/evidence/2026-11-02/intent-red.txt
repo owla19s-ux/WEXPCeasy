@@ -1,0 +1,38 @@
+✔ remove persists configuration deletion without deleting operation history (22.275365ms)
+✔ remove rejects stale revision, missing connection and reused intent (13.814281ms)
+✔ remove validates requests before committing (10.287322ms)
+✔ reopened ledger preserves deduplication and unknown evidence (7.760382ms)
+✖ different operation and observation pairs cannot collide in persistence intents (12.318821ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 439.026806
+
+✖ failing tests:
+
+test at connections/tests/persistence.test.mjs:51:1
+✖ different operation and observation pairs cannot collide in persistence intents (12.318821ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'unavailable'
+  - 'ok'
+
+      at TestContext.<anonymous> (file:///workspace/scratch/12fa229ba2da/WEXPCeasy/connections/tests/persistence.test.mjs:56:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'unavailable',
+    expected: 'ok',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -16,3 +16,16 @@ test('same intent cannot silently accept different config',()=>{
  assert.notEqual(result.status,'ok');
  assert.equal(c.get('api').enabled,true);
 });
+
+test('remove does not claim success after unknown commit',()=>{
+ const s=store(),configs=createConnectionConfigs(s);configs.put(sample,0,'create');
+ s.commit=()=>({status:'unknown',intent:'remove'});
+ assert.equal(configs.remove('api',1,'remove').status,'unknown');
+ assert.deepEqual(configs.get('api'),sample);
+});
+test('remove verifies acknowledged deletion against persisted state',()=>{
+ const s=store(),configs=createConnectionConfigs(s);configs.put(sample,0,'create');
+ s.commit=()=>({status:'committed',intent:'remove',revision:2});
+ assert.equal(configs.remove('api',1,'remove').reason,'persisted_state_mismatch');
+ assert.deepEqual(configs.get('api'),sample);
+});

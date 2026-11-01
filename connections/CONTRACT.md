@@ -252,3 +252,13 @@ connections 及具体适配器必须把真实能力与动作副作用描述清�
 - 新增、拆分或调整核心连接功能，只在 connections owner 范围内分配新编号；API/LOCAL/DSH 子模块分别维护自己的编号，不重排 F01–F15。
 - A/B/C/D 状态沿用产品总表与既有决策；编号建立不等于真实 Provider、GitHub、DSH 或 Windows 适配验收完成。
 
+
+
+## 8. 当前最小实现与本批施工事实（2026-11-02）
+
+`src/index.ts` 为当前公开出口，持久技术机制通过 `shared/src/index.ts` 注入；未建立新权威状态或扩展权限政策。
+
+- **配置**：`createConnectionConfigs(Store)` 提供 `read/get/put/remove`。`put` 同时支持创建、修改与 enabled 切换；`remove(id, expectedRevision, intent)` 只移除本地配置，检查修订、存在性和意图；返回 ok/conflict/unavailable/unknown。ACK 后回读验证删除，不因删除配置清除 Operation、终止外部进程或声称断开成功。未知提交按原 intent 经 Store.query 与配置回读核对，不盲重试。调用方须在访问配置前完成授权；此存储 API 不是独立授权入口。
+- **Operation**：`createOperationLedger(Store)` 提供 `read/get/prepare/markDispatched/observe`。当前单次派发实现最多预留一次尝试；prepared 为 0 次且无观察，dispatched 为 1 次且无观察，observed/unknown 必须带对应合法观察。观察提交意图使用独立 v2 前缀和 JSON 元组，避免 Operation/Observation ID 内含分隔符导致碰撞；不改既有观察身份。重复 Operation/Observation ID、空身份、非法 JSON、阶段/次数/观察矛盾均拒绝读取和后续派发；不把坏账本当空库、不自动修复。未知观察不会被迟到成功清除。此处次数是宿主预留记录，不证明外部实际执行次数；未提供主动远端核对/恢复授权。
+- **边界**：`createReadBoundary` 与 `createDispatchBoundary` 已存在；写边界绑定主体/入口/资源/目标/payload、检查权限、持久预留后最多调用一次。现有实现仍未接入生产 Connection 配置/版本、资源协调、凭证后端、实际 Provider/GitHub/DSH、通用回调或通知；不承诺完整 C01–C05 已实现。
+- **验证**：新增真实 SQLite 配置移除/命名空间隔离，以及不同 Node 进程间权限+账本+文件副作用组合，覆盖重启后不重复执行、撤权零写入和未知结果不重派。外部适配器仅为测试内文件夹具，Linux 证据不能替代真实服务或 Windows E4。原始命令与结果见 [本批回执](IMPLEMENTATION-2026-11-02.md)。

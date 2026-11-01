@@ -8,11 +8,11 @@
 
 状态核对日期：2026-11-02（文档入口核对；**不代表代码已重新测试**）
 
-- **当前工程位置：** 基础模块设计与首轮实现验证已完成到第八批；尚未进入由正式产品功能表和 0.1.1 版本计划驱动的模块施工阶段。
+- **当前工程位置：** 基础模块设计与首轮实现验证已完成到第八批；现按用户授权推进 connections 稳定范围的模块施工，0.1.1 版本计划尚未冻结。
 - **最近完成：** [第八批交付报告](docs/batch8/REPORT.md)。基础模块复验及 Electron / React 宿主隔离实验已完成；报告记录 Linux E2 证据，**Windows E4 尚未通过**。这不是完整桌面产品交付。
-- **已有产品源码：** `shared/`、`permissions/`、`app/`。
+- **已有产品源码：** `shared/`、`permissions/`、`app/`、`connections/src/`。连接模块当前最小范围与验证见 [施工回执](connections/IMPLEMENTATION-2026-11-02.md)。
 - **实验与原型：** Electron / React 宿主实验位于 `experiments/electron-host-spike/`；React Flow 编辑器原型位于 `workflows/editor/prototype/`。
-- **主要以契约/说明为主：** `space/`、`conversations/`、`AI/`、`connections/`、`workflows/`、`views/` 等业务域。目录或契约存在不代表产品功能已经实现。
+- **主要以契约/说明为主：** `space/`、`conversations/`、`AI/`、`workflows/`、`views/` 等业务域。目录或契约存在不代表产品功能已经实现。
 
 ### 规划依据与待闭合门槛
 

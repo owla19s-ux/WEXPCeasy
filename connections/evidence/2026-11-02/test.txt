@@ -1,0 +1,297 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> wexpc1-foundations@0.0.0 test
+> npm run build && node --test shared/tests/*.test.mjs permissions/tests/*.test.mjs app/tests/*.test.mjs connections/tests/*.test.mjs tools/tests/*.test.mjs && npm run check:boundaries
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> wexpc1-foundations@0.0.0 build
+> tsc -p tsconfig.json
+
+✔ app consumer same reader vectors: real permissions + SQLite (8.237217ms)
+✔ app consumer same reader vectors: contract double (1.906814ms)
+✔ host only injects declared dependencies and releases in reverse order once (4.898649ms)
+✔ optional failure degrades with affected dependent; critical failure fails startup (1.052646ms)
+✔ late initialization cannot register and its resources are released (14.018529ms)
+✔ release failure stays observable, cleans other modules, and can be retried (1.508288ms)
+✔ dependency cycles and duplicate module IDs fail without starting modules (0.604632ms)
+✔ shutdown stays incomplete while timed-out provider is pending or late cleanup fails (11.95523ms)
+✔ late successful release permits a later confirmed shutdown (11.505801ms)
+✔ late initialization cleanup failure is retained and can be retried (10.210729ms)
+✔ real app/shared/permissions assembly persists revocation and blocks old authorization (118.110539ms)
+✔ missing root and unavailable storage report affected capabilities without fake success (42.140462ms)
+✔ storage commit failure remains not_committed in real host consumer (33.176969ms)
+✔ existing store symlink cannot redirect host writes outside selected root (21.425967ms)
+✔ unconfirmed provider close retains root lease and exposes incomplete shutdown (16.472678ms)
+✔ foundation shutdown retries a transient provider close failure before releasing the root lease (6.491532ms)
+✔ foundation shutdown retries root lease release after providers have stopped (7.492597ms)
+✔ configuration persists with revision (6.503649ms)
+✔ stale revision rejected (0.521788ms)
+✔ invalid configuration rejected (0.514795ms)
+✔ returned objects are isolated (0.470445ms)
+✔ same intent cannot silently accept different config (0.547291ms)
+✔ remove does not claim success after unknown commit (0.947011ms)
+✔ remove verifies acknowledged deletion against persisted state (0.454999ms)
+✔ dispatch only once (6.953973ms)
+✔ changed payload rejected (0.977935ms)
+✔ parallel requests execute once (0.448797ms)
+✔ read-only authorization cannot execute write adapter (0.599605ms)
+✔ observations do not increment attempts (3.536567ms)
+✔ process restart preserves authorization, observed receipt and no-replay guarantee (482.678287ms)
+✔ unknown external outcome survives restart without repeating its side effect (271.83099ms)
+✔ corrupted ledger fails closed: duplicate operation ids (3.801237ms)
+✔ corrupted ledger fails closed: empty identity (0.686916ms)
+✔ corrupted ledger fails closed: empty fingerprint (0.271918ms)
+✔ corrupted ledger fails closed: negative attempts (0.490322ms)
+✔ corrupted ledger fails closed: prepared with dispatched attempt (0.282695ms)
+✔ corrupted ledger fails closed: dispatched without attempt (0.18964ms)
+✔ corrupted ledger fails closed: more than one dispatch (0.233878ms)
+✔ corrupted ledger fails closed: prepared with observation (0.493429ms)
+✔ corrupted ledger fails closed: dispatched with observation (0.520746ms)
+✔ corrupted ledger fails closed: observed with no evidence (0.383908ms)
+✔ corrupted ledger fails closed: invalid observation phase (0.239895ms)
+✔ corrupted ledger fails closed: missing observation value (0.463708ms)
+✔ corrupted ledger fails closed: duplicate observation ids (0.190988ms)
+✔ corrupted ledger fails closed: unknown hidden by observed phase (0.184919ms)
+✔ corrupted ledger fails closed: unknown without unknown evidence (0.238096ms)
+✔ corrupted ledger fails closed: nonfinite stored JSON (0.376373ms)
+✔ invalid observation inputs never reach persistence (0.56866ms)
+✔ corrupted ledger blocks adapter dispatch (1.403652ms)
+✔ prepare and deduplicate (3.90492ms)
+✔ observation saved once (0.822779ms)
+✔ missing intent rejected (0.313124ms)
+✔ unknown write not reported as success (0.279493ms)
+✔ observation before dispatch reservation is refused (0.527095ms)
+✔ late observation does not erase unknown outcome (0.69475ms)
+✔ remove persists configuration deletion without deleting operation history (9.20672ms)
+✔ remove rejects stale revision, missing connection and reused intent (2.981988ms)
+✔ remove validates requests before committing (4.174617ms)
+✔ reopened ledger preserves deduplication and unknown evidence (4.430535ms)
+✔ different operation and observation pairs cannot collide in persistence intents (8.675731ms)
+✔ authorized read (3.482001ms)
+✔ wrong target blocked (0.654784ms)
+✔ revoked before call blocked (0.417737ms)
+✔ cancel before call blocked (0.591261ms)
+✔ revoke while reading prevents disclosure (0.851074ms)
+✔ permissions provider and shared consumer against real SQLite (27.499889ms)
+✔ permissions consumer against shared contract double (5.780744ms)
+✔ missing trusted facts, unprivileged mutation and unavailable store never allow (0.391161ms)
+✔ ACK loss is unknown, original intent recovers without a second permission event (0.258548ms)
+✔ confirmed failure and malformed stored permission evidence never create a grant (1.999454ms)
+✔ real SQLite competing process cannot overwrite locked revision (1259.953693ms)
+✔ shared provider: same contract vectors against SQLite real transactions with transport fault port (8.872737ms)
+✔ consumer double: same success, failure, ACK-loss and conflict vectors (0.903693ms)
+✔ actual SQLite read-only failure is confirmed not committed (1.350413ms)
+✔ root identity, realpath containment and cooperative lock fail closed (29.576861ms)
+✔ root diagnostics distinguish absent, missing volume, denied and corrupt (3.859646ms)
+✔ technical diagnostics accept codes only; secret and business fields are omitted (1.843757ms)
+✔ unknown existing root lock is never cleaned and foreign owner cannot release (9.228805ms)
+✔ diagnostic sink failure is observable without rewriting business results (0.469633ms)
+✔ root marker must be a regular non-symlink file (3.783057ms)
+✔ failed owner write cleans its exact token and leaves unknown lock contents untouched (9.173839ms)
+✔ CAS, original intent replay and conflict survive reopen (6.660782ms)
+✔ sparse arrays are rejected before commit and cannot corrupt readable snapshot (1.163909ms)
+✔ nonempty real AST graph accepts public dependency (10.09887ms)
+✔ rejects private import (0.788099ms)
+✔ rejects reverse app (0.548656ms)
+✔ rejects shared business (0.600687ms)
+✔ rejects renderer Node (0.465268ms)
+✔ rejects renderer Electron (0.448135ms)
+✔ rejects renderer storage (0.71156ms)
+✔ rejects file cycle (0.320109ms)
+✔ rejects module cycle (0.346443ms)
+✔ rejects parse failure (1.092671ms)
+✔ rejects dynamic unresolved (0.3845ms)
+✔ rejects missing file (0.210174ms)
+✔ rejects empty graph (0.260816ms)
+✔ type imports cannot bypass module and private boundaries (1.228752ms)
+✔ renderer cannot import permission authority through its public barrel (0.549679ms)
+ℹ tests 98
+ℹ suites 0
+ℹ pass 98
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1678.282051
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> wexpc1-foundations@0.0.0 check:boundaries
+> node tools/check-boundaries.mjs
+
+{
+  "files": 14,
+  "edges": [
+    [
+      "app/src/foundations.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "permissions/src/index.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "permissions/src/index.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "app/src/assembly.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "app/src/assembly.ts"
+    ],
+    [
+      "app/src/index.ts",
+      "app/src/assembly.ts"
+    ],
+    [
+      "app/src/index.ts",
+      "app/src/assembly.ts"
+    ],
+    [
+      "app/src/index.ts",
+      "app/src/foundations.ts"
+    ],
+    [
+      "app/src/index.ts",
+      "app/src/foundations.ts"
+    ],
+    [
+      "app/src/main.ts",
+      "app/src/index.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/storage.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/storage.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/paths.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/paths.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/diagnostics.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/diagnostics.ts"
+    ],
+    [
+      "permissions/src/index.ts",
+      "permissions/src/service.ts"
+    ],
+    [
+      "permissions/src/index.ts",
+      "permissions/src/service.ts"
+    ],
+    [
+      "permissions/src/service.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "connections/src/config.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "connections/src/dispatch.ts",
+      "permissions/src/index.ts"
+    ],
+    [
+      "connections/src/dispatch.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "connections/src/dispatch.ts",
+      "connections/src/operations.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "permissions/src/index.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/operations.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/operations.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/dispatch.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/dispatch.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/config.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/config.ts"
+    ],
+    [
+      "connections/src/operations.ts",
+      "shared/src/index.ts"
+    ]
+  ],
+  "moduleEdges": [
+    [
+      "app",
+      "shared"
+    ],
+    [
+      "app",
+      "shared"
+    ],
+    [
+      "app",
+      "permissions"
+    ],
+    [
+      "app",
+      "permissions"
+    ],
+    [
+      "permissions",
+      "shared"
+    ],
+    [
+      "connections",
+      "shared"
+    ],
+    [
+      "connections",
+      "permissions"
+    ],
+    [
+      "connections",
+      "shared"
+    ],
+    [
+      "connections",
+      "permissions"
+    ],
+    [
+      "connections",
+      "shared"
+    ]
+  ],
+  "errors": []
+}
