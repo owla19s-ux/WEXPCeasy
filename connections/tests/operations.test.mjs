@@ -40,3 +40,13 @@ test('observation before dispatch reservation is refused',()=>{
  assert.equal(l.observe('early','result',{ok:true},'observed').status,'conflict');
  assert.equal(l.get('early').observations.length,0);
 });
+
+test('late observation does not erase unknown outcome',()=>{
+ const l=createOperationLedger(store());
+ l.prepare('late','fingerprint');
+ l.markDispatched('late');
+ assert.equal(l.observe('late','disconnect',{source:'transport'},'unknown').status,'ok');
+ assert.equal(l.observe('late','late-result',{source:'remote'},'observed').status,'ok');
+ assert.equal(l.get('late').phase,'unknown');
+ assert.equal(l.get('late').observations.length,2);
+});
