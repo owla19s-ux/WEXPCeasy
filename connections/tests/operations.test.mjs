@@ -19,6 +19,7 @@ test('prepare and deduplicate',()=>{
 test('observation saved once',()=>{
  const l=createOperationLedger(store());
  l.prepare('a','x');
+ l.markDispatched('a');
  assert.equal(l.observe('a','event',{result:'ok'},'observed').status,'ok');
  assert.equal(l.observe('a','event',{result:'ok'},'observed').status,'ok');
  assert.equal(l.get('a').observations.length,1);
