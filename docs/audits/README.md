@@ -4,6 +4,9 @@
 
 ## 审查报告
 
+- [非代码文档体系重复、冲突与权威漂移审查（2026-11-02）](DOCUMENT-SYSTEM-CONSISTENCY-AUDIT-2026-11-02.md)：首轮目录及关键正文审查，含 DOC-01～12 风险清单；尚未完成全量链接和语义 diff。
+
+
 - [架构验证顺序与版本门槛](ARCHITECTURE-VALIDATION-ORDER-AND-VERSION-GATE.md)
 - [DSH / WEXPC1 能力差距矩阵](DSH-WEXPC1-GAP-MATRIX-V0.1.md)
 - [WEXPC 源码边界只读审查](WEXPC-SOURCE-BOUNDARY-READONLY-2026-10-28.md)
