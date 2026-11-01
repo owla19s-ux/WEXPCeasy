@@ -34,8 +34,9 @@ export function createOperationLedger(store:Store){
     if(!op)return {status:'conflict',reason:'not_prepared'};
     const intent='operation:observe:'+id+':'+observationId;
     const old=store.query(intent);
-    if(old)return {status:'ok',operation:op,revision:snap.revision};
-    const next:Operation={...op,phase,attempts:op.attempts+1,observations:[...op.observations,copy(value)]};
+    if(old){const recorded=op.observations.find(v=>v!==null&&typeof v==='object'&&!Array.isArray(v)&&(v as Record<string,Json>).id===observationId) as Record<string,Json>|undefined;
+     return recorded&&recorded.phase===phase&&JSON.stringify(recorded.value)===JSON.stringify(value)?{status:'ok',operation:op,revision:snap.revision}:{status:'conflict',reason:'observation_conflict'};}
+    const next:Operation={...op,phase,attempts:op.attempts+1,observations:[...op.observations,{id:observationId,phase,value:copy(value)}]};
     const result=write(intent,snap.revision,snap.operations.map(o=>o.id===id?next:o));
     if(result.status==='committed')return {status:'ok',operation:copy(next),revision:result.revision};
     return {status:result.status==='unknown'?'unknown':result.reason==='revision_conflict'?'conflict':'unavailable',reason:result.status==='unknown'?'commit_unknown':result.reason};
