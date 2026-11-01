@@ -16,3 +16,6 @@ export function createReadBoundary(permission:PermissionReader,adapter:ReadAdapt
   }catch{return {status:'unavailable',reason:'adapter_failed'};}
  }};
 }
+
+export {createOperationLedger} from './operations.js';
+export type {Operation,OperationResult,OperationPhase} from './operations.js';
