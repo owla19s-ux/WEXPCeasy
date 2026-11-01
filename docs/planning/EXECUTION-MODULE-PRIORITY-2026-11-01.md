@@ -3,7 +3,7 @@
 ## 用户确认的优先次序
 
 1. **Runtime/调度**：主线。先做 workflows/runtime 独立施工与验收规格，再落地最小正确性链路。见 [Runtime 验收规格](../../workflows/runtime/ACCEPTANCE.md)。
-2. **GitHub 连接器**：优先复用旧 WEX/WEXPC 已有成果；先核实现有代码/证据和新 Electron/TypeScript 宿主适配成本，不重复造轮子。见 [GitHub 复用契约](../../connections/github/CONTRACT.md)。
+2. **GitHub 连接器**：以 GitHub 官方 github-mcp-server 为首选，Octokit.js REST/GraphQL 补全官方 MCP 未覆盖的能力；WEX 做能力适配、授权、Operation/Receipt 和验收接线，不自行重写 GitHub API。旧 WEX/WEXPC 模块仅作参考。见 [官方 GitHub 接入契约](../../connections/github/CONTRACT.md)。
 3. **API、Local、MODE、SD**：已有 CONTRACT 业务编号，下一步补独立验收表和组合验收，不重开整体架构；缺口按领域分配并保留 B/C/D。具体矩阵见本文件下文。
 4. **Accounts**：仅定义未来主体身份与账号生命周期边界，不启用注册、云账号服务器、组织多租户或跨设备同步。见 [Accounts 预留边界](../../accounts/BOUNDARY.md)。
 5. **DSH 原生 Core+Loader 插件宿主研究**：**暂缓**；保留已有实验与兼容性证据，不作为 Runtime、GitHub 或首版入口前置。外部 DSH Agent 连接器与此不同，不因此被要求实现原生宿主。
