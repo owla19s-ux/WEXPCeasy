@@ -33,3 +33,10 @@ test('unknown write not reported as success',()=>{
  const l=createOperationLedger(s);
  assert.equal(l.prepare('a','x').status,'unknown');
 });
+
+test('observation before dispatch reservation is refused',()=>{
+ const l=createOperationLedger(store());
+ l.prepare('early','fingerprint');
+ assert.equal(l.observe('early','result',{ok:true},'observed').status,'conflict');
+ assert.equal(l.get('early').observations.length,0);
+});
