@@ -4,8 +4,7 @@
 
 ## 研究文档
 
-- [API 历史成果提取：APS → WEX → WEXPC → WEXPCeasy 与 Pi AI 复用边界](API-HISTORY-APS-WEX-WEXPC-2026-11-01.md)
-
+- [API 历史沿革（历史索引）](API-HISTORY-APS-WEX-WEXPC-2026-11-01.md) → [Pi AI 后续实验与有条件技术建议](api/README.md)。历史未验证判断不可覆盖后续实验事实；技术推荐不等于产品重构已批准。
 - [产品需求重新理解与工程偏差审查](PRODUCT-REINTERPRETATION-AND-ENGINEERING-REVIEW-2026-10-30.md)
 - [产品功能全景](PRODUCT-FUNCTION-LANDSCAPE-2026-10-31.md)
 - [外部 Agent 生态](AGENT-ECOSYSTEM-2026-10-31.md)
