@@ -1,0 +1,41 @@
+wex-service-red.log
+✖ connection service composes configured dispatch without exposing ledger mutation (5.709903ms)
+✖ stop timeout retains in-flight receipt and later stop confirms completion (2.22179ms)
+✖ adapter reentrant stop observes an already registered in-flight operation (2.722463ms)
+✖ duplicate static adapters fail before any operation is created (5.125217ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 188.614135
+✖ failing tests:
+✖ connection service composes configured dispatch without exposing ledger mutation (5.709903ms)
+✖ stop timeout retains in-flight receipt and later stop confirms completion (2.22179ms)
+✖ adapter reentrant stop observes an already registered in-flight operation (2.722463ms)
+✖ duplicate static adapters fail before any operation is created (5.125217ms)
+
+wex-app-connections-red.log
+✖ trusted app consumes real configured connections and reopens without replay (32.047661ms)
+✖ host keeps operation stores and root locked while adapter result is pending (11.254697ms)
+✖ unsafe connection store path degrades only optional connections (8.570139ms)
+✖ corrupt connection data is not replaced by an empty ready module (8.279648ms)
+✖ connection store close failure retains root lease and retries only unclosed stores (5.35752ms)
+✖ failed initialization retains any unclosed partial stores until stop retry (5.106517ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 256.782571
+✖ failing tests:
+✖ trusted app consumes real configured connections and reopens without replay (32.047661ms)
+✖ host keeps operation stores and root locked while adapter result is pending (11.254697ms)
+✖ unsafe connection store path degrades only optional connections (8.570139ms)
+✖ corrupt connection data is not replaced by an empty ready module (8.279648ms)
+✖ connection store close failure retains root lease and retries only unclosed stores (5.35752ms)
+✖ failed initialization retains any unclosed partial stores until stop retry (5.106517ms)

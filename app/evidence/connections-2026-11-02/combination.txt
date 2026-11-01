@@ -1,0 +1,20 @@
+✔ trusted app consumes real configured connections and reopens without replay (71.033689ms)
+✔ host keeps operation stores and root locked while adapter result is pending (59.041411ms)
+✔ unsafe connection store path degrades only optional connections (17.310813ms)
+✔ corrupt connection data is not replaced by an empty ready module (14.205531ms)
+✔ connection store close failure retains root lease and retries only unclosed stores (10.870674ms)
+✔ failed initialization retains any unclosed partial stores until stop retry (18.57294ms)
+✔ separate app processes persist config, authorization and receipt without replay (283.514064ms)
+✔ connection service composes configured dispatch without exposing ledger mutation (17.854742ms)
+✔ stop timeout retains in-flight receipt and later stop confirms completion (16.723111ms)
+✔ adapter reentrant stop observes an already registered in-flight operation (16.839637ms)
+✔ duplicate static adapters fail before any operation is created (3.262022ms)
+✔ unknown adapter cannot manufacture an operation and throwing adapter does not leak shutdown work (7.378805ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 626.070116

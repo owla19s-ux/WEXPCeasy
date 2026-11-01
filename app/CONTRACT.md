@@ -115,3 +115,16 @@ APP-02/03的部分模块装配、释放重试和Electron Linux隔离实验已有
 - **产品待决**：PRD-D04 后台策略、PRD-D05 数据保留、PRD-D07 自动更新、PRD-C06/C07 Windows/备份恢复实验。
 
 维护规则：宿主/安装/进程/装配/协调语义写回本契约；领域数据格式、Task/Operation/权限/凭证秘密由相应 owner 维护；Windows 实测只更新证据，不自动关闭用户待决政策。
+
+
+## 8. 可选连接服务的可信装配（2026-11-02）
+
+`FoundationOptions.connections` 是可信静态装配选项，提供已验证来源的内置 adapters 和可选技术 shutdownTimeoutMs（默认 1000ms）；未提供时不装配连接模块。app 只从 connections 的 `src/index.ts` 消费 `createConnectionService`，把 permissions 窄面及隔离 Store 注入；不读取/修改其私有业务实现或另建状态。
+
+- 连接配置技术库为所选根内 `connections-configs.sqlite`（namespace connection-configs），操作技术库为 `connections-operations.sqlite`（namespace connection-operations）。app 仅维护技术打开/关闭句柄；schema、修订及历史语义归 connections。
+- 初始化前检查根身份及数据库/journal/wal/shm 既存路径；不接受链接/非普通文件。缺失根不建立替代库。Windows 同用户竞态/句柄安全仍未验证。
+- `host.connections` 只暴露可信主进程 client（configs、只读 operations、受控 dispatch），不传给 Renderer、模型、连接器或外部请求。用户身份/真实目标及适用权限仍由原 owner 和入口保护。
+- connections 是可选模块：不可用/坏数据为 degraded，不阻断可用 permissions，也不把坏库清空恢复。初始化部分成功后的关库失败保留待回收句柄。
+- app stop 请求连接服务排空在途和回执，排空未知或关库失败则 incomplete，保留根锁并可重试；已关闭成功的句柄不重复关闭。没有强杀外部工作、重放未知操作、自动授予、后台常驻或 UI 退出政策。
+
+真实组合与 E2 证据见[施工回执](CONNECTIONS-INTEGRATION-2026-11-02.md)。不代表 APP-IPC、Windows E4 或任何真实外部服务已验收。

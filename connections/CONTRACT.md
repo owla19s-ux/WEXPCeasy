@@ -279,3 +279,14 @@ connections 及具体适配器必须把真实能力与动作副作用描述清�
 7. 可信宿主仍须把 target 绑定为含真实 backend/对象身份的已授权目标，适配器不得将获准目标重定向到其他资源；配置绑定不替代该解析/授权责任。此处没有增加配置专属授权维度、自动升级兼容范围或跨进程撤权/派发原子性承诺。全命名空间修订使无关连接修改也可能暂时阻塞新派发，当前采用保守冲突拒绝。
 
 对应 C01/C02、CONNECTIONS-CONNECTION-001、CONNECTIONS-VERSION-001、CONNECTIONS-ADMISSION-001、CONNECTIONS-OPERATION-001 的最小本域实现；不将 B/C/D 或完整功能域标记为验收完成。证据及已知限制见 [本批回执](CONFIGURED-DISPATCH-2026-11-02.md)。
+
+
+## 10. 可信静态服务及宿主消费（2026-11-02）
+
+`createConnectionService(permission, configStore, operationStore, adapters, {shutdownTimeoutMs?})` 组合本域已有公开能力，不是插件运行时或能力发现框架。仅接受非空 id/version 与 execute 的可信内置适配器、拒绝重复 id；构造时核对已有配置与操作账本，不把坏数据当空服务。
+
+服务 client 提供 configs/read/get/put/remove、operations/read/get 与 dispatch(adapterId, request, operationId, connectionId, revision, target, fingerprint, payload)；不公开 ledger prepare/markDispatched/observe、Store 或秘密。上述管理/历史面只供可信宿主，用户/外部读取仍需宿主按权限投影。
+
+服务在进入依赖/适配器前登记在途令牌；stop 一旦开始，拒绝新派发及管理读写，允许已经开始的派发完成内部观察保存。等待到全部结束返回 stopped，超过技术等待时间返回 incomplete；再次 stop 可确认排空。stop 不取消外部进程、不清除 unknown，不把 adapter exception 当外部未执行。技术存储由 app 在服务排空后关闭；关闭/初始化失败的句柄追踪也归 app 技术生命周期。
+
+app 已通过本域公开出口消费该 client，见[宿主组合回执](../app/CONNECTIONS-INTEGRATION-2026-11-02.md)。这不等于已具备真实适配器、通用 Capability/Service 动态生命周期、Renderer/IPC 或最终 UI。

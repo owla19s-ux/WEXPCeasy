@@ -1,0 +1,436 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> wexpc1-foundations@0.0.0 test
+> npm run build && node --test shared/tests/*.test.mjs permissions/tests/*.test.mjs app/tests/*.test.mjs connections/tests/*.test.mjs tools/tests/*.test.mjs && npm run check:boundaries
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> wexpc1-foundations@0.0.0 build
+> tsc -p tsconfig.json
+
+✔ trusted app consumes real configured connections and reopens without replay (72.513778ms)
+✔ host keeps operation stores and root locked while adapter result is pending (46.113208ms)
+✔ unsafe connection store path degrades only optional connections (14.624294ms)
+✔ corrupt connection data is not replaced by an empty ready module (10.490308ms)
+✔ connection store close failure retains root lease and retries only unclosed stores (18.719605ms)
+✔ failed initialization retains any unclosed partial stores until stop retry (19.575008ms)
+✔ separate app processes persist config, authorization and receipt without replay (715.922537ms)
+✔ app consumer same reader vectors: real permissions + SQLite (40.810832ms)
+✔ app consumer same reader vectors: contract double (0.703989ms)
+✔ host only injects declared dependencies and releases in reverse order once (6.815414ms)
+✔ optional failure degrades with affected dependent; critical failure fails startup (3.646464ms)
+✔ late initialization cannot register and its resources are released (18.970492ms)
+✔ release failure stays observable, cleans other modules, and can be retried (3.52997ms)
+✔ dependency cycles and duplicate module IDs fail without starting modules (0.317918ms)
+✔ shutdown stays incomplete while timed-out provider is pending or late cleanup fails (11.447452ms)
+✔ late successful release permits a later confirmed shutdown (11.379496ms)
+✔ late initialization cleanup failure is retained and can be retried (11.011917ms)
+✔ real app/shared/permissions assembly persists revocation and blocks old authorization (37.047834ms)
+✔ missing root and unavailable storage report affected capabilities without fake success (34.123751ms)
+✔ storage commit failure remains not_committed in real host consumer (10.698976ms)
+✔ existing store symlink cannot redirect host writes outside selected root (7.306983ms)
+✔ unconfirmed provider close retains root lease and exposes incomplete shutdown (7.602542ms)
+✔ foundation shutdown retries a transient provider close failure before releasing the root lease (6.906485ms)
+✔ foundation shutdown retries root lease release after providers have stopped (6.280113ms)
+✔ configuration persists with revision (3.649224ms)
+✔ stale revision rejected (0.528798ms)
+✔ invalid configuration rejected (0.441141ms)
+✔ returned objects are isolated (0.755531ms)
+✔ same intent cannot silently accept different config (0.787013ms)
+✔ remove does not claim success after unknown commit (0.544647ms)
+✔ remove verifies acknowledged deletion against persisted state (0.530205ms)
+✔ configured dispatch binds persisted revision and adapter version (21.309325ms)
+✔ unauthorized caller cannot inspect configuration existence (1.962982ms)
+✔ configured dispatch blocks disabled (3.089597ms)
+✔ configured dispatch blocks removed (2.977691ms)
+✔ configured dispatch blocks different adapter (3.792294ms)
+✔ stale configuration revision blocks before intent is recorded (4.658874ms)
+✔ empty adapter version is not executable (3.789312ms)
+✔ disable during dispatch reservation prevents external execution (8.323066ms)
+✔ remove during dispatch reservation prevents external execution (12.379505ms)
+✔ version during dispatch reservation prevents external execution (6.81959ms)
+✔ revoke during dispatch reservation prevents external execution (7.73966ms)
+✔ in-flight configuration stays bound while later edits block replay (18.597366ms)
+✔ configured entry snapshots payload before consulting permission dependencies (7.662963ms)
+✔ uncloneable configured payload is a rejected input, not an unknown external result (3.160719ms)
+✔ failed not-dispatched receipt remains unknown while the adapter stays uncalled (8.290124ms)
+✔ dispatch only once (7.909068ms)
+✔ changed payload rejected (2.236137ms)
+✔ parallel requests execute once (1.122317ms)
+✔ read-only authorization cannot execute write adapter (0.361938ms)
+✔ payload mutation during permission checks cannot change dispatched input (2.508599ms)
+✔ invalid dispatch payload is rejected: sparse array (0.430863ms)
+✔ invalid dispatch payload is rejected: undefined value (0.316181ms)
+✔ invalid dispatch payload is rejected: cyclic object (0.550223ms)
+✔ observations do not increment attempts (3.840078ms)
+✔ process restart preserves authorization, observed receipt and no-replay guarantee (466.387181ms)
+✔ unknown external outcome survives restart without repeating its side effect (218.683668ms)
+✔ configured dispatch reopens its original binding and refuses a new endpoint for the same intent (356.386602ms)
+✔ corrupted ledger fails closed: duplicate operation ids (3.076179ms)
+✔ corrupted ledger fails closed: empty identity (0.300316ms)
+✔ corrupted ledger fails closed: empty fingerprint (0.297094ms)
+✔ corrupted ledger fails closed: negative attempts (0.425874ms)
+✔ corrupted ledger fails closed: prepared with dispatched attempt (0.32587ms)
+✔ corrupted ledger fails closed: dispatched without attempt (0.244491ms)
+✔ corrupted ledger fails closed: more than one dispatch (0.757768ms)
+✔ corrupted ledger fails closed: prepared with observation (0.436404ms)
+✔ corrupted ledger fails closed: dispatched with observation (0.753333ms)
+✔ corrupted ledger fails closed: observed with no evidence (0.587916ms)
+✔ corrupted ledger fails closed: invalid observation phase (0.301405ms)
+✔ corrupted ledger fails closed: missing observation value (0.249644ms)
+✔ corrupted ledger fails closed: duplicate observation ids (0.190106ms)
+✔ corrupted ledger fails closed: unknown hidden by observed phase (0.209866ms)
+✔ corrupted ledger fails closed: unknown without unknown evidence (0.284422ms)
+✔ corrupted ledger fails closed: nonfinite stored JSON (0.192642ms)
+✔ invalid observation inputs never reach persistence (1.344232ms)
+✔ corrupted ledger blocks adapter dispatch (1.510718ms)
+✔ prepare and deduplicate (2.801071ms)
+✔ observation saved once (1.237829ms)
+✔ missing intent rejected (0.47329ms)
+✔ unknown write not reported as success (0.312363ms)
+✔ observation before dispatch reservation is refused (0.415857ms)
+✔ late observation does not erase unknown outcome (0.826818ms)
+✔ remove persists configuration deletion without deleting operation history (25.798785ms)
+✔ remove rejects stale revision, missing connection and reused intent (6.283617ms)
+✔ remove validates requests before committing (1.776933ms)
+✔ reopened ledger preserves deduplication and unknown evidence (8.262627ms)
+✔ different operation and observation pairs cannot collide in persistence intents (5.771378ms)
+✔ operation binding survives reopening and cannot be changed by a duplicate prepare (3.774239ms)
+✔ legacy operation remains readable and cannot be silently rebound (5.465125ms)
+✔ invalid operation bindings cannot be persisted or accepted from storage (4.230986ms)
+✔ authorized read (2.922693ms)
+✔ wrong target blocked (0.268461ms)
+✔ revoked before call blocked (0.284174ms)
+✔ cancel before call blocked (0.23373ms)
+✔ revoke while reading prevents disclosure (1.044574ms)
+✔ connection service composes configured dispatch without exposing ledger mutation (39.40174ms)
+✔ stop timeout retains in-flight receipt and later stop confirms completion (17.034888ms)
+✔ adapter reentrant stop observes an already registered in-flight operation (16.906835ms)
+✔ duplicate static adapters fail before any operation is created (4.677496ms)
+✔ unknown adapter cannot manufacture an operation and throwing adapter does not leak shutdown work (10.629408ms)
+✔ permissions provider and shared consumer against real SQLite (8.190464ms)
+✔ permissions consumer against shared contract double (2.933762ms)
+✔ missing trusted facts, unprivileged mutation and unavailable store never allow (0.624011ms)
+✔ ACK loss is unknown, original intent recovers without a second permission event (0.52803ms)
+✔ confirmed failure and malformed stored permission evidence never create a grant (2.032964ms)
+✔ real SQLite competing process cannot overwrite locked revision (1281.561642ms)
+✔ shared provider: same contract vectors against SQLite real transactions with transport fault port (11.426144ms)
+✔ consumer double: same success, failure, ACK-loss and conflict vectors (1.266011ms)
+✔ actual SQLite read-only failure is confirmed not committed (2.300766ms)
+✔ root identity, realpath containment and cooperative lock fail closed (25.361086ms)
+✔ root diagnostics distinguish absent, missing volume, denied and corrupt (5.971244ms)
+✔ technical diagnostics accept codes only; secret and business fields are omitted (2.043539ms)
+✔ unknown existing root lock is never cleaned and foreign owner cannot release (14.478662ms)
+✔ diagnostic sink failure is observable without rewriting business results (0.800148ms)
+✔ root marker must be a regular non-symlink file (3.928475ms)
+✔ failed owner write cleans its exact token and leaves unknown lock contents untouched (9.596608ms)
+✔ CAS, original intent replay and conflict survive reopen (6.91444ms)
+✔ sparse arrays are rejected before commit and cannot corrupt readable snapshot (0.989114ms)
+✔ nonempty real AST graph accepts public dependency (13.31989ms)
+✔ rejects private import (1.091674ms)
+✔ rejects reverse app (1.107979ms)
+✔ rejects shared business (0.579878ms)
+✔ rejects renderer Node (0.412253ms)
+✔ rejects renderer Electron (0.472576ms)
+✔ rejects renderer storage (1.147941ms)
+✔ rejects file cycle (1.12329ms)
+✔ rejects module cycle (0.921577ms)
+✔ rejects parse failure (1.011126ms)
+✔ rejects dynamic unresolved (0.546546ms)
+✔ rejects missing file (0.432477ms)
+✔ rejects empty graph (0.262582ms)
+✔ type imports cannot bypass module and private boundaries (1.681357ms)
+✔ renderer cannot import permission authority through its public barrel (0.29642ms)
+ℹ tests 133
+ℹ suites 0
+ℹ pass 133
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2029.055594
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> wexpc1-foundations@0.0.0 check:boundaries
+> node tools/check-boundaries.mjs
+
+{
+  "files": 16,
+  "edges": [
+    [
+      "app/src/foundations.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "permissions/src/index.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "permissions/src/index.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "connections/src/index.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "connections/src/index.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "app/src/assembly.ts"
+    ],
+    [
+      "app/src/foundations.ts",
+      "app/src/assembly.ts"
+    ],
+    [
+      "app/src/index.ts",
+      "app/src/assembly.ts"
+    ],
+    [
+      "app/src/index.ts",
+      "app/src/assembly.ts"
+    ],
+    [
+      "app/src/index.ts",
+      "app/src/foundations.ts"
+    ],
+    [
+      "app/src/index.ts",
+      "app/src/foundations.ts"
+    ],
+    [
+      "app/src/main.ts",
+      "app/src/index.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/storage.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/storage.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/paths.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/paths.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/diagnostics.ts"
+    ],
+    [
+      "shared/src/index.ts",
+      "shared/src/diagnostics.ts"
+    ],
+    [
+      "permissions/src/index.ts",
+      "permissions/src/service.ts"
+    ],
+    [
+      "permissions/src/index.ts",
+      "permissions/src/service.ts"
+    ],
+    [
+      "permissions/src/service.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "connections/src/config.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "connections/src/configured-dispatch.ts",
+      "permissions/src/index.ts"
+    ],
+    [
+      "connections/src/configured-dispatch.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "connections/src/configured-dispatch.ts",
+      "connections/src/config.ts"
+    ],
+    [
+      "connections/src/configured-dispatch.ts",
+      "connections/src/operations.ts"
+    ],
+    [
+      "connections/src/configured-dispatch.ts",
+      "connections/src/dispatch.ts"
+    ],
+    [
+      "connections/src/configured-dispatch.ts",
+      "connections/src/dispatch.ts"
+    ],
+    [
+      "connections/src/dispatch.ts",
+      "permissions/src/index.ts"
+    ],
+    [
+      "connections/src/dispatch.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "connections/src/dispatch.ts",
+      "connections/src/operations.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "permissions/src/index.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/operations.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/operations.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/dispatch.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/dispatch.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/config.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/config.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/configured-dispatch.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/configured-dispatch.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/service.ts"
+    ],
+    [
+      "connections/src/index.ts",
+      "connections/src/service.ts"
+    ],
+    [
+      "connections/src/operations.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "connections/src/service.ts",
+      "shared/src/index.ts"
+    ],
+    [
+      "connections/src/service.ts",
+      "permissions/src/index.ts"
+    ],
+    [
+      "connections/src/service.ts",
+      "connections/src/config.ts"
+    ],
+    [
+      "connections/src/service.ts",
+      "connections/src/config.ts"
+    ],
+    [
+      "connections/src/service.ts",
+      "connections/src/operations.ts"
+    ],
+    [
+      "connections/src/service.ts",
+      "connections/src/configured-dispatch.ts"
+    ],
+    [
+      "connections/src/service.ts",
+      "connections/src/configured-dispatch.ts"
+    ],
+    [
+      "connections/src/service.ts",
+      "connections/src/dispatch.ts"
+    ]
+  ],
+  "moduleEdges": [
+    [
+      "app",
+      "shared"
+    ],
+    [
+      "app",
+      "shared"
+    ],
+    [
+      "app",
+      "permissions"
+    ],
+    [
+      "app",
+      "permissions"
+    ],
+    [
+      "app",
+      "connections"
+    ],
+    [
+      "app",
+      "connections"
+    ],
+    [
+      "permissions",
+      "shared"
+    ],
+    [
+      "connections",
+      "shared"
+    ],
+    [
+      "connections",
+      "permissions"
+    ],
+    [
+      "connections",
+      "shared"
+    ],
+    [
+      "connections",
+      "permissions"
+    ],
+    [
+      "connections",
+      "shared"
+    ],
+    [
+      "connections",
+      "permissions"
+    ],
+    [
+      "connections",
+      "shared"
+    ],
+    [
+      "connections",
+      "shared"
+    ],
+    [
+      "connections",
+      "permissions"
+    ]
+  ],
+  "errors": []
+}

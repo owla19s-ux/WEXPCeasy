@@ -28,3 +28,6 @@ export type {ConnectionConfig,ConfigResult,ConfigRemovalResult} from './config.j
 
 export {createConfiguredDispatchBoundary} from './configured-dispatch.js';
 export type {ConfiguredDispatchAdapter} from './configured-dispatch.js';
+
+export {createConnectionService} from './service.js';
+export type {ConnectionService,ConnectionClient} from './service.js';

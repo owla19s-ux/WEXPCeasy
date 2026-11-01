@@ -1,6 +1,6 @@
 # app
 
-**当前：第七批基础产品实现已落地；稳定实现与限制见本文“第七批实际实现”及[验收报告](../docs/batch7/REPORT.md)。下方阶段描述保留为历史依据。**
+**当前：基础宿主已可选装配真实 connections 服务，包含持久配置/操作与退出排空。最新范围及证据见[宿主连接组合回执](CONNECTIONS-INTEGRATION-2026-11-02.md)；第七/八批描述保留为历史依据。**
 程序启动、窗口生命周期和功能装配。主界面布局归 UI，不在启动入口累积业务。
 
 历史初始状态（2026-10-30）：当时本目录只有职责说明，尚无产品实现；该状态已由第七批基础实现覆盖。当前代码与限制以本文“第七批实际实现”及后续批次补充为准。目录不是运行时数据路径，也不代表独立插件、进程或编译包。
@@ -84,3 +84,10 @@
 App 负责把可信宿主身份/入口事实和窄能力注入模块，并协调启动、退出、数据根接回及诊断入口；不拥有权限政策、Task 检查点或 Operation 账本。重启后由各 owner 恢复自己的事实，App 不自动重派未知工作。应用关闭期间是否后台运行仍属既有用户待决，不因跨对话持续工作要求而默认常驻。
 
 见[基础能力落地映射](../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+
+
+## 可选连接服务装配（2026-11-02）
+
+`startFoundations({dataRoot, trust, connections:{adapters, shutdownTimeoutMs?}})` 通过 connections 公开出口装配配置绑定写派发；省略 connections 保持原路径。可信宿主得到 `host.connections` 的 configs、operations（只读）和 dispatch，不得到 Store/DB 或账本写入口。初始化失败为 degraded 且不暴露连接 client；退出先排空，再关库，未完成时保留根锁并允许再次 stop。
+
+数据库、生命周期、真实组合验证和未完成项以[本批回执](CONNECTIONS-INTEGRATION-2026-11-02.md)与[本域契约](CONTRACT.md#8-可选连接服务的可信装配2026-11-02)为准；这不是 Renderer/IPC 或正式 Electron UI。
