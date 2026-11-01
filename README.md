@@ -14,14 +14,16 @@
 - **实验与原型：** Electron / React 宿主实验位于 `experiments/electron-host-spike/`；React Flow 编辑器原型位于 `workflows/editor/prototype/`。
 - **主要以契约/说明为主：** `space/`、`conversations/`、`AI/`、`connections/`、`workflows/`、`views/` 等业务域。目录或契约存在不代表产品功能已经实现。
 
-### 尚未建立的规划依据
+### 规划依据与待闭合门槛
 
-1. **产品功能与第二轮审查：** 已建立 [F01–F15基础功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)、[交互与UI边界](docs/product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、[第二轮需求对冲审查](docs/product/SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md)、[216项模块契约映射](docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)和[基础功能施工准备度审查](docs/product/FOUNDATION-READINESS-2026-11-01.md)。第二轮静态审查已完成；CV/API/LOCAL/MODE/SD/VIEW/AIC/SH/APP候选子契约已回写到原owner。F10/F15复合owner已收敛，B级契约已完成技术一致性评审并修订；C实验仍有部分未关闭，PRD-D01～D13等待用户确认。
+1. **产品功能与第二轮审查：** 已建立 [F01–F15基础功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)、[交互与UI边界](docs/product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、[第二轮需求对冲审查](docs/product/SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md)、[216项模块契约映射](docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)和[基础功能施工准备度审查](docs/product/FOUNDATION-READINESS-2026-11-01.md)。第二轮静态审查已完成；CV/API/LOCAL/MODE/SD/VIEW/AIC/SH/APP候选子契约已回写到原owner。F10/F15复合owner已收敛，B级契约已完成技术一致性评审并修订；C实验仍有部分未关闭，PRD-D01～D13已完成部分决策收敛；D01/D02 核心语义已确认，Shell/插件/权限策略/凭证等特殊安全边界仍待确认。
 2. **基础模块施工与组合验收：** 需先关闭契约缺口和对应实验/决策门槛，再按模块独立施工并复用H01–H30开展组合验收。
 3. **UI与产品验收：** 基础功能及组合链路达到门槛后，才进行UI接线、真实用户操作和最终产品验收。
 4. **0.1.1版本计划：** 完整需求确认后再从产品功能底表推导，不提前裁剪完整产品范围。
 
 **当前规划顺序：用户确认D级产品政策/范围 → 在可用真实环境完成必要C实验或明确安全延期 → 确认完整需求基线 → 推导0.1.1版本表 → 基础模块施工与组合验收 → UI接线和产品验收。**
+
+**产品功能规格更新（2026-11-02）：** [F01–F15 完整功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 的 216 项已合并逐项注释和进一步检查点；这不等于功能需求、真实代码或 Windows E4 均已验收。非代码文档重叠/状态风险见 [文档体系审查](docs/audits/DOCUMENT-SYSTEM-CONSISTENCY-AUDIT-2026-11-02.md)。
 
 ## AI / 协作者进入仓库的阅读顺序
 
