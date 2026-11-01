@@ -45,6 +45,7 @@ export function createOperationLedger(store:Store){
    if(!id||!observationId)return {status:'conflict',reason:'invalid_request'};
    try{const s=read(),op=s.operations.find(o=>o.id===id);
     if(!op)return {status:'conflict',reason:'not_prepared'};
+    if(op.phase==='prepared')return {status:'conflict',reason:'not_dispatched'};
     const previous=op.observations.find(o=>o.id===observationId);
     if(previous)return previous.phase===phase&&canonical(previous.value)===canonical(value)?{status:'ok',operation:op,revision:s.revision}:{status:'conflict',reason:'observation_conflict'};
     const next:Operation={...op,phase,observations:[...op.observations,{id:observationId,phase,value:clone(value)}]};
