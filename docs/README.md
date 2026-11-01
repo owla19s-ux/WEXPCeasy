@@ -2,10 +2,12 @@
 
 **最近工程交付：[第八批基础复验与 Electron / React 宿主最小验证](batch8/REPORT.md)** · [Electron / React 实验复现说明](../experiments/electron-host-spike/README.md)。
 
-**阶段规划入口：[阶段路线图](planning/PHASE-ROADMAP-2026-10-31.md)** · [后续施工计划](planning/CONSTRUCTION-PLAN-2026-10-31.md)。最近完成批次：[第八批报告](batch8/REPORT.md)；[第八批任务书](batch8/PLAN.md)仅保留历史范围。
+**当前模块优先级参考：[2026-11-01 执行模块优先级](planning/EXECUTION-MODULE-PRIORITY-2026-11-01.md)**。历史规划快照：[阶段路线图](planning/PHASE-ROADMAP-2026-10-31.md) · [旧施工计划](planning/CONSTRUCTION-PLAN-2026-10-31.md)，不自动作为新派工。最近完成批次：[第八批报告](batch8/REPORT.md)；[第八批任务书](batch8/PLAN.md)仅保留历史范围。
 
 本页是仓库设计、架构、研究、审查、阶段规划与批次交付的统一入口。源码功能域仍按模块就近维护；这里不复制模块私有契约。
 
+
+**文档体系冲突与重复风险审查：** [2026-11-02 静态审查](audits/DOCUMENT-SYSTEM-CONSISTENCY-AUDIT-2026-11-02.md)。
 
 ## AI 阅读与文档权威顺序
 
