@@ -9,9 +9,9 @@ GitHub 操作与连接配置。权限使用共用机制；专属面板留在本�
 修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
 
 
-## 旧成熟模块复用与验收
+## 官方 GitHub 能力连接与验收
 
-- [GitHub 独立业务契约及旧代码复用评审](CONTRACT.md)（GH-01～GH-12）。先核查 WEX/WEXPC 旧实现和测试，再决定新的 TypeScript/Electron 集成方式；不从零重造已验证规则，也不声称已移植完成。
+- [GitHub 官方 MCP + Octokit 完整能力接入契约](CONTRACT.md)（GH-01～GH-12）。官方 GitHub MCP Server 为首选，Octokit REST/GraphQL 补充能力缺口；WEX 只做受控连接器，不重写 GitHub API。旧 WEX/WEXPC 源码仅作测试与安全参考。
 
 ## 上级契约与文档入口
 
