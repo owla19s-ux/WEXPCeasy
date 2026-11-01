@@ -18,12 +18,12 @@ export function createDispatchBoundary(permission:PermissionReader,ledger:Ledger
   const blocked=(reason:string):DispatchResult=>({status:'blocked',reason,operationId:id});
   if(!id||!target||!fingerprint)return blocked('invalid_request');
   try{
-   const boundFingerprint=createHash('sha256').update(canonical([adapter.id,target,fingerprint,payload])).digest('hex');
-   const prior=ledger.get(id);
-   if(prior)return prior.fingerprint!==boundFingerprint?blocked('intent_conflict'):blocked('already_recorded_no_automatic_retry');
    const decision=permission.evaluate(request);
    if(decision.status!=='allow')return blocked('authorization_'+decision.status);
-   if(decision.scope.resource!==adapter.id||decision.scope.target!==target||decision.scope.action==='read')return blocked('scope_mismatch');
+   if(decision.scope.resource!==adapter.id||decision.scope.target!==target||decision.scope.action!=='write')return blocked('scope_mismatch');
+   const boundFingerprint=createHash('sha256').update(canonical([decision.scope.subject,decision.scope.entry,decision.scope.conversation,decision.scope.context,adapter.id,target,decision.scope.action,fingerprint,payload])).digest('hex');
+   const prior=ledger.get(id);
+   if(prior)return prior.fingerprint!==boundFingerprint?blocked('intent_conflict'):blocked('already_recorded_no_automatic_retry');
    const current=permission.recheck(request,decision);
    if(current.status!=='allow')return blocked('authorization_stale');
    const prepared=ledger.prepare(id,boundFingerprint);
