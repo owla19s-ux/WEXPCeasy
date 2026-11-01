@@ -3,7 +3,25 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "engines": {"node": ">=24.9.0"},
-  "scripts": {"build": "tsc -p tsconfig.json", "typecheck": "tsc -p tsconfig.json --noEmit", "test": "npm run build && node --test shared/tests/*.test.mjs permissions/tests/*.test.mjs app/tests/*.test.mjs tools/tests/*.test.mjs && npm run check:boundaries", "test:shared": "npm run build && node --test shared/tests/*.test.mjs", "test:permissions": "npm run build && node --test permissions/tests/*.test.mjs", "test:app": "npm run build && node --test app/tests/*.test.mjs", "check:boundaries": "node tools/check-boundaries.mjs", "start:headless": "npm run build && node dist/app/src/main.js", "build:shared": "node tools/build-module.mjs shared", "build:permissions": "node tools/build-module.mjs permissions", "build:app": "node tools/build-module.mjs app"},
-  "devDependencies": {"@types/node": "24.10.0", "typescript": "5.9.3"}
+  "engines": {
+    "node": ">=24.9.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test shared/tests/*.test.mjs permissions/tests/*.test.mjs app/tests/*.test.mjs connections/tests/*.test.mjs tools/tests/*.test.mjs && npm run check:boundaries",
+    "test:shared": "npm run build && node --test shared/tests/*.test.mjs",
+    "test:permissions": "npm run build && node --test permissions/tests/*.test.mjs",
+    "test:app": "npm run build && node --test app/tests/*.test.mjs",
+    "check:boundaries": "node tools/check-boundaries.mjs",
+    "start:headless": "npm run build && node dist/app/src/main.js",
+    "build:shared": "node tools/build-module.mjs shared",
+    "build:permissions": "node tools/build-module.mjs permissions",
+    "build:app": "node tools/build-module.mjs app",
+    "test:connections": "npm run build && node --test connections/tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "typescript": "5.9.3"
+  }
 }
