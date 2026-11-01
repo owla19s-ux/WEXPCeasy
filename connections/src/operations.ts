@@ -20,7 +20,13 @@ export function createOperationLedger(store:Store){
  function read(){const s=store.read();return {revision:s.revision,operations:clone(decode(s.value).operations)};}
  function write(intent:string,revision:number,operations:Operation[]):CommitResult{return store.commit({intent,expectedRevision:revision,value:{format:1,operations:clone(operations)} as unknown as Json});}
  function result(commit:CommitResult,operation:Operation):OperationResult {
-  return commit.status==='committed'?{status:'ok',operation:clone(operation),revision:commit.revision}:{status:commit.status==='unknown'?'unknown':commit.reason==='revision_conflict'?'conflict':'unavailable',reason:commit.status==='unknown'?'commit_unknown':commit.reason};
+  if(commit.status==='committed'){
+   try{const snapshot=read(),actual=snapshot.operations.find(o=>o.id===operation.id);
+    if(!actual||canonical(actual as unknown as Json)!==canonical(operation as unknown as Json))return {status:'conflict',reason:'persisted_state_mismatch'};
+    return {status:'ok',operation:actual,revision:snapshot.revision};
+   }catch{return {status:'unavailable',reason:'verification_failed'};}
+  }
+  return {status:commit.status==='unknown'?'unknown':commit.reason==='revision_conflict'?'conflict':'unavailable',reason:commit.status==='unknown'?'commit_unknown':commit.reason};
  }
  return Object.freeze({
   read,
