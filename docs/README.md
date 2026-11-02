@@ -2,7 +2,7 @@
 
 **最近工程交付：[第八批基础复验与 Electron / React 宿主最小验证](batch8/REPORT.md)** · [Electron / React 实验复现说明](../experiments/electron-host-spike/README.md)。
 
-**当前模块优先级参考：[2026-11-01 执行模块优先级](planning/EXECUTION-MODULE-PRIORITY-2026-11-01.md)**。历史规划快照：[阶段路线图](planning/PHASE-ROADMAP-2026-10-31.md) · [旧施工计划](planning/CONSTRUCTION-PLAN-2026-10-31.md)，不自动作为新派工。最近完成批次：[第八批报告](batch8/REPORT.md)；[第八批任务书](batch8/PLAN.md)仅保留历史范围。
+**当前正式施工入口：[0.1.1 三批任务表](versions/0.1.1/PLAN.md)**。历史优先级参考：[2026-11-01 执行模块优先级](planning/EXECUTION-MODULE-PRIORITY-2026-11-01.md)。历史规划快照：[阶段路线图](planning/PHASE-ROADMAP-2026-10-31.md) · [旧施工计划](planning/CONSTRUCTION-PLAN-2026-10-31.md)，不自动作为新派工。最近完成批次：[第八批报告](batch8/REPORT.md)；[第八批任务书](batch8/PLAN.md)仅保留历史范围。
 
 本页是仓库设计、架构、研究、审查、阶段规划与批次交付的统一入口。源码功能域仍按模块就近维护；这里不复制模块私有契约。
 
@@ -14,7 +14,7 @@
 **遇到冲突：** 先核对实际 main 代码与测试证据；产品功能/注释以 [统一 216 项功能总表](product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 为单一正文，职责及公开能力依模块 CONTRACT；产品政策以用户明确批准和现行决策矩阵为准。技术研究推荐、旧路线图及批次报告不得替代用户授权。详细规则见[文档权威说明](DOCUMENT-AUTHORITY-AND-MAINTENANCE-2026-11-02.md)。
 
 
-AI/协作者进入仓库时，先读根目录 [README](../README.md) 了解产品身份与当前状态，再读根目录 [AGENTS.md](../AGENTS.md) 确认工作边界，然后按具体任务读取本索引和目标模块文档。任务范围以用户明确指派及后续正式任务总表/施工卡为准；历史批次任务书只记录当时范围，不自动构成当前派工。
+AI/协作者进入仓库时，先读根目录 [README](../README.md) 了解产品身份与当前状态，再读根目录 [AGENTS.md](../AGENTS.md) 确认工作边界，然后按具体任务读取本索引和目标模块文档。0.1.1 任务范围以用户已批准的 [B1-01～B3-08 施工表](versions/0.1.1/PLAN.md)为准；历史批次任务书只记录当时范围，不自动构成当前派工。
 
 模块 `README.md` 用于快速了解职责和目录；模块 `CONTRACT.md` 是该模块当前业务语义、公开能力和依赖边界的主要依据。跨模块问题还需读取相关全局架构与决策记录。若文档与当前代码状态不一致，必须标记差异并核实，不能把设计描述当作已实现事实。
 
@@ -29,6 +29,7 @@ AI/协作者进入仓库时，先读根目录 [README](../README.md) 了解产�
 | 研究资料 | [research/](research/README.md) | 需求、生态、技术调查与方案比较 |
 | 审查报告 | [audits/](audits/README.md) | 压力审查、差距审计、验证与证据等级 |
 | 阶段规划 | [planning/](planning/README.md) | 产品阶段目标、依赖关系、阶段门槛和后续施工顺序 |
+| 当前版本施工 | [versions/0.1.1/PLAN.md](versions/0.1.1/PLAN.md) | 已批准的版本范围、三批任务、验收门槛及 GitHub 测试授权；不替代模块 CONTRACT | 
 | 批次交付 | [batchN/](.) | 按批次保存任务书、结论、原始证据与交付记录；当前批次从施工计划进入 |
 | 可执行实验 | 仓库根目录 `experiments/` 及模块内实验目录 | 代码、夹具和可重复运行入口，不等同产品实现 |
 | 外部参考 | 仓库根目录 `references/`、`dsh/upstream/` | 保留来源、版本与许可证；不自动成为 WEX 内部契约 |
@@ -41,8 +42,8 @@ AI/协作者进入仓库时，先读根目录 [README](../README.md) 了解产�
 - 基础能力规格：[G1–G7 落地映射](planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。这是跨模块能力归属和验收依据，不是完整产品功能表，也不是 0.1.1 版本计划。
 - 既有[阶段路线图](planning/PHASE-ROADMAP-2026-10-31.md)和[后续施工计划](planning/CONSTRUCTION-PLAN-2026-10-31.md)保留作研究/历史规划参考；在重新核对并建立新的正式规划前，不把它们或旧批次任务书直接当作当前派工依据。
 - **当前工作流画布方向：** [自由画布与节点工作界面设计](architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md) · [技术路线研究](research/WORKFLOW-CANVAS-TECHNOLOGY-REVIEW-2026-11-01.md) · [方向决策](decisions/WORKFLOW-CANVAS-DIRECTION-2026-11-01.md)。
-- **产品需求基线已建立首轮稿：** [F01–F15 基础功能总表](product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)、[交互与 UI 边界](product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、[需求对冲与遗漏审查](product/REQUIREMENT-REVIEW-2026-11-01.md)。仍需第二轮逐项评审和用户确认；不代表 0.1.1 范围已批准。
-- **待建立：** 0.1.1 版本计划，以及据此形成的阶段任务总表和施工卡。
+- **产品需求基线已建立首轮稿：** [F01–F15 基础功能总表](product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)、[交互与 UI 边界](product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、[需求对冲与遗漏审查](product/REQUIREMENT-REVIEW-2026-11-01.md)。完整产品总表的未决项仍需后续处理；0.1.1 范围已单独获得用户批准，以版本计划为准。
+- **已建立：** [0.1.1 正式版本计划与三批 24 项任务](versions/0.1.1/PLAN.md)。B1 模块实现 → B2 基础业务闭环 → B3 Windows UI/验收。自由格子工作流、调度器、DSH 插件系统与连接器延期至 0.1.2。
 - [全模块业务契约索引](MODULE-CONTRACTS.md)：模块职责、公开能力、依赖与现有实现状态。
 - [基础能力完整性审查](audits/FOUNDATION-CAPABILITY-COMPLETENESS-REVIEW-2026-10-31.md)：基本动作遗漏与复杂组合检查。
 - [第六批准备度与实验记录](batch6/README.md)：历史审查依据和实验结果。
