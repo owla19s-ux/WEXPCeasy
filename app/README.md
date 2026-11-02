@@ -1,5 +1,13 @@
 # app
 
+## 当前施工速览（0.1.1 / B1-01）
+
+- **公开代码入口**：`app/src/index.ts`；可信模块装配、生命周期与 `startFoundations`，支持可选 connections 服务装配。
+- **运行验证**：`npm run test:app`；无窗口诊断入口 `npm run start:headless -- <已有数据根>`；跨模块验证另运行 `npm test`。
+- **未实现或未验收**：正式 Electron/React UI、Preload/IPC、Windows 安装和 E4 实机；第八批隔离实验不能替代正式桌面产品。
+- **施工依据**：[0.1.1 正式计划](../docs/versions/0.1.1/PLAN.md) → [本域契约](CONTRACT.md) → `app/src/` 与 `app/tests/`。最新连接组合事实另见 [施工回执](CONNECTIONS-INTEGRATION-2026-11-02.md)。
+
+
 **当前：基础宿主已可选装配真实 connections 服务，包含持久配置/操作与退出排空。最新范围及证据见[宿主连接组合回执](CONNECTIONS-INTEGRATION-2026-11-02.md)；第七/八批描述保留为历史依据。**
 程序启动、窗口生命周期和功能装配。主界面布局归 UI，不在启动入口累积业务。
 
@@ -54,7 +62,7 @@
 ## 文档入口
 
 - [本域契约及关联依据](CONTRACT.md#文档关联与施工入口)
-- [WEXPC1 文档体系总索引](../docs/README.md)
+- [WEX 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
 全局架构、决策、研究、审查、实验和当前施工准入范围，以本域 `CONTRACT.md` 的“文档关联与施工入口”章节为准；README 只负责提供入口，不重复维护一份容易漂移的资料清单。
