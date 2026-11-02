@@ -1,92 +1,63 @@
-# WEX
+# WEX｜AI 仓库工作入口
 
-> **产品名称：WEX。** 当前仓库：`owla19s-ux/WEXPCeasy`（仅为仓库标识，不是产品名称）。
+> 产品：WEX｜仓库：`owla19s-ux/WEXPCeasy`｜当前主线：Windows PC｜默认集成分支：`main`
 >
-> WEX 是面向个人长期工作的跨平台联通、调度与交互系统。本仓库当前聚焦 **WEX PC 端**。
+> **本文件用于 AI 进入、协作、派工和交接，不是项目说明书。** 产品定位与完整架构见 [docs/PROJECT.md](docs/PROJECT.md)，非日常施工必读。
 
-## 当前项目状态
+## 1. 进入仓库后怎么做
 
-状态核对日期：2026-11-02（文档入口核对；**不代表代码已重新测试**）
+1. 读取本 README，确认协作规则、当前任务和目标模块。
+2. 读取目标**模块 README**，确认功能、已实现状态、公开边界、施工要求、源码、测试与验收。
+3. 检查最新 `main`、实际源码/测试及相关 CI，按模块完成实现、验证、修复和交接。
 
-- **当前工程位置：** 基础模块设计与首轮实现验证已完成到第八批；现按已批准的 [0.1.1 正式版本计划](docs/versions/0.1.1/PLAN.md)推进三批模块施工；既有 connections 施工成果作为复用基线。
-- **最近施工：** [可信宿主与连接模块组合](app/CONNECTIONS-INTEGRATION-2026-11-02.md)：可选装配、持久恢复与退出排空；未完成正式 UI 或真实外部服务验收。
-- **历史批次：** [第八批交付报告](docs/batch8/REPORT.md)。基础模块复验及 Electron / React 宿主隔离实验已完成；报告记录 Linux E2 证据，**Windows E4 尚未通过**。这不是完整桌面产品交付。
-- **已有产品源码：** `shared/`、`permissions/`、`app/`、`connections/src/`。连接模块当前最小范围与验证见 [施工回执](connections/CONFIGURED-DISPATCH-2026-11-02.md)。
-- **实验与原型：** Electron / React 宿主实验位于 `experiments/electron-host-spike/`；React Flow 编辑器原型位于 `workflows/editor/prototype/`。
-- **主要以契约/说明为主：** `space/`、`conversations/`、`AI/`、`workflows/`、`views/` 等业务域。目录或契约存在不代表产品功能已经实现。
+**常规施工只需两份引导文档**：根 README → 模块 README → 源码/测试。跨模块复杂任务允许第三份专项任务说明；遇到重大契约争议、安全政策或未决设计时再定向查研究/决策资料。文档数量限制不妨碍检查真实代码与证据。
 
-### 规划依据与待闭合门槛
+## 2. AI 协作与仓库操作规范
 
-1. **产品功能与第二轮审查：** 已建立 [F01–F15基础功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)、[交互与UI边界](docs/product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、[第二轮需求对冲审查](docs/product/SECOND-ROUND-REQUIREMENT-REVIEW-2026-11-01.md)、[216项模块契约映射](docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)和[基础功能施工准备度审查](docs/product/FOUNDATION-READINESS-2026-11-01.md)。第二轮静态审查已完成；CV/API/LOCAL/MODE/SD/VIEW/AIC/SH/APP候选子契约已回写到原owner。F10/F15复合owner已收敛，B级契约已完成技术一致性评审并修订；C实验仍有部分未关闭，PRD-D01～D13已完成部分决策收敛；D01/D02 核心语义已确认，Shell/插件/权限策略/凭证等特殊安全边界仍待确认。
-2. **基础模块施工与组合验收：** 按 0.1.1 B1/B2/B3 任务实施；仅真实阻塞本版安全与正确性的缺口需先关闭，其他研究事项记录并按版本延期。
-3. **UI与产品验收：** 基础功能及组合链路达到门槛后，才进行UI接线、真实用户操作和最终产品验收。
-4. **0.1.1版本计划：** 已批准并形成 [三批施工计划](docs/versions/0.1.1/PLAN.md)；完整 F01–F15 产品总表继续作为长期需求基线，0.1.2 另行规划。
+- **事实优先**：最新 `main` 源码、可执行测试和真实验收证据优先于历史报告。已设计、已实现、已验证、待决策必须区分。
+- **模块化**：业务数据与行为由所属模块维护；跨模块只通过公开能力，不建立全局业务状态总管，不将实现集中到 `shared/`。
+- **权限与安全**：默认拒绝未授权入口；不把提示词、角色名或模型输出当作权限。涉及未确认的特殊高风险边界不得擅自放开。
+- **施工**：先检查状态与依赖，再按完整功能链路实现、测试、修复；不要以一次调用、一个提交或 PR 作为完成标准。避免重复研究与碎片化提交。
+- **GitHub**：默认 `main`；仅在并行冲突或高风险隔离时使用短期分支。提交前核对 HEAD、变更冲突和测试证据。已授权使用 GitHub Actions，不必因额度回避必要测试；失败先定位原因。
+- **交接**：记录实际提交、变更文件、测试命令及结果、未验证项、阻塞原因；更新目标模块 README 的状态。只有达到验收条件，才推进根 README 的当前/下一任务。
+- **并行**：多执行者不得互相覆盖；并行任务需明确 owner、工作范围与状态。重大产品方向和未决权限政策由用户最终裁决。
 
-**简化阅读：** 当前施工只需根 README → AGENTS → [0.1.1 计划](docs/versions/0.1.1/PLAN.md) → 目标模块 README/CONTRACT → 源码/测试；研究报告按需查阅。详见 [文档收敛规则](docs/DOCUMENT-CONSOLIDATION-2026-11-02.md)。
+## 3. 当前任务目录
 
-**文档权威提示：** [文档阅读与维护规则](docs/DOCUMENT-AUTHORITY-AND-MAINTENANCE-2026-11-02.md) 说明最新产品需求、历史规划与实验报告如何区分；不能把过往阶段文档当作实时施工命令。
+> **注意：以下是现行计划的施工入口，不是实时“已开工/已完成”断言。** 进入时先核对最新源码和 CI；不要机械重复已有实现。
 
-**当前执行顺序：按 [0.1.1 正式计划](docs/versions/0.1.1/PLAN.md)执行 B1 模块施工 → B2 基础业务闭环 → B3 Windows UI/安装与验收。未定安全边界不得擅自放宽；非阻塞研究延期处理。**
-
-**产品功能规格更新（2026-11-02）：** [F01–F15 完整功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 的 216 项已合并逐项注释和进一步检查点；这不等于功能需求、真实代码或 Windows E4 均已验收。非代码文档重叠/状态风险见 [文档体系审查](docs/audits/DOCUMENT-SYSTEM-CONSISTENCY-AUDIT-2026-11-02.md)。
-
-## AI / 协作者进入仓库的阅读顺序
-
-1. **先读本 README：** 建立 WEX 产品身份、当前阶段、实现状态和工作入口认知。
-2. **读 [AGENTS.md](AGENTS.md)：** 获取 AI 的最小强制引导与施工前检查要求。若使用的工具不会自动读取 AGENTS.md，任务发起者必须明确要求先读本 README 和 AGENTS.md。
-3. **读当前任务依据：** 以 [0.1.1 正式任务表](docs/versions/0.1.1/PLAN.md)确定本次任务及验收条件。
-4. **读取目标模块：** 先看模块 README 开头的当前施工速览，再看 CONTRACT、实际源码/测试和必要的提供方公开契约。
-5. **按需检索 [文档总索引](docs/README.md)：** 仅在需要功能编号、跨模块设计、政策或历史证据时查阅，不把全仓研究当成开工前置。
-
-## 当前施工入口与 GitHub 测试授权
-
-- **仓库：** 公开仓库 `owla19s-ux/WEXPCeasy`；默认 `main`。本版按 [0.1.1 正式施工计划](docs/versions/0.1.1/PLAN.md)执行，施工规范见 [AGENTS.md](AGENTS.md)。
-- **施工方法：** 先核对最新代码与模块契约，再按模块一次完成合理范围的实现与测试；B1 模块独立、B2 组合闭环、B3 UI 与 Windows 验收。避免重复研究和碎片化提交。
-- **测试授权：** 用户已明确允许在 GitHub 上进行可执行的构建与测试，**无需顾虑 GitHub Actions 额度**。可按实际 workflow 配置触发 Actions；失败先定位修复，不盲目重复运行。CI 与 Windows E4 实机验收分别记录。
-- **版本延期：** 自由格子工作流、正式调度器、DSH 插件系统、DSH 连接器进入 0.1.2，不作为 0.1.1 交付依赖。
-
-## API 历史成果与独立实验
-
-[API 复用研究与 Pi AI 兼容验证](docs/research/api/README.md)：已建立历史追踪与可复现实验；整体无退化替换不通过，建议有条件复用部分协议能力。不是正式 API 模块重构或 Windows 验收。
-
-## 产品与技术方向
-
-- WEX 是产品主体；仓库名、目录名和实验名称不改变产品身份。
-- 当前 PC 技术路线：**TypeScript + Electron（Windows 桌面宿主）+ React**。
-- 工作流编辑器当前方向是 WEX 自研轻量自由画布（React/DOM 节点 + SVG 正交连线为实现候选）；既有 React Flow 原型仅是历史技术实验。工作流业务数据与节点调度由 WEX 自主维护。
-- DSH 是独立外部 Agent 客户端；WEX 通过连接器研究任务交接与结果接收，不把 DSH 客户端/运行时搬入 WEX。
-- `dsh/` 的 DSH Core + Loader 原生插件兼容实验，与 `connections/dsh/` 的外部 Agent 连接器是两条不同路线。
-- SQLite 与用户选择的数据目录是当前持久化方向；具体产品实现与 Windows 行为仍需按实际证据验收。
-
-## 模块与源码导航
-
-完整职责、公开能力和模块契约入口见 [全模块契约索引](docs/MODULE-CONTRACTS.md)。
-
-| 功能域 | 目录入口 | 主要职责 |
+| 任务 | 目标模块 | 入口 |
 |---|---|---|
-| 宿主与界面 | [app](app/README.md) · [UI](UI/README.md) · [views](views/README.md) | 启动装配、用户交互、视图呈现 |
-| 工作组织与交互 | [space](space/README.md) · [conversations](conversations/README.md) · [AI](AI/README.md) | Space/Context、对话、角色配置 |
-| 工作与连接 | [workflows](workflows/README.md) · [connections](connections/README.md) | 工作流/任务事实、受控连接和适配器 |
-| 基础保障 | [permissions](permissions/README.md) · [shared](shared/README.md) | 权限决策、存储及共用技术能力 |
-| 预留与独立研究 | [plugins](plugins/README.md) · [accounts](accounts/README.md) · [dsh](dsh/README.md) | 插件机制研究、身份预留、DSH 原生插件实验 |
+| B1-01 基础复验 | shared / permissions / app | [shared](shared/README.md) · [permissions](permissions/README.md) · [app](app/README.md) |
+| B1-02 Space / Context | space | [space](space/README.md) |
+| B1-03 API | connections/api | [API](connections/api/README.md) |
+| B1-04 Agent | AI | [AI](AI/README.md) |
+| B1-05 Conversations | conversations | [conversations](conversations/README.md) |
+| B1-06 Connections | connections / local | [connections](connections/README.md) · [local](connections/local/README.md) |
+| B1-07 数据与日志 | shared / app | [shared](shared/README.md) · [app](app/README.md) |
 
-## 权威文档入口
+**当前派工基线**：按 0.1.1 B1 独立模块施工推进。B1-01 已有基础实现与历史测试证据，但最新任务验收状态需重新核查；不得凭此表宣布 B1-01 已完成。
 
-- [文档总索引](docs/README.md)：文档分类、归属与阅读导航。
-- [全模块业务契约索引](docs/MODULE-CONTRACTS.md)：模块职责、公开能力、依赖和实现状态。
-- [全局架构](docs/architecture/README.md)：跨模块架构和技术边界。
-- [架构决策](docs/decisions/README.md)：已确认约束、候选、实验门槛和用户待决事项。
-- [研究资料](docs/research/README.md) · [审查报告](docs/audits/README.md)：研究证据、缺口和验证结论。
-- [产品需求基线](docs/product/README.md)：F01–F15基础功能、交互语义、UI映射、Owner/B/C/D收敛与需求审查。
-- [G1–G7 基础能力落地映射](docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)：基础能力归属及跨对话持续工作要求。
-- [第八批交付报告](docs/batch8/REPORT.md)：最近已完成批次的结果与证据。
+## 4. 下一任务与后续批次
 
-## 基本协作原则
+- **B1-08**：基础模块独立验收；需在 B1 必要模块可调用且有测试证据后执行。
+- **B2-01～B2-08**：跨模块业务闭环；依赖 B1 相应接口。
+- **B3-01～B3-08**：正式 Electron/React UI、Windows 安装、数据恢复和版本验收；Windows E4 尚未通过。
+- **后续版本**：[自由格子工作流](workflows/grid/README.md) 与 [独立调度器](scheduler/README.md)，均可作为 Context 的可组合能力；不纳入 0.1.1 正式交付。DSH 相关产品化也不属于 0.1.1。
 
-- 按模块 owner 施工；模块业务事实由对应模块维护，跨模块通过公开契约协作。
-- 修改模块行为时，先核对并同步该模块的 README / CONTRACT；不要只改全局说明。
-- 明确区分：**已决定、已设计、已编码、已测试、已独立验收**。文档、原型、替身测试不能冒充产品实现或 Windows 实机验收。
-- 开始工作前重新读取远端最新 `main` 和实际代码；历史 SHA 仅用于追溯，不能直接当作当前施工基线。
-- 默认以 `main` 作为集成主线；只有确有并行冲突或高风险隔离需要时才考虑短期分支。具体仓库操作和 AI 施工细则后续单独建立，不在入口文件内重复展开。
-- 未经授权不扩大任务范围、不替用户关闭待决事项，也不把测试通过解释为产品范围已获批准。
+## 5. 任务交接与文档更新
 
+1. 核对本任务验收条件和最新代码，确定实际完成/部分完成/阻塞状态。
+2. 完成必要测试、异常验证和回归；不能用实验或 CI 绿灯替代目标 Windows 实机验收。
+3. 更新模块 README：功能状态、公开接口、测试证据、剩余缺口和下一施工范围。
+4. 更新本 README：当前任务入口、已验收任务与下一任务。未满足依赖时标记等待，不自动推进。
+5. 研究性契约、候选方案和历史证据归 `docs/`，不将未批准内容混入模块的当前施工要求。
+
+## 6. 资料入口（按需，不属于默认阅读链）
+
+- [完整项目说明](docs/PROJECT.md)
+- [0.1.1 版本计划及原始 B1/B2/B3 验收表](docs/versions/0.1.1/PLAN.md)
+- [F01～F15 产品功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)
+- [文档索引与历史资料](docs/README.md)
+
+**冲突处理**：源码与模块 README 不一致时先查真实实现并修正文档；需求/权限未决时不得自行将研究候选升格为已批准规范。
