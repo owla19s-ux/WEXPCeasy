@@ -8,6 +8,7 @@ const strict = process.argv.includes('--strict');
 const json = process.argv.includes('--json');
 const skip = new Set(['.git','node_modules','dist','build','.build','.next','coverage']);
 const files = [];
+const known = new Set();
 function walk(dir) {
   for (const ent of fs.readdirSync(dir,{withFileTypes:true})) {
     if (skip.has(ent.name)) continue;
@@ -17,6 +18,7 @@ function walk(dir) {
   }
 }
 walk(root);
+for (const file of files) known.add(path.relative(root,file).replaceAll(path.sep,'/'));
 const issues=[]; const hashes=new Map(); let links=0;let redirects=0;
 for (const file of files) {
   const rel=path.relative(root,file).replaceAll(path.sep,'/');
@@ -25,7 +27,7 @@ for (const file of files) {
   if (hashes.has(hash)) issues.push({kind:'duplicate-exact',file:rel,other:hashes.get(hash)});
   else hashes.set(hash,rel);
   if(body.startsWith('# 文档位置已调整')) redirects++;
-  const prose=body.replace(/^(```|~~~)[^\n]*\n[\s\S]*?^\1[^\n]*$/gm,'');
+  const prose=body.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^(?:`{3,}|~{3,})[^\n]*$/gm,'');
   const re=/!?\[[^\]\n]*\]\((<[^>]+>|[^\s)]+)(?:\s+"[^"]*")?\)/g;
   for(const match of prose.matchAll(re)) {
     let target=match[1].replace(/^<|>$/g,'');
