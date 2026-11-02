@@ -6,6 +6,7 @@ on:
     paths:
       - '**/*.md'
       - 'tools/check-docs.mjs'
+      - 'tools/check-docs.test.mjs'
       - '.github/workflows/docs-audit.yml'
 
 jobs:
