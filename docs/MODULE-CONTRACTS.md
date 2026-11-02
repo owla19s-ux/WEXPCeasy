@@ -20,7 +20,7 @@
 | [space](../space/README.md)、[AI](../AI/README.md)、[conversations](../conversations/README.md)、[views](../views/README.md) | 已有职责与业务契约设计；AI 已补 AIC-01～09 与 AI-* 细分规格；views 已补 VIEW-01～07 与 VIEWS-* 细分规格 | 尚无对应完整产品业务实现；Agent引擎、AI派生记忆和views引擎未实现 |
 | [plugins](../plugins/README.md)、[dsh](../dsh/README.md)、[accounts](../accounts/README.md) | plugins 已补 PLUGINS-* 候选业务契约；dsh 仍为独立 Core+Loader 兼容实验；accounts 保留身份预留 | WEX插件加载器未实现；DSH实验不等于WEX插件平台或外部Agent连接器产品化 |
 
-基础模块第八批证据与限制见[交付报告](batch8/REPORT.md)。本表描述 WEXPC1 当前实现状态；契约正文中的 A/B/C/D 等级仍按原定义解释，不能因代码或实验通过而自动升级。
+基础模块第八批证据与限制见[交付报告](batch8/REPORT.md)。本表包含 WEXPC1 历史设计基线；当前实现状态必须核对最新 main 的源码与测试；契约正文中的 A/B/C/D 等级仍按原定义解释，不能因代码或实验通过而自动升级。
 
 ## 1. 依据与决定等级
 
