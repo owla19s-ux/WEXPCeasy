@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Test documentation auditor
+        run: node --test tools/check-docs.test.mjs
       - name: Audit links and exact duplicates
         run: node tools/check-docs.mjs --json > docs-audit-report.json
       - name: Print summary and issues
