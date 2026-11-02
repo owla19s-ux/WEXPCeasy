@@ -17,7 +17,7 @@
 **遇到冲突：** 先核对实际 main 代码与测试证据；产品功能/注释以 [统一 216 项功能总表](product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 为单一正文，职责及公开能力依模块 CONTRACT；产品政策以用户明确批准和现行决策矩阵为准。技术研究推荐、旧路线图及批次报告不得替代用户授权。详细规则见[文档权威说明](DOCUMENT-AUTHORITY-AND-MAINTENANCE-2026-11-02.md)。
 
 
-AI/协作者进入仓库时，先读根目录 [README](../README.md) 了解产品身份与当前状态，再读根目录 [AGENTS.md](../AGENTS.md) 确认工作边界，然后按具体任务读取本索引和目标模块文档。0.1.1 任务范围以用户已批准的 [B1-01～B3-08 施工表](versions/0.1.1/PLAN.md)为准；历史批次任务书只记录当时范围，不自动构成当前派工。
+AI/协作者进入仓库时，先读根目录 [README](../README.md) 了解产品身份与当前状态，再读根目录 [AGENTS.md](../AGENTS.md) 确认工作边界，随后按 [0.1.1 施工表](versions/0.1.1/PLAN.md) 进入目标模块 README/CONTRACT 与源码/测试。本索引用于遇到特定问题时定向检索，不是每次施工必读全文。0.1.1 任务范围以用户已批准的 [B1-01～B3-08 施工表](versions/0.1.1/PLAN.md)为准；历史批次任务书只记录当时范围，不自动构成当前派工。
 
 模块 `README.md` 用于快速了解职责和目录；模块 `CONTRACT.md` 是该模块当前业务语义、公开能力和依赖边界的主要依据。跨模块问题还需读取相关全局架构与决策记录。若文档与当前代码状态不一致，必须标记差异并核实，不能把设计描述当作已实现事实。
 
@@ -43,7 +43,7 @@ AI/协作者进入仓库时，先读根目录 [README](../README.md) 了解产�
 
 - 最近完成批次：[第八批交付报告](batch8/REPORT.md)。第八批任务书是历史范围记录，不是当前待执行任务。
 - 基础能力规格：[G1–G7 落地映射](planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。这是跨模块能力归属和验收依据，不是完整产品功能表，也不是 0.1.1 版本计划。
-- 既有[阶段路线图](planning/PHASE-ROADMAP-2026-10-31.md)和[后续施工计划](planning/CONSTRUCTION-PLAN-2026-10-31.md)保留作研究/历史规划参考；在重新核对并建立新的正式规划前，不把它们或旧批次任务书直接当作当前派工依据。
+- 既有[阶段路线图](planning/PHASE-ROADMAP-2026-10-31.md)和[后续施工计划](planning/CONSTRUCTION-PLAN-2026-10-31.md)保留作研究/历史规划参考；当前正式规划已建立，不把旧路线图或旧批次任务书当作派工依据。
 - **当前工作流画布方向：** [自由画布与节点工作界面设计](architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md) · [技术路线研究](research/WORKFLOW-CANVAS-TECHNOLOGY-REVIEW-2026-11-01.md) · [方向决策](decisions/WORKFLOW-CANVAS-DIRECTION-2026-11-01.md)。
 - **产品需求基线已建立首轮稿：** [F01–F15 基础功能总表](product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)、[交互与 UI 边界](product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、[需求对冲与遗漏审查](product/REQUIREMENT-REVIEW-2026-11-01.md)。完整产品总表的未决项仍需后续处理；0.1.1 范围已单独获得用户批准，以版本计划为准。
 - **已建立：** [0.1.1 正式版本计划与三批 24 项任务](versions/0.1.1/PLAN.md)。B1 模块实现 → B2 基础业务闭环 → B3 Windows UI/验收。自由格子工作流、调度器、DSH 插件系统与连接器延期至 0.1.2。
