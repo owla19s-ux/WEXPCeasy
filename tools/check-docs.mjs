@@ -8,7 +8,6 @@ const strict = process.argv.includes('--strict');
 const json = process.argv.includes('--json');
 const skip = new Set(['.git','node_modules','dist','build','.build','.next','coverage']);
 const files = [];
-const known = new Set();
 function walk(dir) {
   for (const ent of fs.readdirSync(dir,{withFileTypes:true})) {
     if (skip.has(ent.name)) continue;
@@ -18,7 +17,6 @@ function walk(dir) {
   }
 }
 walk(root);
-for (const file of files) known.add(path.relative(root,file).replaceAll(path.sep,'/'));
 const issues=[]; const hashes=new Map(); let links=0;let redirects=0;
 for (const file of files) {
   const rel=path.relative(root,file).replaceAll(path.sep,'/');
