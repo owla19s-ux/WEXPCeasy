@@ -61,6 +61,26 @@ Space 只拥有这些对象及关系。Agent 由 `AI/` 管理，会话由 `conve
 
 完整产品需求状态仍以 [F01 总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 为准。上表的 B/C/D 候选不因写入本文件就自动成为 0.1.1 强制交付；0.1.1 先完成稳定的 Context、Space、Group、目录登记、关系、资源/工具基础开关和持久化恢复。正式调度器、自由格子工作流、DSH 连接器与插件系统延期到 0.1.2。
 
+
+## 3.1 Context 对 API、角色与 Agent 的显式引用（0.1.1 必须覆盖）
+
+**Context 必须能主动添加、查询、更换和解除 API 配置引用与角色引用**，不能仅用“组合关联”四个字代替功能。三种概念严格分离：
+
+- **API / Model 引用**：Context 选择一个由 `connections/api/` 管理的 API Connection、Provider/Model 或模型配置对象（以该模块实际公开身份为准）。Space 保存目标 owner、目标 ID、用途、关系 ID 和修订；不保存 API Key 明文、不复制 Provider 配置，也不直接发起模型请求。
+- **角色（Role）引用**：Context 从 `AI/` 所拥有的角色定义中选择角色；保存角色目标身份、关系 ID、用途、启用状态（如业务确有需要）及修订。角色的提示词、权限资格和实际定义仍由 AI owner 管理；Space 不创建角色副本。
+- **Agent 引用**：若 Context 需要绑定具体 Agent 实例，则单独引用 Agent 身份；**角色引用不自动创建 Agent，API 引用也不自动创建 Agent**。岗位、角色、Agent、API/Model 是不同概念，不能用一个字符串字段混合存储。
+
+| 功能 | 输入 | 成功输出与行为 | 异常与拒绝 |
+|---|---|---|---|
+| 添加 API/Model 引用 | contextId、API owner 的稳定目标身份、用途、调用主体/入口、操作意图 | 新 associationId、目标身份、关系修订；重启后仍可查询 | 目标不可验证或无权时不伪装可用；不能把 API Key 写入 Space |
+| 更换或解除 API 引用 | associationId、明确的新目标身份（更换时）、期望修订 | 原关系按明确意图更新或解除；不修改全局 API 配置 | 不静默改指其他 Provider/Model；不撤销其他 Context 的引用 |
+| 添加角色引用 | contextId、roleId（由 AI owner 提供）、用途、操作意图 | 新 associationId、roleId、关系修订；可查询 | 角色不存在、无权或不可用时返回受控状态，不复制角色定义 |
+| 更换或解除角色引用 | associationId、新 roleId（更换时）、期望修订 | 只修改本 Context 的关系；其他 Context 不受影响 | 不删除角色，不修改角色全局提示词或权限 |
+| 关联 Agent | contextId、agentId、关系意图 | 独立的 Agent 关联与修订 | 不把 Agent ID、Role ID、API Connection ID 混成同一身份 |
+| 解析 Context 的 AI 组合 | contextId、可信主体/入口及目标 owner 的当前观察 | 返回已选 API/Model、角色、Agent 的引用及可用/失联/无权状态 | **不自行推断默认模型或角色绑定优先级**；组合选择不等于授权模型调用 |
+
+**验收补充**：创建 Context C，分别添加 API 引用 A 和角色 R；重启后两条关系及各自目标 ID 不变；更换 A 不影响 R，更换 R 不影响 A；同一 API/角色可被另一个 Context 引用；解除 C 的关系不删除全局 API/角色；无权入口不能查询其名称或存在性。API 模型真实调用、角色运行行为由各自 owner 的测试负责，Space 只验证引用、解析和权限隔离。
+
 ## 4. 代码与持久化要求
 
 1. 先检查 `space/` 现有文件、`shared/src/index.ts` 的 Store/CAS 与路径出口、`permissions/` 的公开判权能力。不得凭本文臆造依赖函数签名。
@@ -84,6 +104,7 @@ Space 只拥有这些对象及关系。Agent 由 `AI/` 管理，会话由 `conve
 | S08 | A Context 启用工具 X，B 未启用；B 不获得 X；A 不自动获得执行权限 |
 | S09 | 无权入口不能通过列表、计数、关联反查推断对象存在 |
 | S10 | 解除引用不触发本体删除、外域删除、撤权或任务取消 |
+| S11 | Context 显式添加 API/Model 与 Role 引用；重启恢复、更换、解除互不影响；不复制凭证和角色定义 |
 
 执行 `npm run build`、`npm run typecheck`、新增的 `npm run test:space`、`npm test` 和 `npm run check:boundaries`。测试命令、结果、提交 SHA、未验收的 Windows 行为须在回执中写实。模拟依赖通过不等于真实集成通过。
 
