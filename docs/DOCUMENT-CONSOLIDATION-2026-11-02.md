@@ -70,3 +70,18 @@
 **核验限制**：本轮完整递归树共计 229 个 Markdown（包含本轮新建收敛规则）。未完成全部正文逐份扫描和全仓链接检测，不能据此宣布“没有其他重复或失效链接”。
 
 **处理规则**：导航与新施工文档直接引用唯一正文；历史文件可继续引用兼容入口；禁止向旧跳转页追加正文。
+
+
+## 第三轮：自动化检查落地（2026-11-02）
+
+新增 [tools/check-docs.mjs](../tools/check-docs.mjs) 与 [对应单元测试](../tools/check-docs.test.mjs)，以及 [GitHub Actions 文档审计工作流](../.github/workflows/docs-audit.yml)。
+
+- 递归扫描仓库 Markdown，跳过 `.git`、`node_modules`、构建输出与 coverage。
+- 检查 Markdown 相对文件/目录链接是否存在、越界路径、无效 URL 编码、完全一致的正文重复；统计旧路径跳转页。
+- 默认报告模式不因旧文档债务中断施工；人工修复后可运行 `node tools/check-docs.mjs --strict` 启用失败退出码。
+- `node --test tools/check-docs.test.mjs` 测试检查器；`node tools/check-docs.mjs --json > docs-audit-report.json` 输出可机读报告。
+- 工作流在 Markdown 或检查器变更时运行并上传 `docs-audit-report.json`；它是文档质量报告，不代表版本产品验收。
+
+**验证事实**：检查器的两项独立夹具测试已在 Node.js v22.16.0 本地运行通过（缺失链接/完全重复、合法相对链接/锚点）；未获取 GitHub Actions 的运行结果，也未取得整仓报告，故全仓链接和重复检查仍待真实 CI 报告确认。检查器目前只检查本地目标存在性，不检查锚点是否存在、外部 HTTP 链接可达性、语义重复或历史政策冲突；这些不能宣称通过。
+
+**处理原则**：先取得真实报告并区分源码路径、历史兼容路径和真实失效；再按目标 owner 修复，必要时补例外依据。禁止为了让检查变绿而批量删除历史文件或忽略全部错误。
