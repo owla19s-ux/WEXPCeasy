@@ -35,3 +35,14 @@ test('accepts valid relative links and fragment-only links', () => {
     assert.equal(JSON.parse(run.stdout).issueCount,0);
   } finally {fs.rmSync(root,{recursive:true,force:true});}
 });
+
+
+test('ignores Markdown-looking links inside fenced code', () => {
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'wex-doc-audit-'));
+  try {
+    fs.writeFileSync(path.join(root,'a.md'),'# A\\n\\`\\`\\`md\\n[not a link](missing.md)\\n\\`\\`\\`\\n');
+    const run=spawnSync(process.execPath,[script,'--root',root,'--json','--strict'],{encoding:'utf8'});
+    assert.equal(run.status,0,run.stdout+run.stderr);
+    assert.equal(JSON.parse(run.stdout).checkedLocalLinks,0);
+  } finally {fs.rmSync(root,{recursive:true,force:true});}
+});
