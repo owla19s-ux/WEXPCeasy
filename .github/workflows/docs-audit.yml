@@ -1,0 +1,27 @@
+name: Documentation audit
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '**/*.md'
+      - 'tools/check-docs.mjs'
+      - '.github/workflows/docs-audit.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit links and exact duplicates
+        run: node tools/check-docs.mjs --json > docs-audit-report.json
+      - name: Print summary and issues
+        run: |
+          node -e "const r=require('./docs-audit-report.json'); console.log(JSON.stringify({markdownFiles:r.markdownFiles,checkedLocalLinks:r.checkedLocalLinks,legacyRedirectPages:r.legacyRedirectPages,issueCount:r.issueCount},null,2)); console.log(JSON.stringify(r.issues,null,2))"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-audit-report
+          path: docs-audit-report.json
