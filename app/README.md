@@ -1,5 +1,16 @@
 # app
 
+> **当前模块施工状态（文档整理，2026-11-03）**：已有 app/src/index.ts、headless 验证入口；正式 Windows UI/IPC/安装未验收。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
+>
+> **模块职责**：可信宿主装配、生命周期与平台接线。
+>
+> **下一施工范围**：复核现有宿主能力与测试，未批准的 UI/平台扩展不在本模块抢先实现。
+>
+> **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
+>
+> **研究迁移**：历史深度契约归档于 [docs/research/contracts/app/CONTRACT-archive.md](../docs/research/contracts/app/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
+
+
 ## 当前施工速览（0.1.1 / B1-01）
 
 - **公开代码入口**：`app/src/index.ts`；可信模块装配、生命周期与 `startFoundations`，支持可选 connections 服务装配。
