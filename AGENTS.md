@@ -5,9 +5,9 @@
 ## 必须遵循的入口顺序
 
 1. **先读取根目录 [README.md](README.md)**，确认 WEX 的产品身份、当前工程状态、未完成的规划依据和阅读导航。
-2. 根据用户明确指派的任务，读取 [docs/README.md](docs/README.md) 并定位相关文档。
-3. 读取目标模块的 `README.md` 和 `CONTRACT.md`；涉及跨模块行为时，同时读取提供方契约及相关架构/决策依据。
-4. **当前 0.1.1 已有正式任务表**：[docs/versions/0.1.1/PLAN.md](docs/versions/0.1.1/PLAN.md)，按 B1-01～B3-08 读取和实施。历史批次任务书仅供追溯。
+2. **先读当前正式任务表**：[docs/versions/0.1.1/PLAN.md](docs/versions/0.1.1/PLAN.md)，确认 B1-01～B3-08 的本次任务范围。
+3. 读取目标模块的 `README.md`（优先读开头的当前施工速览）、`CONTRACT.md` 和实际源码/测试；涉及跨模块行为时，同时读取被调用模块的公开契约。
+4. 需要查产品功能编号、政策或历史争议时，再使用 [docs/README.md](docs/README.md) 定向查阅；历史批次任务书仅供追溯。
 
 如果当前 AI 工具不会自动读取 `AGENTS.md`，任务发起者应明确要求先读根目录 `README.md` 与本文件。不得假定所有工具具有相同的自动发现机制。
 
