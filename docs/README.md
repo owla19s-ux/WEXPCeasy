@@ -1,5 +1,8 @@
 # WEX 文档体系索引
 
+> **最短施工阅读路径**：根 [README](../README.md) → [AGENTS](../AGENTS.md) → [0.1.1 施工表](versions/0.1.1/PLAN.md) → 目标模块 README/CONTRACT → 源码与测试。其余研究、历史批次、参考材料按需读取，不要求全仓通读。参见 [文档收敛与历史资料使用规则](DOCUMENT-CONSOLIDATION-2026-11-02.md)。
+
+
 **最近工程交付：[第八批基础复验与 Electron / React 宿主最小验证](batch8/REPORT.md)** · [Electron / React 实验复现说明](../experiments/electron-host-spike/README.md)。
 
 **当前正式施工入口：[0.1.1 三批任务表](versions/0.1.1/PLAN.md)**。历史优先级参考：[2026-11-01 执行模块优先级](planning/EXECUTION-MODULE-PRIORITY-2026-11-01.md)。历史规划快照：[阶段路线图](planning/PHASE-ROADMAP-2026-10-31.md) · [旧施工计划](planning/CONSTRUCTION-PLAN-2026-10-31.md)，不自动作为新派工。最近完成批次：[第八批报告](batch8/REPORT.md)；[第八批任务书](batch8/PLAN.md)仅保留历史范围。
