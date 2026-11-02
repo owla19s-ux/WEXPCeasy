@@ -46,3 +46,18 @@ test('ignores Markdown-looking links inside fenced code', () => {
     assert.equal(JSON.parse(run.stdout).checkedLocalLinks,0);
   } finally {fs.rmSync(root,{recursive:true,force:true});}
 });
+
+
+test('strict mode preserves upstream snapshots as reported non-blocking evidence', () => {
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'wex-doc-audit-'));
+  try {
+    fs.mkdirSync(path.join(root,'references','dsh'),{recursive:true});
+    fs.writeFileSync(path.join(root,'references','dsh','upstream.md'),'[missing](unbundled.md)\n');
+    fs.writeFileSync(path.join(root,'README.md'),'# WEX\n');
+    const run=spawnSync(process.execPath,[script,'--root',root,'--json','--strict'],{encoding:'utf8'});
+    assert.equal(run.status,0,run.stdout+run.stderr);
+    const report=JSON.parse(run.stdout);
+    assert.equal(report.ownedIssueCount,0);
+    assert.equal(report.externalSnapshotIssueCount,1);
+  } finally {fs.rmSync(root,{recursive:true,force:true});}
+});
