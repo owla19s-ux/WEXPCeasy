@@ -49,3 +49,24 @@
 ## 后续整理准则
 
 优先修复仍影响 B1～B3 施工的入口和契约引用；其次自动检查相对链接、过期仓库名、重复正文及历史报告引用；最后对有证据的冗余资料进行分组归档。任何迁移都应同步更新引用，并确认源码构建或测试脚本没有依赖文档路径。
+
+
+## 第二轮核验：旧路径跳转页（2026-11-02）
+
+对下列九组旧路径和新路径读取正文并比较：旧路径均为简短的“文档位置已调整”指向页，**不是两份独立的完整正文**。因此本轮不删除这些兼容入口；只有完成全仓引用迁移、相对链接检查及外部引用影响评估后，才考虑移除。
+
+| 旧路径（docs/ 下） | 唯一正文 |
+| --- | --- |
+| WEXPC-GLOBAL-CONTRACT-MAP-V0.1.md | architecture/GLOBAL-CONTRACT-MAP-V0.1.md |
+| WEXPC-MODULE-LOCALITY-DESIGN-V0.1.md | architecture/MODULE-LOCALITY-DESIGN-V0.1.md |
+| WEXPC-PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md | architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md |
+| WEXPC-RUNTIME-EXTENSION-CONTRACT-V0.1.md | architecture/RUNTIME-EXTENSION-CONTRACT-V0.1.md |
+| WEXPC-RUNTIME-OPTIONS-V0.1.md | architecture/RUNTIME-OPTIONS-V0.1.md |
+| WEXPC-SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md | architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md |
+| WEXPC-SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md | architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md |
+| WEXPC1-DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md | architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md |
+| WEXPC1-RESEARCH-DECISIONS-2026-10-30.md | decisions/RESEARCH-DECISIONS-2026-10-30.md |
+
+**核验限制**：本轮完整递归树共计 229 个 Markdown（包含本轮新建收敛规则）。未完成全部正文逐份扫描和全仓链接检测，不能据此宣布“没有其他重复或失效链接”。
+
+**处理规则**：导航与新施工文档直接引用唯一正文；历史文件可继续引用兼容入口；禁止向旧跳转页追加正文。
