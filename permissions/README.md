@@ -1,5 +1,13 @@
 # permissions — 策略、授权决定与撤权
 
+## 当前施工速览（0.1.1 / B1-01）
+
+- **公开代码入口**：`permissions/src/index.ts`；已有 `createPermissions(Store, TrustPort)`，提供 evaluate/recheck/grant/revoke/history，采用真实存储和可信宿主注入。
+- **运行验证**：`npm run test:permissions`；跨域组合另运行 `npm test`。当前授权正例的可信事实来自测试宿主，不等于正式 Windows/IPC 身份认证。
+- **当前安全边界**：非对话入口仍返回 `entry_policy_unresolved`；不伪造对话授权，不开放尚未批准的自动授权、有限次数或特殊风险操作。
+- **施工依据**：[0.1.1 正式计划](../docs/versions/0.1.1/PLAN.md) → [本域契约](CONTRACT.md) → `permissions/src/` 与 `permissions/tests/`。第四批契约设计状态是历史起点，不代表当前代码不存在。
+
+
 **当前：第七批基础产品实现已落地；稳定实现与限制见本文“第七批实际实现”及[验收报告](../docs/batch7/REPORT.md)。下方阶段描述保留为历史依据。**
 历史初始状态（第二批）：当时尚无产品授权引擎；第七批已实现本域基础授权服务。此处仍是唯一的权限业务域；[shared/permissions](../shared/permissions/README.md) 仅保留旧入口指引，不再承担另一套授权服务。模块细分使用 PERMISSIONS-*，既有 PER-01～04 保持稳定。
 
@@ -48,7 +56,7 @@
 ## 文档入口
 
 - [本域契约及关联依据](CONTRACT.md#文档关联与施工入口)
-- [WEXPC1 文档体系总索引](../docs/README.md)
+- [WEX 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
 全局架构、决策、研究、审查、实验和当前施工准入范围，以本域 `CONTRACT.md` 的“文档关联与施工入口”章节为准；README 只负责提供入口，不重复维护一份容易漂移的资料清单。
