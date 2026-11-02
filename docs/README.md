@@ -1,5 +1,8 @@
 # WEX 文档体系索引
 
+> **迁移进度（2026-11-03）**：Space 及 shared、permissions、app、AI、conversations、connections、workflows、connections/api、connections/local 的历史 CONTRACT 已归档到 `docs/research/contracts/`，原路径为兼容提示。当前施工只以模块 README 为入口；本索引下方部分旧章节仍记录迁移前的阅读规则，待统一清理，不应覆盖根 README 的最新规定。
+
+
 > **最短施工阅读路径**：根 [README](../README.md) → [AGENTS](../AGENTS.md) → [0.1.1 施工表](versions/0.1.1/PLAN.md) → 目标模块 README/CONTRACT → 源码与测试。其余研究、历史批次、参考材料按需读取，不要求全仓通读。参见 [文档收敛与历史资料使用规则](DOCUMENT-CONSOLIDATION-2026-11-02.md)。
 
 
