@@ -1,0 +1,36 @@
+{
+  "baseline": "0af406a73679f6ea17da73606fd52e0807e3221c",
+  "authorization": "User continuation of API implementation; construction documents unchanged",
+  "changes": [
+    "Bounded strict text-only nonstream JSON response parser",
+    "Nonstream transport shares permission/configuration checks and existing Operation ledger",
+    "Awaitable idempotent stop drains in-flight response handling and receipt persistence",
+    "Reject native timer overflow before Operation preparation"
+  ],
+  "validation": {
+    "fullSuite": 298,
+    "apiSuite": 60,
+    "build": "passed",
+    "typecheck": "passed",
+    "boundaries": "passed",
+    "diffCheck": "passed"
+  },
+  "regressionsReproduced": [
+    "Nonstream requests rejected despite supported preparation",
+    "Awaiting old stop left ledger in dispatched phase",
+    "Native timer overflow lacked pre-dispatch rejection"
+  ],
+  "coverage": [
+    "Real HTTP nonstream POST with stream false and SQLite receipts",
+    "JSON invalid UTF8/truncation/concatenated documents, tools/reasoning/roles/finish and usage guards",
+    "JSON byte/text bounds and abort cleanup",
+    "Single and concurrent active-request stop drain, repeated stop",
+    "Native timer overflow blocked before Operation creation",
+    "Incorrect content types and malformed JSON never return successful content"
+  ],
+  "notRun": [
+    "Real credential backend and provider account",
+    "Desktop host assembly and Windows runtime",
+    "Nontext responses, tools and reasoning remain explicitly unsupported"
+  ]
+}

@@ -5,3 +5,5 @@ export {decodeChatStream} from './stream.js';
 export type {ChatStreamOptions,ChatStreamResult} from './stream.js';
 export {createApiTransport} from './transport.js';
 export type {ApiSendResult,ApiTransportOptions} from './transport.js';
+export {decodeChatResponse} from './response.js';
+export type {ChatResponseOptions} from './response.js';
