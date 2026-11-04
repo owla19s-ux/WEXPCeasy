@@ -62,8 +62,8 @@ function mutate<S extends Registry|Body>(store:Store,snap:Snapshot,state:S,key:s
 }
 function organization(state:Registry,c:SpaceCommand,id:()=>string):{id:string;revision:number}{
  switch(c.kind){
- case 'category.create':{const item={id:allocate(state,id),revision:1,name:c.name};state.categories.push(item);return item;}
- case 'category.edit':{const item=find(state.categories,c.id);expected(item,c.expectedRevision);item.name=c.name;item.revision++;return item;}
+ case 'category.create':{if(state.categories.some(x=>x.name===c.name))return fail('duplicate_category_name_unsupported');const item={id:allocate(state,id),revision:1,name:c.name};state.categories.push(item);return item;}
+ case 'category.edit':{const item=find(state.categories,c.id);expected(item,c.expectedRevision);if(state.categories.some(x=>x.id!==c.id&&x.name===c.name))return fail('duplicate_category_name_unsupported');item.name=c.name;item.revision++;return item;}
  case 'space.create':{if(c.categoryId)find(state.categories,c.categoryId);const item={id:allocate(state,id),revision:1,name:c.name,description:c.description??'',categoryId:c.categoryId??null};state.spaces.push(item);return item;}
  case 'space.edit':{const item=find(state.spaces,c.id);expected(item,c.expectedRevision);if(c.categoryId)find(state.categories,c.categoryId);item.name=c.name;if(c.description!==undefined)item.description=c.description;if(c.categoryId!==undefined)item.categoryId=c.categoryId;item.revision++;return item;}
  case 'space.directory':{const item=find(state.spaces,c.id);expected(item,c.expectedRevision);item.directory=c.location;item.revision++;return item;}
@@ -169,7 +169,7 @@ export async function openSpaceService(options:SpaceOptions):Promise<SpaceOpenRe
  }
  async function verifyTarget(r:object,c:SpaceCommand):Promise<void>{
  if(c.kind!=='association.add'&&c.kind!=='association.replace'&&c.kind!=='tool.add')return;
- const valid=(c.owner==='AI'&&['role','agent'].includes(c.targetType))||(c.owner==='connections/api'&&['api','model'].includes(c.targetType))||(c.kind==='tool.add'&&c.owner==='connections'&&c.targetType==='tool');
+ const valid=c.kind==='tool.add'?c.owner==='connections'&&c.targetType==='tool':(c.owner==='AI'&&['role','agent'].includes(c.targetType))||(c.owner==='connections/api'&&['api','model'].includes(c.targetType));
  if(!valid)return fail('unsupported_target');if(!options.owner)return fail('owner_unavailable','unavailable');
  let observation;try{observation=await options.owner.resolve(r,{owner:c.owner,targetType:c.targetType,targetId:c.targetId});}catch{return fail('owner_unavailable','unavailable');}
  if(observation.status!=='available')return fail('owner_unavailable','unavailable');
@@ -265,18 +265,26 @@ export async function openSpaceService(options:SpaceOptions):Promise<SpaceOpenRe
    if(input.kind!=='organization'||!['category','space','group'].includes(input.entity))return fail('invalid_query');
    const d=authorize(options.permission,request,{action:'organization.list',target:`root:${root.id}`,context:null});
    const {state}=await registrySnapshot();const items=input.entity==='category'?state.categories:input.entity==='space'?state.spaces:state.groups;
-   const visible:typeof items=[];
+   const collected:{request:object;decision:Allow;item:(typeof items)[number];linked?:{request:object;decision:Allow}}[]=[];
    for(const item of items){
     const target={action:`${input.entity}.read`,target:`${input.entity}:${item.id}`,context:null};const derived=options.deriveRequest?.(request,target);
     if(!derived)continue;
     try{const a=authorize(options.permission,derived,target);if(a.scope.subject!==d.scope.subject||a.scope.entry!==d.scope.entry||a.scope.conversation!==d.scope.conversation||a.scope.relationship!==d.scope.relationship||a.scope.relationshipGeneration!==d.scope.relationshipGeneration)continue;recheck(options.permission,derived,a);
      const projected=structuredClone(item);
+     const row:{request:object;decision:Allow;item:(typeof items)[number];linked?:{request:object;decision:Allow}}={request:derived,decision:a,item:projected};
      const ref='categoryId'in projected?projected.categoryId:'spaceId'in projected?projected.spaceId:null;
-     if(ref){const kind='categoryId'in projected?'category':'space';const wanted={action:`${kind}.read`,target:`${kind}:${ref}`,context:null};const linked=options.deriveRequest?.(request,wanted);let readable=false;
-      try{if(linked){const check=authorize(options.permission,linked,wanted);readable=check.scope.subject===d.scope.subject&&check.scope.entry===d.scope.entry&&check.scope.conversation===d.scope.conversation&&check.scope.relationship===d.scope.relationship&&check.scope.relationshipGeneration===d.scope.relationshipGeneration;recheck(options.permission,linked,check);}}catch{readable=false;}
-      if(!readable){if('categoryId'in projected)projected.categoryId=null;else continue;}
+     if(ref){const kind='categoryId'in projected?'category':'space';const wanted={action:`${kind}.read`,target:`${kind}:${ref}`,context:null};const linked=options.deriveRequest?.(request,wanted);
+      try{if(linked){const check=authorize(options.permission,linked,wanted);if(check.scope.subject===d.scope.subject&&check.scope.entry===d.scope.entry&&check.scope.conversation===d.scope.conversation&&check.scope.relationship===d.scope.relationship&&check.scope.relationshipGeneration===d.scope.relationshipGeneration){recheck(options.permission,linked,check);row.linked={request:linked,decision:check};}}}catch{/* inaccessible relationship */}
+      if(!row.linked){if('categoryId'in projected)projected.categoryId=null;else continue;}
      }
-     (visible as typeof item[]).push(projected);}catch{/* omit inaccessible projection, including its existence */}
+     collected.push(row);}catch{/* omit inaccessible projection, including its existence */}
+   }
+   const visible:typeof items=[];
+   // Later host/permission calls can revoke an earlier object or its referenced container.
+   for(const row of collected){
+    try{recheck(options.permission,row.request,row.decision);}catch{continue;}
+    if(row.linked){try{recheck(options.permission,row.linked.request,row.linked.decision);}catch{if('categoryId'in row.item)row.item.categoryId=null;else continue;}}
+    (visible as (typeof items)[number][]).push(row.item);
    }
    recheck(options.permission,request,d);return {status:'ok' as const,value:visible};
   }catch(e){return e instanceof Failure?errorResult(e,'query'):{status:'unavailable',reason:'query_dependency_unavailable'};}
