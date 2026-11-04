@@ -1,0 +1,37 @@
+{
+  "baseline": "e0b87daa00e19c1877ff18deb13500b5b8c0fe53",
+  "scope": "User-authorized API continuation; no construction documents modified",
+  "implementation": [
+    "Permission-scoped request.send plus independently authorized same-actor prepare request",
+    "Immutable request capture and current configuration/permission rechecks",
+    "Existing Connections Operation ledger; single dispatch reservation; no automatic replay",
+    "HTTP POST with redirects refused and strict bounded SSE parsing",
+    "Timeout, caller abort and transport stop abort active fetch",
+    "Static HTTP error classifications and no raw provider errors",
+    "Credential references blocked before Operation creation until credential backend exists"
+  ],
+  "validation": {
+    "rootTests": 287,
+    "apiTests": 49,
+    "typecheck": "passed",
+    "build": "passed",
+    "boundaries": "passed",
+    "diffCheck": "passed"
+  },
+  "integrationEvidence": [
+    "Real local HTTP server, real SQLite API and Operation stores",
+    "POST URL/method, no Authorization header for credential-free connection",
+    "Replay suppression, pre-abort and deny with zero network calls",
+    "Stalled response timeout, active abort, stop and sealed transport",
+    "Permission revocation and configuration changes suppress output",
+    "Redirect refusal, 401/403/429/500, truncated stream",
+    "Result persistence failure returns unknown without content or automatic retry",
+    "Actor mismatch and incorrect action blocked"
+  ],
+  "notRun": [
+    "Real provider account and credential backend",
+    "Windows/Electron host wiring",
+    "Nonstream responses, tools and reasoning",
+    "Idle permission revocation interrupts on next read or overall timeout; stop and caller abort interrupt immediately"
+  ]
+}
