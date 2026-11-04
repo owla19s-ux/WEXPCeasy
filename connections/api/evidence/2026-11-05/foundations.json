@@ -1,0 +1,126 @@
+{
+  "kind": "construction_verification_receipt",
+  "module": "connections/api",
+  "date": "2026-11-05",
+  "baseline": "8f5858ab00dd1e8449124a0a99f0e970fb4acd66",
+  "scope": "First API foundation batch: owned nonsecret configuration, manual models, capability observations, parameter validation, immutable request preparation and identity projections. No outbound model request.",
+  "public_entry": "connections/api/src/index.ts",
+  "implementation": [
+    "API configuration lives in a host-supplied shared Store aggregate with its own domain/version. API connections are not mirrored into the generic write-connection configuration store; no second Operation ledger or secret store was added.",
+    "Multiple Connection identities, own revisions, explicit protocol/endpoint mode, nonsecret credential ID/revision references, enablement and parameters; manual models are Connection-scoped and remain capability-unknown until the trusted adapter observation port supplies matching evidence.",
+    "Connection and model reads/lists require exact permissions; per-object lists derive matching-principal reads and recheck before returning. Missing projection binding cannot reveal collection size.",
+    "Configuration writes preserve scoped business intents with prepared/committed records in real SQLite. Lost acknowledgements recover by original intent; unresolved prepared records are observation-only, not blindly re-executed.",
+    "Preparation checks current Connection/Model revisions, matching evidence revision, enabled state, protocol and observed capability. Parameter types/ranges/enums and explicit value/default/disabled modes are validated. Conflicting sources are rejected; no override precedence was chosen.",
+    "OpenAI-Chat-compatible text request plans preserve endpoint prefixes/full routes, 0/false/null and supported structured parameter values. Deep-frozen snapshots retain credential references and explicit setting provenance/fingerprints, never resolved secrets. Media/tool-message inputs are rejected, not dropped.",
+    "Permission-scoped API/Model identity projections support real Space references. Registered identity is distinct from a live Provider/model capability test.",
+    "Closed-input schemas, reserved native fields, endpoint credentials/query fragments, unsafe remote HTTP, corrupt/future formats, ID collisions and reentrant service stop are rejected. Loopback HTTP metadata can be registered."
+  ],
+  "verification": [
+    {
+      "command": "npm test (baseline)",
+      "tests": 238,
+      "passed": 238,
+      "failed": 0
+    },
+    {
+      "command": "initial API config tests (before implementation)",
+      "tests": 6,
+      "passed": 0,
+      "failed": 6
+    },
+    {
+      "command": "explicit default/disabled fingerprint regression (before fix)",
+      "tests": 11,
+      "passed": 10,
+      "failed": 1
+    },
+    {
+      "command": "stop inside permission recheck regression (before fix)",
+      "tests": 1,
+      "failed": 1
+    },
+    {
+      "command": "permission-filtered API list regressions (before fix)",
+      "tests": 2,
+      "failed": 2
+    },
+    {
+      "command": "invalid query classification regression (before fix)",
+      "tests": 1,
+      "failed": 1
+    },
+    {
+      "command": "npm run test:api",
+      "tests": 28,
+      "passed": 28,
+      "failed": 0
+    },
+    {
+      "command": "npm test",
+      "tests": 266,
+      "passed": 266,
+      "failed": 0,
+      "includes": [
+        "build",
+        "check:boundaries"
+      ]
+    },
+    {
+      "command": "npm run typecheck",
+      "status": "passed"
+    },
+    {
+      "command": "isolated API public-entry strict TypeScript compilation",
+      "status": "passed",
+      "qualification": "Transitive shared/permissions dependencies compile; no package isolation claim."
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "integration": {
+    "real": [
+      "API service",
+      "Space service",
+      "permissions",
+      "SQLite"
+    ],
+    "fixtures": [
+      "host identity binding and management approval facts",
+      "capability observation fixtures"
+    ],
+    "assertions": [
+      "Missing configuration grant does not create API metadata.",
+      "A Space association needs an independent API model-read grant.",
+      "Revoking model-read permission hides the Space projection; restoring permission preserves the relation ID.",
+      "Space does not receive API credential-reference metadata."
+    ],
+    "live_provider_calls": 0
+  },
+  "coverage": {
+    "API-01": "Partial: independent Connection configuration CRUD subset (create/edit/read/list/enablement). Copy, defaults and destructive deletion are not implemented.",
+    "API-02": "Partial: manual models, local directory, provenance-bearing trusted capability observations. Remote model listing/probing adapters are not implemented.",
+    "API-03": "Credential references only; no platform credential backend or real connectivity test.",
+    "API-04": "Prepared text request plan/body only. No HTTP transport, response generation, SSE decoder, terminal handling, producer backpressure or cancellation/timeout execution.",
+    "API-05": "Tool input/intent handling not implemented; unsupported tool messages/fields are rejected.",
+    "API-06": "Usage/cost observations not implemented.",
+    "API-07": "Loopback endpoint metadata supported; no model runtime or actual local-provider invocation.",
+    "API-08": "Explicit Connection/Model selection and immutable snapshot; no automatic routing.",
+    "API-09": "Timeout intent captured in plan; no network timers, retries or fallback. Configuration commit-unknown handling is not model-request recovery.",
+    "API-10": "Automatic failover remains unimplemented and policy-dependent."
+  },
+  "limits": [
+    "Only openai-chat request preparation is implemented. Other protocol metadata can be saved, but prepare explicitly rejects unsupported protocols.",
+    "Endpoint validation initially refuses URL queries/fragments; provider-specific query routes are not yet supported. This is not full Azure/Google endpoint support.",
+    "Observed capability provenance comes from an injected trusted synchronous reader of existing evidence, not an implicit network probe. Capability TTL/refresh policy and actual provider verification remain pending.",
+    "Snapshot output size is bounded; no claim of bounded streaming queues or producer backpressure is made.",
+    "No Pi AI dependency or SDK replacement was adopted. Historical strict decoder/continuation assets and research were not deleted or altered.",
+    "No OpenAI/DeepSeek account credentials were inspected, provisioned or used. Actual provider generation, tool round trips, credential delivery and Windows integration are NOT_RUN.",
+    "App automatic API-store lifecycle wiring is pending; the host must own Store/lock lifetime. This batch only exercises explicit real composition.",
+    "Descriptor files, layered parameter precedence, automatic switching and destructive lifecycle policies remain unfrozen/unimplemented."
+  ],
+  "documents_changed": false,
+  "module_accepted": false,
+  "next": "Controlled credential/transport and strict response streaming slice, retaining historical negative vectors and explicit Provider integration evidence."
+}
