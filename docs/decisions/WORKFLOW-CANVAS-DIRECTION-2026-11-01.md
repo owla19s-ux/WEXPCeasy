@@ -42,5 +42,5 @@
 
 - [工作流自由画布与节点工作界面设计](../architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)
 - [工作流技术路线研究](../research/WORKFLOW-CANVAS-TECHNOLOGY-REVIEW-2026-11-01.md)
-- [workflows 契约](../../workflows/CONTRACT.md)
+- [workflows 契约](../research/contracts/workflows/CONTRACT-archive.md)
 - [views 契约](../../views/CONTRACT.md)

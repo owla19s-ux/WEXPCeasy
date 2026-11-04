@@ -11,7 +11,7 @@ API 模块专属配置面板的维护位置，由 WEX 配置页挂载。仅有�
 
 ## 上级契约与文档入口
 
-- **上级契约：** [connections/CONTRACT.md](../../../connections/CONTRACT.md)
+- **上级契约：** [connections/CONTRACT.md](../../../docs/research/contracts/connections/CONTRACT-archive.md)
 - **上级契约：** [UI/CONTRACT.md](../../../UI/CONTRACT.md)
 - **全局文档总索引：** [docs/README.md](../../../docs/README.md)
 - [提供方边界 Walkthrough](../../../docs/architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)

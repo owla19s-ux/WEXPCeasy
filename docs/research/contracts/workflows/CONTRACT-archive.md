@@ -1,4 +1,6 @@
-> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。原文相对链接沿用旧目录结构，按需从仓库根目录定位。
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../../../../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。
+
+> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。2026-11-04 已按原 owner 位置修复可确定的相对链接；原始业务结论保留。
 
 # workflows / runtime 业务契约（第四批设计草案）
 
@@ -131,7 +133,7 @@
 
 ## 第五批复杂压力审查补充（2026-10-31）
 
-依据：[第五批覆盖、冲突与再审查记录](../docs/audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
+依据：[第五批覆盖、冲突与再审查记录](../../../audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
 
 ### W01/W03：定义、实例与循环推进（F02）
 
@@ -176,7 +178,7 @@ runtime唯一拥有WEX内推进/等待决定及资源协调记录；适配器提
 
 runtime窄配额owner仍B候选；同池原子预留、unknown不退、对账差额和重试新成本为验收条件，无Task调用不依赖完整流程。可先施工定义/实例/Task/轮次/证据记录、等待诊断；X01/02/05/06/07只证局部持久模型，真实派发/资源别名/回调重入/快照待C，D03/04/07阻受影响动作。
 
-本域独立输入/输出、取消/失败/超时/unknown及双方替身样例沿用上文；下一批先真实本域测试，再真实提供/消费与装配，不用实验替代。[全域准备度与独立入口](../docs/batch6/READINESS.md)、[局部证据与未验证条件](../docs/batch6/EXPERIMENTS.md)、[集中待决](../docs/batch6/DECISIONS.md)。
+本域独立输入/输出、取消/失败/超时/unknown及双方替身样例沿用上文；下一批先真实本域测试，再真实提供/消费与装配，不用实验替代。[全域准备度与独立入口](../../../batch6/READINESS.md)、[局部证据与未验证条件](../../../batch6/EXPERIMENTS.md)、[集中待决](../../../batch6/DECISIONS.md)。
 
 
 ## 6. 模块独立功能编号与细化契约
@@ -279,24 +281,24 @@ runtime窄配额owner仍B候选；同池原子预留、unknown不退、对账差
 
 本节是本域施工者的最小阅读入口；模块业务语义以本文件为准，全局文档提供约束/背景，批次与实验记录提供阶段状态和证据。**文档中的 A/B/C/D 不得互相升级：实验通过不自动批准候选，用户待决事项不得由施工者代裁。**
 
-- **模块导航**：[全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档体系总索引](../docs/README.md)
+- **模块导航**：[全模块契约索引](../../../MODULE-CONTRACTS.md) · [文档体系总索引](../../../README.md)
 - **全局架构**：
-- [全局契约地图](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
-- [模块局部性设计](../docs/architecture/MODULE-LOCALITY-DESIGN-V0.1.md)
-- [当前工作流自由画布与节点工作界面设计](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)
-- [Space 组织与目录接入历史共识](../docs/architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
+- [全局契约地图](../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
+- [模块局部性设计](../../../architecture/MODULE-LOCALITY-DESIGN-V0.1.md)
+- [当前工作流自由画布与节点工作界面设计](../../../architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)
+- [Space 组织与目录接入历史共识](../../../architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
 - **决策与研究**：
-- [研究决策与当前边界](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
+- [研究决策与当前边界](../../../decisions/RESEARCH-DECISIONS-2026-10-30.md)
 - **审查报告**：
-- [复杂业务契约压力审查](../docs/audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
-- **准备度与批次结论**：[本域施工准备度](../docs/batch6/READINESS.md) · [F01–F09 契约收敛](../docs/batch6/CONVERGENCE.md) · [集中决策与待决项](../docs/batch6/DECISIONS.md)
-- **实验与验证证据**：[第六批实验总表](../docs/batch6/EXPERIMENTS.md) · [可复现实验入口](../experiments/contract-readiness-spike/README.md)
+- [复杂业务契约压力审查](../../../audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
+- **准备度与批次结论**：[本域施工准备度](../../../batch6/READINESS.md) · [F01–F09 契约收敛](../../../batch6/CONVERGENCE.md) · [集中决策与待决项](../../../batch6/DECISIONS.md)
+- **实验与验证证据**：[第六批实验总表](../../../batch6/EXPERIMENTS.md) · [可复现实验入口](../../../../experiments/contract-readiness-spike/README.md)
 
 维护规则：模块职责/业务行为修改在本域 README/CONTRACT；跨模块架构或政策变更更新对应全局文档；每次实验只更新证据，不改写未批准的决策。施工批次结束后，先回写模块契约，再更新本节关联；不得把批次历史报告当作模块当前状态的替代品。
 
 ## G1/G4/G5 与跨对话持续工作补充（2026-10-31）
 
-本节把 Task 资料引用、操作结果关联、内部检索和持久检查点归入 Workflows；详细 owner 矩阵见[基础能力落地映射](../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+本节把 Task 资料引用、操作结果关联、内部检索和持久检查点归入 Workflows；详细 owner 矩阵见[基础能力落地映射](../../../planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
 
 **G1：Task 输入与产物引用。** Task 可引用 Context 资料、外部文件/仓库、会话输入、其他 Task 产物和核验依据。Workflows 保存引用及使用时的来源版本/观察，不复制来源正文或接管外部文件。Artifact 记录产物身份、来源 Task/轮次、输入与规则依据、实际定位及版本观察；实际字节由对应资源 owner/连接器管理。Verification 必须绑定具体 Artifact、输入清单、规则版本和核验环境。
 
@@ -331,7 +333,7 @@ runtime窄配额owner仍B候选；同池原子预留、unknown不退、对账差
 - 工作流模式不读取对话四级权限；由对话创建的 Task 进入工作流后，按当前工作流节点策略重新判权。
 - 在途运行绑定启动时定义修订；权限撤销和当前策略变化仍需在每次执行前生效。
 
-完整动作风险、节点授权维度与验收样例见[ D01–D02 权限矩阵 ](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。
+完整动作风险、节点授权维度与验收样例见[ D01–D02 权限矩阵 ](../../../product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。
 
 
 ## D02：工作流运行启动时一次性授权（2026-11-01，已确认）

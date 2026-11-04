@@ -1,5 +1,7 @@
 # app
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：产品源码 4 文件、测试 4 文件，公开入口 `app/src/index.ts`。本轮根测试覆盖 shared、permissions、app、connections 及边界工具；不代表完整本版验收。 开工须重新核对最新 main。
+
 > **当前模块施工状态（文档整理，2026-11-03）**：已有 app/src/index.ts、headless 验证入口；正式 Windows UI/IPC/安装未验收。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
 >
 > **模块职责**：可信宿主装配、生命周期与平台接线。
@@ -16,7 +18,7 @@
 - **公开代码入口**：`app/src/index.ts`；可信模块装配、生命周期与 `startFoundations`，支持可选 connections 服务装配。
 - **运行验证**：`npm run test:app`；无窗口诊断入口 `npm run start:headless -- <已有数据根>`；跨模块验证另运行 `npm test`。
 - **未实现或未验收**：正式 Electron/React UI、Preload/IPC、Windows 安装和 E4 实机；第八批隔离实验不能替代正式桌面产品。
-- **施工依据**：[0.1.1 正式计划](../docs/versions/0.1.1/PLAN.md) → [本域契约](CONTRACT.md) → `app/src/` 与 `app/tests/`。最新连接组合事实另见 [施工回执](CONNECTIONS-INTEGRATION-2026-11-02.md)。
+- **施工依据**：[0.1.1 正式计划](../docs/versions/0.1.1/PLAN.md) → [本域契约](../docs/research/contracts/app/CONTRACT-archive.md) → `app/src/` 与 `app/tests/`。最新连接组合事实另见 [施工回执](CONNECTIONS-INTEGRATION-2026-11-02.md)。
 
 
 **当前：基础宿主已可选装配真实 connections 服务，包含持久配置/操作与退出排空。最新范围及证据见[宿主连接组合回执](CONNECTIONS-INTEGRATION-2026-11-02.md)；第七/八批描述保留为历史依据。**
@@ -30,7 +32,7 @@
 
 ## 模块编号规则
 
-- app 宿主与运行维护细分使用 `APP-<子域>-NNN`，详见 [CONTRACT 第 7 节](CONTRACT.md#7-模块独立功能编号与细化契约)。
+- app 宿主与运行维护细分使用 `APP-<子域>-NNN`，详见 [CONTRACT 第 7 节](../docs/research/contracts/app/CONTRACT-archive.md#7-模块独立功能编号与细化契约)。
 - APP-01～APP-12 保留为既有能力锚点，不重排。
 - app 只负责可信宿主、装配、平台/进程生命周期和跨域作业协调；不成为全局业务状态中心。
 
@@ -52,9 +54,9 @@
 
 
 
-## 第四批：模块业务契约设计
+## 第四批：模块业务契约设计（历史研究）
 
-[本模块契约与独立验收规格](CONTRACT.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
+[本模块契约与独立验收规格](../docs/research/contracts/app/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 ## 基础应用能力归属补充（2026-10-31；候选目录，尚未实现）
 
@@ -65,18 +67,18 @@
 后续验收须至少涵盖同一数据根重复启动、子进程残留、renderer/main进程崩溃、启动循环安全恢复、更新失败及旧数据回接、部分依赖缺失时的降级。当前无Windows实机证据，不能据文档宣称这些能力已可用。
 
 
-### 第六批施工准备度（2026-10-31）
+### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：按本目录[CONTRACT第六批条款](CONTRACT.md)执行上述稳定范围；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/research/contracts/app/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
 
-- [本域契约及关联依据](CONTRACT.md#文档关联与施工入口)
+- [本域契约及关联依据](../docs/research/contracts/app/CONTRACT-archive.md#文档关联与施工入口)
 - [WEX 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
-全局架构、决策、研究、审查、实验和当前施工准入范围，以本域 `CONTRACT.md` 的“文档关联与施工入口”章节为准；README 只负责提供入口，不重复维护一份容易漂移的资料清单。
+当前施工范围与必要契约摘要以本 README 和根 README 为入口；历史契约及其关联资料只供按需追溯，不自动派工或批准候选政策。
 
 
 ## 第七批实际实现（2026-10-31）
@@ -109,4 +111,4 @@ App 负责把可信宿主身份/入口事实和窄能力注入模块，并协调
 
 `startFoundations({dataRoot, trust, connections:{adapters, shutdownTimeoutMs?}})` 通过 connections 公开出口装配配置绑定写派发；省略 connections 保持原路径。可信宿主得到 `host.connections` 的 configs、operations（只读）和 dispatch，不得到 Store/DB 或账本写入口。初始化失败为 degraded 且不暴露连接 client；退出先排空，再关库，未完成时保留根锁并允许再次 stop。
 
-数据库、生命周期、真实组合验证和未完成项以[本批回执](CONNECTIONS-INTEGRATION-2026-11-02.md)与[本域契约](CONTRACT.md#8-可选连接服务的可信装配2026-11-02)为准；这不是 Renderer/IPC 或正式 Electron UI。
+数据库、生命周期、真实组合验证和未完成项以[本批回执](CONNECTIONS-INTEGRATION-2026-11-02.md)与[本域契约](../docs/research/contracts/app/CONTRACT-archive.md#8-可选连接服务的可信装配2026-11-02)为准；这不是 Renderer/IPC 或正式 Electron UI。

@@ -1,3 +1,5 @@
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。
+
 # views 业务契约：获准投影、视图配置与编辑转交
 
 - Owner：views。维护视图定义、对象出现/映射、布局筛选、草稿修订和投影刷新状态。
@@ -79,7 +81,7 @@ VIEW-03保留不同关系类别的来源类型，不合并为“通用边”；F
 
 - **模块导航**：[views README](README.md) · [全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档总索引](../docs/README.md)
 - **产品需求**：[F01–F15 产品功能总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
-- **跨模块设计**：[工作流自由画布与节点工作界面](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md) · [工作流契约](../workflows/CONTRACT.md) · [Space 契约](../space/CONTRACT.md)
+- **跨模块设计**：[工作流自由画布与节点工作界面](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md) · [工作流契约](../docs/research/contracts/workflows/CONTRACT-archive.md) · [Space 契约](../docs/research/contracts/space/CONTRACT-2026-10-31.md)
 - **决策与研究**：[工作流画布方向决策](../docs/decisions/WORKFLOW-CANVAS-DIRECTION-2026-11-01.md) · [全局模块化架构](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
 
 维护规则：视图业务语义写回本文件；源领域对象/关系的变更转交其 owner；跨模块边界变化更新全局索引。原型或图形库数据不自动成为 views 的正式数据契约。

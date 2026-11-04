@@ -1,5 +1,7 @@
 # dsh — DSH 插件机制独立构建与验证
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：没有独立产品 src/tests；已有 build/checks 与锁定的上游兼容实验。它是独立实验，WEX 正式接线及 Windows 实机未验收。 开工须重新核对最新 main。
+
 本目录保存版本锁定的 DSH 插件基础机制。WEX 自有插件机制在 [plugins/](../plugins/README.md)，外部 DSH Agent 连接器在 [connections/dsh/](../connections/dsh/README.md)，两者不由本目录替代。
 
 > **版本边界（2026-11-02）**：DSH 原生插件系统产品化与 DSH 连接器均推迟到 **0.1.2**。下文阶段目标及 Linux 实验为历史/后续研究依据，不能当作 0.1.1 任务。见 [0.1.1 计划](../docs/versions/0.1.1/PLAN.md)。

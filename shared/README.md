@@ -1,5 +1,7 @@
 # shared｜通用技术基础模块
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：产品源码 4 文件、测试 5 文件，公开入口 `shared/src/index.ts`。本轮根测试覆盖 shared、permissions、app、connections 及边界工具；不代表完整本版验收。 开工须重新核对最新 main。
+
 > **当前不是施工入口**。当前模块仍是 [Space](../space/README.md)。本页是 shared 的独立维护与验收规格；工作模式不得修改施工文档。
 >
 > **实现状态（文档证据，待实时核查）**：已有 `shared/src/index.ts`、`shared/tests/` 和 `npm run test:shared` 入口；此前记录 SQLite 命名空间 Store/CAS、数据根检查、受限路径定位、合作目录锁、诊断 sink 已实现。本文更新没有重新执行测试或 Windows 实机验证。
@@ -45,4 +47,4 @@ shared 只提供可复用的**技术机制**，不拥有 Space/Context、Agent�
 
 **当前验收状态**：本轮仅重写文档，未复跑测试、未核验最新实现；不能据此判定模块通过或需要重写。
 
-历史完整研究：[shared 契约归档](../docs/research/contracts/shared/CONTRACT-archive.md)；旧 [CONTRACT](CONTRACT.md) 为兼容入口。Windows 数据要求：[目录与数据设计](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)。
+历史完整研究：[shared 契约归档](../docs/research/contracts/shared/CONTRACT-archive.md)；旧 [CONTRACT](../docs/research/contracts/shared/CONTRACT-archive.md) 为兼容入口。Windows 数据要求：[目录与数据设计](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)。

@@ -1,5 +1,7 @@
 # AI/roles — 角色配置与职责关联
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：未发现本域产品 src/、tests/ 或公开 index.ts；现有说明是设计/施工目标，不能表述为已实现。 开工须重新核对最新 main。
+
 状态：架构责任已细化，产品代码未实现。维护角色名称、说明、提示/模型连接选择，以及角色或执行主体在特定工作范围内承担的职责；不保存任务执行状态或授权账本。
 
 主 AI、秘书/管家、执行、审查是职责，不是不可兼任的固定等级。同一主体可以在不同 Context 中兼任，但每次工作使用适用的职责和授权范围，不能把各项目权限拼接。角色默认意图不能覆盖用户约束、强制拒绝或目标资源授权。
@@ -17,15 +19,15 @@
 
 ## 上级契约与文档入口
 
-- **上级业务/职责契约：** [AI/CONTRACT.md](../../AI/CONTRACT.md)
+- **上级业务/职责研究（历史）：** [AI/CONTRACT.md](../../docs/research/contracts/AI/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [外部 Agent 生态](../../docs/research/AGENT-ECOSYSTEM-2026-10-31.md)
 - [研究决策](../../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
 
-本子目录只细化上级模块内部的职责或实现入口，不另建第二份业务权威。若本页与上级契约冲突，以对应 owner 契约为准；实验结论只按原记录的环境和范围解释。
+本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
 ## G6：配置修订与记忆边界
 
 角色提示、模型/连接引用、职责关联及配置修订由本目录维护；不存 Key、授权、Task 检查点、Operation 或会话历史。新任务绑定当时配置修订，在途任务不因角色配置更新被静默改写。角色长期记忆/公共经验共享仍是长期研究，不在此目录预建第二套记忆账本。
 
-跨域要求见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)及[AI 上级契约](../CONTRACT.md)。
+跨域要求见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)及[AI 上级契约](../../docs/research/contracts/AI/CONTRACT-archive.md)。

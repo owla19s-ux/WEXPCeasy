@@ -1,4 +1,6 @@
-> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。原文相对链接沿用旧目录结构，按需从仓库根目录定位。
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../../../../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。
+
+> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。2026-11-04 已按原 owner 位置修复可确定的相对链接；原始业务结论保留。
 
 # connections 业务契约（第四批设计草案）
 
@@ -114,7 +116,7 @@ DSH headless 既有实验锁 npm `0.2.1-rc.5`、源码 `ce7073d51254c26cd63b22a6
 
 ## 第五批复杂压力审查补充（2026-10-31）
 
-依据：[第五批覆盖、冲突与再审查记录](../docs/audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
+依据：[第五批覆盖、冲突与再审查记录](../../../audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
 
 ### C02/C05：衍生信息出口与递归边界（F03/F04）
 
@@ -153,33 +155,33 @@ DSH headless 既有实验锁 npm `0.2.1-rc.5`、源码 `ce7073d51254c26cd63b22a6
 
 可先做能力描述、意图/回执/原关联查询与单本地适配器的本域测试。现有18项边界/headless通过只是夹具；X04真实原生Loader非WEX连接器成功。正式DSH成功/停止/第三方插件、真实出口来源/撤权竞态、资源协调及D01/06/07仍阻塞。
 
-本域独立输入/输出、取消/失败/超时/unknown及双方替身样例沿用上文；下一批先真实本域测试，再真实提供/消费与装配，不用实验替代。[全域准备度与独立入口](../docs/batch6/READINESS.md)、[局部证据与未验证条件](../docs/batch6/EXPERIMENTS.md)、[集中待决](../docs/batch6/DECISIONS.md)。
+本域独立输入/输出、取消/失败/超时/unknown及双方替身样例沿用上文；下一批先真实本域测试，再真实提供/消费与装配，不用实验替代。[全域准备度与独立入口](../../../batch6/READINESS.md)、[局部证据与未验证条件](../../../batch6/EXPERIMENTS.md)、[集中待决](../../../batch6/DECISIONS.md)。
 
 
 ## 文档关联与施工入口
 
 本节是本域施工者的最小阅读入口；模块业务语义以本文件为准，全局文档提供约束/背景，批次与实验记录提供阶段状态和证据。**文档中的 A/B/C/D 不得互相升级：实验通过不自动批准候选，用户待决事项不得由施工者代裁。**
 
-- **模块导航**：[全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档体系总索引](../docs/README.md)
+- **模块导航**：[全模块契约索引](../../../MODULE-CONTRACTS.md) · [文档体系总索引](../../../README.md)
 - **全局架构**：
-- [全局契约地图](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
-- [提供方边界 Walkthrough](../docs/architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
-- [运行时扩展契约](../docs/architecture/RUNTIME-EXTENSION-CONTRACT-V0.1.md)
-- [双插件体系边界](../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)
+- [全局契约地图](../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
+- [提供方边界 Walkthrough](../../../architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
+- [运行时扩展契约](../../../architecture/RUNTIME-EXTENSION-CONTRACT-V0.1.md)
+- [双插件体系边界](../../../architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)
 - **决策与研究**：
-- [研究决策与当前边界](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
-- [外部 Agent 生态](../docs/research/AGENT-ECOSYSTEM-2026-10-31.md)
+- [研究决策与当前边界](../../../decisions/RESEARCH-DECISIONS-2026-10-30.md)
+- [外部 Agent 生态](../../AGENT-ECOSYSTEM-2026-10-31.md)
 - **审查报告**：
-- [DSH / WEXPC1 能力差距矩阵](../docs/audits/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
-- [复杂业务契约压力审查](../docs/audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
-- **准备度与批次结论**：[本域施工准备度](../docs/batch6/READINESS.md) · [F01–F09 契约收敛](../docs/batch6/CONVERGENCE.md) · [集中决策与待决项](../docs/batch6/DECISIONS.md)
-- **实验与验证证据**：[第六批实验总表](../docs/batch6/EXPERIMENTS.md) · [可复现实验入口](../experiments/contract-readiness-spike/README.md)
+- [DSH / WEXPC1 能力差距矩阵](../../../audits/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
+- [复杂业务契约压力审查](../../../audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
+- **准备度与批次结论**：[本域施工准备度](../../../batch6/READINESS.md) · [F01–F09 契约收敛](../../../batch6/CONVERGENCE.md) · [集中决策与待决项](../../../batch6/DECISIONS.md)
+- **实验与验证证据**：[第六批实验总表](../../../batch6/EXPERIMENTS.md) · [可复现实验入口](../../../../experiments/contract-readiness-spike/README.md)
 
 维护规则：模块职责/业务行为修改在本域 README/CONTRACT；跨模块架构或政策变更更新对应全局文档；每次实验只更新证据，不改写未批准的决策。施工批次结束后，先回写模块契约，再更新本节关联；不得把批次历史报告当作模块当前状态的替代品。
 
 ## G1/G2/G4/G5/G6 与跨对话持续工作补充（2026-10-31）
 
-本节将基础资源访问、API 工具往返、操作反馈、外部搜索和连接配置要求映射到本域；完整跨模块责任与验收见[基础能力落地映射](../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+本节将基础资源访问、API 工具往返、操作反馈、外部搜索和连接配置要求映射到本域；完整跨模块责任与验收见[基础能力落地映射](../../../planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
 
 **G1：资源访问与来源观察。** 连接器负责真实资源定位、访问、元数据/内容读取、版本或可用性观察及明确副作用。资源引用不是路径字符串：至少需要可追溯到来源 owner/适配器和目标身份，并在使用时重新解析/检查。外部关联不等于导入副本；附件引用不等于长期 Context 资料；Task 产物由 Workflows/对应资源 owner 维护。连接器不拥有 Space 组合关系或全局资源目录。
 
@@ -205,7 +207,7 @@ connections 及具体适配器必须把真实能力与动作副作用描述清�
 - 在取数/派发前判权；排队后、实际外部副作用前按当前权限与资源版本复核；需要审批、拒绝、不可判定或判权超时均零派发。
 - connections 唯一保存 Operation/attempt/receipt；授权决定归 permissions，Task/节点状态归 workflows。
 
-完整动作分类、高风险门及派发前验收见[ D01–D02 权限矩阵 ](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。
+完整动作分类、高风险门及派发前验收见[ D01–D02 权限矩阵 ](../../../product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。
 
 
 ## 7. 模块独立功能编号与细化契约
@@ -265,7 +267,7 @@ connections 及具体适配器必须把真实能力与动作副作用描述清�
 - **配置**：`createConnectionConfigs(Store)` 提供 `read/get/put/remove`。`put` 同时支持创建、修改与 enabled 切换；`remove(id, expectedRevision, intent)` 只移除本地配置，检查修订、存在性和意图；返回 ok/conflict/unavailable/unknown。ACK 后回读验证删除，不因删除配置清除 Operation、终止外部进程或声称断开成功。未知提交按原 intent 经 Store.query 与配置回读核对，不盲重试。调用方须在访问配置前完成授权；此存储 API 不是独立授权入口。
 - **Operation**：`createOperationLedger(Store)` 提供 `read/get/prepare/markDispatched/observe`。当前单次派发实现最多预留一次尝试；prepared 为 0 次且无观察，dispatched 为 1 次且无观察，observed/unknown 必须带对应合法观察。观察提交意图使用独立 v2 前缀和 JSON 元组，避免 Operation/Observation ID 内含分隔符导致碰撞；不改既有观察身份。重复 Operation/Observation ID、空身份、非法 JSON、阶段/次数/观察矛盾均拒绝读取和后续派发；不把坏账本当空库、不自动修复。未知观察不会被迟到成功清除。此处次数是宿主预留记录，不证明外部实际执行次数；未提供主动远端核对/恢复授权。
 - **边界**：`createReadBoundary` 与 `createDispatchBoundary` 已存在；写边界绑定主体/入口/资源/目标/payload、检查权限、持久预留后最多调用一次。现有实现仍未接入生产 Connection 配置/版本、资源协调、凭证后端、实际 Provider/GitHub/DSH、通用回调或通知；不承诺完整 C01–C05 已实现。
-- **验证**：新增真实 SQLite 配置移除/命名空间隔离，以及不同 Node 进程间权限+账本+文件副作用组合，覆盖重启后不重复执行、撤权零写入和未知结果不重派。外部适配器仅为测试内文件夹具，Linux 证据不能替代真实服务或 Windows E4。原始命令与结果见 [本批回执](IMPLEMENTATION-2026-11-02.md)。
+- **验证**：新增真实 SQLite 配置移除/命名空间隔离，以及不同 Node 进程间权限+账本+文件副作用组合，覆盖重启后不重复执行、撤权零写入和未知结果不重派。外部适配器仅为测试内文件夹具，Linux 证据不能替代真实服务或 Windows E4。原始命令与结果见 [本批回执](../../../../connections/IMPLEMENTATION-2026-11-02.md)。
 
 
 ## 9. 配置绑定写派发（2026-11-02）
@@ -280,7 +282,7 @@ connections 及具体适配器必须把真实能力与动作副作用描述清�
 6. 原 `createDispatchBoundary` 继续作为显式无配置兼容入口，旧调用的指纹保持原规则；生产装配不能把它冒称已执行配置检查。当前未做 app/UI 装配、读取边界的配置接线、资源解析/占用、秘密读取、Provider/GitHub/DSH 实配、主动查询或取消。
 7. 可信宿主仍须把 target 绑定为含真实 backend/对象身份的已授权目标，适配器不得将获准目标重定向到其他资源；配置绑定不替代该解析/授权责任。此处没有增加配置专属授权维度、自动升级兼容范围或跨进程撤权/派发原子性承诺。全命名空间修订使无关连接修改也可能暂时阻塞新派发，当前采用保守冲突拒绝。
 
-对应 C01/C02、CONNECTIONS-CONNECTION-001、CONNECTIONS-VERSION-001、CONNECTIONS-ADMISSION-001、CONNECTIONS-OPERATION-001 的最小本域实现；不将 B/C/D 或完整功能域标记为验收完成。证据及已知限制见 [本批回执](CONFIGURED-DISPATCH-2026-11-02.md)。
+对应 C01/C02、CONNECTIONS-CONNECTION-001、CONNECTIONS-VERSION-001、CONNECTIONS-ADMISSION-001、CONNECTIONS-OPERATION-001 的最小本域实现；不将 B/C/D 或完整功能域标记为验收完成。证据及已知限制见 [本批回执](../../../../connections/CONFIGURED-DISPATCH-2026-11-02.md)。
 
 
 ## 10. 可信静态服务及宿主消费（2026-11-02）
@@ -291,4 +293,4 @@ connections 及具体适配器必须把真实能力与动作副作用描述清�
 
 服务在进入依赖/适配器前登记在途令牌；stop 一旦开始，拒绝新派发及管理读写，允许已经开始的派发完成内部观察保存。等待到全部结束返回 stopped，超过技术等待时间返回 incomplete；再次 stop 可确认排空。stop 不取消外部进程、不清除 unknown，不把 adapter exception 当外部未执行。技术存储由 app 在服务排空后关闭；关闭/初始化失败的句柄追踪也归 app 技术生命周期。
 
-app 已通过本域公开出口消费该 client，见[宿主组合回执](../app/CONNECTIONS-INTEGRATION-2026-11-02.md)。这不等于已具备真实适配器、通用 Capability/Service 动态生命周期、Renderer/IPC 或最终 UI。
+app 已通过本域公开出口消费该 client，见[宿主组合回执](../../../../app/CONNECTIONS-INTEGRATION-2026-11-02.md)。这不等于已具备真实适配器、通用 Capability/Service 动态生命周期、Renderer/IPC 或最终 UI。

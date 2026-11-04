@@ -1,56 +1,22 @@
-# WEX｜项目说明与总体架构
+# WEX｜项目概要与架构入口
 
-> 文档定位：产品与架构说明，不是 AI 施工入口、当前任务表或自动授权依据。当前源码仓库为 `owla19s-ux/WEXPCeasy`，产品名称为 WEX。当前主线 Windows PC；Android 原型暂停。
+产品为 WEX，源码仓库为 WEXPCeasy；当前 Windows PC 优先，Android 原型暂停。WEX 是跨平台的联通、调度、交互、知识与生产管理系统。
 
-## 1. 产品定位
+完整定位、组织方式、地址与工具组合、AI、连接器、插件、工作流、多视图和长期方向统一见 [《维加项目总体说明》](维加项目总体说明.md)。本文不重复维护长篇产品说明，不承担派工或模块接口规范。
 
-WEX 是面向长期工作的跨平台联通、调度、交互、知识与生产管理系统，不是单一聊天客户端，也不以自建完整 Agent 执行平台为目标。WEX 将 Context、Agent、连接能力、工作流、任务、证据和多视图按需组合，让人和 AI 能在可控边界内协作。
+## 架构入口
 
-当前阶段以个人自用和 Windows PC 版本为优先，公众发行不是现阶段必需目标。
+- [Space / Context](../space/README.md)：组织引用与可独立存在的 Context。
+- [AI / Roles](../AI/README.md)、[Conversations](../conversations/README.md)：配置、角色及独立会话。
+- [Connections](../connections/README.md)：连接配置、受控调用和 Operation 回执。
+- [Workflows](../workflows/README.md)、[Grid](../workflows/grid/README.md)、[Scheduler](../scheduler/README.md)、[Views](../views/README.md)：工作定义、视觉组织、执行协调及多视图分别维护。
+- [Permissions](../permissions/README.md)、[Shared](../shared/README.md)、[App](../app/README.md)：授权、技术基础及可信装配。
+- [插件体系边界](维加项目总体说明.md#七wex-自有插件机制与-dsh-原生插件兼容机制)：内置连接器、自有动态插件、原生兼容宿主与外部 Agent 分别判断。
 
-## 2. 设计原则
+## 范围与证据
 
-- **Context 可独立存在**：Space 负责类别、工作区、可选分组及 Context 的组织引用；同一 Context 可在多处展示，但权威本体不复制。
-- **能力可组合**：Context 可按需关联工具、Agent、连接器、自由格子工作流、调度能力和专业视图。关联不等于拥有对方内部状态，也不自动授予权限。
-- **模块独立**：业务数据和行为由所属模块维护，跨模块使用公开能力，不建全局业务状态总管。
-- **可信执行**：模型建议、对话文本、任务指令、授权决定、外部操作回执及最终验收是不同事实，不得互相冒充。
-- **研究与产品分离**：实验原型不等于正式实现；已确认需求、候选方案、实际代码与验收证据分别记录。
+完整需求见 [F01–F15 总表](product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)，当前版本范围见 [0.1.1 计划](versions/0.1.1/PLAN.md)。自由格子工作流、正式调度器、DSH 原生插件机制产品化及 DSH 连接器闭环后置至 0.1.2。
 
-## 3. 主要功能领域
+模块 README 与实际源码、测试决定实现状态；已有基础 TypeScript 代码和隔离实验不等于完整 Windows 产品。文档、实验、单测、组合与 Windows 实机证据须分别核验。
 
-| 领域 | 责任 |
-|---|---|
-| Space / Context | 组织、定位、组合引用及工作环境 |
-| AI / Roles | Agent 配置、角色与职责关联 |
-| Conversations | 独立会话、消息、段落、生成与编辑重发 |
-| Connections | 公共连接配置、受控能力交换、Operation 与回执 |
-| Connections/API | Provider、模型协议、流式响应与模型调用 |
-| Connections/Local | 文件、目录及按阶段开放的本地开发工具 |
-| Workflows/Grid | 自由格子工作流定义、编辑、布局与可视化 |
-| Scheduler | 独立任务调度、派发、等待、恢复与资源协调 |
-| Permissions | 授权策略、范围、复核与审计 |
-| Views / UI | Context 多视图、布局保存及桌面交互 |
-| Shared / App | 存储、诊断、可信宿主与模块装配 |
-
-**新目录设计决策**：自由格子工作流采用 `workflows/grid/`，调度器采用顶层 `scheduler/`。两者均可作为 Context 按需添加的能力；调度器不限于工作流内部执行。目录规划不代表当前源码已经存在或功能已实现。
-
-## 4. 产品数据与 Windows 部署
-
-程序安装目录、用户选择的公共数据根、Space 工作区目录、独立 Context 目录相互区分。公共数据根保存应用配置、索引与必要记录；用户资料可留在独立选择的工作区。除系统必须管理的凭证和注册数据外，尽量避免将用户可迁移数据散落在系统盘默认位置。重装系统后的恢复能力需要正式实现与验证，不能因设计已确定就视为通过。
-
-## 5. 当前技术路线与阶段边界
-
-当前优先采用 TypeScript、Electron、React。既有基础产品代码主要位于 `shared/`、`permissions/`、`app/`、`connections/src/`；其他主要业务域仍有待正式施工。已有 Electron 宿主和工作流编辑器实验不等于 Windows 正式应用；Windows E4 验收尚未完成。
-
-0.1.1 的正式范围以版本计划为准；自由格子工作流、正式调度器及外部 DSH Agent 连接等属于后续阶段研究和施工，不擅自扩入 0.1.1。DSH/Hermes 可作为外部兼容与设计研究对象，不等于 WEX 内部必须复制其运行时。
-
-## 6. 需求、决策与施工资料的关系
-
-- 完整功能需求以 `docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md` 为当前功能总表基线（F01–F15，共 216 项）；需求条目不代表全部已批准或已实现。
-- 历史契约、实验与压力审查属于研究资料；其中已确认且对施工必需的约束，应提炼到对应模块 README。
-- 重大产品和架构决策应独立留存；未决政策不能由施工者根据候选文档自行批准。
-- 根 `README.md` 是 AI 工作入口，负责协作规范、当前任务与下一任务；各模块 `README.md` 负责该模块功能、施工约束、代码、测试和验收。**本文件不承担施工派工职责。**
-
-## 7. 发展方向
-
-WEX 的长期能力可覆盖软件开发、小说与角色创作、信息收集、跨设备协作及多 Agent 任务。Context 类型与模板由工具、工作流和视图组合形成，可跨领域复用。具体商业化、云端部署、多窗口形态、长期记忆和高级自动化均按实际验证逐步决定，不在本说明中视为已冻结或已交付。
+施工从 [根 README](../README.md) 进入，按需资料由 [文档索引](README.md) 检索；权威和维护规则见 [文档治理规则](DOCUMENT-AUTHORITY-AND-MAINTENANCE-2026-11-02.md)。

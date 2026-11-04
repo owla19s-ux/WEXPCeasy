@@ -12,7 +12,7 @@ Space／Context 页面。展示组织与关联，业务调用 space，不把 Con
 ## 上级契约与文档入口
 
 - **上级契约：** [UI/CONTRACT.md](../../UI/CONTRACT.md)
-- **上级契约：** [space/CONTRACT.md](../../space/CONTRACT.md)
+- **上级契约：** [space/CONTRACT.md](../../space/README.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [Space 与工作流编辑器设计](../../docs/architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
 

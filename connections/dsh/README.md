@@ -1,5 +1,7 @@
 # connections/dsh — 外部 DSH Agent 连接器
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：没有产品 src/tests；有 experiment/ 独立 headless 实验，不等于正式外部 Agent 连接闭环。 开工须重新核对最新 main。
+
 首期重点：WEX 任务卡向独立 DSH 运行实例派发任务，取得可获取的会话状态、结果与产物引用。适配 DSH **实际公开**的接口能力，不预设一定能附着现有网页会话、取消内部任务或精确同步其 Agent Loop。
 
 本模块不实现 DSH 客户端，不管理 Cordis 宿主基础设施；仅把 DSH 作为 WEX 的一种可命名外部执行能力。工作流和 Context 不直接依赖 DSH 内部模型；真实回执、结果未知、人工验收等状态由 WEX 保存。
@@ -46,13 +48,13 @@ DSH Session、内部 Agent 状态和自身权限由独立 DSH 持有；本适配
 
 ## 上级契约与文档入口
 
-- **上级业务/职责契约：** [connections/CONTRACT.md](../../connections/CONTRACT.md)
+- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/research/contracts/connections/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [双插件体系边界](../../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)
 - [外部 Agent 生态](../../docs/research/AGENT-ECOSYSTEM-2026-10-31.md)
 - [DSH 能力差距审计](../../docs/audits/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
 
-本子目录只细化上级模块内部的职责或实现入口，不另建第二份业务权威。若本页与上级契约冲突，以对应 owner 契约为准；实验结论只按原记录的环境和范围解释。
+本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
 ## G4：外部会话接续边界
 

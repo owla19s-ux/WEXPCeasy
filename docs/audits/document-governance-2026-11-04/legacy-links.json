@@ -1,0 +1,413 @@
+{
+  "root": "/workspace/scratch/581890ca42b0/WEXPCeasy",
+  "markdownFiles": 246,
+  "checkedLocalLinks": 1335,
+  "legacyRedirectPages": 15,
+  "issueCount": 67,
+  "ownedIssueCount": 0,
+  "externalSnapshotIssueCount": 67,
+  "issues": [
+    {
+      "kind": "broken-local-link",
+      "file": "dsh/upstream/vendor/README.md",
+      "link": "../docs/cookbook/adding-a-vendored-package.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "dsh/upstream/vendor/README.md",
+      "link": "cordis-rc11-upgrade-plan.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "dsh/upstream/vendor/README.md",
+      "link": "../docs/rescope.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "dsh/upstream/vendor/cordis/README.md",
+      "link": "../../docs/tutorials/build-a-plugin.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "dsh/upstream/vendor/cordis/README.md",
+      "link": "../../docs/guides/plugin-lifecycle.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "dsh/upstream/vendor/cordis/README.md",
+      "link": "../../docs/guides/loader-config.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "dsh/upstream/vendor/cordis/README.md",
+      "link": "../../docs/api/core.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "dsh/upstream/vendor/schemastery/README.md",
+      "link": "../../docs/cordis-tutorial/05-config.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "architecture.zh.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "cordis-tutorial/index.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/bundle/base/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/bundle/web-app/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/bundle/headless/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/bundle/sdk-app/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/bundle/acp-app/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/bundle/sdk-minimal/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/boot/plugin-manager/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/boot/app-boot/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "config-catalog.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../scripts/verify-application-entrypoints.ts",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../apps/desktop/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/session.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/system-prompt.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/tools.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/core.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/core.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/scope.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/llm-streaming.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/core/agent-loop/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "event-producer-consumer.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/core/agent-loop/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/core/agent-loop/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/core/agent-loop/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "agent-lifecycle.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "tool-execution-pipeline.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/core.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/tools.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../.agents/notes/implemented/architecture/2026-09-01-v2-embedded-assistant-streams.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../.agents/notes/implemented/architecture/2026-08-31-released-session-format-migrations.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/session.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/core/session/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/session/session-projection/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "../packages/core/agent-loop/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/working-directory.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "capability-seams.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/subagent.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/agent-team.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "cookbook/extension-cookbook.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "cookbook/adding-a-package.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "cookbook/adding-a-tool.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "cookbook/adding-an-llm-adapter.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "cookbook/adding-a-settings-card.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/architecture.md",
+      "link": "subsystems/conversation.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "duplicate-exact",
+      "file": "references/dsh/source-snapshot/docs/cordis-README.md",
+      "other": "dsh/upstream/vendor/cordis/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/cordis-README.md",
+      "link": "../../docs/tutorials/build-a-plugin.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/cordis-README.md",
+      "link": "../../docs/guides/plugin-lifecycle.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/cordis-README.md",
+      "link": "../../docs/guides/loader-config.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/cordis-README.md",
+      "link": "../../docs/api/core.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/cordis-primer.md",
+      "link": "cordis-primer.zh.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/cordis-primer.md",
+      "link": "subsystems/core.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/cordis-primer.md",
+      "link": "cordis-tutorial/index.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/cordis-primer.md",
+      "link": "../vendor/README.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/scope-README.md",
+      "link": "README.zh.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/scope-README.md",
+      "link": "src/index.ts",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/scope-README.md",
+      "link": "src/store.ts",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/scope-README.md",
+      "link": "../../../docs/subsystems/scope.md",
+      "scope": "external-snapshot"
+    },
+    {
+      "kind": "broken-local-link",
+      "file": "references/dsh/source-snapshot/docs/scope-README.md",
+      "link": "../agent-loop/README.md",
+      "scope": "external-snapshot"
+    }
+  ]
+}

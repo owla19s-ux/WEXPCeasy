@@ -1,3 +1,5 @@
+> **适用性更新（2026-11-04）**：本文保留历史架构推演及已确认约束；旧 workflows/runtime 调度目录方向已由顶层 [scheduler](../../scheduler/README.md)取代。当前模块入口与研究契约使用规则见[根 README](../../README.md)，不依据历史目录自动派工。
+
 # WEXPC 源码目录与 Windows 安装、数据存放要求
 
 - 日期：2026-10-30

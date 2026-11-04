@@ -1,3 +1,5 @@
+> **适用性更新（2026-11-04）**：本文保留历史架构推演及已确认约束；旧 workflows/runtime 调度目录方向已由顶层 [scheduler](../../scheduler/README.md)取代。当前模块入口与研究契约使用规则见[根 README](../../README.md)，不依据历史目录自动派工。
+
 # WEXPC Space 组织、目录接入与工作流编辑器共识（2026-10-30）
 
 > **历史修订说明（2026-11-01）：** 本文关于 Space 类别、Space 工作区、Context 目录和任务卡/调度器关系的内容继续作为历史设计依据；但第 3 章及第 5、7 章中“React Flow 为当前技术首选、无需另做自由画布”的工作流编辑器选型，已被 [2026-11-01 工作流自由画布设计](WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md) 与 [方向决策](../decisions/WORKFLOW-CANVAS-DIRECTION-2026-11-01.md) 修订。当前方向为 WEX 自研轻量自由画布；React Flow 原型保留为历史实验，不是最终产品选型。

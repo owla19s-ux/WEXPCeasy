@@ -1,5 +1,7 @@
 # connections/github
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：未发现本域产品 src/、tests/ 或公开 index.ts；现有说明是设计/施工目标，不能表述为已实现。 开工须重新核对最新 main。
+
 GitHub 操作与连接配置。权限使用共用机制；专属面板留在本模块。
 
 状态：2026-10-30 按用户确认建立的源码维护目录，当前只有职责说明，尚无产品实现。目录不是运行时数据路径，也不代表独立插件、进程或编译包。
@@ -15,12 +17,12 @@ GitHub 操作与连接配置。权限使用共用机制；专属面板留在本�
 
 ## 上级契约与文档入口
 
-- **上级业务/职责契约：** [connections/CONTRACT.md](../../connections/CONTRACT.md)
+- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/research/contracts/connections/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [提供方边界 Walkthrough](../../docs/architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
 - [复杂业务契约压力审查](../../docs/audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
 
-本子目录只细化上级模块内部的职责或实现入口，不另建第二份业务权威。若本页与上级契约冲突，以对应 owner 契约为准；实验结论只按原记录的环境和范围解释。
+本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
 ## G1/G4：远端资源引用与操作回执
 

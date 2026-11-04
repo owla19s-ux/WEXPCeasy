@@ -1,3 +1,5 @@
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../../../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。
+
 # software-development 专业模式业务子契约（2026-11-01）
 
 - 上级owner：workflows/modes。不是新的顶层模块，不取代workflows/runtime、space、connections、views或F13。

@@ -1,4 +1,6 @@
-> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。原文相对链接沿用旧目录结构，按需从仓库根目录定位。
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../../../../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。
+
+> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。2026-11-04 已按原 owner 位置修复可确定的相对链接；原始业务结论保留。
 
 # permissions 业务契约（第四批设计稿）
 
@@ -65,7 +67,7 @@ A：权限唯一owner、组织/职责不授权、检查与真实限制分层、�
 
 ## 第五批复杂压力审查补充（2026-10-31）
 
-依据：[第五批覆盖、冲突与再审查记录](../docs/audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
+依据：[第五批覆盖、冲突与再审查记录](../../../audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
 
 ### PER-01/PER-02：来源、衍生内容与目标出口（F03）
 
@@ -92,24 +94,24 @@ A：权限唯一owner、组织/职责不授权、检查与真实限制分层、�
 
 可先做可信事实、拒绝/不可判定、已明确对话范围的判定/撤销/历史查询；无适用入口政策时不颁有效许可。X03证明受控文件/outbox拒绝及二次继承，未证可信来源认证、网络出口竞态或完整DLP。非对话第三层D01、降级/发布D06、有限次数C01/强审计D05仍保留；预算竞争不能替代许可扣次实验。
 
-本域独立输入/输出、取消/失败/超时/unknown及双方替身样例沿用上文；下一批先真实本域测试，再真实提供/消费与装配，不用实验替代。[全域准备度与独立入口](../docs/batch6/READINESS.md)、[局部证据与未验证条件](../docs/batch6/EXPERIMENTS.md)、[集中待决](../docs/batch6/DECISIONS.md)。
+本域独立输入/输出、取消/失败/超时/unknown及双方替身样例沿用上文；下一批先真实本域测试，再真实提供/消费与装配，不用实验替代。[全域准备度与独立入口](../../../batch6/READINESS.md)、[局部证据与未验证条件](../../../batch6/EXPERIMENTS.md)、[集中待决](../../../batch6/DECISIONS.md)。
 
 
 ## 文档关联与施工入口
 
 本节是本域施工者的最小阅读入口；模块业务语义以本文件为准，全局文档提供约束/背景，批次与实验记录提供阶段状态和证据。**文档中的 A/B/C/D 不得互相升级：实验通过不自动批准候选，用户待决事项不得由施工者代裁。**
 
-- **模块导航**：[全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档体系总索引](../docs/README.md)
+- **模块导航**：[全模块契约索引](../../../MODULE-CONTRACTS.md) · [文档体系总索引](../../../README.md)
 - **全局架构**：
-- [全局契约地图](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
+- [全局契约地图](../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
 - **决策与研究**：
-- [边界决策记录](../docs/decisions/BOUNDARY-DECISION-NOTES-V0.1.md)
-- [研究决策与当前边界](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
-- [安全与数据持续性](../docs/research/SECURITY-AND-PERSISTENCE-2026-10-31.md)
+- [边界决策记录](../../../decisions/BOUNDARY-DECISION-NOTES-V0.1.md)
+- [研究决策与当前边界](../../../decisions/RESEARCH-DECISIONS-2026-10-30.md)
+- [安全与数据持续性](../../SECURITY-AND-PERSISTENCE-2026-10-31.md)
 - **审查报告**：
-- [复杂业务契约压力审查](../docs/audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
-- **准备度与批次结论**：[本域施工准备度](../docs/batch6/READINESS.md) · [F01–F09 契约收敛](../docs/batch6/CONVERGENCE.md) · [集中决策与待决项](../docs/batch6/DECISIONS.md)
-- **实验与验证证据**：[第六批实验总表](../docs/batch6/EXPERIMENTS.md) · [可复现实验入口](../experiments/contract-readiness-spike/README.md)
+- [复杂业务契约压力审查](../../../audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
+- **准备度与批次结论**：[本域施工准备度](../../../batch6/READINESS.md) · [F01–F09 契约收敛](../../../batch6/CONVERGENCE.md) · [集中决策与待决项](../../../batch6/DECISIONS.md)
+- **实验与验证证据**：[第六批实验总表](../../../batch6/EXPERIMENTS.md) · [可复现实验入口](../../../../experiments/contract-readiness-spike/README.md)
 
 维护规则：模块职责/业务行为修改在本域 README/CONTRACT；跨模块架构或政策变更更新对应全局文档；每次实验只更新证据，不改写未批准的决策。施工批次结束后，先回写模块契约，再更新本节关联；不得把批次历史报告当作模块当前状态的替代品。
 
@@ -132,7 +134,7 @@ A：权限唯一owner、组织/职责不授权、检查与真实限制分层、�
 
 ## G3 非对话入口与基础能力授权补充（2026-10-31）
 
-本节对应基础能力 G3；跨域入口和状态矩阵见[基础能力落地映射](../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+本节对应基础能力 G3；跨域入口和状态矩阵见[基础能力落地映射](../../../planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
 
 当前产品实现对 Conversation 入口有真实允许路径，但对非对话入口仍返回 `entry_policy_unresolved`。该状态是明确的安全阻断，不是待绕过的临时错误。Task、本地直接操作、受控回调和外部 Agent 连接不能伪造 Conversation ID，也不能把创建 Task 时的对话授权直接继承为执行授权。
 
@@ -160,7 +162,7 @@ G1 资源引用不产生权限；G2 工具意图不产生权限；G4 Operation �
 
 ## 10. PRD-D01/D02 权限判定矩阵（2026-11-01）
 
-完整产品级矩阵见[ D01–D02 权限判定矩阵与执行模式 ](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。本域负责最终策略、授权、审批、撤销、判定与依据；app/AI/space/workflows/conversations 只提供各自拥有且由可信宿主绑定的窄事实，connections 在真实副作用前调用本域并复核。
+完整产品级矩阵见[ D01–D02 权限判定矩阵与执行模式 ](../../../product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。本域负责最终策略、授权、审批、撤销、判定与依据；app/AI/space/workflows/conversations 只提供各自拥有且由可信宿主绑定的窄事实，connections 在真实副作用前调用本域并复核。
 
 执行必须满足：工具/模块启用 → AI工具资格 → Context工具启用 → 当前执行位置策略（工作流节点权限或对话四级）→ 本次真实操作判权。全局访问约束继续作为独立总闸。任何下层配置不得扩大上层范围；不同入口、Context、AI主体、工作流节点不得求权限并集。
 

@@ -1,4 +1,6 @@
-> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。原文相对链接沿用旧目录结构，按需从仓库根目录定位。
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../../../../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。
+
+> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。2026-11-04 已按原 owner 位置修复可确定的相对链接；原始业务结论保留。
 
 # app 业务契约：可信宿主、装配与运行维护
 
@@ -111,9 +113,9 @@ APP-02/03的部分模块装配、释放重试和Electron Linux隔离实验已有
 
 ## 文档关联与施工入口
 
-- **模块导航**：[app README](README.md) · [全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档总索引](../docs/README.md)
-- **产品需求**：[F01–F15 产品功能总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
-- **跨模块依据**：[Windows 安装与数据目录设计](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md) · [permissions 契约](../permissions/CONTRACT.md) · [shared 契约](../shared/CONTRACT.md) · [connections 契约](../connections/CONTRACT.md)
+- **模块导航**：[app README](../../../../app/README.md) · [全模块契约索引](../../../MODULE-CONTRACTS.md) · [文档总索引](../../../README.md)
+- **产品需求**：[F01–F15 产品功能总表](../../../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../../../product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
+- **跨模块依据**：[Windows 安装与数据目录设计](../../../architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md) · [permissions 契约](../../../../permissions/CONTRACT.md) · [shared 契约](../../../../shared/CONTRACT.md) · [connections 契约](../../../../connections/CONTRACT.md)
 - **产品待决**：PRD-D04 后台策略、PRD-D05 数据保留、PRD-D07 自动更新、PRD-C06/C07 Windows/备份恢复实验。
 
 维护规则：宿主/安装/进程/装配/协调语义写回本契约；领域数据格式、Task/Operation/权限/凭证秘密由相应 owner 维护；Windows 实测只更新证据，不自动关闭用户待决政策。
@@ -129,4 +131,4 @@ APP-02/03的部分模块装配、释放重试和Electron Linux隔离实验已有
 - connections 是可选模块：不可用/坏数据为 degraded，不阻断可用 permissions，也不把坏库清空恢复。初始化部分成功后的关库失败保留待回收句柄。
 - app stop 请求连接服务排空在途和回执，排空未知或关库失败则 incomplete，保留根锁并可重试；已关闭成功的句柄不重复关闭。没有强杀外部工作、重放未知操作、自动授予、后台常驻或 UI 退出政策。
 
-真实组合与 E2 证据见[施工回执](CONNECTIONS-INTEGRATION-2026-11-02.md)。不代表 APP-IPC、Windows E4 或任何真实外部服务已验收。
+真实组合与 E2 证据见[施工回执](../../../../app/CONNECTIONS-INTEGRATION-2026-11-02.md)。不代表 APP-IPC、Windows E4 或任何真实外部服务已验收。

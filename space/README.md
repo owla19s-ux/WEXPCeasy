@@ -1,8 +1,12 @@
 # Space / Context｜0.1.1 模块施工规范
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：未发现本域产品 src/、tests/ 或公开 index.ts；现有说明是设计/施工目标，不能表述为已实现。 开工须重新核对最新 main。
+
 > 当前施工模块：Space。施工 AI 只修改源码与测试，不修改本文。**本文描述目标，不代表代码已实现。**
 >
 > 技术基线（开工重新核对）：TypeScript 5.9.3、Node.js >=24.9、ESM/NodeNext、strict 类型检查；桌面宿主计划 Electron + React，Space 领域代码不得依赖 React。当前仓库的 `tsconfig.json` 尚未纳入 `space/src/**/*.ts`，`package.json` 尚无 `test:space`；已查询的 `space/src/index.ts` 不存在。开工须先重新核对最新 main。
+
+> **产品与内部模型边界（2026-11-04）**：产品组织概念为 Space → Space 类别 → Group → Context。以下 Placement 描述保留内部关系研究，不新增用户必须管理的独立层级；其必要性、存储方式与界面表达仍需后续确认，本轮不改变数据结构。
 
 ## 0. 编号规则、文档入口与资料边界
 
@@ -19,7 +23,7 @@
 
 ### 0.2 文档入口与三类资料边界
 
-- **当前规范（施工与验收依据）**：本文、[根 README](../README.md)（工作/普通对话模式、提交与回执要求）、[AGENTS](../AGENTS.md)、[0.1.1 施工表](../docs/versions/0.1.1/PLAN.md)（Space 对应 B1-02）、[文档总索引](../docs/README.md)、[全模块契约索引](../docs/MODULE-CONTRACTS.md)、[文档权威与维护规则](../docs/DOCUMENT-AUTHORITY-AND-MAINTENANCE-2026-11-02.md)。
+- **当前规范（施工与验收依据）**：本文、[根 README](../README.md)（工作/普通对话模式、提交与回执要求）、[AGENTS](../AGENTS.md)、[0.1.1 施工表](../docs/versions/0.1.1/PLAN.md)（Space 对应 B1-02）、[文档总索引](../docs/README.md)、[文档权威与维护规则](../docs/DOCUMENT-AUTHORITY-AND-MAINTENANCE-2026-11-02.md)。
 - **产品需求基线**：[F01–F15 功能总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 是 F01 条目与 `SPACE-*` 细分编号的单一正文；本文不复制整套需求表。
 - **研究、历史与旧参考（只用于追溯，不构成派工）**：§3.3 引用的 SPACE 研究契约归档、`docs/batch6`～`docs/batch8` 批次记录、`docs/audits` 审查、`docs/architecture` 历史设计、[旧资料](../旧资料/README.md)。这些材料按其原始环境与证据等级解释；与本文冲突时以本文当前范围为准，代码事实以最新 main 源码与测试为准。
 
@@ -31,7 +35,7 @@
 - **Space**：组织入口，具有自身 ID、名称和可选工作区目录登记。Space 不等于目录。
 - **Group**：Space 内可选的组织分组；不强制每个 Context 经过 Group。
 - **Context**：独立的工作对象，有不可变的 **Context ID**、自身配置、存储定位及修订。没有 Space、Agent、Task 或模板也能创建。
-- **Placement**：Context 在 Space/Group 中的一个放置关系，有独立关系 ID。同一 Context 可有多条 Placement，始终只有一个 Context 本体。
+- **Placement（内部关系候选，非第五层产品对象）**：Context 在 Space/Group 中的一个放置关系，有独立关系 ID。同一 Context 可有多条 Placement，始终只有一个 Context 本体。
 - **Association / ResourceReference / ToolSelection**：Context 对其他对象、资源或工具的关系记录。关系 ID 与目标 ID 不同；关联不复制目标、不授权、不启动执行。
 
 Space 只拥有这些对象及关系。Agent 由 `AI/` 管理，会话由 `conversations/` 管理，连接和工具真实可用性由 `connections/` 管理，授权由 `permissions/` 管理，任务与调度由其各自 owner 管理。不能在 Space 中建立第二份外域权威状态。

@@ -11,10 +11,10 @@
 
 ## 上级契约与文档入口
 
-- **上级业务/职责契约：** [workflows/modes/CONTRACT.md](../../../workflows/modes/CONTRACT.md)
+- **上级业务/职责研究（历史）：** [workflows/modes/CONTRACT.md](../../../workflows/modes/CONTRACT.md)
 - **专业模式子契约：** [software-development CONTRACT](CONTRACT.md)
 - **全局文档总索引：** [docs/README.md](../../../docs/README.md)
 - [产品功能全景](../../../docs/research/PRODUCT-FUNCTION-LANDSCAPE-2026-10-31.md)
 - [研究决策](../../../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
 
-本子目录只细化上级模块内部的职责或实现入口，不另建第二份业务权威。若本页与上级契约冲突，以对应 owner 契约为准；实验结论只按原记录的环境和范围解释。
+本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。

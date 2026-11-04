@@ -1,4 +1,6 @@
-> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。原文相对链接沿用旧目录结构，按需从仓库根目录定位。
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../../../../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。
+
+> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。2026-11-04 已按原 owner 位置修复可确定的相对链接；原始业务结论保留。
 
 # conversations 业务契约：独立对话、消息与逻辑生成
 
@@ -93,13 +95,13 @@ CV-06与CV-16必须分开：前者修改历史输入并创建新生成，后者�
 - 修改/重发历史消息创建新逻辑生成，不复用旧工具授权或重放旧 Operation。
 - IV级允许在用户明确授予的工具、Context、资源和目标范围内执行全部风险等级操作，不因风险标签本身逐次询问；专门信任边界见PRD-D01/D02矩阵§6。未主动设置等级时，主AI与秘书AI均拒绝工具执行。
 
-详细候选等级与样例见[ D01–D02 权限矩阵 ](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。
+详细候选等级与样例见[ D01–D02 权限矩阵 ](../../../product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。
 
 
 ## 文档关联与施工入口
 
-- **模块导航**：[conversations README](README.md) · [全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档总索引](../docs/README.md)
-- **产品需求**：[F01–F15 产品功能总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [交互语义与 UI 映射边界](../docs/product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md) · [功能—模块契约映射](../docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
-- **跨模块依据**：[AI 契约](../AI/CONTRACT.md) · [connections 契约](../connections/CONTRACT.md) · [workflows 契约](../workflows/CONTRACT.md) · [D01–D02 权限矩阵](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)
+- **模块导航**：[conversations README](../../../../conversations/README.md) · [全模块契约索引](../../../MODULE-CONTRACTS.md) · [文档总索引](../../../README.md)
+- **产品需求**：[F01–F15 产品功能总表](../../../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [交互语义与 UI 映射边界](../../../product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md) · [功能—模块契约映射](../../../product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
+- **跨模块依据**：[AI 契约](../../../../AI/CONTRACT.md) · [connections 契约](../../../../connections/CONTRACT.md) · [workflows 契约](../../../../workflows/CONTRACT.md) · [D01–D02 权限矩阵](../../../product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)
 
 维护规则：消息/序列项/逻辑生成事实写回本契约；Provider 请求与 Operation 事实转交 connections；Agent/角色配置转交 AI；Task 转交 workflows；任何许可决定转交 permissions。

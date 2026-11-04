@@ -50,7 +50,7 @@ WEX API 已细化 Chat Completions / Responses 事件差别、DeepSeek thinking 
 
 ## 五、WEXPCeasy：当前唯一 owner 与已有独立实验
 
-- [connections/api/CONTRACT.md](../../connections/api/CONTRACT.md)：API-01～10，配置、目录、请求/流式、工具意图、Usage、本地模型、路由、重试、故障切换，保留 B/C/D 状态。
+- [connections/api/CONTRACT.md](contracts/connections/api/CONTRACT-archive.md)：API-01～10，配置、目录、请求/流式、工具意图、Usage、本地模型、路由、重试、故障切换，保留 B/C/D 状态。
 - [Provider 边界研究](../architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)：厂商适配/网络会话与 Conversation/Operation/Task/权限权威分离；普通对话不强制创建 Task。
 - [模型协调实验](../../experiments/model-coordination-spike/README.md)：历史文档记载 6 组独立替身行为检查和 5 组 SQLite 崩溃恢复场景通过。不能扩展为真实模型、真实付费 API、Windows/产品链路验收。
 - **现行原则**：WEX 连接管理、凭证引用、权限、Operation/receipt、消息/Task 仍有唯一 owner；第三方 SDK 只供厂商协议与传输实现。

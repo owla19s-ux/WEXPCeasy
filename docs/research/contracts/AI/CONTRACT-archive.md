@@ -1,4 +1,6 @@
-> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。原文相对链接沿用旧目录结构，按需从仓库根目录定位。
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../../../../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。
+
+> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。2026-11-04 已按原 owner 位置修复可确定的相对链接；原始业务结论保留。
 
 # AI 业务契约：Agent配置、角色职责、工作依据与记忆
 
@@ -61,7 +63,7 @@ AI/roles 负责保存当前 Agent/角色配置中可用的工具能力集合及�
 - 新配置影响后续工作；在途工作保留当时配置修订，但每次实际操作仍按当前权限修订复核。
 - 工具资格配置的新增/移除不等于授权记录的 grant/revoke；两者必须保持不同事实和不同 owner。
 
-详细判定见[ D01–D02 权限矩阵 ](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。
+详细判定见[ D01–D02 权限矩阵 ](../../../product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。
 
 
 ## 8. 模块独立功能编号与细化契约
@@ -111,9 +113,9 @@ AI/roles 负责保存当前 Agent/角色配置中可用的工具能力集合及�
 
 ## 文档关联与施工入口
 
-- **模块导航**：[AI README](README.md) · [角色子域](roles/README.md) · [全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档总索引](../docs/README.md)
-- **产品需求**：[F01–F15 产品功能总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
-- **跨模块依据**：[D01–D02 权限判定矩阵](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md) · [connections 契约](../connections/CONTRACT.md) · [workflows 契约](../workflows/CONTRACT.md) · [Space 契约](../space/CONTRACT.md)
+- **模块导航**：[AI README](../../../../AI/README.md) · [角色子域](../../../../AI/roles/README.md) · [全模块契约索引](../../../MODULE-CONTRACTS.md) · [文档总索引](../../../README.md)
+- **产品需求**：[F01–F15 产品功能总表](../../../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../../../product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
+- **跨模块依据**：[D01–D02 权限判定矩阵](../../../product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md) · [connections 契约](../../../../connections/CONTRACT.md) · [workflows 契约](../../../../workflows/CONTRACT.md) · [Space 契约](../space/CONTRACT-2026-10-31.md)
 - **记忆政策**：PRD-D05/D10/D13 及本文件第 6～8 节；未决共享/保留政策不得按实现方便自行默认。
 
 维护规则：Agent/角色/资格配置写回本契约；Task/轮次事实转交 workflows；Provider/Session/Operation 事实转交 connections；消息原文转交 conversations；任何授权决定转交 permissions。

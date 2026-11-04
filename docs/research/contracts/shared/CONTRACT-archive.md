@@ -1,4 +1,6 @@
-> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。原文相对链接沿用旧目录结构，按需从仓库根目录定位。
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../../../../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。
+
+> 历史契约归档，非当前施工命令。当前状态与要求请读模块 README。2026-11-04 已按原 owner 位置修复可确定的相对链接；原始业务结论保留。
 
 # shared 业务契约：存储、路径、凭证与技术诊断
 
@@ -103,9 +105,9 @@
 
 ## 文档关联与施工入口
 
-- **模块导航**：[shared README](README.md) · [全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档总索引](../docs/README.md)
-- **产品需求**：[F01–F15 产品功能总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
-- **跨模块依据**：[app 契约](../app/CONTRACT.md) · [permissions 契约](../permissions/CONTRACT.md) · [connections 契约](../connections/CONTRACT.md) · [全局模块化架构](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
+- **模块导航**：[shared README](../../../../shared/README.md) · [全模块契约索引](../../../MODULE-CONTRACTS.md) · [文档总索引](../../../README.md)
+- **产品需求**：[F01–F15 产品功能总表](../../../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../../../product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
+- **跨模块依据**：[app 契约](../../../../app/CONTRACT.md) · [permissions 契约](../../../../permissions/CONTRACT.md) · [connections 契约](../../../../connections/CONTRACT.md) · [全局模块化架构](../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
 - **待决政策**：PRD-D05 数据保留、PRD-D12 清理策略、PRD-C07 备份恢复与 Windows E4 平台实验。
 
 维护规则：shared 只实现技术原语；业务状态、领域 schema、资源可删除性、授权和审计保留规则必须回到对应 owner。

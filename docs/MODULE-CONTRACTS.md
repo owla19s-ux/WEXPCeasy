@@ -1,3 +1,5 @@
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。
+
 # 第四批：模块业务契约与施工准备索引
 
 **文档入口：** [文档体系总索引](README.md) · [架构文档](architecture/README.md) · [决策记录](decisions/README.md) · [研究资料](research/README.md) · [审查报告](audits/README.md)
@@ -41,14 +43,14 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 
 | 模块/就近规格 | 唯一维护与公开能力摘要 | 明确不维护 | 准备程度与后续依赖 |
 |---|---|---|---|
-| [app](../app/CONTRACT.md) | APP-01～APP-12 + APP-*：安装/数据根/锁/装配/IPC/窗口/平台/凭证接线/更新/安全模式/健康诊断/备份恢复 | 各域业务状态/Operation/Task/授权政策/凭证秘密/主UI布局 | 基础装配与生命周期已实现；正式安装器、首次选根、Windows profile/IPC/进程树、更新卸载、备份恢复仍需C/E4；D04/D07/D05清理政策待决 |
-| [space](../space/CONTRACT.md) | 本体/放置/组合引用、组织配置、可见查询；独立删除单列 | 职责、会话背景、授权、外部文件 | 组织/引用可审阅；消费权限/存储/目标最小投影；实际删除与多目录迁移待C/D |
-| [AI与roles](../AI/CONTRACT.md) | AIC-01～09 + AI-*：Agent/角色/职责/工具资格/模型引用/配置快照/Runtime与Session映射/记忆来源 | Key/外部循环/Task分配/Context选择/授权账本 | 配置/职责/资格契约已细化；Agent Runtime、外部Session恢复C；D10派生记忆共享与D05保留政策待决 |
-| [conversations](../conversations/CONTRACT.md) | CV-01～CV-16 + CONVERSATIONS-*：会话/消息/序列项/分支/追加重发/流式/工具往返/局部修订 | Provider协议/Operation权威/Task验收/权限账本 | 业务编号与交互边界已细化；流式/取消/提交竞态C；片段保留D05 |
-| [connections](../connections/CONTRACT.md) | C01–C05 + CONNECTIONS-*：Connection/Capability/准入/Operation/观察/控制/回调/Service/外部Agent；API/LOCAL 子域保留 API-*/LOCAL-* | Task状态/权限政策/资源占用最终裁决/外部Session权威 | 宿主契约已细化；真实Provider/DSH成功任务、回调认证、持久去重、Windows进程树与GitHub远端仍需独立验收 |
-| [workflows](../workflows/CONTRACT.md) · [editor](../workflows/editor/README.md) | WORKFLOWS-* 细化定义/节点/依赖/Task/调度/恢复/证据；WORKFLOWS-EDITOR-* 细化自由格子交互；MODE/SD 保留专业子域编号 | 厂商协议/Operation正式状态/布局权威 | 定义、Task、证据可先本域；派发恢复依赖连接/授权/协调证据；资源冲突/容量C，后台策略D04；画布布局归 views |
-| [permissions](../permissions/CONTRACT.md) | PER-01～04 + PERMISSIONS-*：主体/入口/模块/全局/对话约束、资源判定、IV级/节点启动确认、Grant/撤权/复核/审计/披露 | AI职责/Context/Task/凭证秘密/Operation账本 | 基础授权账本、CAS、撤销/复核及真实 SQLite 消费测试已实现；D01/D02完整映射未落地；非对话入口D，OS身份/IPC、撤权竞态和有限次数C/D |
-| [shared](../shared/CONTRACT.md) | SH-01～06 + SHARED-*：根/路径/锁、命名空间存储、事务/CAS/意图、类别、备份恢复迁移原语、凭证/秘密/平台后端、日志/追踪/诊断/容量 | Task/Operation/权限业务意义/领域schema/保留政策 | SQLite单库事务与CAS/意图已验证；备份恢复、Windows凭证/ACL/句柄级路径安全、持久日志轮转仍为C/D |
+| [app](research/contracts/app/CONTRACT-archive.md) | APP-01～APP-12 + APP-*：安装/数据根/锁/装配/IPC/窗口/平台/凭证接线/更新/安全模式/健康诊断/备份恢复 | 各域业务状态/Operation/Task/授权政策/凭证秘密/主UI布局 | 基础装配与生命周期已实现；正式安装器、首次选根、Windows profile/IPC/进程树、更新卸载、备份恢复仍需C/E4；D04/D07/D05清理政策待决 |
+| [space](research/contracts/space/CONTRACT-2026-10-31.md) | 本体/放置/组合引用、组织配置、可见查询；独立删除单列 | 职责、会话背景、授权、外部文件 | 组织/引用可审阅；消费权限/存储/目标最小投影；实际删除与多目录迁移待C/D |
+| [AI与roles](research/contracts/AI/CONTRACT-archive.md) | AIC-01～09 + AI-*：Agent/角色/职责/工具资格/模型引用/配置快照/Runtime与Session映射/记忆来源 | Key/外部循环/Task分配/Context选择/授权账本 | 配置/职责/资格契约已细化；Agent Runtime、外部Session恢复C；D10派生记忆共享与D05保留政策待决 |
+| [conversations](research/contracts/conversations/CONTRACT-archive.md) | CV-01～CV-16 + CONVERSATIONS-*：会话/消息/序列项/分支/追加重发/流式/工具往返/局部修订 | Provider协议/Operation权威/Task验收/权限账本 | 业务编号与交互边界已细化；流式/取消/提交竞态C；片段保留D05 |
+| [connections](research/contracts/connections/CONTRACT-archive.md) | C01–C05 + CONNECTIONS-*：Connection/Capability/准入/Operation/观察/控制/回调/Service/外部Agent；API/LOCAL 子域保留 API-*/LOCAL-* | Task状态/权限政策/资源占用最终裁决/外部Session权威 | 宿主契约已细化；真实Provider/DSH成功任务、回调认证、持久去重、Windows进程树与GitHub远端仍需独立验收 |
+| [workflows](research/contracts/workflows/CONTRACT-archive.md) · [editor](../workflows/editor/README.md) | WORKFLOWS-* 细化定义/节点/依赖/Task/调度/恢复/证据；WORKFLOWS-EDITOR-* 细化自由格子交互；MODE/SD 保留专业子域编号 | 厂商协议/Operation正式状态/布局权威 | 定义、Task、证据可先本域；派发恢复依赖连接/授权/协调证据；资源冲突/容量C，后台策略D04；画布布局归 views |
+| [permissions](research/contracts/permissions/CONTRACT-archive.md) | PER-01～04 + PERMISSIONS-*：主体/入口/模块/全局/对话约束、资源判定、IV级/节点启动确认、Grant/撤权/复核/审计/披露 | AI职责/Context/Task/凭证秘密/Operation账本 | 基础授权账本、CAS、撤销/复核及真实 SQLite 消费测试已实现；D01/D02完整映射未落地；非对话入口D，OS身份/IPC、撤权竞态和有限次数C/D |
+| [shared](research/contracts/shared/CONTRACT-archive.md) | SH-01～06 + SHARED-*：根/路径/锁、命名空间存储、事务/CAS/意图、类别、备份恢复迁移原语、凭证/秘密/平台后端、日志/追踪/诊断/容量 | Task/Operation/权限业务意义/领域schema/保留政策 | SQLite单库事务与CAS/意图已验证；备份恢复、Windows凭证/ACL/句柄级路径安全、持久日志轮转仍为C/D |
 | [views](../views/CONTRACT.md) | VIEW-01～VIEW-07 + VIEWS-*：视图定义/投影/对象关系映射/布局/多视图/刷新/锚点/获准检索 | 专业关系/执行依赖/任务真相/真实资源内容 | 布局与投影契约已细化；多图/撤权缓存/异步布局与大规模性能C；专业规则由 modes/领域 owner 提供；自由格子交互归 workflows/editor |
 | [workflows/modes](../workflows/modes/CONTRACT.md) | 可选组合、专业对象/关系/规则身份、预设实例化/调整建议 | 通用Task/权限/连接/第二套Context | 软件开发为先验案例；先窄组合；跨域部分成功/版本升级C/D，不建完整市场 |
 | [UI](../UI/CONTRACT.md) | 导航、面板、临时输入/选择、窄桥动作与证据反馈 | 业务/回执/授权/验收真相 | 隔离 React/Preload/IPC 最小实验已通过；正式产品页面/IPC、Windows 与撤权缓存仍未验收 |
@@ -205,8 +207,8 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 
 | 子契约 | 上级owner | 覆盖范围 | 状态 |
 |---|---|---|---|
-| [connections/api](../connections/api/CONTRACT.md) | connections | F04 Provider/Model/Capability/流式/usage/工具意图 | B候选，真实Provider待验 |
-| [connections/local](../connections/local/CONTRACT.md) | connections | F06 文件/目录/终端/进程/Git/Android/监控 | B候选，Windows实验待验 |
+| [connections/api](research/contracts/connections/api/CONTRACT-archive.md) | connections | F04 Provider/Model/Capability/流式/usage/工具意图 | B候选，真实Provider待验 |
+| [connections/local](research/contracts/connections/local/CONTRACT-archive.md) | connections | F06 文件/目录/终端/进程/Git/Android/监控 | B候选，Windows实验待验 |
 | [workflows/modes MODE-01～MODE-06](../workflows/modes/CONTRACT.md) | workflows/modes | F07-005～012模式发现/组合/规则/升级 | B候选，待评审 |
 | [software-development mode](../workflows/modes/software-development/CONTRACT.md) | workflows/modes | F07-013～020专业对象和关系 | B候选，未实现 |
 | conversations CV-01～CV-16 + CONVERSATIONS-* | conversations | F03逐项稳定锚点与对话业务细分；I01–I16 交互语义另行维护 | B候选，流式/取消仍C |

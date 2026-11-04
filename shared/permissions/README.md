@@ -7,7 +7,7 @@
 
 ## 现行契约与文档入口
 
-- [permissions 业务契约](../../permissions/CONTRACT.md)
+- [permissions 业务契约](../../docs/research/contracts/permissions/CONTRACT-archive.md)
 - [全局文档总索引](../../docs/README.md)
 - [权限边界决策记录](../../docs/decisions/BOUNDARY-DECISION-NOTES-V0.1.md)
 

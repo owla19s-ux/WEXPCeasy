@@ -12,7 +12,7 @@
 ## 上级契约与文档入口
 
 - **上级契约：** [UI/CONTRACT.md](../../UI/CONTRACT.md)
-- **上级契约：** [conversations/CONTRACT.md](../../conversations/CONTRACT.md)
+- **上级契约：** [conversations/CONTRACT.md](../../docs/research/contracts/conversations/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [全局契约地图](../../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
 

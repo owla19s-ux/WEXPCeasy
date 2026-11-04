@@ -1,4 +1,6 @@
-# workflows — 工作流、任务状态与调度职责
+# workflows — 工作流定义与业务数据
+
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：没有产品 src/tests；editor/prototype/ 是独立 React Flow 实验。正式自由格子与调度后置，调度入口为 scheduler/。 开工须重新核对最新 main。
 
 > **当前模块施工状态（文档整理，2026-11-03）**：有研究与 React Flow 原型；正式产品实现待核查；独立 scheduler 已规划。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
 >
@@ -11,7 +13,7 @@
 > **研究迁移**：历史深度契约归档于 [docs/research/contracts/workflows/CONTRACT-archive.md](../docs/research/contracts/workflows/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
 
 
-**状态（2026-11-01）**：workflows 是 WEX 工作流业务数据与运行调度的权威 owner；现有 React Flow 仅为历史交互实验；模块细分使用 WORKFLOWS-* 编号，模式和软件开发子域保留 MODE-*、SD-*。当前画布方向调整为自研轻量自由画布，设计见 [当前工作流画布架构](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)。本域尚无正式工作流调度产品代码。
+**状态（2026-11-01）**：workflows 维护工作流业务数据；运行调度方向已更新为独立顶层 scheduler；现有 React Flow 仅为历史交互实验；模块细分使用 WORKFLOWS-* 编号，模式和软件开发子域保留 MODE-*、SD-*。当前画布方向调整为自研轻量自由画布，设计见 [当前工作流画布架构](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)。本域尚无正式工作流调度产品代码。
 
 > **版本边界（2026-11-02）**：正式自由格子工作流、任务调度器和节点运行属于 **0.1.2**；本目录在 0.1.1 仅作为长期架构/契约参考，不是当前施工派工。见 [0.1.1 计划](../docs/versions/0.1.1/PLAN.md)。历史准备度和实验不改变版本边界。
 
@@ -25,7 +27,7 @@
 
 ## 模块编号规则
 
-- 核心工作流业务能力：`WORKFLOWS-<子域>-NNN`，详细清单见 [CONTRACT 第 6 节](CONTRACT.md#6-模块独立功能编号与细化契约)。
+- 核心工作流业务能力：`WORKFLOWS-<子域>-NNN`，详细清单见 [CONTRACT 第 6 节](../docs/research/contracts/workflows/CONTRACT-archive.md#6-模块独立功能编号与细化契约)。
 - 自由格子交互：`WORKFLOWS-EDITOR-NNN`，由本目录承接交互意图，不拥有布局数据或工作流业务状态。
 - 专业模式继续使用 `MODE-01～06`；软件开发专业对象继续使用 `SD-01～07`。
 - W01～W07 是既有业务契约章节锚点，不作为新增细分功能编号。
@@ -49,7 +51,7 @@
 
 实际文件/提交/远端产物仍以来源系统为事实依据，本域拥有的是产物引用与核验/验收记录，不是远端文件的唯一真相。证据必须对应被验收版本；后续变更不能继续沿用旧版本的通过结论。
 
-调度决定执行时机、候选执行者、依赖条件与资源协调；连接器/外部 Agent 实施动作，权限域作授权判断。主 AI 提供规划与技术判断，程序流转按已适用的规则处理，不能替用户改目标或让模型自批完成。由 [runtime](runtime/README.md) 承接调度/恢复责任，不新增调度器顶层系统。
+调度决定执行时机、候选执行者、依赖条件与资源协调；连接器/外部 Agent 实施动作，权限域作授权判断。主 AI 提供规划与技术判断，程序流转按已适用的规则处理，不能替用户改目标或让模型自批完成。执行协调归独立顶层 [scheduler](../scheduler/README.md)；旧 [runtime 研究](runtime/README.md)只保留历史设计依据，不是当前调度 owner。
 
 `AI/roles` 提供职责配置，`space` 提供关联范围；本域只保存本次任务分配与输入依据，不反向修改角色模板或 Context 本体。普通对话和单次连接调用不强制创建任务。
 
@@ -63,25 +65,25 @@
 
 
 
-## 第四批：模块业务契约设计
+## 第四批：模块业务契约设计（历史研究）
 
-[本模块契约与独立验收规格](CONTRACT.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
+[本模块契约与独立验收规格](../docs/research/contracts/workflows/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 
-### 第六批施工准备度（2026-10-31）
+### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：按本目录[CONTRACT第六批条款](CONTRACT.md)执行上述稳定范围；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/research/contracts/workflows/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
 
-- [本域契约及关联依据](CONTRACT.md#文档关联与施工入口)
+- [本域契约及关联依据](../docs/research/contracts/workflows/CONTRACT-archive.md#文档关联与施工入口)
 - [当前工作流自由画布设计](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)
 - [工作流画布方向决策](../docs/decisions/WORKFLOW-CANVAS-DIRECTION-2026-11-01.md)
 - [WEXPC1 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
-全局架构、决策、研究、审查、实验和当前施工准入范围，以本域 `CONTRACT.md` 的“文档关联与施工入口”章节为准；README 只负责提供入口，不重复维护一份容易漂移的资料清单。
+当前施工范围与必要契约摘要以本 README 和根 README 为入口；历史契约及其关联资料只供按需追溯，不自动派工或批准候选政策。
 
 ## G1/G4：Task 资料引用与跨对话检查点
 

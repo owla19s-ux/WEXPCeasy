@@ -1,5 +1,7 @@
 # conversations — 独立对话与生成业务
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：未发现本域产品 src/、tests/ 或公开 index.ts；现有说明是设计/施工目标，不能表述为已实现。 开工须重新核对最新 main。
+
 > **当前模块施工状态（文档整理，2026-11-03）**：有业务设计；正式产品实现与测试待核验。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
 >
 > **模块职责**：独立对话、消息、段落与生成状态。
@@ -23,7 +25,7 @@
 
 ## 模块编号规则
 
-- 对话业务细分使用 `CONVERSATIONS-<子域>-NNN`，详见 [CONTRACT 第 5 节](CONTRACT.md#5-模块独立功能编号与细化契约)。
+- 对话业务细分使用 `CONVERSATIONS-<子域>-NNN`，详见 [CONTRACT 第 5 节](../docs/research/contracts/conversations/CONTRACT-archive.md#5-模块独立功能编号与细化契约)。
 - CV-01～CV-16 保留为既有业务契约锚点。
 - I01–I16 是全局交互语义编号；本模块只引用，不重复定义。
 - 本模块不拥有 Provider/Operation、Task、Agent配置或权限账本。
@@ -36,23 +38,23 @@
 
 
 
-## 第四批：模块业务契约设计
+## 第四批：模块业务契约设计（历史研究）
 
-[本模块契约与独立验收规格](CONTRACT.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
+[本模块契约与独立验收规格](../docs/research/contracts/conversations/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 
-### 第六批施工准备度（2026-10-31）
+### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：按本目录[CONTRACT第六批条款](CONTRACT.md)执行上述稳定范围；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/research/contracts/conversations/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
 
-- [本域契约及关联依据](CONTRACT.md#文档关联与施工入口)
+- [本域契约及关联依据](../docs/research/contracts/conversations/CONTRACT-archive.md#文档关联与施工入口)
 - [WEXPC1 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
-全局架构、决策、研究、审查、实验和当前施工准入范围，以本域 `CONTRACT.md` 的“文档关联与施工入口”章节为准；README 只负责提供入口，不重复维护一份容易漂移的资料清单。
+当前施工范围与必要契约摘要以本 README 和根 README 为入口；历史契约及其关联资料只供按需追溯，不自动派工或批准候选政策。
 
 ## G2/G7：工具往返与输入附件
 

@@ -12,8 +12,8 @@
 ## 上级契约与文档入口
 
 - **上级契约：** [UI/CONTRACT.md](../../UI/CONTRACT.md)
-- **上级契约：** [permissions/CONTRACT.md](../../permissions/CONTRACT.md)
-- **上级契约：** [shared/CONTRACT.md](../../shared/CONTRACT.md)
+- **上级契约：** [permissions/CONTRACT.md](../../docs/research/contracts/permissions/CONTRACT-archive.md)
+- **上级契约：** [shared/CONTRACT.md](../../docs/research/contracts/shared/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [源码目录与 Windows 数据布局](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
 - [安全与数据持续性](../../docs/research/SECURITY-AND-PERSISTENCE-2026-10-31.md)

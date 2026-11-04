@@ -1,5 +1,7 @@
 # views — WEX 视图体系（架构研究与未来源码职责）
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：未发现本域产品 src/、tests/ 或公开 index.ts；现有说明是设计/施工目标，不能表述为已实现。 开工须重新核对最新 main。
+
 **状态：已建立职责边界、VIEW-01～VIEW-07 与 VIEWS-* 细分契约；尚无视图引擎产品代码。** 本目录不代表另起一套画布框架，也不代表已冻结数据协议或节点类型。
 
 ## 责任范围
@@ -23,7 +25,7 @@
 ## 边界与参考
 
 - [当前研究共识](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
-- [工作流领域](../workflows/README.md)：业务流程、任务状态、调度与执行，不管理所有非执行图。
+- [工作流领域](../workflows/README.md)：工作流定义与业务状态，不管理所有非执行图；执行协调另见 [Scheduler](../scheduler/README.md)。
 - [Space / Context](../space/README.md)：对象所属组织及范围；视图不是新的 Context。
 - [WEX 工作流自由画布与节点工作界面设计](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)
 - [WEX 编辑器交互边界](../workflows/editor/README.md)
@@ -54,14 +56,14 @@
 
 
 
-## 第四批：模块业务契约设计
+## 第四批：模块业务契约设计（历史研究）
 
 [本模块契约与独立验收规格](CONTRACT.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 
-### 第六批施工准备度（2026-10-31）
+### 第六批施工准备度（历史：2026-10-31）
 
-**绿（仅布局配置包）**：按本目录[CONTRACT第六批条款](CONTRACT.md)执行上述稳定范围；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**绿（仅布局配置包）**：第六批[历史条款](CONTRACT.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
@@ -70,4 +72,4 @@
 - [WEXPC1 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
-全局架构、决策、研究、审查、实验和当前施工准入范围，以本域 `CONTRACT.md` 的“文档关联与施工入口”章节为准；README 只负责提供入口，不重复维护一份容易漂移的资料清单。
+当前施工范围与必要契约摘要以本 README 和根 README 为入口；历史契约及其关联资料只供按需追溯，不自动派工或批准候选政策。

@@ -1,5 +1,7 @@
 # connections — WEX 内部与公共连接/适配体系
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：产品源码 6 文件、测试 10 文件，公开入口 `connections/src/index.ts`。本轮根测试覆盖 shared、permissions、app、connections 及边界工具；不代表完整本版验收。 开工须重新核对最新 main。
+
 > **当前模块施工状态（文档整理，2026-11-03）**：已有 src 最小产品实现、测试及宿主组合记录；真实服务和 UI 未验收。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
 >
 > **模块职责**：连接配置、Operation 账本与受控派发。
@@ -29,7 +31,7 @@
 
 ## 模块编号规则
 
-- 核心连接宿主：`CONNECTIONS-<子域>-NNN`，完整细分见 [CONTRACT 第 7 节](CONTRACT.md#7-模块独立功能编号与细化契约)。
+- 核心连接宿主：`CONNECTIONS-<子域>-NNN`，完整细分见 [CONTRACT 第 7 节](../docs/research/contracts/connections/CONTRACT-archive.md#7-模块独立功能编号与细化契约)。
 - Provider/API 适配：`connections/api` 保留 `API-01～10`。
 - 本地工具适配：`connections/local` 保留 `LOCAL-01～10`。
 - 外部 DSH Agent：`connections/dsh` 是独立适配路线；其专属子契约后续单独细化。
@@ -80,9 +82,9 @@
 
 
 
-## 第四批：模块业务契约设计
+## 第四批：模块业务契约设计（历史研究）
 
-[本模块契约与独立验收规格](CONTRACT.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
+[本模块契约与独立验收规格](../docs/research/contracts/connections/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 ## 公共网络适配边界补充（2026-10-31；条件候选）
 
@@ -93,18 +95,18 @@
 此处仅补职责说明，未增加目录或接口，没有网络/Windows实机测试。
 
 
-### 第六批施工准备度（2026-10-31）
+### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：按本目录[CONTRACT第六批条款](CONTRACT.md)执行上述稳定范围；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/research/contracts/connections/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
 
-- [本域契约及关联依据](CONTRACT.md#文档关联与施工入口)
+- [本域契约及关联依据](../docs/research/contracts/connections/CONTRACT-archive.md#文档关联与施工入口)
 - [WEX 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
-全局架构、决策、研究、审查、实验和当前施工准入范围，以本域 `CONTRACT.md` 的“文档关联与施工入口”章节为准；README 只负责提供入口，不重复维护一份容易漂移的资料清单。
+当前施工范围与必要契约摘要以本 README 和根 README 为入口；历史契约及其关联资料只供按需追溯，不自动派工或批准候选政策。
 
 ## G1/G2/G4/G5/G6：基础连接闭环
 

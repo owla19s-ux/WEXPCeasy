@@ -84,13 +84,13 @@ module.exports = {
 
 ## 上级契约与文档入口
 
-- **上级业务/职责契约：** [docs/MODULE-CONTRACTS.md](../docs/MODULE-CONTRACTS.md)
+- **上级业务/职责研究（历史）：** [docs/MODULE-CONTRACTS.md](../docs/MODULE-CONTRACTS.md)
 - **全局文档总索引：** [docs/README.md](../docs/README.md)
 - [模块局部性设计](../docs/architecture/MODULE-LOCALITY-DESIGN-V0.1.md)
 - [模块施工顺序](../docs/batch6/NEXT.md)
 - [文档体系总索引](../docs/README.md)
 
-本子目录只细化上级模块内部的职责或实现入口，不另建第二份业务权威。若本页与上级契约冲突，以对应 owner 契约为准；实验结论只按原记录的环境和范围解释。
+本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
 
 第八批：`npm run build:shared`、`build:permissions`、`build:app`以单域公开入口独立编译必要依赖闭包（不等于npm包隔离）；构建输出临时目录自动清理。AST增加Renderer公开导入permissions的拒绝反例。详见[报告](../docs/batch8/REPORT.md)。

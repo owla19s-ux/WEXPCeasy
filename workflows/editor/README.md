@@ -23,7 +23,7 @@
 
 ## 2.1 编辑交互功能编号
 
-本目录的交互子域使用 `WORKFLOWS-EDITOR-001～011`。它们描述自由画布的用户交互，不是第二份业务契约，也不计入 F01–F15 的 216 项基础功能统计。完整行为和验收边界见 [上级 workflows 契约第 6.4 节](../CONTRACT.md#64-自由格子编辑交互-workflowseditor)。
+本目录的交互子域使用 `WORKFLOWS-EDITOR-001～011`。它们描述自由画布的用户交互，不是第二份业务契约，也不计入 F01–F15 的 216 项基础功能统计。完整行为和验收边界见 [上级 workflows 契约第 6.4 节](../../docs/research/contracts/workflows/CONTRACT-archive.md#64-自由格子编辑交互workflowseditor)。
 
 | 编号范围 | 交互能力 |
 |---|---|
@@ -64,5 +64,5 @@ prototype/ 保留既有 React Flow 12.12.0 实验。其构建、模型和 DOM �
 - [当前自由画布与节点工作界面设计](../../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)
 - [工作流画布技术路线研究](../../docs/research/WORKFLOW-CANVAS-TECHNOLOGY-REVIEW-2026-11-01.md)
 - [方向决策记录](../../docs/decisions/WORKFLOW-CANVAS-DIRECTION-2026-11-01.md)
-- [workflows 业务契约](../CONTRACT.md)
+- [workflows 业务契约](../../docs/research/contracts/workflows/CONTRACT-archive.md)
 - [views 业务契约](../../views/CONTRACT.md)

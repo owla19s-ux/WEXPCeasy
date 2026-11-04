@@ -20,12 +20,12 @@
 
 ## 上级契约与文档入口
 
-- **上级业务/职责契约：** [shared/CONTRACT.md](../../shared/CONTRACT.md)
+- **上级业务/职责研究（历史）：** [shared/CONTRACT.md](../../docs/research/contracts/shared/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [安全与数据持续性](../../docs/research/SECURITY-AND-PERSISTENCE-2026-10-31.md)
 - [Windows 生命周期](../../docs/research/WINDOWS-LIFECYCLE-2026-10-31.md)
 
-本子目录只细化上级模块内部的职责或实现入口，不另建第二份业务权威。若本页与上级契约冲突，以对应 owner 契约为准；实验结论只按原记录的环境和范围解释。
+本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
 ## G6：凭证引用的最小闭环
 

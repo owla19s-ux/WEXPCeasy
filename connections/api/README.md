@@ -1,5 +1,7 @@
 # connections/api
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：未发现本域产品 src/、tests/ 或公开 index.ts；现有说明是设计/施工目标，不能表述为已实现。 开工须重新核对最新 main。
+
 > **当前模块施工状态（文档整理，2026-11-03）**：有 Pi AI 兼容性研究，正式 Provider 产品实现待核查。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
 >
 > **模块职责**：Provider/Model 配置、请求协议与流式适配。
@@ -31,13 +33,13 @@ API 配置与模型协议适配。AI 配置引用连接，不复制密钥；不�
 
 ## 上级契约与文档入口
 
-- **上级业务/职责契约：** [connections/CONTRACT.md](../../connections/CONTRACT.md)
-- **适配器子契约：** [Provider适配器子契约](CONTRACT.md)
+- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/research/contracts/connections/CONTRACT-archive.md)
+- **适配器子契约：** [Provider适配器子契约](../../docs/research/contracts/connections/api/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [提供方边界 Walkthrough](../../docs/architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
 - [外部 Agent 生态与 Provider 观察](../../docs/research/AGENT-ECOSYSTEM-2026-10-31.md)
 
-本子目录只细化上级模块内部的职责或实现入口，不另建第二份业务权威。若本页与上级契约冲突，以对应 owner 契约为准；实验结论只按原记录的环境和范围解释。
+本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
 ## G2/G6：Provider 请求与工具意图
 

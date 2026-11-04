@@ -1,3 +1,5 @@
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。
+
 # plugins 业务契约：WEX 自有插件机制
 
 - **Owner：** plugins。只负责 WEX 自有插件的描述、发现、安装、信任、生命周期、依赖、隔离、配置/数据和扩展点。
@@ -58,7 +60,7 @@
 
 - **模块导航：** [plugins README](README.md) · [全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档总索引](../docs/README.md)
 - **产品需求：** [F01–F15 产品功能总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../docs/product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
-- **跨模块边界：** [双插件体系架构](../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md) · [app](../app/CONTRACT.md) · [connections](../connections/CONTRACT.md) · [permissions](../permissions/CONTRACT.md) · [shared](../shared/CONTRACT.md)
+- **跨模块边界：** [双插件体系架构](../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md) · [app](../docs/research/contracts/app/CONTRACT-archive.md) · [connections](../docs/research/contracts/connections/CONTRACT-archive.md) · [permissions](../docs/research/contracts/permissions/CONTRACT-archive.md) · [shared](../docs/research/contracts/shared/CONTRACT-archive.md)
 - **证据：** [DSH 原生插件宿主实验](../dsh/README.md) · [外部 DSH Agent 连接器](../connections/dsh/README.md)
 
 维护规则：本契约只维护 WEX 自有插件业务语义；DSH 原生插件机制写入 dsh 专属实验资料；外部 Agent 协议写入 connections/dsh；真实授权写入 permissions。所有候选状态与 D09/C06 门槛保持显式。

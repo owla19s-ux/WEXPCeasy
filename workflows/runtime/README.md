@@ -1,3 +1,5 @@
+> **2026-11-04 文档治理标识｜历史研究/证据**：保留原始结论、编号及当时状态；当前施工从[根 README](../../README.md)进入，本文不自动派工。研究中的候选、准备度及接口草案不等于已批准或已实现。 调度协调现行入口为 [scheduler](../../scheduler/README.md)，本目录不再承担新调度器施工入口。
+
 # workflows/runtime
 
 程序化派发、等待、退回、继续、恢复和运行记录。任务、节点及工具结果区分含义但不据此拆成多套系统；结果未知不得盲重试。
@@ -31,13 +33,13 @@
 
 ## 上级契约与文档入口
 
-- **上级业务/职责契约：** [workflows/CONTRACT.md](../../workflows/CONTRACT.md)
+- **上级业务/职责研究（历史）：** [workflows/CONTRACT.md](../../docs/research/contracts/workflows/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [模块局部性设计](../../docs/architecture/MODULE-LOCALITY-DESIGN-V0.1.md)
 - [第六批关键机制实验](../../docs/batch6/EXPERIMENTS.md)
 - [集中决策与待决项](../../docs/batch6/DECISIONS.md)
 
-本子目录只细化上级模块内部的职责或实现入口，不另建第二份业务权威。若本页与上级契约冲突，以对应 owner 契约为准；实验结论只按原记录的环境和范围解释。
+本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
 ## G1/G4：Task 检查点与跨对话恢复
 

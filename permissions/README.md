@@ -1,5 +1,7 @@
 # permissions — 策略、授权决定与撤权
 
+> **代码事实核对（2026-11-04，基线 `1048b6a`）**：产品源码 2 文件、测试 2 文件，公开入口 `permissions/src/index.ts`。本轮根测试覆盖 shared、permissions、app、connections 及边界工具；不代表完整本版验收。 开工须重新核对最新 main。
+
 > **当前模块施工状态（文档整理，2026-11-03）**：已有 permissions/src/index.ts 和模块测试；宿主可信事实与真实资源执行边界仍需验证。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
 >
 > **模块职责**：权限策略、判定、授予、撤销与审计。
@@ -16,7 +18,7 @@
 - **公开代码入口**：`permissions/src/index.ts`；已有 `createPermissions(Store, TrustPort)`，提供 evaluate/recheck/grant/revoke/history，采用真实存储和可信宿主注入。
 - **运行验证**：`npm run test:permissions`；跨域组合另运行 `npm test`。当前授权正例的可信事实来自测试宿主，不等于正式 Windows/IPC 身份认证。
 - **当前安全边界**：非对话入口仍返回 `entry_policy_unresolved`；不伪造对话授权，不开放尚未批准的自动授权、有限次数或特殊风险操作。
-- **施工依据**：[0.1.1 正式计划](../docs/versions/0.1.1/PLAN.md) → [本域契约](CONTRACT.md) → `permissions/src/` 与 `permissions/tests/`。第四批契约设计状态是历史起点，不代表当前代码不存在。
+- **施工依据**：[0.1.1 正式计划](../docs/versions/0.1.1/PLAN.md) → [本域契约](../docs/research/contracts/permissions/CONTRACT-archive.md) → `permissions/src/` 与 `permissions/tests/`。第四批契约设计状态是历史起点，不代表当前代码不存在。
 
 
 **当前：第七批基础产品实现已落地；稳定实现与限制见本文“第七批实际实现”及[验收报告](../docs/batch7/REPORT.md)。下方阶段描述保留为历史依据。**
@@ -54,23 +56,23 @@
 
 
 
-## 第四批：模块业务契约设计
+## 第四批：模块业务契约设计（历史研究）
 
-[本模块契约与独立验收规格](CONTRACT.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
+[本模块契约与独立验收规格](../docs/research/contracts/permissions/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 
-### 第六批施工准备度（2026-10-31）
+### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：按本目录[CONTRACT第六批条款](CONTRACT.md)执行上述稳定范围；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/research/contracts/permissions/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
 
-- [本域契约及关联依据](CONTRACT.md#文档关联与施工入口)
+- [本域契约及关联依据](../docs/research/contracts/permissions/CONTRACT-archive.md#文档关联与施工入口)
 - [WEX 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
-全局架构、决策、研究、审查、实验和当前施工准入范围，以本域 `CONTRACT.md` 的“文档关联与施工入口”章节为准；README 只负责提供入口，不重复维护一份容易漂移的资料清单。
+当前施工范围与必要契约摘要以本 README 和根 README 为入口；历史契约及其关联资料只供按需追溯，不自动派工或批准候选政策。
 
 
 ## 第七批实际实现（2026-10-31）
@@ -98,7 +100,7 @@ G1 引用、G2 工具意图、G4 Operation 历史和 G5 搜索命中均不产生
 
 ## 模块编号规则
 
-- 权限域细分使用 `PERMISSIONS-<子域>-NNN`，详见 [CONTRACT 第 11 节](CONTRACT.md#11-模块独立功能编号与细化契约)。
+- 权限域细分使用 `PERMISSIONS-<子域>-NNN`，详见 [CONTRACT 第 11 节](../docs/research/contracts/permissions/CONTRACT-archive.md#11-模块独立功能编号与细化契约)。
 - PER-01～PER-04 保留为既有稳定能力锚点。
 - D01/D02 已确认政策与特殊信任边界待决项分别标注；编号建立不代表未实现政策已落地。
 

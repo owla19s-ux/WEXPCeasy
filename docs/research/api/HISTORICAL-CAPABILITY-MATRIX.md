@@ -8,7 +8,7 @@
 - APS 原始资料**已找到**：[ai 源码](https://github.com/owla19s-ux/APS/tree/024ca95d542ed7e74e1d7bf726376f36e1d7613d/app/src/main/java/com/abridgefs/app/ai)，SHA `024ca95d542ed7e74e1d7bf726376f36e1d7613d`。本次实际读取 AIConnection、AIProfile、AIProfileStore、AIConnector、AIConnectorRegistry、三协议Connector、ApiEndpoint、ApiErrorSanitizer 及 MultiProtocolConnectorTest/ProviderConnectorErrorRedactionTest。源码存在不是通过证明；未声称 APS 为需求首次提出时间。
 - WEX Android：[ai_extension.dart](https://github.com/owla19s-ux/WEX/blob/c7dcf0a9833f66d8c93b5356c2dbfe1bfd882c19/apps/wex/lib/extensions/android_connectors/ai_extension.dart)、同目录 connector_config.dart 及 test/extensions/ai_extension_test.dart 已读取：一组 baseUrl/key/model、禁止重定向与SDK重试，不具备目标多 Connection 配置。凭证存于 secure storage，但旧配置对象仍携带 Key，不照搬成新模块 schema。
 - WEXPC 源码基线 `faf11f31d44e4fc4788e766074b8db6b83ab4a1b`。下述 Rust 路径均相对 [wexpc](https://github.com/owla19s-ux/wexpc/tree/faf11f31d44e4fc4788e766074b8db6b83ab4a1b)。正式 main 已集成 wex-api 与 HTTP；其 README 仍写“提案分支”，是过期状态说明，不能单凭该 README 否定主线代码，也不能自称其他执行者已独立签收。
-- 当前 WEXPCeasy `609e4142b319fec8800c8aea89bc7aa4ca447d16`：[API-01～10](../../../connections/api/CONTRACT.md) 当前仍为 B 候选语义与 C 真实实验门槛；本批未改它。
+- 当前 WEXPCeasy `609e4142b319fec8800c8aea89bc7aa4ca447d16`：[API-01～10](../contracts/connections/api/CONTRACT-archive.md) 当前仍为 B 候选语义与 C 真实实验门槛；本批未改它。
 - **E-RUST：**本轮读取既有 Actions [40527701505](https://github.com/owla19s-ux/wexpc/actions/runs/40527701505)，job `122271653337` 原始日志，源码 `c1ff8d9e83c920fb3a531926e5dc6aa47039f805`。这是历史已运行证据，不能升级成本次 HEAD 重跑。见[报告](PI-AI-TEST-REPORT.md)。当前环境 rustc/cargo 均 command not found。
 
 状态分别记录：设计已确认/候选/未决，代码无/原型/主线实现，测试本轮通过/历史通过/未运行/证据不足。没有用“有测试文件”代替“通过”。原规范的 Android 特例不是 PC 当前权限政策。
