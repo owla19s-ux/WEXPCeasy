@@ -1,0 +1,109 @@
+{
+  "kind": "construction_verification_receipt",
+  "date": "2026-11-05",
+  "module": "app",
+  "baseline": "e2eeb7183fb557110c6fa1087dc44ca9e783a2c4",
+  "authorization": "User continued the proposed app trusted-entry/lifecycle assembly batch. Construction documents remain unchanged.",
+  "implemented": [
+    "Optional startFoundations local entry binder: main-process source verifier supplies current user/entry identity and gates; operation descriptors are closed-schema snapshots; request identity lives in a WeakMap and cannot be serialized/copied into a valid binding.",
+    "Source close permanently invalidates that source in the current binder. Entry-generation advance invalidates previous bindings and requires a fresh exact permission grant. Derived requests preserve source identity and generation across verification calls.",
+    "Known local tokens never fall back to unrelated legacy TrustPort facts; when a local binder is configured, raw local facts in the legacy path are rejected. Existing nonlocal TrustPort behavior is retained.",
+    "Optional Space assembly uses the Space public interface and the real permissions reader. Space borrows only the app-owned public-root lease; Context roots still acquire their own actual locks. Default per-object projection requests derive through the local binder.",
+    "Host stop synchronously seals local binding and permission reads/management, drains domain work, closes stores, and releases the root lease only after confirmed cleanup. Space failures and initialization orphan stores remain retryable and retain the root lease.",
+    "App holds no Context/permission/Operation business-state replicas and issues no default grants."
+  ],
+  "verification": [
+    {
+      "command": "npm test (baseline)",
+      "tests": 223,
+      "passed": 223,
+      "failed": 0
+    },
+    {
+      "command": "node --test app/tests/local-space.test.mjs (initial red)",
+      "tests": 8,
+      "passed": 0,
+      "failed": 8
+    },
+    {
+      "command": "derived identity-generation regression (before fix)",
+      "tests": 1,
+      "failed": 1
+    },
+    {
+      "command": "closure inside platform verifier regression (before fix)",
+      "tests": 1,
+      "failed": 1
+    },
+    {
+      "command": "npm test",
+      "tests": 238,
+      "passed": 238,
+      "failed": 0,
+      "includes": [
+        "build",
+        "check:boundaries"
+      ]
+    },
+    {
+      "command": "npm run test:app",
+      "tests": 39,
+      "passed": 39,
+      "failed": 0
+    },
+    {
+      "command": "npm run typecheck",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "new_tests": {
+    "file": "app/tests/local-space.test.mjs",
+    "count": 15,
+    "real_components": [
+      "app.startFoundations",
+      "space.openSpaceService",
+      "permissions.createPermissions",
+      "SQLite",
+      "directoryLock"
+    ],
+    "injected_components": [
+      "platform event-source identity verifier",
+      "trusted permission management approvals",
+      "explicit storage/owner faults"
+    ],
+    "covers": [
+      "single public-root lease and real Context create/read/list",
+      "closed-source invalidation",
+      "entry generation and independent grants",
+      "operation snapshots and current entry gates",
+      "stop seals saved permission references",
+      "optional Space failure/degradation",
+      "Space close failure and retry",
+      "source close while owner observation is pending",
+      "derived generation changes",
+      "no fallback to legacy Conversation identity",
+      "pending Space operation shutdown drain and root retention",
+      "reentrant source closure",
+      "failed initialization store retention",
+      "raw legacy-local request rejection",
+      "host restart, persistent Context ID and old-token rejection"
+    ]
+  },
+  "compatibility": "Omitting local and space options preserves existing assembly paths. Existing app, permission and connection tests pass. A new platform entry generation requires a new exact-scope grant; historical grants are not rewritten by app.",
+  "limits": [
+    "Platform event-source verification remains an injected port; real Electron BrowserWindow/WebContents/frame/IPC authentication and Windows user/ACL validation are not implemented or verified.",
+    "The platform adapter must provide fresh trustworthy entry identities/generations across actual process restarts; binder monotonicity and closed-source tracking are in-process only.",
+    "Permission management approval remains a trusted-host port, not a Renderer-accessible API or production approval UI.",
+    "Entry invalidation stops future WEX-controlled reads/writes; it does not promise stopping/rolling back external work or changing the background-running policy.",
+    "Formal UI, installation, backend credential/provider adapters and advanced Space configuration remain outside this batch.",
+    "Root/module README status/navigation is stale relative to the user-authorized module transition; no construction-document maintenance was performed."
+  ],
+  "documents_changed": false,
+  "permissions_source_changed": false,
+  "space_source_changed": false,
+  "module_accepted": false
+}

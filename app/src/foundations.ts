@@ -6,10 +6,14 @@ import {createPermissions} from '../../permissions/src/index.js';
 import type {TrustPort,Permissions} from '../../permissions/src/index.js';
 import {createConnectionService} from '../../connections/src/index.js';
 import type {ConnectionClient,ConfiguredDispatchAdapter} from '../../connections/src/index.js';
+import {openSpaceService} from '../../space/src/index.js';
+import type {SpaceService,SpaceOptions} from '../../space/src/index.js';
+import {createLocalEntries} from './local-entries.js';
+import type {LocalEntryOptions,LocalEntryClient} from './local-entries.js';
 import {assemble} from './assembly.js';
 import type {Host} from './assembly.js';
-export interface FoundationOptions {dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];shutdownTimeoutMs?:number}}
-export interface FoundationHost extends Host {readonly permissions?:Permissions;readonly connections?:ConnectionClient}
+export interface FoundationOptions {dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationHost extends Host {readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
  for(const suffix of ['', '-journal','-wal','-shm']){
   try{const info=await lstat(join(root.path,name+suffix));if(info.isSymbolicLink()||!info.isFile())throw Error('unsafe store path');}
@@ -30,17 +34,40 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  let lease:LockResult;
  try{lease=await (options.lock??directoryLock).acquire(probe.root);}catch{lease={status:'unavailable'};}
  if(lease.status!=='acquired')return Object.freeze({status:'failed',diagnostics:[{module:'shared',reason:'initialization_failed' as const}],stop:async()=>({status:'stopped' as const,failed:[]})});
- let permissions:Permissions|undefined,connections:ConnectionClient|undefined;const release=lease.release;
- const open=options.openStore??openSqliteStore,orphans=new Set<ManagedStore>();
+ let permissions:Permissions|undefined,connections:ConnectionClient|undefined,space:SpaceService|undefined;const release=lease.release;
+ const open=options.openStore??openSqliteStore,orphans=new Set<ManagedStore>(),spaceOrphans=new Set<ManagedStore>();
+ const local=options.local?createLocalEntries(options.local):undefined;let stopping=false,rootActive=true;
+ const trust:TrustPort={
+  current(request){if(stopping)return;if(local?.owns(request))return local.current(request);const facts=options.trust.current(request);return local&&facts?.kind==='local'?undefined:facts;},
+  canManage(change){return !stopping&&options.trust.canManage(change);},
+  canReadHistory(request){return !stopping&&options.trust.canReadHistory(request);}
+ };
+ // Space borrows only this host's acquired public-root lease; Context roots still acquire real locks.
+ const spaceLock:RootLock={async acquire(root){
+  if(root.path===probe.root.path&&root.id===probe.root.id)return rootActive?{status:'acquired',release:async()=>{}}:{status:'unavailable'};
+  return (options.lock??directoryLock).acquire(root);
+ }};
  const host=await assemble([
  {id:'shared',requires:[],async start(){
  const store=await openDomainStore(probe.root,'permissions.sqlite','permissions',open);
  return {value:Object.freeze({read:()=>store.read(),commit:(...a:Parameters<Store['commit']>)=>store.commit(...a),query:(intent:string)=>store.query(intent)}),stop:async()=>{store.close();}};
  }},
  {id:'permissions',requires:['shared'],async start(deps){
- permissions=createPermissions(deps['shared'] as Store,options.trust);
+ permissions=createPermissions(deps['shared'] as Store,trust);
  return {value:Object.freeze({evaluate:permissions.evaluate,recheck:permissions.recheck}),stop:async()=>{permissions=undefined;}};
  }},
+ ...(options.space?[{id:'space',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
+  const stores=new Set<ManagedStore>();
+  const trackedOpen:NonNullable<SpaceOptions['openStore']>=(path,namespace)=>{
+   const db=open(path,namespace);const tracked:ManagedStore={...db,close(){db.close();stores.delete(tracked);}};stores.add(tracked);return tracked;
+  };
+  try{
+   const opened=await openSpaceService({...options.space,dataRoot:probe.root.path,expectedRootId:probe.root.id,permission:deps['permissions'] as Pick<Permissions,'evaluate'|'recheck'>,lock:spaceLock,openStore:trackedOpen,
+    ...(options.space!.deriveRequest?{deriveRequest:options.space!.deriveRequest}:local?{deriveRequest:(parent,scope)=>local.client.derive(parent,scope)}:{})});
+   if(opened.status!=='ready')throw Error('space_unavailable');space=opened.service;const service=space;
+   return {value:service,stop:async()=>{await service.close();await closeStores(stores);space=undefined;}};
+  }catch(error){try{await closeStores(stores);}catch{for(const db of stores)spaceOrphans.add(db);}throw error;}
+ }}]:[]),
  ...(options.connections?[{id:'connections',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
   const stores=new Set<ManagedStore>();
   try{
@@ -60,17 +87,19 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  ],{required:['shared','permissions'],timeoutMs:1000});
  let stopPromise:ReturnType<Host['stop']>|undefined;
  const stop=()=>{
+ stopping=true;local?.stop();
  if(stopPromise)return stopPromise;
  const job=(async()=>{
  const result=await host.stop();
  // Keep root occupied when provider shutdown cannot confirm release.
  if(result.status==='incomplete')return result;
  try{await closeStores(orphans);}catch{return {status:'incomplete' as const,failed:['connections-storage']};}
- try{await release();return result;}catch{return {status:'incomplete' as const,failed:['root-lock']};}
+ try{await closeStores(spaceOrphans);}catch{return {status:'incomplete' as const,failed:['space-storage']};}
+ try{await release();rootActive=false;return result;}catch{return {status:'incomplete' as const,failed:['root-lock']};}
  })();
  stopPromise=job;void job.then(result=>{if(result.status==='incomplete')stopPromise=undefined;});return job;
  };
  if(host.status==='failed')await stop();
- const current=permissions,currentConnections=connections;
- return Object.freeze({...host,...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),stop});
+ const current=permissions,currentConnections=connections,currentSpace=space;
+ return Object.freeze({...host,...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),...(currentSpace?{space:currentSpace}:{}),...(local&&host.status!=='failed'?{local:local.client}:{}),stop});
 }
