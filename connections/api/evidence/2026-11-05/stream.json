@@ -1,0 +1,28 @@
+{
+  "baseline": "9fdae72c57a112d30b24de27093a1897058e03a4",
+  "scope": "Text-only OpenAI Chat SSE decoder; explicit continuation authorization from user; no construction docs changed",
+  "validation": {
+    "rootTests": 274,
+    "apiTests": 36,
+    "build": "passed",
+    "typecheck": "passed",
+    "boundaries": "passed"
+  },
+  "coverage": [
+    "UTF8 byte splits and fatal encoding",
+    "CRLF and multiline data",
+    "successful finish plus unique DONE required",
+    "post-terminal payload rejected",
+    "length/filter/tool/unknown delta rejected",
+    "bounded wire/frame/count/text",
+    "usage unknown when missing; validated when present",
+    "abort observed between chunks closes iterator; no partial successful result"
+  ],
+  "limitations": [
+    "No network transport or live provider verification",
+    "No credential access or Operation dispatch integration",
+    "No incremental UI emission; bounded final result only",
+    "Transport must abort blocked reads; decoder observes cancellation between chunks",
+    "Tools, reasoning and non-text deltas unsupported and rejected"
+  ]
+}
