@@ -1,0 +1,168 @@
+{
+  "kind": "implementation_and_verification_receipt",
+  "baseline": "ef73cdfd40950fb429adfd43600e4e4c8c134ab3",
+  "scope": "Space only; observations of current code and test evidence, not product-policy changes or module acceptance",
+  "date": "2026-11-05",
+  "documents_changed": false,
+  "module_accepted": false,
+  "verification": {
+    "baseline_full_suite": {
+      "tests": 195,
+      "passed": 195
+    },
+    "after_full_suite": {
+      "command": "npm test",
+      "tests": 200,
+      "passed": 200,
+      "includes_build_and_boundaries": true
+    },
+    "typecheck": "passed",
+    "new_regressions_red": {
+      "tests": 4,
+      "failed": 4
+    },
+    "new_regressions_green": {
+      "tests": 4,
+      "passed": 4
+    },
+    "space_suite": {
+      "command": "npm run test:space",
+      "tests": 67,
+      "passed": 67
+    }
+  },
+  "fix": "Read and write share supported relation subtype rules. Context reads/writes reject persisted unsupported targets and duplicate target identities without rewriting data. Four regressions include real SQLite and close/reopen.",
+  "additional_verification": "API and Role replacement retains reference identity and revision; restart and offline confirmed replay; removal leaves unrelated references and Context revision unchanged.",
+  "requirements": [
+    {
+      "id": "F01-001",
+      "status": "partial",
+      "observation": "类别创建、读取、重命名已实现；同名操作明确拒绝；删除政策阻塞。"
+    },
+    {
+      "id": "F01-002",
+      "status": "partial",
+      "observation": "Space 创建、列表读取、名称说明编辑已实现；归档、恢复、删除未实现。"
+    },
+    {
+      "id": "F01-003",
+      "status": "partial",
+      "observation": "工作区地址登记、清除、持久化已验证；工作区目录观察状态尚无专用返回。"
+    },
+    {
+      "id": "F01-004",
+      "status": "partial",
+      "observation": "Group 创建、列表读取、重命名和排序写入已有代码；排序专属断言不足；跨 Space 移动及删除未实现。"
+    },
+    {
+      "id": "F01-005",
+      "status": "verified_L2",
+      "observation": "独立 Context、稳定 ID、真实 SQLite 和跨进程重启测试通过。"
+    },
+    {
+      "id": "F01-006",
+      "status": "partial",
+      "observation": "名称说明编辑、修订冲突已有验证；config 固定为空，尚无自身配置修改入口。"
+    },
+    {
+      "id": "F01-007",
+      "status": "blocked_conflict",
+      "observation": "Placement 没有实现；README 仍列为必做，但同时标为待确认，且用户明确未设计此产品概念；不据此自行添加。"
+    },
+    {
+      "id": "F01-008",
+      "status": "partial",
+      "observation": "API/Model、Role/Agent 关联、替换、解除已有代码；本批补 API/Role 替换及重启验证。Other Context 关联明确拒绝。真实 owner 正向组合未完成。"
+    },
+    {
+      "id": "F01-009",
+      "status": "incomplete",
+      "observation": "仅返回当前自身记录和 owner 可验证关联；缺少显式来源、冲突、失效观察投影；覆盖优先级仍阻塞。"
+    },
+    {
+      "id": "F01-010",
+      "status": "partial",
+      "observation": "关联、地址和工具解除已实现；Placement 解除未实现；没有本体删除命令或删除预检。"
+    },
+    {
+      "id": "F01-011",
+      "status": "partial",
+      "observation": "组织、Context 列表权限过滤、撤权重判、完整性隔离已有测试；真实 local 正向入口仍阻塞。"
+    },
+    {
+      "id": "F01-012",
+      "status": "partial",
+      "observation": "按 ID 定位诊断、显式接回、索引丢失重建、重复身份拒绝已验证；无物理迁移。"
+    },
+    {
+      "id": "SPACE-RESOURCE-001",
+      "status": "verified_L2",
+      "observation": "多地址与主引用选择、清除已验证；不绑定 Context 数据位置。"
+    },
+    {
+      "id": "SPACE-RESOURCE-002",
+      "status": "partial",
+      "observation": "名称、地址、备注、单字符串用途已实现；独立类型/来源字段和多用途集合没有实现。"
+    },
+    {
+      "id": "SPACE-RESOURCE-003",
+      "status": "partial",
+      "observation": "未验证地址编辑及修订已实现；已验证资源身份与重定位未实施。"
+    },
+    {
+      "id": "SPACE-RESOURCE-004",
+      "status": "verified_L2",
+      "observation": "独立解除地址不删除外部资源；解除主地址清除主选择。"
+    },
+    {
+      "id": "SPACE-RESOURCE-005",
+      "status": "incomplete",
+      "observation": "地址仅支持 unverified；可用、失联、过期和身份冲突等观察投影未实施。"
+    },
+    {
+      "id": "SPACE-RESOURCE-006",
+      "status": "candidate_unimplemented",
+      "observation": "资源别名身份核验未实施。"
+    },
+    {
+      "id": "SPACE-RESOURCE-007",
+      "status": "candidate_unimplemented",
+      "observation": "来源版本观察未实施。"
+    },
+    {
+      "id": "SPACE-TOOL-001",
+      "status": "verified_L1_L2",
+      "observation": "工具添加、启停、移除及 Context 隔离已有实现与测试；不授予执行权限。"
+    },
+    {
+      "id": "SPACE-TOOL-002",
+      "status": "candidate_unimplemented",
+      "observation": "局部配置引用及覆盖机制未实施。"
+    },
+    {
+      "id": "SPACE-TOOL-003",
+      "status": "partial",
+      "observation": "返回可核验工具及 enabled；owner 离线/拒绝时省略记录，缺少规范要求的失联/冲突候选状态。"
+    }
+  ],
+  "limits": [
+    "Permission and owner positives use explicitly injected test ports. Real local PermissionReader rejection is tested, not a positive local integration.",
+    "Windows paths/ACL/drive reconnection and UI/IPC are not verified.",
+    "Creation stage fault coverage is not exhaustive for every commit boundary; no general cross-directory atomicity claim.",
+    "Root README still names Space as the sole construction module; no next-module switch."
+  ],
+  "next_stable_gaps": [
+    "Context own-configuration editing and validation boundary.",
+    "Resource type/source and multiple-purpose representation; no schema change made in this batch.",
+    "Safe status projection for unavailable owner selections and resource observations."
+  ],
+  "policy_conflicts": [
+    "Placement remains unimplemented due to conflicting specification and explicit user direction.",
+    "Body deletion, migration and effective-configuration precedence remain blocked or deferred."
+  ],
+  "ci_observed_before_commit": {
+    "sha": "ef73cdfd40950fb429adfd43600e4e4c8c134ab3",
+    "status": "queued",
+    "conclusion": null
+  }
+}

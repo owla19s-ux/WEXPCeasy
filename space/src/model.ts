@@ -6,6 +6,12 @@ export interface Group extends Named {spaceId:string;order:number}
 export interface Context extends Named {description:string;config:{[key:string]:Json};primaryAddress:string|null}
 export interface Address extends Named {address:string;notes:string;purpose:string;status:'unverified'}
 export interface Target {owner:string;targetType:string;targetId:string}
+/** Shared write/read invariant: target identity must match the relation subtype. */
+export function supportedTarget(value:Target,kind:'association'|'tool'):boolean {
+ return kind==='tool'?value.owner==='connections'&&value.targetType==='tool':
+  (value.owner==='AI'&&['role','agent'].includes(value.targetType))||
+  (value.owner==='connections/api'&&['api','model'].includes(value.targetType));
+}
 export interface Association extends Target {id:string;revision:number;purpose:string}
 export interface Tool extends Association {enabled:boolean}
 export interface ContextView extends Context {resources:Address[];associations:Association[];tools:Tool[]}
@@ -90,6 +96,7 @@ export function command(input:unknown):SpaceCommand {
 const named=(x:unknown):x is Named=>object(x)&&nonempty(x['id'])&&revision(x['revision'])&&nonempty(x['name']);
 const target=(x:unknown):x is Association=>object(x)&&nonempty(x['id'])&&revision(x['revision'])&&nonempty(x['owner'])&&nonempty(x['targetType'])&&nonempty(x['targetId'])&&typeof x['purpose']==='string';
 function intents(value:unknown):value is Intent[]{return Array.isArray(value)&&value.every(x=>exact(x,['key','command','id','revision','phase'])&&object(x)&&nonempty(x['key'])&&typeof x['command']==='string'&&nonempty(x['id'])&&revision(x['revision'])&&['prepared','committed'].includes(String(x['phase'])))&&new Set(value.map(x=>x.key)).size===value.length;}
+function uniqueTargets(values:Target[]):boolean{return new Set(values.map(x=>JSON.stringify([x.owner,x.targetType,x.targetId]))).size===values.length;}
 function unique(values:{id:string}[]):boolean{return new Set(values.map(x=>x.id)).size===values.length;}
 function envelope(value:unknown,domain:string,rootId:string):asserts value is Record<string,unknown>{
  if(!object(value)||value['format']!==1||value['domain']!==domain)return fail('incompatible_or_corrupt','unavailable');
@@ -105,7 +112,7 @@ export function registry(value:Json,rootId:string):Registry {
 export function body(value:Json,rootId:string,expectedId:string):Body {
  envelope(value,'context',rootId);const s=value as unknown as Body;
  if(named(s.context)&&s.context.id!==expectedId)return fail('identity_conflict','unavailable');
- if(!exact(s,['format','domain','rootId','context','resources','associations','tools','intents'])||!named(s.context)||!exact(s.context,['id','revision','name','description','config','primaryAddress'])||s.context.id!==expectedId||typeof s.context.description!=='string'||(!object(s.context.config)||Object.keys(s.context.config).length!==0)||!Array.isArray(s.resources)||!s.resources.every(x=>named(x)&&exact(x,['id','revision','name','address','notes','purpose','status'])&&nonempty(x.address)&&typeof x.notes==='string'&&typeof x.purpose==='string'&&x.status==='unverified')||!Array.isArray(s.associations)||!s.associations.every(x=>target(x)&&exact(x,['id','revision','owner','targetType','targetId','purpose']))||!Array.isArray(s.tools)||!s.tools.every(x=>target(x)&&exact(x,['id','revision','owner','targetType','targetId','purpose','enabled'])&&typeof x.enabled==='boolean')||!unique([s.context,...s.resources,...s.associations,...s.tools])||(s.context.primaryAddress!==null&&!s.resources.some(x=>x.id===s.context.primaryAddress)))return fail('corrupt_context','unavailable');
+ if(!exact(s,['format','domain','rootId','context','resources','associations','tools','intents'])||!named(s.context)||!exact(s.context,['id','revision','name','description','config','primaryAddress'])||s.context.id!==expectedId||typeof s.context.description!=='string'||(!object(s.context.config)||Object.keys(s.context.config).length!==0)||!Array.isArray(s.resources)||!s.resources.every(x=>named(x)&&exact(x,['id','revision','name','address','notes','purpose','status'])&&nonempty(x.address)&&typeof x.notes==='string'&&typeof x.purpose==='string'&&x.status==='unverified')||!Array.isArray(s.associations)||!s.associations.every(x=>target(x)&&supportedTarget(x,'association')&&exact(x,['id','revision','owner','targetType','targetId','purpose']))||!Array.isArray(s.tools)||!s.tools.every(x=>target(x)&&supportedTarget(x,'tool')&&exact(x,['id','revision','owner','targetType','targetId','purpose','enabled'])&&typeof x.enabled==='boolean')||!uniqueTargets(s.associations)||!uniqueTargets(s.tools)||!unique([s.context,...s.resources,...s.associations,...s.tools])||(s.context.primaryAddress!==null&&!s.resources.some(x=>x.id===s.context.primaryAddress)))return fail('corrupt_context','unavailable');
  return s;
 }
 export function allocate(state:Registry|Body,id:()=>string):string {

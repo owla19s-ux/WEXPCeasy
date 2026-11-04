@@ -3,7 +3,7 @@ import {resolve} from 'node:path';
 import {inspectRoot,directoryLock} from '../../shared/src/index.js';
 import type {Json,Store,ManagedStore,Root,RootLock,Snapshot} from '../../shared/src/index.js';
 import type {PermissionReader,Decision} from '../../permissions/src/index.js';
-import {Failure,fail,command,canonical,registry,body,allocate,expected,find,nonempty} from './model.js';
+import {Failure,fail,command,canonical,registry,body,allocate,expected,find,nonempty,supportedTarget} from './model.js';
 import type {SpaceCommand,SpaceQuery,Mutation,QueryResult,ProjectionScope,OwnerPort,Registry,Body,Intent,Association,ContextSummary} from './model.js';
 import {openStore} from './storage.js';
 import {readExistingContext,attachRegistration} from './recovery.js';
@@ -169,7 +169,7 @@ export async function openSpaceService(options:SpaceOptions):Promise<SpaceOpenRe
  }
  async function verifyTarget(r:object,c:SpaceCommand):Promise<void>{
  if(c.kind!=='association.add'&&c.kind!=='association.replace'&&c.kind!=='tool.add')return;
- const valid=c.kind==='tool.add'?c.owner==='connections'&&c.targetType==='tool':(c.owner==='AI'&&['role','agent'].includes(c.targetType))||(c.owner==='connections/api'&&['api','model'].includes(c.targetType));
+ const valid=supportedTarget(c,c.kind==='tool.add'?'tool':'association');
  if(!valid)return fail('unsupported_target');if(!options.owner)return fail('owner_unavailable','unavailable');
  let observation;try{observation=await options.owner.resolve(r,{owner:c.owner,targetType:c.targetType,targetId:c.targetId});}catch{return fail('owner_unavailable','unavailable');}
  if(observation.status!=='available')return fail('owner_unavailable','unavailable');
