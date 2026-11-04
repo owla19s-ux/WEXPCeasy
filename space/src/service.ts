@@ -4,8 +4,9 @@ import {inspectRoot,directoryLock} from '../../shared/src/index.js';
 import type {Json,Store,ManagedStore,Root,RootLock,Snapshot} from '../../shared/src/index.js';
 import type {PermissionReader,Decision} from '../../permissions/src/index.js';
 import {Failure,fail,command,canonical,registry,body,allocate,expected,find,nonempty} from './model.js';
-import type {SpaceCommand,SpaceQuery,Mutation,QueryResult,ProjectionScope,OwnerPort,Registry,Body,Intent,Association} from './model.js';
+import type {SpaceCommand,SpaceQuery,Mutation,QueryResult,ProjectionScope,OwnerPort,Registry,Body,Intent,Association,ContextSummary} from './model.js';
 import {openStore} from './storage.js';
+import {readExistingContext,attachRegistration} from './recovery.js';
 import type {OpenStore} from './storage.js';
 export interface SpaceOptions {
  dataRoot:string;expectedRootId?:string;permission:PermissionReader;
@@ -23,7 +24,7 @@ type Allow=Extract<Decision,{status:'allow'}>;
 function errorResult(e:unknown,intent:string):Exclude<Mutation,{status:'committed'}>{return e instanceof Failure?{status:e.status,reason:e.reason}:{status:'unknown',intent};}
 function scope(c:SpaceCommand,root:Root):ProjectionScope {
  const context='contextId'in c?c.contextId:c.kind==='context.edit'?c.id:null;
- return {action:c.kind,context,target:c.kind==='context.create'?resolve(c.location):context?`context:${context}`:'id'in c?`${c.kind.split('.')[0]}:${c.id}`:c.kind==='group.create'?`space:${c.spaceId}`:`root:${root.id}`};
+ return {action:c.kind,context,target:c.kind==='context.create'||c.kind==='context.attach'?resolve(c.location):context?`context:${context}`:'id'in c?`${c.kind.split('.')[0]}:${c.id}`:c.kind==='group.create'?`space:${c.spaceId}`:`root:${root.id}`};
 }
 function authorize(p:PermissionReader,request:object,needed:ProjectionScope):Allow{
  let d:Decision;try{d=p.evaluate(request);}catch{return fail('permission_unavailable','unavailable');}
@@ -65,6 +66,7 @@ function organization(state:Registry,c:SpaceCommand,id:()=>string):{id:string;re
  case 'category.edit':{const item=find(state.categories,c.id);expected(item,c.expectedRevision);item.name=c.name;item.revision++;return item;}
  case 'space.create':{if(c.categoryId)find(state.categories,c.categoryId);const item={id:allocate(state,id),revision:1,name:c.name,description:c.description??'',categoryId:c.categoryId??null};state.spaces.push(item);return item;}
  case 'space.edit':{const item=find(state.spaces,c.id);expected(item,c.expectedRevision);if(c.categoryId)find(state.categories,c.categoryId);item.name=c.name;if(c.description!==undefined)item.description=c.description;if(c.categoryId!==undefined)item.categoryId=c.categoryId;item.revision++;return item;}
+ case 'space.directory':{const item=find(state.spaces,c.id);expected(item,c.expectedRevision);item.directory=c.location;item.revision++;return item;}
  case 'group.create':{find(state.spaces,c.spaceId);const item={id:allocate(state,id),revision:1,name:c.name,spaceId:c.spaceId,order:state.groups.filter(g=>g.spaceId===c.spaceId).length};state.groups.push(item);return item;}
  case 'group.edit':{const item=find(state.groups,c.id);expected(item,c.expectedRevision);item.name=c.name;if(c.order!==undefined)item.order=c.order;item.revision++;return item;}
  default:return fail('unsupported_command');
@@ -149,6 +151,22 @@ export async function openSpaceService(options:SpaceOptions):Promise<SpaceOpenRe
   return ready.status==='committed'?result:{status:'unknown',intent:c.intent,id:registration.id};
  }catch{return {status:'unknown',intent:c.intent,id:registration.id};}
  }
+ async function attach(request:object,c:Extract<SpaceCommand,{kind:'context.attach'}>,d:Allow,key:string,signal:AbortSignal|undefined):Promise<Mutation>{
+ const initial=await registrySnapshot(),fingerprint=canonical(c),prior=initial.state.intents.find(x=>x.key===key);
+ if(prior&&prior.command!==fingerprint)return fail('intent_conflict');
+ return inContext(c.location,undefined,false,async(db,contextRoot)=>{
+  const existing=readExistingContext(db,contextRoot);
+  if(c.expectedContextId!==undefined&&existing.state.context.id!==c.expectedContextId)return fail('identity_conflict');
+  const current=await registrySnapshot(),registered=current.state.contexts.find(x=>x.id===existing.state.context.id);
+  if(prior&&prior.id!==existing.state.context.id)return fail('attachment_location_changed','unavailable');
+  if(prior?.phase==='committed'&&(!registered||registered.location!==contextRoot.path||registered.rootId!==contextRoot.id))return fail('attachment_location_changed','unavailable');
+  // Re-observe both roots after asynchronous inspection; no authorization/identity snapshot is a lease forever.
+  const confirmed=await inspectRoot(c.location,contextRoot.id);
+  if(confirmed.status!=='available'||confirmed.root.path!==contextRoot.path)return fail('attachment_location_changed','unavailable');
+  if(prior?.phase==='prepared'){recheck(options.permission,request,d);return {status:'unknown',intent:c.intent,id:prior.id};}
+  return mutate(store,current.snap,current.state,key,c,options.permission,request,d,signal,next=>attachRegistration(next,existing,contextRoot));
+ });
+ }
  async function verifyTarget(r:object,c:SpaceCommand):Promise<void>{
  if(c.kind!=='association.add'&&c.kind!=='association.replace'&&c.kind!=='tool.add')return;
  const valid=(c.owner==='AI'&&['role','agent'].includes(c.targetType))||(c.owner==='connections/api'&&['api','model'].includes(c.targetType))||(c.kind==='tool.add'&&c.owner==='connections'&&c.targetType==='tool');
@@ -165,6 +183,7 @@ export async function openSpaceService(options:SpaceOptions):Promise<SpaceOpenRe
    if(signal?.aborted)return fail('cancelled');
    const d=authorize(options.permission,request,scope(c,root)),key=keyFor(d,c.intent,root);
    if(c.kind==='context.create')return await create(request,c,d,key,signal);
+   if(c.kind==='context.attach')return await attach(request,c,d,key,signal);
    const {snap,state}=await registrySnapshot();
    if(c.kind.startsWith('category.')||c.kind.startsWith('space.')||c.kind.startsWith('group.')){
     if((c.kind==='space.create'||c.kind==='space.edit')&&c.categoryId){
@@ -204,6 +223,44 @@ export async function openSpaceService(options:SpaceOptions):Promise<SpaceOpenRe
      }
      recheck(options.permission,request,d);return {status:'ok' as const,value:{...structuredClone(s.context),resources:structuredClone(s.resources),associations,tools}};
     });
+   }
+   if(input.kind==='contexts'){
+    const d=authorize(options.permission,request,{action:'context.list',target:`root:${root.id}`,context:null});
+    // Fail independently of collection size when the trusted host cannot bind per-object reads.
+    if(!options.deriveRequest)return fail('projection_binding_unavailable','unavailable');
+    const {state}=await registrySnapshot();const collected:{request:object;decision:Allow;item:ContextSummary}[]=[];
+    for(const entry of state.contexts){
+     if(entry.phase!=='ready')continue;recheck(options.permission,request,d);
+     const wanted={action:'context.read',target:`context:${entry.id}`,context:entry.id};let derived:object|undefined,a:Allow;
+     try{
+      derived=options.deriveRequest(request,wanted);if(!derived)continue;a=authorize(options.permission,derived,wanted);
+      if(a.scope.subject!==d.scope.subject||a.scope.entry!==d.scope.entry||a.scope.conversation!==d.scope.conversation||a.scope.relationship!==d.scope.relationship||a.scope.relationshipGeneration!==d.scope.relationshipGeneration)continue;
+      recheck(options.permission,derived,a);
+     }catch{continue;}
+     let item:ContextSummary;
+     try{item=await inContext(entry.location,entry.rootId,false,async(db,contextRoot)=>{
+      const s=body(db.read().value,contextRoot.id,entry.id);
+      return {status:'available' as const,id:s.context.id,revision:s.context.revision,name:s.context.name,description:s.context.description};
+     });}catch(e){if(quarantined)return fail('context_release_unconfirmed','unavailable');item={status:'unavailable',id:entry.id,reason:e instanceof Failure?e.reason:'context_unreadable'};}
+     collected.push({request:derived,decision:a,item});
+    }
+    const visible:ContextSummary[]=[];
+    // A later directory read may have changed an earlier projection's permission. Filter again at return.
+    for(const row of collected){try{recheck(options.permission,row.request,row.decision);visible.push(row.item);}catch{/* omit even failure metadata for revoked projections */}}
+    recheck(options.permission,request,d);
+    return {status:'ok' as const,value:visible,complete:visible.every(item=>item.status==='available')};
+   }
+   if(input.kind==='context.location'){
+    if(!nonempty(input.id))return fail('invalid_query');const contextId=input.id;
+    const d=authorize(options.permission,request,{action:'context.locate',target:`context:${contextId}`,context:contextId});
+    const {state}=await registrySnapshot(),entry=find(state.contexts,contextId);
+    let observation:{status:'available';revision:number}|{status:'unavailable';reason:string};
+    try{observation=await inContext(entry.location,entry.rootId,false,async(db,contextRoot)=>{
+     const existing=readExistingContext(db,contextRoot);if(existing.state.context.id!==contextId)return fail('identity_conflict','unavailable');
+     return {status:'available' as const,revision:existing.state.context.revision};
+    });}catch(e){observation={status:'unavailable',reason:e instanceof Failure?e.reason:'context_unreadable'};}
+    recheck(options.permission,request,d);
+    return {status:'ok' as const,value:{id:contextId,location:entry.location,registration:entry.phase,...observation,observedAt:new Date().toISOString()}};
    }
    if(input.kind!=='organization'||!['category','space','group'].includes(input.entity))return fail('invalid_query');
    const d=authorize(options.permission,request,{action:'organization.list',target:`root:${root.id}`,context:null});
