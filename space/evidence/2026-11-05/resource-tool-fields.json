@@ -1,0 +1,112 @@
+{
+  "kind": "construction_verification_receipt",
+  "date": "2026-11-05",
+  "baseline": "b20f70b796a1d6d7e6a0ce8f13ccf7138b6f9d5d",
+  "module": "space",
+  "module_accepted": false,
+  "changes": {
+    "SPACE-RESOURCE-002": {
+      "status": "implemented_and_verified_L2",
+      "fields": {
+        "type": "optional descriptive string; not an owner identity",
+        "source": "optional user-supplied descriptive string; not proof of origin",
+        "purpose": "legacy string or dense unique array of nonempty strings"
+      },
+      "edit": "Omitted type/source preserve existing values; explicit null clears. Purposes use the existing purpose field; no parallel address table. All addresses remain unverified.",
+      "compatibility": "Existing scalar-purpose records load without adding defaults or rewriting data. Intent fingerprints and object revisions are preserved; new metadata and array purposes persist through close/reopen. Older application builds do not support extended address records; no downgrade compatibility is claimed."
+    },
+    "SPACE-TOOL-003": {
+      "status": "partial_with_owner_projection_verified_L1_L2",
+      "behavior": "Visible owner-confirmed identities expose current availability available/unavailable/conflict/unknown plus sourceRevision and observedAt. Missing availability is unknown. Enabled is the independent persisted Context selection.",
+      "privacy": "Owner denied, unavailable without current visible identity evidence, malformed observation or missing provenance hides the selection. No cached identity is disclosed on owner disconnection.",
+      "storage": "Availability observations are ephemeral; queries do not write the Context or bump any revision. No final execution authorization or cancellation is implied."
+    }
+  },
+  "verification": [
+    {
+      "command": "npm test",
+      "tests": 214,
+      "passed": 214,
+      "failed": 0,
+      "includes": [
+        "build",
+        "check:boundaries"
+      ]
+    },
+    {
+      "command": "npm run test:space",
+      "tests": 81,
+      "passed": 81,
+      "failed": 0
+    },
+    {
+      "command": "npm run typecheck",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "test_first_evidence": {
+    "address_initial": {
+      "tests": 9,
+      "passed": 6,
+      "failed": 3,
+      "reason": "new metadata, old-record extension and explicit clear unsupported before implementation"
+    },
+    "tool_initial": {
+      "tests": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "tool_malformed_null": {
+      "tests": 2,
+      "failed": 1
+    },
+    "tool_unknown_default": {
+      "tests": 2,
+      "failed": 1
+    }
+  },
+  "test_files": [
+    "space/tests/address-metadata.test.mjs",
+    "space/tests/tool-observation.test.mjs"
+  ],
+  "remaining": [
+    {
+      "item": "Context own configuration",
+      "status": "not_implemented",
+      "reason": "Reviewed current Space README, product catalog and project overview define ownership but no supported own-configuration keys or field validation rules. config remains empty; no arbitrary JSON/foreign-domain configuration acceptance added."
+    },
+    {
+      "item": "Tool owner adapters",
+      "status": "integration_pending",
+      "reason": "Availability/visibility test responses are injected trusted owner fixtures, not actual local compiler or external connector integration. Full owner-port outage still hides identities."
+    },
+    {
+      "item": "Resource observations",
+      "status": "not_implemented",
+      "reason": "Real target availability, verified identity, alias and source-version observation remain outside this descriptive metadata batch."
+    },
+    {
+      "item": "Desktop integration",
+      "status": "blocked_or_unverified",
+      "reason": "Real local positive authorization, host/UI/IPC assembly and Windows paths/ACL are not verified."
+    },
+    {
+      "item": "Placement / deletion / physical migration / config precedence",
+      "status": "unchanged",
+      "reason": "Conflicting or deferred product policy is not implemented or approved by this batch."
+    }
+  ],
+  "documents_changed": false,
+  "permission_policy_changed": false,
+  "other_modules_changed": false,
+  "prior_ci": {
+    "sha": "b20f70b796a1d6d7e6a0ce8f13ccf7138b6f9d5d",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "supersedes_observations_in": "space/evidence/2026-11-05/acceptance-review.json for SPACE-RESOURCE-002 and SPACE-TOOL-003 only"
+}

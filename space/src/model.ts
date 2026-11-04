@@ -4,7 +4,8 @@ export interface Category extends Named {}
 export interface Space extends Named {description:string;categoryId:string|null;directory?:string|null}
 export interface Group extends Named {spaceId:string;order:number}
 export interface Context extends Named {description:string;config:{[key:string]:Json};primaryAddress:string|null}
-export interface Address extends Named {address:string;notes:string;purpose:string;status:'unverified'}
+export type AddressPurpose=string|string[];
+export interface Address extends Named {address:string;notes:string;purpose:AddressPurpose;type?:string;source?:string;status:'unverified'}
 export interface Target {owner:string;targetType:string;targetId:string}
 /** Shared write/read invariant: target identity must match the relation subtype. */
 export function supportedTarget(value:Target,kind:'association'|'tool'):boolean {
@@ -14,7 +15,10 @@ export function supportedTarget(value:Target,kind:'association'|'tool'):boolean 
 }
 export interface Association extends Target {id:string;revision:number;purpose:string}
 export interface Tool extends Association {enabled:boolean}
-export interface ContextView extends Context {resources:Address[];associations:Association[];tools:Tool[]}
+export type ToolAvailability='available'|'unavailable'|'conflict'|'unknown';
+/** Ephemeral owner projection; never persisted in Tool selection records. */
+export interface ToolView extends Tool {availability:ToolAvailability;sourceRevision:string;observedAt:string}
+export interface ContextView extends Context {resources:Address[];associations:Association[];tools:ToolView[]}
 export type Mutation={status:'committed';id:string;revision:number}|{status:'rejected'|'unavailable'|'failed_no_commit';reason:string}|{status:'unknown';intent:string;id?:string};
 export type ContextSummary={status:'available';id:string;revision:number;name:string;description:string}|{status:'unavailable';id:string;reason:string};
 export interface ContextLocation {id:string;location:string;registration:'pending'|'ready';status:'available'|'unavailable';observedAt:string;revision?:number;reason?:string}
@@ -33,8 +37,8 @@ export type SpaceCommand=
  | (Base&{kind:'context.create';location:string;name:string;description?:string})
  | (Base&{kind:'context.attach';location:string;expectedContextId?:string})
  | (Revision&{kind:'context.edit';name:string;description?:string})
- | (InContext&{kind:'address.add';name:string;address:string;notes?:string;purpose?:string})
- | (InContext&Revision&{kind:'address.edit';name:string;address:string;notes?:string;purpose?:string})
+ | (InContext&{kind:'address.add';name:string;address:string;notes?:string;purpose?:AddressPurpose;type?:string|null;source?:string|null})
+ | (InContext&Revision&{kind:'address.edit';name:string;address:string;notes?:string;purpose?:AddressPurpose;type?:string|null;source?:string|null})
  | (InContext&Revision&{kind:'address.remove'|'association.remove'|'tool.remove'})
  | (InContext&{kind:'primary.select';id:string|null;expectedRevision:number})
  | (InContext&Target&{kind:'association.add'|'tool.add';purpose:string})
@@ -42,7 +46,9 @@ export type SpaceCommand=
  | (InContext&Revision&{kind:'tool.set';enabled:boolean});
 export type SpaceQuery={kind:'contexts'}|{kind:'context';id:string}|{kind:'context.location';id:string}|{kind:'organization';entity:'category'|'space'|'group'};
 export interface ProjectionScope {action:string;target:string;context:string|null}
-export type OwnerObservation=({status:'available';sourceRevision:string;observedAt:string}&Target)|{status:'denied'|'unavailable'|'unsupported'};
+export type OwnerObservation=({status:'available';sourceRevision:string;observedAt:string;availability?:ToolAvailability}&Target)|{status:'denied'|'unavailable'|'unsupported'};
+/** available confirms visible target identity; optional availability describes current capability state.
+ * denied/unavailable without identity evidence cannot disclose a stored selection. */
 export interface OwnerPort {resolve(request:object,target:Target):Promise<OwnerObservation>}
 export interface Intent {key:string;command:string;id:string;revision:number;phase:'prepared'|'committed'}
 export interface Registration {id:string;location:string;rootId:string;phase:'pending'|'ready';key:string;command:string}
@@ -61,6 +67,17 @@ export function canonical(value:unknown):string {
  if(!object(value))return fail('invalid_command');
  return '{'+Object.keys(value).sort().map(k=>JSON.stringify(k)+':'+canonical(value[k])).join(',')+'}';
 }
+/** Preserve legacy scalar purposes; reject sparse/ambiguous multi-purpose input. */
+function addressPurpose(value:unknown):value is AddressPurpose {
+ return typeof value==='string'||(Array.isArray(value)&&Object.keys(value).length===value.length&&
+  Array.from({length:value.length},(_,i)=>Object.hasOwn(value,i)&&nonempty(value[i])).every(Boolean)&&new Set(value).size===value.length);
+}
+function address(value:unknown):value is Address {
+ if(!named(value)||!object(value))return false;
+ return exact(value,['id','revision','name','address','notes','purpose','status',...(Object.hasOwn(value,'type')?['type']:[]),...(Object.hasOwn(value,'source')?['source']:[])])&&
+  nonempty(value['address'])&&typeof value['notes']==='string'&&addressPurpose(value['purpose'])&&value['status']==='unverified'&&
+  (!Object.hasOwn(value,'type')||nonempty(value['type']))&&(!Object.hasOwn(value,'source')||nonempty(value['source']));
+}
 const fields:Record<string,string[]>={
  'category.create':['name'],'category.edit':['id','expectedRevision','name'],
  'space.create':['name','description','categoryId'],'space.edit':['id','expectedRevision','name','description','categoryId'],
@@ -68,7 +85,7 @@ const fields:Record<string,string[]>={
  'group.create':['spaceId','name'],'group.edit':['id','expectedRevision','name','order'],
  'context.attach':['location','expectedContextId'],
  'context.create':['location','name','description'],'context.edit':['id','expectedRevision','name','description'],
- 'address.add':['contextId','name','address','notes','purpose'],'address.edit':['contextId','id','expectedRevision','name','address','notes','purpose'],
+ 'address.add':['contextId','name','address','notes','purpose','type','source'],'address.edit':['contextId','id','expectedRevision','name','address','notes','purpose','type','source'],
  'address.remove':['contextId','id','expectedRevision'],'association.remove':['contextId','id','expectedRevision'],'tool.remove':['contextId','id','expectedRevision'],
  'primary.select':['contextId','id','expectedRevision'],
  'association.add':['contextId','owner','targetType','targetId','purpose'],'association.replace':['contextId','id','expectedRevision','owner','targetType','targetId','purpose'],
@@ -81,7 +98,9 @@ export function command(input:unknown):SpaceCommand {
  if(!nonempty(input['intent'])||String(input['intent']).length>256||Object.keys(input).some(k=>!['kind','intent',...allowed].includes(k)))return fail('invalid_command');
  for(const k of allowed){
   const x=input[k];
-  if(['description','notes','purpose'].includes(k)){if(x!==undefined&&typeof x!=='string')return fail('invalid_command');}
+  if((kind==='address.add'||kind==='address.edit')&&k==='purpose'){if(x!==undefined&&!addressPurpose(x))return fail('invalid_command');}
+  else if((kind==='address.add'||kind==='address.edit')&&['type','source'].includes(k)){if(x!==undefined&&x!==null&&!nonempty(x))return fail('invalid_command');}
+  else if(['description','notes','purpose'].includes(k)){if(x!==undefined&&typeof x!=='string')return fail('invalid_command');}
   else if(k==='expectedContextId'){if(x!==undefined&&!nonempty(x))return fail('invalid_command');}
   else if(k==='location'&&kind==='space.directory'&&x===null)continue;
   else if(k==='categoryId'){if(x!==undefined&&x!==null&&!nonempty(x))return fail('invalid_command');}
@@ -112,7 +131,7 @@ export function registry(value:Json,rootId:string):Registry {
 export function body(value:Json,rootId:string,expectedId:string):Body {
  envelope(value,'context',rootId);const s=value as unknown as Body;
  if(named(s.context)&&s.context.id!==expectedId)return fail('identity_conflict','unavailable');
- if(!exact(s,['format','domain','rootId','context','resources','associations','tools','intents'])||!named(s.context)||!exact(s.context,['id','revision','name','description','config','primaryAddress'])||s.context.id!==expectedId||typeof s.context.description!=='string'||(!object(s.context.config)||Object.keys(s.context.config).length!==0)||!Array.isArray(s.resources)||!s.resources.every(x=>named(x)&&exact(x,['id','revision','name','address','notes','purpose','status'])&&nonempty(x.address)&&typeof x.notes==='string'&&typeof x.purpose==='string'&&x.status==='unverified')||!Array.isArray(s.associations)||!s.associations.every(x=>target(x)&&supportedTarget(x,'association')&&exact(x,['id','revision','owner','targetType','targetId','purpose']))||!Array.isArray(s.tools)||!s.tools.every(x=>target(x)&&supportedTarget(x,'tool')&&exact(x,['id','revision','owner','targetType','targetId','purpose','enabled'])&&typeof x.enabled==='boolean')||!uniqueTargets(s.associations)||!uniqueTargets(s.tools)||!unique([s.context,...s.resources,...s.associations,...s.tools])||(s.context.primaryAddress!==null&&!s.resources.some(x=>x.id===s.context.primaryAddress)))return fail('corrupt_context','unavailable');
+ if(!exact(s,['format','domain','rootId','context','resources','associations','tools','intents'])||!named(s.context)||!exact(s.context,['id','revision','name','description','config','primaryAddress'])||s.context.id!==expectedId||typeof s.context.description!=='string'||(!object(s.context.config)||Object.keys(s.context.config).length!==0)||!Array.isArray(s.resources)||!s.resources.every(address)||!Array.isArray(s.associations)||!s.associations.every(x=>target(x)&&supportedTarget(x,'association')&&exact(x,['id','revision','owner','targetType','targetId','purpose']))||!Array.isArray(s.tools)||!s.tools.every(x=>target(x)&&supportedTarget(x,'tool')&&exact(x,['id','revision','owner','targetType','targetId','purpose','enabled'])&&typeof x.enabled==='boolean')||!uniqueTargets(s.associations)||!uniqueTargets(s.tools)||!unique([s.context,...s.resources,...s.associations,...s.tools])||(s.context.primaryAddress!==null&&!s.resources.some(x=>x.id===s.context.primaryAddress)))return fail('corrupt_context','unavailable');
  return s;
 }
 export function allocate(state:Registry|Body,id:()=>string):string {

@@ -4,7 +4,7 @@ import {inspectRoot,directoryLock} from '../../shared/src/index.js';
 import type {Json,Store,ManagedStore,Root,RootLock,Snapshot} from '../../shared/src/index.js';
 import type {PermissionReader,Decision} from '../../permissions/src/index.js';
 import {Failure,fail,command,canonical,registry,body,allocate,expected,find,nonempty,supportedTarget} from './model.js';
-import type {SpaceCommand,SpaceQuery,Mutation,QueryResult,ProjectionScope,OwnerPort,Registry,Body,Intent,Association,ContextSummary} from './model.js';
+import type {SpaceCommand,SpaceQuery,Mutation,QueryResult,ProjectionScope,OwnerPort,Registry,Body,Intent,Association,ContextSummary,ToolView,Tool} from './model.js';
 import {openStore} from './storage.js';
 import {readExistingContext,attachRegistration} from './recovery.js';
 import type {OpenStore} from './storage.js';
@@ -75,8 +75,8 @@ function organization(state:Registry,c:SpaceCommand,id:()=>string):{id:string;re
 function contextChange(state:Body,c:SpaceCommand,id:()=>string):{id:string;revision:number}{
  switch(c.kind){
  case 'context.edit':{expected(state.context,c.expectedRevision);state.context.name=c.name;if(c.description!==undefined)state.context.description=c.description;state.context.revision++;return state.context;}
- case 'address.add':{const item={id:allocate(state,id),revision:1,name:c.name,address:c.address,notes:c.notes??'',purpose:c.purpose??'',status:'unverified' as const};state.resources.push(item);return item;}
- case 'address.edit':{const item=find(state.resources,c.id);expected(item,c.expectedRevision);Object.assign(item,{name:c.name,address:c.address,notes:c.notes??'',purpose:c.purpose??'',revision:item.revision+1});return item;}
+ case 'address.add':{const item={id:allocate(state,id),revision:1,name:c.name,address:c.address,notes:c.notes??'',purpose:c.purpose??'',status:'unverified' as const,...(c.type!=null?{type:c.type}:{}),...(c.source!=null?{source:c.source}:{})};state.resources.push(item);return item;}
+ case 'address.edit':{const item=find(state.resources,c.id);expected(item,c.expectedRevision);Object.assign(item,{name:c.name,address:c.address,notes:c.notes??'',purpose:c.purpose??'',revision:item.revision+1});for(const field of ['type','source'] as const){if(c[field]===null)delete item[field];else if(c[field]!==undefined)item[field]=c[field];}return item;}
  case 'primary.select':{expected(state.context,c.expectedRevision);if(c.id!==null)find(state.resources,c.id);state.context.primaryAddress=c.id;state.context.revision++;return state.context;}
  case 'association.add':case 'tool.add':{
  const values=c.kind==='tool.add'?state.tools:state.associations;
@@ -213,12 +213,15 @@ export async function openSpaceService(options:SpaceOptions):Promise<SpaceOpenRe
     const d=authorize(options.permission,request,{action:'context.read',target:`context:${input.id}`,context:input.id});
     const {state}=await registrySnapshot(),entry=find(state.contexts,input.id);if(entry.phase!=='ready')return fail('context_pending','unavailable');
     return await inContext(entry.location,entry.rootId,false,async(db,contextRoot)=>{
-     const s=body(db.read().value,contextRoot.id,input.id),associations:Association[]=[],tools:Body['tools']=[];
+     const s=body(db.read().value,contextRoot.id,input.id),associations:Association[]=[],tools:ToolView[]=[];
      // Owner projections are revalidated on every query, never cached or inferred from persisted selection.
      for(const [items,out] of [[s.associations,associations],[s.tools,tools]] as const){
       for(const item of items){
        recheck(options.permission,request,d);if(!options.owner)continue;let observation;try{observation=await options.owner.resolve(request,{owner:item.owner,targetType:item.targetType,targetId:item.targetId});}catch{continue;}
-       if(observation.status==='available'&&observation.owner===item.owner&&observation.targetType===item.targetType&&observation.targetId===item.targetId&&nonempty(observation.sourceRevision)&&Number.isFinite(Date.parse(observation.observedAt)))(out as Association[]).push(structuredClone(item));
+       if(observation.status==='available'&&observation.owner===item.owner&&observation.targetType===item.targetType&&observation.targetId===item.targetId&&nonempty(observation.sourceRevision)&&Number.isFinite(Date.parse(observation.observedAt))){
+        if(out===tools){const availability=observation.availability===undefined?'unknown':observation.availability;if(!['available','unavailable','conflict','unknown'].includes(availability))continue;tools.push({...structuredClone(item as Tool),availability,sourceRevision:observation.sourceRevision,observedAt:observation.observedAt});}
+        else associations.push(structuredClone(item));
+       }
       }
      }
      recheck(options.permission,request,d);return {status:'ok' as const,value:{...structuredClone(s.context),resources:structuredClone(s.resources),associations,tools}};
