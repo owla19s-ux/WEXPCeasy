@@ -1,0 +1,93 @@
+{
+  "kind": "construction_verification_receipt",
+  "module": "permissions",
+  "baseline": "a027d3c49df5e7644db68b124fb5a07920d0d3cf",
+  "date": "2026-11-05",
+  "authorization": "User continued the proposed transition from Space to permissions/local-entry implementation. Root/module construction documents were not modified.",
+  "implementation": [
+    "Scope.conversation permits null for direct-user local operations; conversation mode still requires a non-null identity.",
+    "Local mode requires affirmative trusted entryEnabled policy, moduleEnabled, globalEnabled, sourceAllowed and a persisted exact-scope grant. conversationEnabled is not inherited as a local policy.",
+    "Exact matching still includes subject, entry instance, nullable context, resource, action, target, relationship and relationshipGeneration. No grant union or default permission.",
+    "Trusted primitive facts are snapshotted before Store reads; changes cannot retarget a checked scope. Boolean gates require literal true.",
+    "recheck uses current trusted facts, current grants and existing revision/generation checks. Task and callback remain entry_policy_unresolved; old local hosts without the required facts remain blocked.",
+    "Explicitly closed local entry returns deny; missing independent entry policy remains indeterminate."
+  ],
+  "verification": [
+    {
+      "command": "npm test (before changes)",
+      "tests": 214,
+      "passed": 214,
+      "failed": 0
+    },
+    {
+      "command": "node --test permissions/tests/local.test.mjs (before changes)",
+      "tests": 6,
+      "passed": 0,
+      "failed": 6
+    },
+    {
+      "command": "npm run test:permissions",
+      "tests": 14,
+      "passed": 14,
+      "failed": 0
+    },
+    {
+      "command": "npm test",
+      "tests": 223,
+      "passed": 223,
+      "failed": 0,
+      "includes": [
+        "build",
+        "check:boundaries"
+      ]
+    },
+    {
+      "command": "npm run typecheck",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    },
+    {
+      "command": "node --test permissions/tests/local.test.mjs (explicitly-closed entry regression before fix)",
+      "tests": 6,
+      "passed": 5,
+      "failed": 1
+    }
+  ],
+  "consumer_evidence": {
+    "file": "permissions/tests/local-space.test.mjs",
+    "real_components": [
+      "permissions.createPermissions",
+      "space.openSpaceService",
+      "shared.openSqliteStore"
+    ],
+    "injected_component": "Trusted host request identity and management approvals are explicit fixtures; not production OS/IPC authentication.",
+    "assertions": [
+      "No grant: Context body is not created.",
+      "Create/read/edit require independent exact grants, conversation:null.",
+      "Revocation denies original-intent result replay; independent read grants remain current.",
+      "Different window identity cannot read the Context.",
+      "Entry disabled between initial permission evaluation and body commit: Context body remains null.",
+      "Renderer self-claims and unapproved management requests do not create a grant or Context."
+    ]
+  },
+  "compatibility": {
+    "existing_conversation_scopes": "Existing nonempty string-conversation grants and readers pass unchanged tests.",
+    "local_storage": "Null-conversation local grants/revokes survive SQLite close/reopen.",
+    "downgrade": "Older builds reject local null-conversation grant records; downgrade support is not claimed."
+  },
+  "limits": [
+    "The actual app TrustPort still needs trusted user/window/IPC identity binding and entry lifecycle integration. No production UI identity path is enabled by this change.",
+    "The CLI default remains untrusted; no default grants or automatic approval were added.",
+    "Windows/ACL, IPC authentication/replay protection and external side-effect race barriers remain unverified.",
+    "Conversation four levels, workflow/task policy, callback policy and special trust-root rules are not implemented or approved by this batch.",
+    "Root README and permissions README contain earlier Space-only/nonconversation-blocking status. Their status/navigation update remains a separate acceptance/document-maintenance step."
+  ],
+  "next": "App trusted entry and lifecycle assembly using public interfaces, after status/navigation reconciliation.",
+  "documents_changed": false,
+  "app_source_changed": false,
+  "space_source_changed": false,
+  "module_accepted": false
+}
