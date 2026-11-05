@@ -1,3 +1,4 @@
+import {parseUniqueJson} from './json.js';
 import {observeProviderIdentity} from './identity.js';
 import type {ProviderIdentity} from './identity.js';
 import {checkFinishReason,checkRefusal} from './terminal.js';
@@ -23,7 +24,7 @@ export async function decodeChatStream(source:AsyncIterable<Uint8Array>,options:
   const payload=data.join('\n');data=[];
   if(done)throw Error('stream_after_done');
   if(payload==='[DONE]'){if(!finished)throw Error('stream_missing_finish');done=true;return;}
-  let chunk:Record<string,unknown>;try{chunk=record(JSON.parse(payload));}catch{throw Error('invalid_stream_json');}
+  let chunk:Record<string,unknown>;try{chunk=record(parseUniqueJson(payload));}catch{throw Error('invalid_stream_json');}
   observeProviderIdentity(identity,chunk);
   if(chunk.error!==undefined)throw Error('provider_stream_error');
   if(!Array.isArray(chunk.choices)||chunk.choices.length>1)throw Error('unsupported_stream_choices');

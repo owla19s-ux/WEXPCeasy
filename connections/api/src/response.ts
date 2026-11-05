@@ -1,3 +1,4 @@
+import {parseUniqueJson} from './json.js';
 import {observeProviderIdentity} from './identity.js';
 import type {ProviderIdentity} from './identity.js';
 import {checkFinishReason,checkRefusal} from './terminal.js';
@@ -17,7 +18,7 @@ export async function decodeChatResponse(source:AsyncIterable<Uint8Array>,option
  try{for await(const chunk of source){check();if(!(chunk instanceof Uint8Array))throw Error('invalid_response_bytes');bytes+=chunk.byteLength;if(bytes>maxBytes)throw Error('response_byte_limit');body+=decoder.decode(chunk,{stream:true});}body+=decoder.decode();}catch(error){if(error instanceof TypeError)throw Error('invalid_response_encoding');throw error;}
  check();
  const record=(v:unknown):Record<string,unknown>=>{if(!v||typeof v!=='object'||Array.isArray(v))throw Error('invalid_response_object');return v as Record<string,unknown>;};
- let response:Record<string,unknown>;try{response=record(JSON.parse(body));}catch{throw Error('invalid_response_json');}
+ let response:Record<string,unknown>;try{response=record(parseUniqueJson(body));}catch{throw Error('invalid_response_json');}
  const identity:ProviderIdentity={};
  observeProviderIdentity(identity,response);
  if(response.error!==undefined)throw Error('provider_response_error');

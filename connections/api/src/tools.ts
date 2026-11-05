@@ -1,3 +1,4 @@
+import {parseUniqueJson} from './json.js';
 import type {Json} from '../../../shared/src/index.js';
 import {capture,canonical,closed,object,freeze} from './model.js';
 import type {ToolSchema,ToolDefinition,ToolProposal} from './model.js';
@@ -23,14 +24,8 @@ function matches(value:Json,s:ToolSchema):boolean{
  return typed&&(!s.enum||s.enum.some(v=>canonical(v)===canonical(value)));
 }
 function argumentsObject(raw:string):Record<string,Json>{
- let parsed:unknown;try{parsed=JSON.parse(raw);}catch{throw Error('invalid_tool_arguments');}
- // JSON.parse accepts duplicate keys. A complete, already parsed token stream lets us reject them.
- const stack:{object:boolean;nextKey:boolean;keys:Set<string>}[]=[];
- for(const token of raw.match(/"(?:\\.|[^"\\])*"|[{}\[\],:]/g)??[]){
-  if(token==='{'||token==='['){stack.push({object:token==='{',nextKey:token==='{',keys:new Set()});continue;}
-  if(token==='}'||token===']'){stack.pop();continue;}
-  const top=stack.at(-1);if(token===','&&top?.object){top.nextKey=true;continue;}
-  if(token.startsWith('"')&&top?.object&&top.nextKey){const key=JSON.parse(token) as string;if(top.keys.has(key))throw Error('duplicate_tool_argument');top.keys.add(key);top.nextKey=false;}
+ let parsed:unknown;try{parsed=parseUniqueJson(raw);}catch(error){
+  throw Error(error instanceof Error&&error.message==='duplicate_json_key'?'duplicate_tool_argument':'invalid_tool_arguments');
  }
  try{parsed=capture(parsed);}catch{throw Error('invalid_tool_arguments');}
  if(!object(parsed))throw Error('invalid_tool_arguments');return parsed as Record<string,Json>;

@@ -390,11 +390,12 @@ test('network diagnostics persist only classified error reasons',async t=>{
 });
 
 test('trusted tool continuation binds the round and sends matching tool results',async t=>{
- let round,withdraw=false;
+ let round,withdraw=false,expectedRounds=1;
  const h=await setup(t,async(req,res)=>{
   const chunks=[];
   for await(const chunk of req)chunks.push(chunk);
   const wire=JSON.parse(Buffer.concat(chunks).toString());
+  assert.equal(wire.messages.filter(message=>message.role==="tool").length,expectedRounds);
   assert.deepEqual(wire.messages.slice(-2),[
    {role:'assistant',content:'',tool_calls:[{id:'call-1',type:'function',function:{name:'lookup',arguments:'{"key":"x"}'}}]},
    {role:'tool',tool_call_id:'call-1',content:'result from receipt'}
@@ -426,9 +427,29 @@ test('trusted tool continuation binds the round and sends matching tool results'
  const receipt=h.ledger.get('continuation').observations[0].value;
  assert.equal(receipt.sourceRequestId,'earlier-request');
  assert.equal(receipt.requestId,input.requestId);
+ round=[{...original,sourceRequestId:'first-round'},original];
+ expectedRounds=2;
+ assert.equal((await h.transport.send(send,'multi-round',{...input,requestId:'multi-followup'})).status,'ok');
+ round=[original,original];
+ assert.equal(h.f.service.prepare(prepare,input).reason,'duplicate_tool_continuation_source');
+ round=original;
+ expectedRounds=1;
  withdraw=true;
  const withdrawn=await h.transport.send(send,'withdrawn-round',{...input,requestId:'second-followup'});
  assert.equal(withdrawn.status,'unknown');
  assert.equal(h.ledger.get('withdrawn-round').phase,'unknown');
- assert.equal(h.calls(),2);
+ assert.equal(h.calls(),3);
+});
+
+test('provider JSON with duplicate keys cannot overwrite response or directory evidence',async t=>{
+ const h=await setup(t,(req,res)=>{
+  res.writeHead(200,{'content-type':'application/json'});
+  res.end(req.method==='GET'
+   ? '{"data":[],"data":[{"id":"forged"}]}'
+   : '{"choices":[],"choices":[{"index":0,"message":{"role":"assistant","content":"forged"},"finish_reason":"stop"}]}');
+ });
+ assert.equal((await h.transport.send(h.request(),'duplicate-response',{...h.input,stream:false})).status,'unknown');
+ const request=h.f.request('directory.refresh',`connection:${h.c.id}`);
+ assert.equal((await h.transport.refreshDirectory(request,'duplicate-directory',h.c.id,1,1000)).reason,'invalid_model_directory');
+ assert.equal(JSON.stringify(h.ledger.get('duplicate-response')).includes('forged'),false);
 });

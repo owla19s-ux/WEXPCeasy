@@ -1,3 +1,4 @@
+import {parseUniqueJson} from './json.js';
 import {captureResponseFormat,validateStructuredOutput} from './tools.js';
 import {ProviderTerminalError} from './terminal.js';
 import type {Json} from '../../../shared/src/index.js';
@@ -163,7 +164,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     return {status:'ok',operationId,observation};
    }
    let decoded:unknown;
-   try{decoded=JSON.parse(body);}catch{return unknown('invalid_model_directory');}
+   try{decoded=parseUniqueJson(body);}catch{return unknown('invalid_model_directory');}
    if(!object(decoded)||!Array.isArray(decoded.data)||decoded.data.length>4096)return unknown('invalid_model_directory');
    if(decoded.has_more===true)return unknown('model_directory_incomplete');
    const ids=new Set<string>();

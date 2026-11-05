@@ -16,9 +16,9 @@ export interface ToolRound {
  results:readonly {id:string;content:string}[];
 }
 
-export type ToolRoundReader=(request:object,reference:string)=>ToolRound|undefined;
+export type ToolRoundReader=(request:object,reference:string)=>ToolRound|readonly ToolRound[]|undefined;
 
-export function encodeToolRound(
+function encodeRound(
  raw:unknown,scope:Scope,requestId:string,connection:ApiConnection,model:ApiModel
 ):{sourceRequestId:string;messages:ChatWireMessage[]} {
  const round=capture(raw);
@@ -53,4 +53,24 @@ export function encodeToolRound(
   {role:'assistant',content:round.assistantText,tool_calls:calls,...(round.reasoning===undefined?{}:{reasoning_content:round.reasoning as string})},
   ...outputs
  ]};
+}
+
+
+/** The owner supplies consecutive rounds in chronological order for the current generation. */
+export function encodeToolRound(
+ raw:unknown,scope:Scope,requestId:string,connection:ApiConnection,model:ApiModel
+):{sourceRequestId:string;messages:ChatWireMessage[]} {
+ const rounds=Array.isArray(raw)?raw:[raw];
+ if(!rounds.length||rounds.length>16)return fail('invalid_tool_continuation');
+ const sources=new Set<string>();
+ const messages:ChatWireMessage[]=[];
+ let sourceRequestId='';
+ for(const round of rounds){
+  const encoded=encodeRound(round,scope,requestId,connection,model);
+  sourceRequestId=encoded.sourceRequestId;
+  if(sources.has(sourceRequestId))return fail('duplicate_tool_continuation_source');
+  sources.add(sourceRequestId);
+  messages.push(...encoded.messages);
+ }
+ return {sourceRequestId,messages};
 }
