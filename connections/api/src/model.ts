@@ -1,4 +1,7 @@
 import type {Json} from '../../../shared/src/index.js';
+export type ToolSchema=({type:'object';properties:Record<string,ToolSchema>;required?:string[];additionalProperties:false}|{type:'array';items:ToolSchema}|{type:'string'|'number'|'integer'|'boolean'|'null';enum?:Json[]})&{description?:string};
+export interface ToolDefinition {name:string;description?:string;parameters:ToolSchema}
+export interface ToolProposal {id:string;name:string;arguments:Record<string,Json>}
 export type ParameterSetting={mode:'value';value:Json}|{mode:'provider-default'|'disabled'};
 export type Parameters=Record<string,ParameterSetting>;
 export interface CredentialReference {id:string;revision:number}
@@ -21,8 +24,8 @@ export type ApiCommand=
 export type ApiMutation={status:'committed';id:string;revision:number}|{status:'rejected'|'unavailable'|'failed_no_commit';reason:string}|{status:'unknown';intent:string;id?:string};
 export type ApiQuery={kind:'connection'|'model';id:string}|{kind:'connections'}|{kind:'models';connectionId:string};
 export type ApiQueryResult={status:'ok';value:ApiConnection|ApiModel|Array<ApiConnection|ApiModel>}|Exclude<ApiMutation,{status:'committed'}>;
-export interface Preparation {requestId:string;connectionId:string;connectionRevision:number;modelId:string;modelRevision:number;context:string|null;parameters:Parameters;messages:{role:'system'|'user'|'assistant';content:string}[];timeoutMs:number;stream:boolean}
-export interface RequestSnapshot {requestId:string;context:string|null;conversation:string|null;connection:Readonly<ApiConnection>;model:Readonly<ApiModel>;url:string;body:Readonly<{model:string;messages:Preparation['messages'];stream:boolean;[key:string]:Json}>;parameterSources:Record<string,string[]>;parameterSettings:Parameters;timeoutMs:number;fingerprint:string}
+export interface Preparation {tools?:ToolDefinition[];requestId:string;connectionId:string;connectionRevision:number;modelId:string;modelRevision:number;context:string|null;parameters:Parameters;messages:{role:'system'|'user'|'assistant';content:string}[];timeoutMs:number;stream:boolean}
+export interface RequestSnapshot {tools?:readonly ToolDefinition[];requestId:string;context:string|null;conversation:string|null;connection:Readonly<ApiConnection>;model:Readonly<ApiModel>;url:string;body:Readonly<{model:string;messages:Preparation['messages'];stream:boolean;[key:string]:Json}>;parameterSources:Record<string,string[]>;parameterSettings:Parameters;timeoutMs:number;fingerprint:string}
 export interface Intent {key:string;command:string;id:string;revision:number;phase:'prepared'|'committed'}
 export interface State {format:1;domain:'api-configurations';connections:ApiConnection[];models:ApiModel[];intents:Intent[]}
 export class Failure extends Error {constructor(readonly reason:string,readonly status:'rejected'|'unavailable'|'failed_no_commit'='rejected'){super(reason);}}

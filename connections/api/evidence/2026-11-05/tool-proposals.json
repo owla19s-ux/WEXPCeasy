@@ -1,0 +1,45 @@
+{
+  "baseline": "6d9b4802abe6793a1db44a52e971cd0fe485de11",
+  "scope": "User-authorized API continuation; no construction documentation modified",
+  "changes": [
+    "Optional tool declarations pinned into immutable request snapshots and wire body",
+    "Verified tools capability required; declarations do not grant execution authority",
+    "Strict nonstream and SSE complete tool proposal normalization",
+    "Indexed/interleaved fragments assembled only into successful terminal results",
+    "Complete arguments revalidated against an explicit closed JSON Schema subset",
+    "Duplicate decoded object keys, duplicate IDs, undeclared names, incomplete JSON, invalid finish and count/byte limits rejected",
+    "Tool proposals stored as model observations via existing Operation receipt; no executor or automatic second request"
+  ],
+  "schemaSubset": [
+    "Closed object with properties, required and additionalProperties:false",
+    "Array with items",
+    "String, number, integer, boolean and null; scalar enums",
+    "Optional descriptions; max depth16/schema nodes1024; unsupported keywords rejected"
+  ],
+  "validation": {
+    "rootTests": 322,
+    "apiTests": 75,
+    "build": "passed",
+    "typecheck": "passed",
+    "boundaries": "passed",
+    "isolatedApiPublicEntryCompilation": "passed",
+    "diffCheck": "passed"
+  },
+  "coverage": [
+    "Real local HTTP JSON and SSE request/response with real SQLite API/Operations",
+    "Unknown tool capability causes zero dispatch and no Operation",
+    "Malformed provider arguments return unknown without successful output",
+    "UTF8 byte splits and interleaved parallel call fragments",
+    "Escaped/nested duplicate argument keys and duplicate call IDs",
+    "Schema required/type/enum/extra-field checks",
+    "Declaration capture immutability and unknown-schema rejection before reading",
+    "Preserves prior text-only behavior and explicit empty tool-list equivalence"
+  ],
+  "limitations": [
+    "First-round declarations/proposals only; tool-result messages and multi-round continuation not implemented",
+    "Conversations owns logical generation and future continuation binding",
+    "Tools are not executed and proposals confer no permissions",
+    "No reasoning/media adaptation, credential backend, real provider account or Windows UI/IPC verification",
+    "Not a complete JSON Schema implementation; references/combinators and unknown constraints are rejected"
+  ]
+}

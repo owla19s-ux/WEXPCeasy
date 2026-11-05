@@ -7,3 +7,4 @@ export {createApiTransport} from './transport.js';
 export type {ApiSendResult,ApiTransportOptions} from './transport.js';
 export {decodeChatResponse} from './response.js';
 export type {ChatResponseOptions} from './response.js';
+export type {ToolDefinition,ToolSchema,ToolProposal} from './model.js';

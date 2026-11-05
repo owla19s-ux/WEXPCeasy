@@ -1,3 +1,4 @@
+import {captureTools} from './tools.js';
 import {createHash,randomUUID} from 'node:crypto';
 import type {Store,Json} from '../../../shared/src/index.js';
 import type {PermissionReader,Decision,Scope} from '../../../permissions/src/index.js';
@@ -71,7 +72,8 @@ export function createApiService(store:Store,permission:PermissionReader,options
  }
  function prepare(request:object,input:Preparation):ReturnType<ApiService['prepare']>{
   try{
-   const p=capture(input);if(!closed(p,['requestId','connectionId','connectionRevision','modelId','modelRevision','context','parameters','messages','timeoutMs','stream'])||!text(p.requestId)||!text(p.connectionId)||!text(p.modelId)||!revision(p.connectionRevision)||!revision(p.modelRevision)||(p.context!==null&&!text(p.context))||!parameters(p.parameters)||!revision(p.timeoutMs)||typeof p.stream!=='boolean'||!Array.isArray(p.messages)||p.messages.length===0||!p.messages.every(m=>closed(m,['role','content'])&&['system','user','assistant'].includes(String(m.role))&&typeof m.content==='string'))fail('invalid_preparation');
+   const p=capture(input);if(!closed(p,['requestId','connectionId','connectionRevision','modelId','modelRevision','context','parameters','messages','timeoutMs','stream'],['tools'])||!text(p.requestId)||!text(p.connectionId)||!text(p.modelId)||!revision(p.connectionRevision)||!revision(p.modelRevision)||(p.context!==null&&!text(p.context))||!parameters(p.parameters)||!revision(p.timeoutMs)||typeof p.stream!=='boolean'||!Array.isArray(p.messages)||p.messages.length===0||!p.messages.every(m=>closed(m,['role','content'])&&['system','user','assistant'].includes(String(m.role))&&typeof m.content==='string'))fail('invalid_preparation');
+   let tools:ReturnType<typeof captureTools>;try{tools=captureTools(p.tools);}catch{fail('invalid_tool_declarations');}
    const d=authorize(request,{action:'request.prepare',target:`model:${p.modelId}`,context:p.context});
    // Requiring both reads protects metadata, credential references and model existence in returned plans.
    const cr=derived(request,d,{action:'connection.read',target:`connection:${p.connectionId}`,context:null}),mr=derived(request,d,{action:'model.read',target:`model:${p.modelId}`,context:null});
@@ -79,13 +81,15 @@ export function createApiService(store:Store,permission:PermissionReader,options
    if(connection.revision!==p.connectionRevision||model.revision!==p.modelRevision)fail('revision_conflict');if(model.connectionId!==connection.id)fail('model_connection_mismatch');if(!connection.enabled)fail('connection_disabled');if(connection.protocol!=='openai-chat')fail('unsupported_protocol');
    const observed=model.observation;if(!observed)fail('capability_unverified');if(observed.connectionRevision!==connection.revision)fail('capability_observation_stale');
    if(observed.capabilities.text!=='supported'||(p.stream&&observed.capabilities.stream!=='supported'))fail('capability_unsupported_or_unknown');
+   if(tools.length&&observed.capabilities.tools!=='supported')fail('tool_capability_unverified');
    const values:Record<string,Json>={},sources:Record<string,string[]>={},settings=new Map<string,{setting:Parameters[string];sources:string[]}>();
    for(const [source,params] of [['connection',connection.parameters],['model',model.parameters],['request',p.parameters]] as const)for(const [name,setting] of Object.entries(params)){
     const prior=settings.get(name);if(prior){if(canonical(prior.setting)!==canonical(setting))fail('parameter_conflict');prior.sources.push(source);}else settings.set(name,{setting,sources:[source]});
    }
    for(const [name,row] of settings){sources[name]=row.sources;if(row.setting.mode!=='value')continue;const spec=observed.parameters[name];if(!spec)fail('parameter_unsupported');if(!parameterValue(row.setting.value,spec))fail('parameter_invalid');values[name]=row.setting.value;}
    const url=new URL(connection.endpoint);if(connection.endpointMode==='base')url.pathname=url.pathname.replace(/\/$/,'')+'/chat/completions';
-   const data={requestId:p.requestId,context:p.context,conversation:d.scope.conversation,connection:capture(connection),model:capture(model),url:url.href,body:{...values,model:model.modelId,messages:p.messages,stream:p.stream},parameterSources:sources,parameterSettings:Object.fromEntries([...settings].map(([name,row])=>[name,row.setting])),timeoutMs:p.timeoutMs};
+   const wireTools=tools.map(t=>({type:'function',function:t}));
+   const data={...(tools.length?{tools}:{}),requestId:p.requestId,context:p.context,conversation:d.scope.conversation,connection:capture(connection),model:capture(model),url:url.href,body:{...values,model:model.modelId,messages:p.messages,stream:p.stream,...(tools.length?{tools:wireTools as unknown as Json}:{} )},parameterSources:sources,parameterSettings:Object.fromEntries([...settings].map(([name,row])=>[name,row.setting])),timeoutMs:p.timeoutMs};
    const encoded=canonical(data);if(Buffer.byteLength(encoded,'utf8')>maxBytes)fail('snapshot_too_large');
    recheck(cr.request,cr.decision);recheck(mr.request,mr.decision);recheck(request,d);
    return {status:'ok',snapshot:freeze({...data,fingerprint:createHash('sha256').update(encoded).digest('hex')})};

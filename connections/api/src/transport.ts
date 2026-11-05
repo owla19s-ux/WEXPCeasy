@@ -1,3 +1,4 @@
+import type {Json} from '../../../shared/src/index.js';
 import {createHash} from 'node:crypto';
 import type {PermissionReader,Decision} from '../../../permissions/src/index.js';
 import type {createOperationLedger} from '../../src/index.js';
@@ -59,9 +60,9 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(!contentType.test(response.headers.get('content-type')??'')||!response.body)return unknown('invalid_response_content_type');
    const stream=response.body,abortSignal=controller.signal;
    async function* chunks(){const reader=stream!.getReader();try{while(true){if(!current())throw Error('authorization_changed');const item=await reader.read();if(!current())throw Error('authorization_changed');if(item.done)break;yield item.value;}}finally{await reader.cancel().catch(()=>{});reader.releaseLock();}}
-   const result=await (snapshot.body.stream?decodeChatStream(chunks(),{signal:abortSignal}):decodeChatResponse(chunks(),{signal:abortSignal}));
+   const result=await (snapshot.body.stream?decodeChatStream(chunks(),{signal:abortSignal,...(snapshot.tools?{tools:snapshot.tools}:{})}):decodeChatResponse(chunks(),{signal:abortSignal,...(snapshot.tools?{tools:snapshot.tools}:{})}));
    if(!current())return unknown('authorization_or_configuration_changed');
-   const receipt=ledger.observe(operationId,'api-result',{text:result.text,usage:result.usage},'observed');
+   const receipt=ledger.observe(operationId,'api-result',{text:result.text,usage:result.usage,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
    if(receipt.status!=='ok')return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
    return {status:'ok',operationId,result};

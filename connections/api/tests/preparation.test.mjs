@@ -42,7 +42,8 @@ test('unknown capabilities, unsupported protocols and cross-Connection selection
  f.h.execute({kind:'connection.edit',intent:'protocol',id:f.c.id,expectedRevision:1,protocol:'unsupported-protocol'});assert.equal(f.prepare({connectionRevision:2,stream:false}).reason,'unsupported_protocol');
 });
 test('media, tool messages and reserved native-field overrides are rejected instead of dropped',t=>{
- const f=setup(t);f.observe();for(const patch of [{messages:[{role:'user',content:{image:'data'}}]},{messages:[{role:'tool',content:'result'}]},{tools:[]},{parameters:{messages:{mode:'value',value:[]}}}])assert.equal(f.prepare(patch).status,'rejected');
+ const f=setup(t);f.observe();for(const patch of [{messages:[{role:'user',content:{image:'data'}}]},{messages:[{role:'tool',content:'result'}]},{parameters:{messages:{mode:'value',value:[]}}}])assert.equal(f.prepare(patch).status,'rejected');
+ assert.equal(f.prepare({tools:[]}).snapshot.fingerprint,f.prepare().snapshot.fingerprint);
 });
 test('missing or different-principal reference grants block snapshots before metadata disclosure',t=>{
  const absent=setup(t,{deriveRequest:undefined});absent.observe();assert.equal(absent.prepare().reason,'reference_unavailable');
