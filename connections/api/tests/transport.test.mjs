@@ -9,11 +9,11 @@ import {openSqliteStore} from '../../../dist/shared/src/index.js';
 import {createOperationLedger} from '../../../dist/connections/src/index.js';
 import {createApiTransport} from '../../../dist/connections/api/src/index.js';
 const body='data: {"choices":[{"index":0,"delta":{"content":"hello"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n';
-async function setup(t,handler,connectionPatch={},toolCapability='unknown'){let calls=0;const server=createServer((req,res)=>{calls++;handler(req,res);});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.closeAllConnections();server.close();});
+async function setup(t,handler,connectionPatch={},toolCapability='unknown',credentials){let calls=0;const server=createServer((req,res)=>{calls++;handler(req,res);});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.closeAllConnections();server.close();});
 const f=fixture(t,{observer:{resolve(r,c,m){return {connectionId:c.id,connectionRevision:c.revision,modelId:m.modelId,source:'probe',sourceRevision:'test',observedAt:'2026-11-05T00:00:00Z',capabilities:{text:'supported',stream:'supported',tools:toolCapability,image:'unknown',reasoning:'unknown'},parameters:{}};}}});
 const c=f.connection({endpoint:`http://127.0.0.1:${server.address().port}/v1`,credentialRef:null,...connectionPatch}),m=f.model(c.id);f.execute({kind:'model.observe',intent:'observe',id:m.id,expectedRevision:1});
 const dir=mkdtempSync(join(tmpdir(),'api-operation-')),db=openSqliteStore(join(dir,'ops.sqlite'),'operations');t.after(()=>{db.close();rmSync(dir,{recursive:true,force:true});});const ledger=createOperationLedger(db);
-const transport=createApiTransport(f.service,f.permission,ledger,{derivePrepareRequest:()=>f.request('request.prepare',`model:${m.id}`)});
+const transport=createApiTransport(f.service,f.permission,ledger,{derivePrepareRequest:()=>f.request('request.prepare',`model:${m.id}`),credentials});
 const input={requestId:'request',connectionId:c.id,connectionRevision:1,modelId:m.id,modelRevision:2,context:null,parameters:{},messages:[{role:'user',content:'hello'}],timeoutMs:1000,stream:true};
 return {f,c,m,transport,ledger,input,request:()=>f.request('request.send',`model:${m.id}`),calls:()=>calls};}
 test('real HTTP POST and Operation receipt; replay never calls network twice',async t=>{const h=await setup(t,(req,res)=>{assert.equal(req.method,'POST');assert.equal(req.url,'/v1/chat/completions');assert.equal(req.headers.authorization,undefined);res.writeHead(200,{'content-type':'text/event-stream'});res.end(body);});const r=await h.transport.send(h.request(),'operation',h.input);assert.equal(r.status,'ok');assert.equal(r.result.text,'hello');assert.equal(h.ledger.get('operation').phase,'observed');assert.equal((await h.transport.send(h.request(),'operation',h.input)).status,'blocked');assert.equal(h.calls(),1);});
@@ -37,3 +37,41 @@ test('stop drains multiple in-flight requests and remains idempotent',async t=>{
 test('real JSON and SSE calls return only validated tool proposals and persist them as observations',async t=>{for(const stream of [false,true]){const tools=[{name:'propose_read',parameters:{type:'object',properties:{path:{type:'string'}},required:['path'],additionalProperties:false}}];const call={id:'propose-1',type:'function',function:{name:'propose_read',arguments:'{"path":"a.ts"}'}};const h=await setup(t,(req,res)=>{let body='';req.on('data',x=>body+=x);req.on('end',()=>{const input=JSON.parse(body);assert.equal(input.tools[0].function.name,'propose_read');assert.equal(input.stream,stream);res.writeHead(200,{'content-type':stream?'text/event-stream':'application/json'});res.end(stream?`data: ${JSON.stringify({choices:[{index:0,delta:{tool_calls:[{...call,index:0}]},finish_reason:'tool_calls'}]})}\n\ndata: [DONE]\n\n`:JSON.stringify({choices:[{index:0,message:{role:'assistant',content:null,tool_calls:[call]},finish_reason:'tool_calls'}]}));});},{},'supported');const r=await h.transport.send(h.request(),`proposal-${stream}`,{...h.input,tools,stream});assert.equal(r.status,'ok');assert.deepEqual(r.result.toolCalls,[{id:'propose-1',name:'propose_read',arguments:{path:'a.ts'}}]);assert.equal(h.ledger.get(`proposal-${stream}`).observations[0].value.toolCalls[0].name,'propose_read');assert.equal(h.calls(),1);}});
 test('unverified tool capability blocks network dispatch and Operation creation',async t=>{const h=await setup(t,()=>{}),tools=[{name:'read',parameters:{type:'object',properties:{},additionalProperties:false}}];const r=await h.transport.send(h.request(),'unverified-tools',{...h.input,tools});assert.equal(r.status,'blocked');assert.equal(h.calls(),0);assert.equal(h.ledger.get('unverified-tools'),undefined);});
 test('invalid tool arguments from real HTTP never become successful output or accepted receipt',async t=>{const h=await setup(t,(req,res)=>{res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({choices:[{index:0,message:{role:'assistant',content:null,tool_calls:[{id:'bad',type:'function',function:{name:'read',arguments:'{"path":3}'}}]},finish_reason:'tool_calls'}]}));},{},'supported');const tools=[{name:'read',parameters:{type:'object',properties:{path:{type:'string'}},required:['path'],additionalProperties:false}}];const r=await h.transport.send(h.request(),'invalid-tools',{...h.input,stream:false,tools});assert.equal(r.status,'unknown');assert.equal('result'in r,false);assert.equal(h.ledger.get('invalid-tools').phase,'unknown');assert.equal(h.calls(),1);});
+test('trusted credential port binds exact HTTPS target and keeps token out of the ledger',async t=>{
+ const token='fixture-token-123456',requestCalls=[];
+ const h=await setup(t,()=>{},{endpoint:'https://provider.example/v1',credentialRef:{id:'key',revision:3}},'unknown',{
+  resolve(request,binding){requestCalls.push(request);assert.deepEqual(binding,{reference:{id:'key',revision:3},connectionId:h.c.id,connectionRevision:1,endpoint:'https://provider.example/v1/chat/completions',provider:'deepseek'});return token;}
+ });
+ const fetch=t.mock.method(globalThis,'fetch',async (url,init)=>{
+  assert.equal(url,'https://provider.example/v1/chat/completions');
+  assert.equal(init.redirect,'manual');
+  assert.equal(init.headers.authorization,'Bearer '+token);
+  assert.equal(init.body.includes(token),false);
+  return new Response(body,{headers:{'content-type':'text/event-stream'}});
+ });
+ const request=h.request();
+ assert.equal((await h.transport.send(request,'auth',h.input)).status,'ok');
+ assert.equal((await h.transport.send(request,'auth',h.input)).status,'blocked');
+ assert.deepEqual(requestCalls,[request]);
+ assert.equal(fetch.mock.callCount(),1);
+ assert.equal(JSON.stringify(h.ledger.get('auth')).includes(token),false);
+});
+test('credential resolution fails closed on insecure endpoints and revoked send permission',async t=>{
+ let resolved=0;
+ const insecure=await setup(t,()=>{},{credentialRef:{id:'key',revision:1}},'unknown',{resolve(){resolved++;return 'fixture-token';}});
+ assert.equal((await insecure.transport.send(insecure.request(),'insecure',insecure.input)).reason,'credential_requires_https');
+ const revoked=await setup(t,()=>{},{endpoint:'https://provider.example/v1',credentialRef:{id:'key',revision:1}},'unknown',{resolve(){resolved++;revoked.f.revoke();return 'fixture-token';}});
+ const fetch=t.mock.method(globalThis,'fetch',async()=>{throw Error('must not dispatch');});
+ assert.equal((await revoked.transport.send(revoked.request(),'revoked-key',revoked.input)).status,'blocked');
+ assert.equal(fetch.mock.callCount(),0);
+ assert.equal(resolved,1);
+ assert.equal(revoked.ledger.get('revoked-key'),undefined);
+});
+test('provider echo of the credential is discarded before returning or saving a result',async t=>{
+ const token='fixture-echo-token';
+ const h=await setup(t,()=>{},{endpoint:'https://provider.example/v1',credentialRef:{id:'key',revision:1}},'unknown',{resolve(){return token;}});
+ t.mock.method(globalThis,'fetch',async()=>new Response(body.replace('hello',token),{headers:{'content-type':'text/event-stream'}}));
+ const r=await h.transport.send(h.request(),'echo',h.input);
+ assert.equal(r.reason,'credential_echoed');
+ assert.equal(JSON.stringify([r,h.ledger.get('echo')]).includes(token),false);
+});

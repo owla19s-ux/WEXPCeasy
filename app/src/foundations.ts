@@ -5,7 +5,7 @@ import type {Root,RootLock,ManagedStore,Store,LockResult} from '../../shared/src
 import {createPermissions} from '../../permissions/src/index.js';
 import type {TrustPort,Permissions} from '../../permissions/src/index.js';
 import {createApiService,createApiTransport} from '../../connections/api/src/index.js';
-import type {ApiService,ApiOptions} from '../../connections/api/src/index.js';
+import type {ApiService,ApiOptions,ApiCredentialPort} from '../../connections/api/src/index.js';
 import {createOperationLedger} from '../../connections/src/index.js';
 import {createConnectionService} from '../../connections/src/index.js';
 import type {ConnectionClient,ConfiguredDispatchAdapter} from '../../connections/src/index.js';
@@ -16,7 +16,7 @@ import type {LocalEntryOptions,LocalEntryClient} from './local-entries.js';
 import {assemble} from './assembly.js';
 import type {Host} from './assembly.js';
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'>;
-export interface FoundationOptions {api?:ApiOptions;dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationOptions {api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
 export interface FoundationHost extends Host {readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
  for(const suffix of ['', '-journal','-wal','-shm']){
@@ -98,7 +98,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    const derive=options.api!.deriveRequest??(local?((parent:object,scope:{action:string;target:string;context:string|null})=>local.client.derive(parent,scope)):undefined);
    const service=createApiService(store,permission,{...options.api,...(derive?{deriveRequest:derive}:{})});
    if(!apiLedger)throw Error('operation_ledger_unavailable');
-   const transport=createApiTransport(service,permission,apiLedger,{derivePrepareRequest(parent){
+   const transport=createApiTransport(service,permission,apiLedger,{...(options.api?.credentials?{credentials:options.api.credentials}:{}),derivePrepareRequest(parent){
     const decision=permission.evaluate(parent);if(decision.status!=='allow')return;
     return derive?.(parent,{action:'request.prepare',target:decision.scope.target,context:decision.scope.context});
    }});

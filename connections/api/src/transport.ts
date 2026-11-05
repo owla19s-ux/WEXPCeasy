@@ -3,14 +3,28 @@ import {createHash} from 'node:crypto';
 import type {PermissionReader,Decision} from '../../../permissions/src/index.js';
 import type {createOperationLedger} from '../../src/index.js';
 import type {ApiService} from './service.js';
-import type {Preparation} from './model.js';
+import type {CredentialReference,Preparation} from './model.js';
 import {canonical,capture} from './model.js';
 import {decodeChatStream} from './stream.js';
 import {decodeChatResponse} from './response.js';
 import type {ChatStreamResult} from './stream.js';
 type Ledger=ReturnType<typeof createOperationLedger>;
 export type ApiSendResult={status:'ok';operationId:string;result:ChatStreamResult}|{status:'blocked'|'unknown';operationId:string;reason:string};
-export interface ApiTransportOptions {derivePrepareRequest(request:object):object|undefined}
+export interface ApiCredentialBinding {
+ readonly reference:Readonly<CredentialReference>;
+ readonly connectionId:string;
+ readonly connectionRevision:number;
+ readonly endpoint:string;
+ readonly provider:string;
+}
+/** Trusted host port. It must authorize use of this exact revision and destination. */
+export interface ApiCredentialPort {
+ resolve(request:object,binding:Readonly<ApiCredentialBinding>):string|undefined;
+}
+export interface ApiTransportOptions {
+ derivePrepareRequest(request:object):object|undefined;
+ credentials?:ApiCredentialPort;
+}
 /** Host-owned ledger; no retries, credential storage, or tool execution. */
 export function createApiTransport(api:ApiService,permission:PermissionReader,ledger:Ledger,options:ApiTransportOptions){
  let stopped=false;const active=new Set<AbortController>(),pending=new Set<Promise<void>>();
@@ -37,11 +51,24 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const prepared=api.prepare(prepareRequest,p);if(prepared.status!=='ok')return blocked('preparation_rejected');
    const snapshot=prepared.snapshot;
    if(snapshot.timeoutMs>2147483647)return blocked('timeout_out_of_range');
-   if(snapshot.connection.credentialRef!==null)return blocked('credential_backend_unavailable');
    const current=()=>{if(!allowed())return false;const next=api.prepare(prepareRequest,p);return next.status==='ok'&&next.snapshot.fingerprint===snapshot.fingerprint;};
    const fingerprint=createHash('sha256').update(canonical({scope:initial.scope,snapshot:snapshot.fingerprint})).digest('hex');
    if(ledger.get(operationId))return blocked('already_recorded_no_automatic_retry');
    if(!current())return blocked('authorization_or_configuration_changed');
+   let token:string|undefined;
+   const reference=snapshot.connection.credentialRef;
+   if(reference!==null){
+    if(!options.credentials)return blocked('credential_backend_unavailable');
+    if(new URL(snapshot.url).protocol!=='https:')return blocked('credential_requires_https');
+    try{
+     token=options.credentials.resolve(request,Object.freeze({
+      reference,connectionId:snapshot.connection.id,connectionRevision:snapshot.connection.revision,
+      endpoint:snapshot.url,provider:snapshot.connection.provider
+     }));
+    }catch{return blocked('credential_unavailable');}
+    if(typeof token!=='string'||token.length>8192||!/^[-a-zA-Z0-9._~+/]+=*$/.test(token))return blocked('credential_unavailable');
+    if(!current())return blocked('authorization_or_configuration_changed');
+   }
    const reserved=ledger.prepare(operationId,fingerprint,{connectionId:snapshot.connection.id,configRevision:snapshot.connection.revision,adapterId:'connections/api',adapterVersion:'openai-chat-text-1',endpoint:snapshot.url});
    if(reserved.status!=='ok')return {status:'unknown',operationId,reason:'prepare_unconfirmed'};
    if(!current())return blocked('authorization_or_configuration_changed');
@@ -53,7 +80,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(stopped||signal?.aborted){const receipt=ledger.observe(operationId,'api-not-dispatched',{externalDispatched:false},'observed');return receipt.status==='ok'?blocked('stopped_or_cancelled'):{status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'};}
    timer=setTimeout(()=>{timedOut=true;controller?.abort();},snapshot.timeoutMs);
    dispatched=true;
-   const response=await fetch(snapshot.url,{method:'POST',redirect:'manual',headers:{'content-type':'application/json',accept:snapshot.body.stream?'text/event-stream':'application/json'},body:JSON.stringify(snapshot.body),signal:controller.signal});
+   const response=await fetch(snapshot.url,{method:'POST',redirect:'manual',headers:{'content-type':'application/json',accept:snapshot.body.stream?'text/event-stream':'application/json',...(token?{authorization:'Bearer '+token}:{})},body:JSON.stringify(snapshot.body),signal:controller.signal});
    if(!current())return unknown('authorization_or_configuration_changed');
    if(!response.ok)return unknown(response.status===401||response.status===403?'provider_authorization':response.status===429?'provider_rate_limited':response.status>=300&&response.status<400?'redirect_refused':'provider_http_error');
    const contentType=snapshot.body.stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i;
@@ -62,6 +89,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    async function* chunks(){const reader=stream!.getReader();try{while(true){if(!current())throw Error('authorization_changed');const item=await reader.read();if(!current())throw Error('authorization_changed');if(item.done)break;yield item.value;}}finally{await reader.cancel().catch(()=>{});reader.releaseLock();}}
    const result=await (snapshot.body.stream?decodeChatStream(chunks(),{signal:abortSignal,...(snapshot.tools?{tools:snapshot.tools}:{})}):decodeChatResponse(chunks(),{signal:abortSignal,...(snapshot.tools?{tools:snapshot.tools}:{})}));
    if(!current())return unknown('authorization_or_configuration_changed');
+   if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
    const receipt=ledger.observe(operationId,'api-result',{text:result.text,usage:result.usage,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
    if(receipt.status!=='ok')return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
