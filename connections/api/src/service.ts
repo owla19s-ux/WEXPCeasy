@@ -13,6 +13,7 @@ export interface ApiService {
  prepare(request:object,input:Preparation):{status:'ok';snapshot:Readonly<RequestSnapshot>}|Exclude<ApiMutation,{status:'committed'}>;
  resolve(request:object,target:{owner:string;targetType:string;targetId:string}):{status:'available';owner:string;targetType:string;targetId:string;sourceRevision:string;observedAt:string}|{status:'unavailable'|'denied'|'unsupported'};
  directoryConnection(request:object,id:string):Readonly<ApiConnection>;
+ probeModel(request:object,id:string):{connection:Readonly<ApiConnection>;model:Readonly<ApiModel>};
  stop():void;
 }
 const actors=['subject','entry','conversation','relationship','relationshipGeneration'] as const;
@@ -99,6 +100,19 @@ export function createApiService(store:Store,permission:PermissionReader,options
  return Object.freeze({
   execute(request:object,input:ApiCommand,signal?:AbortSignal):ApiMutation{let c:ApiCommand;try{c=command(input);}catch(e){return error(e,'invalid',true);}try{if(signal?.aborted)fail('cancelled');const d=authorize(request,{action:c.kind,target:target(c),context:null});return mutate(request,c,d,signal);}catch(e){return error(e,c.intent);}},
   query,prepare,
+  probeModel(request:object,id:string){
+   const wanted={target:`model:${id}`,context:null};
+   const decision=authorize(request,{...wanted,action:'model.probe'});
+   const modelRead=derived(request,decision,{...wanted,action:'model.read'});
+   const {state}=snapshot();
+   const model=find(state.models,id);
+   const connectionRead=derived(request,decision,{target:`connection:${model.connectionId}`,context:null,action:'connection.read'});
+   const connection=find(state.connections,model.connectionId);
+   recheck(modelRead.request,modelRead.decision);
+   recheck(connectionRead.request,connectionRead.decision);
+   recheck(request,decision);
+   return freeze(capture({connection,model}));
+  },
   directoryConnection(request:object,id:string){
    const wanted={target:`connection:${id}`,context:null};
    const decision=authorize(request,{...wanted,action:'directory.refresh'});

@@ -15,7 +15,7 @@ import {createLocalEntries} from './local-entries.js';
 import type {LocalEntryOptions,LocalEntryClient} from './local-entries.js';
 import {assemble} from './assembly.js';
 import type {Host} from './assembly.js';
-export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'>;
+export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
 export interface FoundationOptions {api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
 export interface FoundationHost extends Host {readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
@@ -103,7 +103,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
     return derive?.(parent,{action:'request.prepare',target:decision.scope.target,context:decision.scope.context});
    }});
    apiService=service;apiTransport=transport;
-   api=Object.freeze({execute:service.execute,query:service.query,prepare:service.prepare,resolve:service.resolve,send:transport.send,refreshDirectory:transport.refreshDirectory});
+   api=Object.freeze({execute:service.execute,query:service.query,prepare:service.prepare,resolve:service.resolve,send:transport.send,refreshDirectory:transport.refreshDirectory,probeGeneration:transport.probeGeneration});
    return {value:api,stop:async()=>{service.stop();await transport.stop();await closeStores(stores);api=undefined;}};
   }catch(error){try{await closeStores(stores);}catch{for(const db of stores)apiOrphans.add(db);}throw error;}
  }}]:[])

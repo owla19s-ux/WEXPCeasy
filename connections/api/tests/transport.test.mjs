@@ -121,3 +121,51 @@ test('directory refresh cancels during host shutdown and records an unknown rece
  assert.equal((await result).reason,'stopped');
  assert.equal(h.ledger.get('directory-stop').phase,'unknown');
 });
+
+test('generation probe verifies an unobserved model with a fixed minimal request',async t=>{
+ const h=await setup(t,async (req,res)=>{
+  const chunks=[];
+  for await(const chunk of req)chunks.push(chunk);
+  const request=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  assert.equal(req.method,'POST');
+  assert.equal(req.url,'/v1/chat/completions');
+  assert.deepEqual(request,{model:'unverified-model',messages:[{role:'user',content:'Reply with OK.'}],stream:false,max_tokens:8});
+  res.writeHead(200,{'content-type':'application/json','x-request-id':'probe-provider-123'});
+  res.end(JSON.stringify({choices:[{index:0,message:{role:'assistant',content:'OK'},finish_reason:'stop'}]}));
+ });
+ const model=h.f.model(h.c.id,{modelId:'unverified-model'});
+ const request=h.f.request('model.probe',`model:${model.id}`);
+ const r=await h.transport.probeGeneration(request,'probe',model.id,1,1,1000);
+ assert.equal(r.status,'ok');
+ assert.equal(r.observation.source,'probe');
+ assert.equal(r.observation.modelId,model.id);
+ assert.equal(r.observation.usage,null);
+ assert.equal(r.observation.providerRequestId,'probe-provider-123');
+ assert.equal(h.ledger.get('probe').phase,'observed');
+ assert.equal(h.f.query('model',model.id).value.observation,null);
+ assert.equal((await h.transport.probeGeneration(request,'probe',model.id,1,1,1000)).status,'blocked');
+ assert.equal(h.calls(),1);
+});
+
+test('generation probe requires an exact grant and both current revisions',async t=>{
+ const h=await setup(t,()=>{throw Error('must not dispatch');});
+ const request=h.f.request('model.probe',`model:${h.m.id}`);
+ assert.equal((await h.transport.probeGeneration(h.request(),'wrong-action',h.m.id,1,2,1000)).status,'blocked');
+ assert.equal((await h.transport.probeGeneration(request,'old-model',h.m.id,1,1,1000)).reason,'model_revision_changed');
+ assert.equal((await h.transport.probeGeneration(request,'old-connection',h.m.id,2,2,1000)).reason,'configuration_changed_or_disabled');
+ assert.equal(h.calls(),0);
+});
+
+test('generation probe treats provider failure as a diagnostic receipt without changing the model',async t=>{
+ const h=await setup(t,(req,res)=>{
+  res.writeHead(429,{'content-type':'application/json','x-request-id':'limited-provider-123'});
+  res.end(JSON.stringify({error:'private response body'}));
+ });
+ const request=h.f.request('model.probe',`model:${h.m.id}`);
+ const r=await h.transport.probeGeneration(request,'limited-probe',h.m.id,1,2,1000);
+ assert.equal(r.reason,'provider_rate_limited');
+ assert.equal(h.ledger.get('limited-probe').phase,'unknown');
+ assert.equal(h.ledger.get('limited-probe').observations[0].value.providerRequestId,'limited-provider-123');
+ assert.equal(JSON.stringify(h.ledger.get('limited-probe')).includes('private response body'),false);
+ assert.equal(h.f.query('model',h.m.id).value.revision,2);
+});
