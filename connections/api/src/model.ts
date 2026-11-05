@@ -24,8 +24,12 @@ export type ApiCommand=
 export type ApiMutation={status:'committed';id:string;revision:number}|{status:'rejected'|'unavailable'|'failed_no_commit';reason:string}|{status:'unknown';intent:string;id?:string};
 export type ApiQuery={kind:'connection'|'model';id:string}|{kind:'connections'}|{kind:'models';connectionId:string};
 export type ApiQueryResult={status:'ok';value:ApiConnection|ApiModel|Array<ApiConnection|ApiModel>}|Exclude<ApiMutation,{status:'committed'}>;
-export interface Preparation {tools?:ToolDefinition[];requestId:string;connectionId:string;connectionRevision:number;modelId:string;modelRevision:number;context:string|null;parameters:Parameters;messages:{role:'system'|'user'|'assistant';content:string}[];timeoutMs:number;headersTimeoutMs?:number;idleTimeoutMs?:number;stream:boolean}
-export interface RequestSnapshot {tools?:readonly ToolDefinition[];requestId:string;context:string|null;conversation:string|null;connection:Readonly<ApiConnection>;model:Readonly<ApiModel>;url:string;body:Readonly<{model:string;messages:Preparation['messages'];stream:boolean;[key:string]:Json}>;parameterSources:Record<string,string[]>;parameterSettings:Parameters;timeoutMs:number;headersTimeoutMs?:number;idleTimeoutMs?:number;fingerprint:string}
+export type ChatWireMessage=
+ | {role:'system'|'user'|'assistant';content:string}
+ | {role:'assistant';content:string;reasoning_content?:string;tool_calls:{id:string;type:'function';function:{name:string;arguments:string}}[]}
+ | {role:'tool';tool_call_id:string;content:string};
+export interface Preparation {toolContinuation?:string;tools?:ToolDefinition[];requestId:string;connectionId:string;connectionRevision:number;modelId:string;modelRevision:number;context:string|null;parameters:Parameters;messages:{role:'system'|'user'|'assistant';content:string}[];timeoutMs:number;headersTimeoutMs?:number;idleTimeoutMs?:number;stream:boolean}
+export interface RequestSnapshot {toolContinuation?:{reference:string;sourceRequestId:string};tools?:readonly ToolDefinition[];requestId:string;context:string|null;conversation:string|null;connection:Readonly<ApiConnection>;model:Readonly<ApiModel>;url:string;body:Readonly<{model:string;messages:ChatWireMessage[];stream:boolean;[key:string]:Json}>;parameterSources:Record<string,string[]>;parameterSettings:Parameters;timeoutMs:number;headersTimeoutMs?:number;idleTimeoutMs?:number;fingerprint:string}
 export interface Intent {key:string;command:string;id:string;revision:number;phase:'prepared'|'committed'}
 export interface State {format:1;domain:'api-configurations';connections:ApiConnection[];models:ApiModel[];intents:Intent[]}
 export class Failure extends Error {constructor(readonly reason:string,readonly status:'rejected'|'unavailable'|'failed_no_commit'='rejected'){super(reason);}}

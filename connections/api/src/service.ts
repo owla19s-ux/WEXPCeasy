@@ -1,3 +1,5 @@
+import {encodeToolRound} from './continuation.js';
+import type {ToolRoundReader} from './continuation.js';
 import type {Operation} from '../../src/index.js';
 import {captureTools,captureResponseFormat} from './tools.js';
 import {createHash,randomUUID} from 'node:crypto';
@@ -6,7 +8,7 @@ import type {PermissionReader,Decision,Scope} from '../../../permissions/src/ind
 import {Failure,fail,text,revision,closed,object,capture,canonical,freeze,parameters,parameterValue,endpoint,observation,decode,command} from './model.js';
 import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,ModelObserver,State,Intent,Preparation,RequestSnapshot,Parameters} from './model.js';
 interface Projection {action:string;target:string;context:string|null}
-export interface ApiOptions {id?:()=>string;observer?:ModelObserver;deriveRequest?:(parent:object,scope:Projection)=>object|undefined;maxSnapshotBytes?:number;readProbeOperation?:(id:string)=>Operation|undefined}
+export interface ApiOptions {readToolRound?:ToolRoundReader;id?:()=>string;observer?:ModelObserver;deriveRequest?:(parent:object,scope:Projection)=>object|undefined;maxSnapshotBytes?:number;readProbeOperation?:(id:string)=>Operation|undefined}
 type Allow=Extract<Decision,{status:'allow'}>;
 export interface ApiService {
  execute(request:object,input:ApiCommand,signal?:AbortSignal):ApiMutation;
@@ -105,7 +107,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
  }
  function prepare(request:object,input:Preparation):ReturnType<ApiService['prepare']>{
   try{
-   const p=capture(input);if(!closed(p,['requestId','connectionId','connectionRevision','modelId','modelRevision','context','parameters','messages','timeoutMs','stream'],['tools','headersTimeoutMs','idleTimeoutMs'])||!text(p.requestId)||!text(p.connectionId)||!text(p.modelId)||!revision(p.connectionRevision)||!revision(p.modelRevision)||(p.context!==null&&!text(p.context))||!parameters(p.parameters)||!revision(p.timeoutMs)||typeof p.stream!=='boolean'||!Array.isArray(p.messages)||p.messages.length===0||!p.messages.every(m=>closed(m,['role','content'])&&['system','user','assistant'].includes(String(m.role))&&typeof m.content==='string'))fail('invalid_preparation');
+   const p=capture(input);if(!closed(p,['requestId','connectionId','connectionRevision','modelId','modelRevision','context','parameters','messages','timeoutMs','stream'],['tools','headersTimeoutMs','idleTimeoutMs','toolContinuation'])||!text(p.requestId)||!text(p.connectionId)||!text(p.modelId)||!revision(p.connectionRevision)||!revision(p.modelRevision)||(p.context!==null&&!text(p.context))||!parameters(p.parameters)||!revision(p.timeoutMs)||typeof p.stream!=='boolean'||!Array.isArray(p.messages)||p.messages.length===0||!p.messages.every(m=>closed(m,['role','content'])&&['system','user','assistant'].includes(String(m.role))&&typeof m.content==='string'))fail('invalid_preparation');
    for(const limit of [p.headersTimeoutMs,p.idleTimeoutMs]){
     if(limit!==undefined&&(!revision(limit)||limit>2147483647))fail('invalid_phase_timeout');
    }
@@ -132,8 +134,16 @@ export function createApiService(store:Store,permission:PermissionReader,options
     }
    }
    const url=new URL(connection.endpoint);if(connection.endpointMode==='base')url.pathname=url.pathname.replace(/\/$/,'')+'/chat/completions';
+   let continuation:ReturnType<typeof encodeToolRound>|undefined;
+   if(p.toolContinuation!==undefined){
+    if(!text(p.toolContinuation)||!options.readToolRound||observed.capabilities.tools!=='supported')
+     fail('tool_continuation_unavailable');
+    const round=options.readToolRound(request,p.toolContinuation);
+    if(!round)fail('tool_continuation_unavailable');
+    continuation=encodeToolRound(round,d.scope,p.requestId,connection,model);
+   }
    const wireTools=tools.map(t=>({type:'function',function:t}));
-   const data={...(tools.length?{tools}:{}),requestId:p.requestId,context:p.context,conversation:d.scope.conversation,connection:capture(connection),model:capture(model),url:url.href,body:{...values,model:model.modelId,messages:p.messages,stream:p.stream,...(tools.length?{tools:wireTools as unknown as Json}:{} )},parameterSources:sources,parameterSettings:Object.fromEntries([...settings].map(([name,row])=>[name,row.setting])),timeoutMs:p.timeoutMs,...(p.headersTimeoutMs===undefined?{}:{headersTimeoutMs:p.headersTimeoutMs}),...(p.idleTimeoutMs===undefined?{}:{idleTimeoutMs:p.idleTimeoutMs})};
+   const data={...(continuation?{toolContinuation:{reference:p.toolContinuation!,sourceRequestId:continuation.sourceRequestId}}:{}),...(tools.length?{tools}:{}),requestId:p.requestId,context:p.context,conversation:d.scope.conversation,connection:capture(connection),model:capture(model),url:url.href,body:{...values,model:model.modelId,messages:continuation?[...p.messages,...continuation.messages]:p.messages,stream:p.stream,...(tools.length?{tools:wireTools as unknown as Json}:{} )},parameterSources:sources,parameterSettings:Object.fromEntries([...settings].map(([name,row])=>[name,row.setting])),timeoutMs:p.timeoutMs,...(p.headersTimeoutMs===undefined?{}:{headersTimeoutMs:p.headersTimeoutMs}),...(p.idleTimeoutMs===undefined?{}:{idleTimeoutMs:p.idleTimeoutMs})};
    const encoded=canonical(data);if(Buffer.byteLength(encoded,'utf8')>maxBytes)fail('snapshot_too_large');
    recheck(cr.request,cr.decision);recheck(mr.request,mr.decision);recheck(request,d);
    return {status:'ok',snapshot:freeze({...data,fingerprint:createHash('sha256').update(encoded).digest('hex')})};

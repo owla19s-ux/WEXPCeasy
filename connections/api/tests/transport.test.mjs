@@ -9,12 +9,15 @@ import {openSqliteStore} from '../../../dist/shared/src/index.js';
 import {createOperationLedger} from '../../../dist/connections/src/index.js';
 import {createApiTransport} from '../../../dist/connections/api/src/index.js';
 const body='data: {"choices":[{"index":0,"delta":{"content":"hello"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n';
-async function setup(t,handler,connectionPatch={},toolCapability='unknown',credentials,parameterSpecs={}){let calls=0;const server=createServer((req,res)=>{calls++;handler(req,res);});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.closeAllConnections();server.close();});
+async function setup(t,handler,connectionPatch={},toolCapability='unknown',credentials,parameterSpecs={},readToolRound){let calls=0;const server=createServer((req,res)=>{calls++;handler(req,res);});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.closeAllConnections();server.close();});
 let ledger;
-const f=fixture(t,{readProbeOperation:id=>ledger.get(id),observer:{resolve(r,c,m){return {connectionId:c.id,connectionRevision:c.revision,modelId:m.modelId,source:'probe',sourceRevision:'test',observedAt:'2026-11-05T00:00:00Z',capabilities:{text:'supported',stream:'supported',tools:toolCapability,image:'unknown',reasoning:'unknown'},parameters:parameterSpecs};}}});
+const f=fixture(t,{...(readToolRound?{readToolRound,deriveRequest(parent,projection){
+ const decision=f.permission.evaluate(parent);
+ return decision.status==='allow'?f.request(projection.action,projection.target,projection.context,{conversation:decision.scope.conversation}):undefined;
+}}:{}),readProbeOperation:id=>ledger.get(id),observer:{resolve(r,c,m){return {connectionId:c.id,connectionRevision:c.revision,modelId:m.modelId,source:'probe',sourceRevision:'test',observedAt:'2026-11-05T00:00:00Z',capabilities:{text:'supported',stream:'supported',tools:toolCapability,image:'unknown',reasoning:'unknown'},parameters:parameterSpecs};}}});
 const c=f.connection({endpoint:`http://127.0.0.1:${server.address().port}/v1`,credentialRef:null,...connectionPatch}),m=f.model(c.id);f.execute({kind:'model.observe',intent:'observe',id:m.id,expectedRevision:1});
 const dir=mkdtempSync(join(tmpdir(),'api-operation-')),db=openSqliteStore(join(dir,'ops.sqlite'),'operations');t.after(()=>{db.close();rmSync(dir,{recursive:true,force:true});});ledger=createOperationLedger(db);
-const transport=createApiTransport(f.service,f.permission,ledger,{derivePrepareRequest:request=>f.request('request.prepare',f.permission.evaluate(request).scope.target),credentials});
+const transport=createApiTransport(f.service,f.permission,ledger,{derivePrepareRequest:request=>{const {scope}=f.permission.evaluate(request);return f.request('request.prepare',scope.target,scope.context,{conversation:scope.conversation});},credentials});
 const input={requestId:'request',connectionId:c.id,connectionRevision:1,modelId:m.id,modelRevision:2,context:null,parameters:{},messages:[{role:'user',content:'hello'}],timeoutMs:1000,stream:true};
 return {f,c,m,transport,ledger,input,request:()=>f.request('request.send',`model:${m.id}`),calls:()=>calls};}
 test('real HTTP POST and Operation receipt; replay never calls network twice',async t=>{const h=await setup(t,(req,res)=>{assert.equal(req.method,'POST');assert.equal(req.url,'/v1/chat/completions');assert.equal(req.headers.authorization,undefined);res.writeHead(200,{'content-type':'text/event-stream'});res.end(body);});const r=await h.transport.send(h.request(),'operation',h.input);assert.equal(r.status,'ok');assert.equal(r.result.text,'hello');assert.equal(h.ledger.get('operation').phase,'observed');assert.equal((await h.transport.send(h.request(),'operation',h.input)).status,'blocked');assert.equal(h.calls(),1);});
@@ -384,4 +387,48 @@ test('network diagnostics persist only classified error reasons',async t=>{
  const request=h.f.request('directory.refresh',`connection:${h.c.id}`);
  assert.equal((await h.transport.refreshDirectory(request,'directory-dns',h.c.id,1,1000)).reason,'provider_dns_failed');
  assert.equal(JSON.stringify(h.ledger.get('dns-failed')).includes('private'),false);
+});
+
+test('trusted tool continuation binds the round and sends matching tool results',async t=>{
+ let round,withdraw=false;
+ const h=await setup(t,async(req,res)=>{
+  const chunks=[];
+  for await(const chunk of req)chunks.push(chunk);
+  const wire=JSON.parse(Buffer.concat(chunks).toString());
+  assert.deepEqual(wire.messages.slice(-2),[
+   {role:'assistant',content:'',tool_calls:[{id:'call-1',type:'function',function:{name:'lookup',arguments:'{"key":"x"}'}}]},
+   {role:'tool',tool_call_id:'call-1',content:'result from receipt'}
+  ]);
+  if(withdraw)round=undefined;
+  res.writeHead(200,{'content-type':'text/event-stream'});
+  res.end(body);
+ },{},'supported',undefined,{},(request,reference)=>reference==='round-a'?round:undefined);
+ const target=`model:${h.m.id}`,conversation='chat-1';
+ const send=h.f.request('request.send',target,null,{conversation});
+ const prepare=h.f.request('request.prepare',target,null,{conversation});
+ round={
+  scope:h.f.permission.evaluate(prepare).scope,
+  sourceRequestId:'earlier-request',connectionId:h.c.id,connectionRevision:1,modelId:h.m.id,modelRevision:2,
+  assistantText:'',calls:[{id:'call-1',name:'lookup',arguments:{key:'x'}}],results:[{id:'call-1',content:'result from receipt'}]
+ };
+ const input={...h.input,toolContinuation:'round-a'};
+ assert.equal(h.f.service.prepare(prepare,{...input,requestId:'earlier-request'}).reason,'tool_continuation_binding_mismatch');
+ assert.equal(h.f.service.prepare(prepare,{...input,toolContinuation:'unknown'}).reason,'tool_continuation_unavailable');
+ const foreign=h.f.request('request.prepare',target,null,{conversation:'chat-2'});
+ assert.equal(h.f.service.prepare(foreign,input).reason,'tool_continuation_binding_mismatch');
+ const original=round;
+ round={...original,reasoning:"unverified provider reasoning"};
+ assert.equal(h.f.service.prepare(prepare,input).reason,"invalid_reasoning_continuation");
+ round={...original,results:[{id:'different-call',content:'result'}]};
+ assert.equal(h.f.service.prepare(prepare,input).reason,'invalid_tool_continuation');
+ round=original;
+ assert.equal((await h.transport.send(send,'continuation',input)).status,'ok');
+ const receipt=h.ledger.get('continuation').observations[0].value;
+ assert.equal(receipt.sourceRequestId,'earlier-request');
+ assert.equal(receipt.requestId,input.requestId);
+ withdraw=true;
+ const withdrawn=await h.transport.send(send,'withdrawn-round',{...input,requestId:'second-followup'});
+ assert.equal(withdrawn.status,'unknown');
+ assert.equal(h.ledger.get('withdrawn-round').phase,'unknown');
+ assert.equal(h.calls(),2);
 });

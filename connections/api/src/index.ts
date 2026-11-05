@@ -9,3 +9,5 @@ export {decodeChatResponse} from './response.js';
 export type {ChatResponseOptions} from './response.js';
 export type {ToolDefinition,ToolSchema,ToolProposal} from './model.js';
 export type {ChatUsage} from './usage.js';
+export type {ToolRound,ToolRoundReader} from './continuation.js';
+export type {ChatWireMessage} from './model.js';

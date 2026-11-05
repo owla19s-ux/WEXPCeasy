@@ -299,7 +299,10 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     if(snapshot.body.stream&&onText)publish(result.text,true);
    }
    if(snapshot.body.stream&&onText){publish('',true);if(!current()||abortSignal.aborted)return unknown('authorization_or_configuration_changed');}
-   const receipt=ledger.observe(operationId,'api-result',{text:result.text,usage:result.usage,...responseIdentity(result),...(result.reasoning?{reasoning:result.reasoning}:{}),...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
+   const receipt=ledger.observe(operationId,'api-result',{
+    requestId:snapshot.requestId,
+    ...(snapshot.toolContinuation?{sourceRequestId:snapshot.toolContinuation.sourceRequestId}:{}),
+    text:result.text,usage:result.usage,...responseIdentity(result),...(result.reasoning?{reasoning:result.reasoning}:{}),...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
    if(receipt.status!=='ok')return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
    return {status:'ok',operationId,result:{...result,...correlation}};
