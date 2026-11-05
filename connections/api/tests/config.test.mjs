@@ -45,3 +45,35 @@ test('missing API list projection binding fails independently of collection size
 test('non-object API queries are rejected as invalid input rather than dependency failures',t=>{
  const h=fixture(t);for(const value of [null,false,0,[]])assert.equal(h.service.query(h.request('connection.list','api:connections'),value).status,'rejected');
 });
+
+test('connection copy creates a disabled independent revision without credentials or models',t=>{
+ const h=fixture(t),source=h.connection({parameters:{temperature:{mode:'value',value:0.5}}});
+ h.model(source.id);
+ const cmd={kind:'connection.copy',intent:'copy',id:source.id,expectedRevision:1,name:'Backup'};
+ const result=h.execute(cmd);
+ assert.equal(result.status,'committed');
+ assert.notEqual(result.id,source.id);
+ h.reopen();
+ assert.deepEqual(h.execute(cmd),result);
+ const copy=h.query('connection',result.id).value;
+ const original=h.query('connection',source.id).value;
+ assert.deepEqual(copy,{...original,id:result.id,name:'Backup',credentialRef:null,enabled:false});
+ assert.deepEqual(h.service.query(h.request('model.list',`connection:${result.id}`),{kind:'models',connectionId:result.id}),{status:'ok',value:[]});
+ assert.equal(h.execute({...cmd,intent:'stale',expectedRevision:2}).reason,'revision_conflict');
+ assert.equal(h.execute({...cmd,intent:'secret',credentialRef:original.credentialRef}).reason,'invalid_request');
+});
+
+test('connection copy independently requires permission to read the source and create the destination',t=>{
+ const h=fixture(t),source=h.connection();
+ const cmd={kind:'connection.copy',intent:'copy',id:source.id,expectedRevision:1,name:'Backup'};
+ const evaluate=h.permission.evaluate.bind(h.permission);
+ for(const denied of ['connection.read','connection.create']){
+  h.permission.evaluate=request=>{
+   const d=evaluate(request);
+   return d.status==='allow'&&d.scope.action===denied?{status:'deny',reason:'private'}:d;
+  };
+  assert.equal(h.execute(cmd).reason,'reference_unavailable');
+ }
+ h.permission.evaluate=evaluate;
+ assert.deepEqual(h.service.query(h.request('connection.list','api:connections'),{kind:'connections'}).value.map(x=>x.id),[source.id]);
+});

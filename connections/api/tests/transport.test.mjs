@@ -9,12 +9,12 @@ import {openSqliteStore} from '../../../dist/shared/src/index.js';
 import {createOperationLedger} from '../../../dist/connections/src/index.js';
 import {createApiTransport} from '../../../dist/connections/api/src/index.js';
 const body='data: {"choices":[{"index":0,"delta":{"content":"hello"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n';
-async function setup(t,handler,connectionPatch={},toolCapability='unknown',credentials,parameterSpecs={},readToolRound){let calls=0;const server=createServer((req,res)=>{calls++;handler(req,res);});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.closeAllConnections();server.close();});
+async function setup(t,handler,connectionPatch={},toolCapability='unknown',credentials,parameterSpecs={},readToolRound,reasoningCapability='unknown'){let calls=0;const server=createServer((req,res)=>{calls++;handler(req,res);});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.closeAllConnections();server.close();});
 let ledger;
 const f=fixture(t,{...(readToolRound?{readToolRound,deriveRequest(parent,projection){
  const decision=f.permission.evaluate(parent);
  return decision.status==='allow'?f.request(projection.action,projection.target,projection.context,{conversation:decision.scope.conversation}):undefined;
-}}:{}),readProbeOperation:id=>ledger.get(id),observer:{resolve(r,c,m){return {connectionId:c.id,connectionRevision:c.revision,modelId:m.modelId,source:'probe',sourceRevision:'test',observedAt:'2026-11-05T00:00:00Z',capabilities:{text:'supported',stream:'supported',tools:toolCapability,image:'unknown',reasoning:'unknown'},parameters:parameterSpecs};}}});
+}}:{}),readProbeOperation:id=>ledger.get(id),observer:{resolve(r,c,m){return {connectionId:c.id,connectionRevision:c.revision,modelId:m.modelId,source:'probe',sourceRevision:'test',observedAt:'2026-11-05T00:00:00Z',capabilities:{text:'supported',stream:'supported',tools:toolCapability,image:'unknown',reasoning:reasoningCapability},parameters:parameterSpecs};}}});
 const c=f.connection({endpoint:`http://127.0.0.1:${server.address().port}/v1`,credentialRef:null,...connectionPatch}),m=f.model(c.id);f.execute({kind:'model.observe',intent:'observe',id:m.id,expectedRevision:1});
 const dir=mkdtempSync(join(tmpdir(),'api-operation-')),db=openSqliteStore(join(dir,'ops.sqlite'),'operations');t.after(()=>{db.close();rmSync(dir,{recursive:true,force:true});});ledger=createOperationLedger(db);
 const transport=createApiTransport(f.service,f.permission,ledger,{derivePrepareRequest:request=>{const {scope}=f.permission.evaluate(request);return f.request('request.prepare',scope.target,scope.context,{conversation:scope.conversation});},credentials});
@@ -515,4 +515,21 @@ test('streaming tool probe requires complete tool fragments and retains the stre
  const model=h.f.query('model',h.m.id).value;
  assert.equal(model.observation.toolProbe.stream,true);
  assert.equal(model.observation.capabilities.tools,'supported');
+});
+
+test('DeepSeek diagnostic accepts verified reasoning without exposing it in the observation',async t=>{
+ const h=await setup(t,(req,res)=>{
+  res.writeHead(200,{'content-type':'application/json'});
+  res.end(JSON.stringify({choices:[{index:0,finish_reason:'stop',message:{
+   role:'assistant',content:'OK',reasoning_content:'private reasoning'
+  }}]}));
+ },{},'unknown',undefined,{},undefined,'supported');
+ const request=h.f.request('model.probe',`model:${h.m.id}`);
+ const result=await h.transport.probeGeneration(request,'reasoning-probe',h.m.id,1,2,1000);
+ assert.equal(result.status,'ok');
+ assert.equal(JSON.stringify(result).includes('private reasoning'),false);
+ assert.equal(JSON.stringify(h.ledger.get('reasoning-probe')).includes('private reasoning'),false);
+ const unverified=h.f.model(h.c.id,{modelId:'unverified-reasoning'});
+ const unverifiedRequest=h.f.request('model.probe',`model:${unverified.id}`);
+ assert.equal((await h.transport.probeGeneration(unverifiedRequest,'unverified-reasoning',unverified.id,1,1,1000)).status,'unknown');
 });

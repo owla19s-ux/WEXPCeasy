@@ -159,7 +159,10 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(model){
     const bytes=new TextEncoder().encode(body);
     const decode=probe?.stream?decodeChatStream:decodeChatResponse;
-    const result=await decode((async function*(){yield bytes;})(),{signal:controller.signal,...(probe?.tools?{tools:[toolProbeDeclaration]}:{})});
+    const allowReasoning=connection.provider==='deepseek'
+     &&model.observation?.connectionRevision===connection.revision
+     &&model.observation.capabilities.reasoning==='supported';
+    const result=await decode((async function*(){yield bytes;})(),{signal:controller.signal,allowReasoning,...(probe?.tools?{tools:[toolProbeDeclaration]}:{})});
     if(probe?.tools&&result.toolCalls?.length!==1)return unknown('tool_probe_proposal_missing');
     if(!probe?.tools&&!result.text.trim())return unknown('empty_probe_response');
     if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
