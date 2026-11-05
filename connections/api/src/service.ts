@@ -12,6 +12,7 @@ export interface ApiService {
  query(request:object,input:ApiQuery):ApiQueryResult;
  prepare(request:object,input:Preparation):{status:'ok';snapshot:Readonly<RequestSnapshot>}|Exclude<ApiMutation,{status:'committed'}>;
  resolve(request:object,target:{owner:string;targetType:string;targetId:string}):{status:'available';owner:string;targetType:string;targetId:string;sourceRevision:string;observedAt:string}|{status:'unavailable'|'denied'|'unsupported'};
+ directoryConnection(request:object,id:string):Readonly<ApiConnection>;
  stop():void;
 }
 const actors=['subject','entry','conversation','relationship','relationshipGeneration'] as const;
@@ -98,6 +99,15 @@ export function createApiService(store:Store,permission:PermissionReader,options
  return Object.freeze({
   execute(request:object,input:ApiCommand,signal?:AbortSignal):ApiMutation{let c:ApiCommand;try{c=command(input);}catch(e){return error(e,'invalid',true);}try{if(signal?.aborted)fail('cancelled');const d=authorize(request,{action:c.kind,target:target(c),context:null});return mutate(request,c,d,signal);}catch(e){return error(e,c.intent);}},
   query,prepare,
+  directoryConnection(request:object,id:string){
+   const wanted={target:`connection:${id}`,context:null};
+   const decision=authorize(request,{...wanted,action:'directory.refresh'});
+   const read=derived(request,decision,{...wanted,action:'connection.read'});
+   const connection=freeze(capture(find(snapshot().state.connections,id)));
+   recheck(read.request,read.decision);
+   recheck(request,decision);
+   return connection;
+  },
   resolve(request:object,input:{owner:string;targetType:string;targetId:string}){
    try{const t=capture(input);if(!closed(t,['owner','targetType','targetId'])||t.owner!=='connections/api'||!['api','model'].includes(t.targetType)||!text(t.targetId))return {status:'unsupported' as const};live();
     const parent=permission.evaluate(request);if(parent.status!=='allow')return {status:'denied' as const};const kind=t.targetType==='api'?'connection':'model',r=derived(request,parent,{action:`${kind}.read`,target:`${kind}:${t.targetId}`,context:null});const q=query(r.request,{kind,id:t.targetId});if(q.status!=='ok'||Array.isArray(q.value))return {status:'unavailable' as const};recheck(r.request,r.decision);

@@ -75,3 +75,49 @@ test('provider echo of the credential is discarded before returning or saving a 
  assert.equal(r.reason,'credential_echoed');
  assert.equal(JSON.stringify([r,h.ledger.get('echo')]).includes(token),false);
 });
+
+test('directory refresh records remote IDs without registering or verifying models',async t=>{
+ const h=await setup(t,(req,res)=>{
+  assert.equal(req.method,'GET');
+  assert.equal(req.url,'/v1/models');
+  res.writeHead(200,{'content-type':'application/json'});
+  res.end(JSON.stringify({data:[{id:'remote-model',owned_by:'provider'}]}));
+ });
+ const request=h.f.request('directory.refresh',`connection:${h.c.id}`);
+ const r=await h.transport.refreshDirectory(request,'directory',h.c.id,1,1000);
+ assert.equal(r.status,'ok');
+ assert.deepEqual(r.observation.modelIds,['remote-model']);
+ assert.equal(r.observation.connectionRevision,1);
+ assert.equal(h.ledger.get('directory').phase,'observed');
+ const list=h.f.service.query(h.f.request('model.list',`connection:${h.c.id}`),{kind:'models',connectionId:h.c.id});
+ assert.deepEqual(list.value.map(m=>m.modelId),['chat-model']);
+ assert.equal((await h.transport.refreshDirectory(request,'directory',h.c.id,1,1000)).status,'blocked');
+ assert.equal(h.calls(),1);
+});
+
+test('directory refresh requires its own grant and distinguishes authentication and malformed listings',async t=>{
+ let code=401;
+ const h=await setup(t,(req,res)=>{
+  res.writeHead(code,{'content-type':'application/json'});
+  res.end(JSON.stringify({data:[{id:'duplicate'},{id:'duplicate'}]}));
+ });
+ const request=h.f.request('directory.refresh',`connection:${h.c.id}`);
+ assert.equal((await h.transport.refreshDirectory(h.request(),'wrong-grant',h.c.id,1,1000)).status,'blocked');
+ assert.equal(h.calls(),0);
+ assert.equal((await h.transport.refreshDirectory(request,'auth-failed',h.c.id,1,1000)).reason,'provider_authorization');
+ code=200;
+ assert.equal((await h.transport.refreshDirectory(request,'bad-list',h.c.id,1,1000)).reason,'invalid_model_directory');
+ assert.equal(h.ledger.get('bad-list').phase,'unknown');
+});
+
+test('directory refresh cancels during host shutdown and records an unknown receipt',async t=>{
+ let started;
+ const ready=new Promise(resolve=>{started=resolve;});
+ const h=await setup(t,()=>started());
+ const request=h.f.request('directory.refresh',`connection:${h.c.id}`);
+ const result=h.transport.refreshDirectory(request,'directory-stop',h.c.id,1,1000);
+ await ready;
+ await h.transport.stop();
+ assert.equal((await result).reason,'stopped');
+ assert.equal(h.ledger.get('directory-stop').phase,'unknown');
+});
