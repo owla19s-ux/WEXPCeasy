@@ -283,3 +283,18 @@ test('generation distinguishes response header and body idle timeouts',async t=>
  assert.equal(h.ledger.get('header-timeout').phase,'unknown');
  assert.equal(h.ledger.get('body-timeout').phase,'unknown');
 });
+
+test('a text-only probe cannot overwrite existing verified streaming and tool evidence',async t=>{
+ const h=await setup(t,(req,res)=>{
+  res.writeHead(200,{'content-type':'application/json'});
+  res.end(JSON.stringify({choices:[{index:0,message:{role:'assistant',content:'OK'},finish_reason:'stop'}]}));
+ },{},'supported');
+ const request=h.f.request('model.probe',`model:${h.m.id}`);
+ assert.equal((await h.transport.probeGeneration(request,'text-only',h.m.id,1,2,1000)).status,'ok');
+ const result=h.f.execute({kind:'model.observe',intent:'narrow-proof',id:h.m.id,expectedRevision:2,probeOperationId:'text-only'});
+ assert.equal(result.reason,'probe_would_replace_verified_evidence');
+ const stored=h.f.query('model',h.m.id).value;
+ assert.equal(stored.revision,2);
+ assert.equal(stored.observation.capabilities.tools,'supported');
+ assert.equal(stored.observation.capabilities.stream,'supported');
+});

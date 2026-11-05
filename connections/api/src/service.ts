@@ -69,7 +69,16 @@ export function createApiService(store:Store,permission:PermissionReader,options
 
     try{observed=capture(options.observer.resolve(request,freeze(capture(connection)),freeze(capture(item))));}catch{return fail('observation_unavailable','unavailable');}
     }
-    if(!observation(observed)||observed.connectionId!==connection.id||observed.connectionRevision!==connection.revision||observed.modelId!==item.modelId)fail('observation_identity_mismatch','unavailable');item.observation=observed;item.revision++;result=item;break;}
+    if(!observation(observed)||observed.connectionId!==connection.id||observed.connectionRevision!==connection.revision||observed.modelId!==item.modelId)fail('observation_identity_mismatch','unavailable');
+    const priorEvidence=item.observation;
+    if(c.probeOperationId&&priorEvidence?.connectionRevision===connection.revision){
+     const losesCapability=(Object.keys(priorEvidence.capabilities) as Array<keyof typeof priorEvidence.capabilities>).some(key=>{
+      const prior=priorEvidence.capabilities[key];
+      return (prior==='supported'||prior==='unsupported')&&observed.capabilities[key]!==prior;
+     });
+     if(losesCapability||Object.keys(priorEvidence.parameters).length)fail('probe_would_replace_verified_evidence');
+    }
+    item.observation=observed;item.revision++;result=item;break;}
   }
   const record:Intent={key,command:fingerprint,id:result.id,revision:result.revision,phase:'committed'},prepared=capture(state);prepared.intents.push({...record,phase:'prepared'});
   verifyProbe();recheck(request,d);if(signal?.aborted)fail('cancelled');
