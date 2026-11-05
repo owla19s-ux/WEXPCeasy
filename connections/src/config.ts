@@ -1,3 +1,4 @@
+import {isDeepStrictEqual} from 'node:util';
 import type {Store,Json,CommitResult} from '../../shared/src/index.js';
 export interface ConnectionConfig {id:string;adapter:string;endpoint:string;credentialRef:string|null;enabled:boolean}
 interface State {format:1;items:ConnectionConfig[]}
@@ -41,7 +42,7 @@ export function createConnectionConfigs(store:Store){
     const result:CommitResult=store.commit({intent,expectedRevision,value:{format:1,items} as unknown as Json});
     if(result.status==='committed'){
      const persisted=read().items.find(x=>x.id===config.id);
-     if(!persisted||JSON.stringify(persisted)!==JSON.stringify(config))return {status:'conflict',reason:'intent_conflict'};
+     if(!persisted||!isDeepStrictEqual(persisted,config))return {status:'conflict',reason:'intent_conflict'};
      return {status:'ok',revision:result.revision,config:structuredClone(persisted)};
     }
     if(result.status==='unknown')return {status:'unknown',reason:'commit_unknown'};

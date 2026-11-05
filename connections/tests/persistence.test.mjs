@@ -84,3 +84,4 @@ test('invalid operation bindings cannot be persisted or accepted from storage',t
  store.commit({intent:'corrupt',expectedRevision:0,value:{format:1,operations:[{id:'bad',fingerprint:'fp',phase:'prepared',attempts:0,observations:[],connection:{...binding,configRevision:0}}]}});
  assert.throws(()=>ledger.read(),/invalid_operation_state/);
 });
+test('configuration commit verification ignores JSON property order in real SQLite',t=>{const open=database(t),configs=createConnectionConfigs(open('configs'));const c={id:'order',adapter:'fixture',endpoint:'local:fixture',credentialRef:null,enabled:true};assert.equal(configs.put(c,0,'ordered').status,'ok');assert.deepEqual(configs.get('order'),c);});

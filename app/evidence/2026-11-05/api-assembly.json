@@ -1,0 +1,37 @@
+{
+  "baseline": "392af0159003c6bf8f8b7451599fbeda1f4ef398",
+  "scope": "User continuation: API host assembly via public module entries; no construction docs changed",
+  "changes": [
+    "Optional startFoundations API client with configuration/query/prepare/resolve/send only",
+    "Host owns API SQLite lifetime and cancels/drains transport before closure",
+    "API reuses Connections Operation storage and owner implementation, no second database/ledger schema",
+    "Trusted local request projections use independent exact API grants",
+    "Generic config verification compares JSON values independent of key order"
+  ],
+  "validation": {
+    "fullTests": 307,
+    "appTests": 47,
+    "apiTests": 60,
+    "typecheck": "passed",
+    "build": "passed",
+    "boundaries": "passed",
+    "isolatedAppPublicEntryBuild": "passed",
+    "diffCheck": "passed"
+  },
+  "coverage": [
+    "Real host/permissions/API/Connections/SQLite/local HTTP POST",
+    "API result visible in Connections Operations and persistent after restart",
+    "Generic connector/API operation ID collision blocks duplicate dispatch",
+    "Active HTTP request interrupted and unknown receipt persisted before Operations close",
+    "Optional API disabled by default; corrupt API and missing Connections degrade safely",
+    "Close failures and failed initialization retain root lock until shutdown retry",
+    "Saved client denied after shutdown",
+    "Real SQLite config commit no longer misreports intent_conflict after JSON key sorting"
+  ],
+  "limitations": [
+    "No Windows/Electron renderer or IPC wiring claimed",
+    "No credential backend, real provider account or live capability probe",
+    "No automatic grant, provider retry, model substitution or tool execution",
+    "Root README/module statuses remain outdated; user explicitly authorized API continuation"
+  ]
+}
