@@ -229,3 +229,40 @@ test('SSE probe adoption requires a complete stream and enables ordinary streami
  assert.equal(h.f.query('model',model.id).value.observation.capabilities.stream,'supported');
  assert.equal((await h.transport.send(h.f.request('request.send',target),'stream-send',{...h.input,modelId:model.id,modelRevision:2})).status,'ok');
 });
+
+test('stream text reaches the caller before terminal frames and final receipt',async t=>{
+ let finish;
+ const h=await setup(t,(req,res)=>{
+  res.writeHead(200,{'content-type':'text/event-stream'});
+  const split=body.indexOf('\n\n')+2;
+  res.write(body.slice(0,split));
+  finish=()=>res.end(body.slice(split));
+ });
+ let received='';
+ const result=await h.transport.send(h.request(),'incremental',h.input,undefined,delta=>{
+  received+=delta;
+  assert.equal(h.ledger.get('incremental').phase,'dispatched');
+  finish();
+ });
+ assert.equal(result.status,'ok');
+ assert.equal(received,'hello');
+ assert.equal(h.ledger.get('incremental').phase,'observed');
+});
+
+test('incremental text never exposes a credential split across SSE frames',async t=>{
+ const token='secret-fixture-token';
+ const h=await setup(t,()=>{},{endpoint:'https://provider.example/v1',credentialRef:{id:'key',revision:1}},'unknown',{resolve:()=>token});
+ const frame=(content,finish_reason)=>'data: '+JSON.stringify({choices:[{index:0,delta:{content},finish_reason}]})+'\n\n';
+ const encoder=new TextEncoder();
+ const stream=new ReadableStream({start(controller){
+  controller.enqueue(encoder.encode(frame('safe prefix: '+token.slice(0,7),null)));
+  controller.enqueue(encoder.encode(frame(token.slice(7),'stop')+'data: [DONE]\n\n'));
+  controller.close();
+ }});
+ t.mock.method(globalThis,'fetch',async()=>new Response(stream,{headers:{'content-type':'text/event-stream'}}));
+ let received='';
+ const result=await h.transport.send(h.request(),'split-secret',h.input,undefined,delta=>{received+=delta;});
+ assert.equal(result.status,'unknown');
+ assert.ok('safe prefix: '.startsWith(received));
+ assert.equal(JSON.stringify(h.ledger.get('split-secret')).includes(token),false);
+});

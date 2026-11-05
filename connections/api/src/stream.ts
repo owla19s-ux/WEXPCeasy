@@ -1,7 +1,7 @@
 import {captureTools,createToolAccumulator} from './tools.js';
 import type {ToolDefinition,ToolProposal} from './model.js';
 /** OpenAI Chat SSE decoder with explicitly declared tool proposals. Transport/authorization remain host responsibilities. */
-export interface ChatStreamOptions {tools?:readonly ToolDefinition[];signal?:AbortSignal;maxBytes?:number;maxFrameBytes?:number;maxFrames?:number;maxTextBytes?:number}
+export interface ChatStreamOptions {onText?:(delta:string)=>void;tools?:readonly ToolDefinition[];signal?:AbortSignal;maxBytes?:number;maxFrameBytes?:number;maxFrames?:number;maxTextBytes?:number}
 export interface ChatStreamResult {toolCalls?:ToolProposal[];text:string;usage:null|{inputTokens:number;outputTokens:number;totalTokens:number}}
 export async function decodeChatStream(source:AsyncIterable<Uint8Array>,options:ChatStreamOptions={}):Promise<ChatStreamResult>{
  const declarations=captureTools(options.tools),accumulator=createToolAccumulator(declarations);let toolCalls:ToolProposal[]=[];
@@ -39,7 +39,16 @@ export async function decodeChatStream(source:AsyncIterable<Uint8Array>,options:
  const endLine=()=>{if(line===''){consume();frameBytes=0;}else if(!line.startsWith(':')){const split=line.indexOf(':'),field=split<0?line:line.slice(0,split);let value=split<0?'':line.slice(split+1);if(value.startsWith(' '))value=value.slice(1);if(field==='data')data.push(value);}line='';};
  let pendingCR=false;
  const feed=(value:string)=>{for(const char of value){if(pendingCR){pendingCR=false;if(char==='\n')continue;}frameBytes+=encoder.encode(char).length;if(frameBytes>maxFrame)throw Error('stream_frame_limit');if(char==='\r'){endLine();pendingCR=true;}else if(char==='\n')endLine();else line+=char;}};
+ let emitted=0;
+ const publish=()=>{
+  check();
+  if(options.onText&&emitted<text.length){
+   options.onText(text.slice(emitted));
+   emitted=text.length;
+   check();
+  }
+ };
  check();
- try{for await(const chunk of source){check();if(!(chunk instanceof Uint8Array))throw Error('invalid_stream_bytes');bytes+=chunk.byteLength;if(bytes>maxBytes)throw Error('stream_byte_limit');feed(decoder.decode(chunk,{stream:true}));check();}feed(decoder.decode());}catch(error){if(error instanceof TypeError)throw Error('invalid_stream_encoding');throw error;}
+ try{for await(const chunk of source){check();if(!(chunk instanceof Uint8Array))throw Error('invalid_stream_bytes');bytes+=chunk.byteLength;if(bytes>maxBytes)throw Error('stream_byte_limit');feed(decoder.decode(chunk,{stream:true}));publish();}feed(decoder.decode());publish();}catch(error){if(error instanceof TypeError)throw Error('invalid_stream_encoding');throw error;}
  check();if(line.length||data.length||!done||!finished)throw Error('incomplete_stream');return {text,usage,...(toolCalls.length?{toolCalls}:{} )};
 }

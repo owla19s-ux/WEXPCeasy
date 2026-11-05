@@ -179,7 +179,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
   if(result.observation.source==='probe')return {...result,observation:result.observation};
   throw Error('unexpected_diagnostic_result');
  },
- async send(request:object,operationId:string,input:Preparation,signal?:AbortSignal):Promise<ApiSendResult>{
+ async send(request:object,operationId:string,input:Preparation,signal?:AbortSignal,onText?:(delta:string)=>void):Promise<ApiSendResult>{
   let settle!:()=>void;const finished=new Promise<void>(resolve=>{settle=resolve;});pending.add(finished);
   const blocked=(reason:string):ApiSendResult=>({status:'blocked',operationId,reason});
   let dispatched=false,controller:AbortController|undefined,timer:ReturnType<typeof setTimeout>|undefined,timedOut=false;
@@ -239,9 +239,23 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(!contentType.test(response.headers.get('content-type')??'')||!response.body)return unknown('invalid_response_content_type');
    const stream=response.body,abortSignal=controller.signal;
    async function* chunks(){const reader=stream!.getReader();try{while(true){if(!current())throw Error('authorization_changed');const item=await reader.read();if(!current())throw Error('authorization_changed');if(item.done)break;yield item.value;}}finally{await reader.cancel().catch(()=>{});reader.releaseLock();}}
-   const result=await (snapshot.body.stream?decodeChatStream(chunks(),{signal:abortSignal,...(snapshot.tools?{tools:snapshot.tools}:{})}):decodeChatResponse(chunks(),{signal:abortSignal,...(snapshot.tools?{tools:snapshot.tools}:{})}));
+   // Hold the suffix that might complete a credential echoed across SSE chunks.
+   let pendingText='';
+   const publish=(delta:string,final=false)=>{
+    if(!onText)return;
+    if(!current()||abortSignal.aborted)throw Error('authorization_changed');
+    pendingText+=delta;
+    if(token&&pendingText.includes(token))throw Error('credential_echoed');
+    const end=final?pendingText.length:Math.max(0,pendingText.length-(token?token.length-1:0));
+    if(end===0)return;
+    const next=pendingText.slice(0,end);
+    pendingText=pendingText.slice(end);
+    onText(next);
+   };
+   const result=await (snapshot.body.stream?decodeChatStream(chunks(),{signal:abortSignal,...(onText?{onText:publish}:{}),...(snapshot.tools?{tools:snapshot.tools}:{})}):decodeChatResponse(chunks(),{signal:abortSignal,...(snapshot.tools?{tools:snapshot.tools}:{})}));
    if(!current())return unknown('authorization_or_configuration_changed');
    if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
+   if(snapshot.body.stream&&onText){publish('',true);if(!current()||abortSignal.aborted)return unknown('authorization_or_configuration_changed');}
    const receipt=ledger.observe(operationId,'api-result',{text:result.text,usage:result.usage,...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
    if(receipt.status!=='ok')return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
