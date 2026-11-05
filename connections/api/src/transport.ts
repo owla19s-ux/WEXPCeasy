@@ -132,7 +132,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
     const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,observedAt:new Date().toISOString(),usage:result.usage,...correlation};
     if(!current())return unknown('authorization_or_configuration_changed');
-    if(ledger.observe(operationId,receiptId,observation,'observed').status!=='ok')
+    if(ledger.observe(operationId,receiptId,{...observation,scopeHash:createHash('sha256').update(canonical(decision.scope)).digest('hex')},'observed').status!=='ok')
      return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
     if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
     return {status:'ok',operationId,observation};

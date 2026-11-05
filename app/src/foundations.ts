@@ -96,7 +96,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    const store=await openDomainStore(probe.root,'api-configurations.sqlite','api-configurations',open);stores.add(store);
    const permission=deps['permissions'] as Pick<Permissions,'evaluate'|'recheck'>;
    const derive=options.api!.deriveRequest??(local?((parent:object,scope:{action:string;target:string;context:string|null})=>local.client.derive(parent,scope)):undefined);
-   const service=createApiService(store,permission,{...options.api,...(derive?{deriveRequest:derive}:{})});
+   const service=createApiService(store,permission,{...options.api,readProbeOperation:id=>apiLedger?.get(id),...(derive?{deriveRequest:derive}:{})});
    if(!apiLedger)throw Error('operation_ledger_unavailable');
    const transport=createApiTransport(service,permission,apiLedger,{...(options.api?.credentials?{credentials:options.api.credentials}:{}),derivePrepareRequest(parent){
     const decision=permission.evaluate(parent);if(decision.status!=='allow')return;

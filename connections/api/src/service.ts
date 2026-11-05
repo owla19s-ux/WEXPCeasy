@@ -1,3 +1,4 @@
+import type {Operation} from '../../src/index.js';
 import {captureTools} from './tools.js';
 import {createHash,randomUUID} from 'node:crypto';
 import type {Store,Json} from '../../../shared/src/index.js';
@@ -5,7 +6,7 @@ import type {PermissionReader,Decision,Scope} from '../../../permissions/src/ind
 import {Failure,fail,text,revision,closed,object,capture,canonical,freeze,parameters,parameterValue,endpoint,observation,decode,command} from './model.js';
 import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,ModelObserver,State,Intent,Preparation,RequestSnapshot,Parameters} from './model.js';
 interface Projection {action:string;target:string;context:string|null}
-export interface ApiOptions {id?:()=>string;observer?:ModelObserver;deriveRequest?:(parent:object,scope:Projection)=>object|undefined;maxSnapshotBytes?:number}
+export interface ApiOptions {id?:()=>string;observer?:ModelObserver;deriveRequest?:(parent:object,scope:Projection)=>object|undefined;maxSnapshotBytes?:number;readProbeOperation?:(id:string)=>Operation|undefined}
 type Allow=Extract<Decision,{status:'allow'}>;
 export interface ApiService {
  execute(request:object,input:ApiCommand,signal?:AbortSignal):ApiMutation;
@@ -39,21 +40,41 @@ export function createApiService(store:Store,permission:PermissionReader,options
  function mutate(request:object,c:ApiCommand,d:Allow,signal?:AbortSignal):ApiMutation {
   const {snap,state}=snapshot(),key=createHash('sha256').update(canonical({scope:d.scope,intent:c.intent})).digest('hex'),fingerprint=canonical(c),prior=state.intents.find(x=>x.key===key);
   if(prior){if(prior.command!==fingerprint)fail('intent_conflict');recheck(request,d);const proof=prior.phase==='committed'?store.query(key+':apply'):undefined;recheck(request,d);if(!proof)return {status:'unknown',intent:c.intent,id:prior.id};return {status:'committed',id:prior.id,revision:prior.revision};}
-  const next=capture(state);let result:{id:string;revision:number};
+  const next=capture(state);let verifyProbe=()=>{};let result:{id:string;revision:number};
   switch(c.kind){
    case 'connection.create':{const item:ApiConnection={id:id(next),revision:1,name:c.name,provider:c.provider,protocol:c.protocol,endpoint:endpoint(c.endpoint,c.endpointMode),endpointMode:c.endpointMode,credentialRef:c.credentialRef,enabled:c.enabled,parameters:c.parameters};next.connections.push(item);result=item;break;}
    case 'connection.edit':{const item=find(next.connections,c.id);expected(item,c.expectedRevision);for(const field of ['name','provider','protocol','endpoint','endpointMode','credentialRef','enabled','parameters'] as const)if(Object.hasOwn(c,field))Object.assign(item,{[field]:c[field]});item.endpoint=endpoint(item.endpoint,item.endpointMode);item.revision++;result=item;break;}
    case 'model.create':{find(next.connections,c.connectionId);if(next.models.some(m=>m.connectionId===c.connectionId&&m.modelId===c.modelId))fail('duplicate_model_unsupported');const item:ApiModel={id:id(next),revision:1,connectionId:c.connectionId,name:c.name,modelId:c.modelId,parameters:c.parameters,observation:null};next.models.push(item);result=item;break;}
    case 'model.edit':{const item=find(next.models,c.id);expected(item,c.expectedRevision);if(c.name!==undefined)item.name=c.name;if(c.parameters!==undefined)item.parameters=c.parameters;item.revision++;result=item;break;}
-   case 'model.observe':{const item=find(next.models,c.id);expected(item,c.expectedRevision);const connection=find(next.connections,item.connectionId);if(!options.observer)fail('observer_unavailable','unavailable');let observed;
+   case 'model.observe':{const item=find(next.models,c.id);expected(item,c.expectedRevision);const connection=find(next.connections,item.connectionId);let observed;
+    if(c.probeOperationId){
+     const probe=derived(request,d,{action:'model.probe',target:`model:${item.id}`,context:null});
+     const operation=options.readProbeOperation?.(c.probeOperationId);
+     const evidence=operation?.observations.find(row=>row.id==='api-probe-result'&&row.phase==='observed')?.value;
+     const binding=operation?.connection;
+     const scopeHash=createHash('sha256').update(canonical(probe.decision.scope)).digest('hex');
+     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||binding.adapterVersion!=='openai-chat-probe-1'
+       ||binding.connectionId!==connection.id||binding.configRevision!==connection.revision||!connection.enabled
+       ||!object(evidence)||evidence.source!=='probe'||evidence.scopeHash!==scopeHash
+       ||evidence.connectionId!==connection.id||evidence.connectionRevision!==connection.revision
+       ||evidence.modelId!==item.id||evidence.modelRevision!==item.revision)
+      fail('probe_evidence_mismatch','unavailable');
+     verifyProbe=()=>recheck(probe.request,probe.decision);
+     observed={connectionId:connection.id,connectionRevision:connection.revision,modelId:item.modelId,
+      source:'probe',sourceRevision:c.probeOperationId,observedAt:evidence.observedAt,
+      capabilities:{text:'supported',stream:'unknown',tools:'unknown',image:'unknown',reasoning:'unknown'},parameters:{}};
+    }else{
+     if(!options.observer)fail('observer_unavailable','unavailable');
+
     try{observed=capture(options.observer.resolve(request,freeze(capture(connection)),freeze(capture(item))));}catch{return fail('observation_unavailable','unavailable');}
+    }
     if(!observation(observed)||observed.connectionId!==connection.id||observed.connectionRevision!==connection.revision||observed.modelId!==item.modelId)fail('observation_identity_mismatch','unavailable');item.observation=observed;item.revision++;result=item;break;}
   }
   const record:Intent={key,command:fingerprint,id:result.id,revision:result.revision,phase:'committed'},prepared=capture(state);prepared.intents.push({...record,phase:'prepared'});
-  recheck(request,d);if(signal?.aborted)fail('cancelled');
+  verifyProbe();recheck(request,d);if(signal?.aborted)fail('cancelled');
   const prep=store.commit({intent:key+':prepare',expectedRevision:snap.revision,value:prepared as unknown as Json});
   if(prep.status==='unknown')return {status:'unknown',intent:c.intent,id:result.id};if(prep.status!=='committed')return {status:'failed_no_commit',reason:prep.reason};
-  next.intents.push(record);recheck(request,d);if(signal?.aborted)fail('cancelled');
+  next.intents.push(record);verifyProbe();recheck(request,d);if(signal?.aborted)fail('cancelled');
   const applied=store.commit({intent:key+':apply',expectedRevision:prep.revision,value:next as unknown as Json});
   return applied.status==='committed'?{status:'committed',id:result.id,revision:result.revision}:applied.status==='unknown'?{status:'unknown',intent:c.intent,id:result.id}:{status:'failed_no_commit',reason:applied.reason};
  }

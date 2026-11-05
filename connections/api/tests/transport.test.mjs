@@ -10,10 +10,11 @@ import {createOperationLedger} from '../../../dist/connections/src/index.js';
 import {createApiTransport} from '../../../dist/connections/api/src/index.js';
 const body='data: {"choices":[{"index":0,"delta":{"content":"hello"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n';
 async function setup(t,handler,connectionPatch={},toolCapability='unknown',credentials){let calls=0;const server=createServer((req,res)=>{calls++;handler(req,res);});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.closeAllConnections();server.close();});
-const f=fixture(t,{observer:{resolve(r,c,m){return {connectionId:c.id,connectionRevision:c.revision,modelId:m.modelId,source:'probe',sourceRevision:'test',observedAt:'2026-11-05T00:00:00Z',capabilities:{text:'supported',stream:'supported',tools:toolCapability,image:'unknown',reasoning:'unknown'},parameters:{}};}}});
+let ledger;
+const f=fixture(t,{readProbeOperation:id=>ledger.get(id),observer:{resolve(r,c,m){return {connectionId:c.id,connectionRevision:c.revision,modelId:m.modelId,source:'probe',sourceRevision:'test',observedAt:'2026-11-05T00:00:00Z',capabilities:{text:'supported',stream:'supported',tools:toolCapability,image:'unknown',reasoning:'unknown'},parameters:{}};}}});
 const c=f.connection({endpoint:`http://127.0.0.1:${server.address().port}/v1`,credentialRef:null,...connectionPatch}),m=f.model(c.id);f.execute({kind:'model.observe',intent:'observe',id:m.id,expectedRevision:1});
-const dir=mkdtempSync(join(tmpdir(),'api-operation-')),db=openSqliteStore(join(dir,'ops.sqlite'),'operations');t.after(()=>{db.close();rmSync(dir,{recursive:true,force:true});});const ledger=createOperationLedger(db);
-const transport=createApiTransport(f.service,f.permission,ledger,{derivePrepareRequest:()=>f.request('request.prepare',`model:${m.id}`),credentials});
+const dir=mkdtempSync(join(tmpdir(),'api-operation-')),db=openSqliteStore(join(dir,'ops.sqlite'),'operations');t.after(()=>{db.close();rmSync(dir,{recursive:true,force:true});});ledger=createOperationLedger(db);
+const transport=createApiTransport(f.service,f.permission,ledger,{derivePrepareRequest:request=>f.request('request.prepare',f.permission.evaluate(request).scope.target),credentials});
 const input={requestId:'request',connectionId:c.id,connectionRevision:1,modelId:m.id,modelRevision:2,context:null,parameters:{},messages:[{role:'user',content:'hello'}],timeoutMs:1000,stream:true};
 return {f,c,m,transport,ledger,input,request:()=>f.request('request.send',`model:${m.id}`),calls:()=>calls};}
 test('real HTTP POST and Operation receipt; replay never calls network twice',async t=>{const h=await setup(t,(req,res)=>{assert.equal(req.method,'POST');assert.equal(req.url,'/v1/chat/completions');assert.equal(req.headers.authorization,undefined);res.writeHead(200,{'content-type':'text/event-stream'});res.end(body);});const r=await h.transport.send(h.request(),'operation',h.input);assert.equal(r.status,'ok');assert.equal(r.result.text,'hello');assert.equal(h.ledger.get('operation').phase,'observed');assert.equal((await h.transport.send(h.request(),'operation',h.input)).status,'blocked');assert.equal(h.calls(),1);});
@@ -167,5 +168,43 @@ test('generation probe treats provider failure as a diagnostic receipt without c
  assert.equal(h.ledger.get('limited-probe').phase,'unknown');
  assert.equal(h.ledger.get('limited-probe').observations[0].value.providerRequestId,'limited-provider-123');
  assert.equal(JSON.stringify(h.ledger.get('limited-probe')).includes('private response body'),false);
+ assert.equal(h.f.query('model',h.m.id).value.revision,2);
+});
+
+test('adopting a trusted probe enables ordinary nonstream text for an unverified model',async t=>{
+ const h=await setup(t,(req,res)=>{
+  res.writeHead(200,{'content-type':'application/json'});
+  res.end(JSON.stringify({choices:[{index:0,message:{role:'assistant',content:'OK'},finish_reason:'stop'}]}));
+ });
+ const model=h.f.model(h.c.id,{modelId:'new-manual-model'});
+ const target=`model:${model.id}`;
+ const probe=h.f.request('model.probe',target);
+ assert.equal((await h.transport.probeGeneration(probe,'evidence',model.id,1,1,1000)).status,'ok');
+ const other=h.f.model(h.c.id,{modelId:'different-model'});
+ assert.equal(h.f.execute({kind:'model.observe',intent:'wrong-model',id:other.id,expectedRevision:1,probeOperationId:'evidence'}).reason,'probe_evidence_mismatch');
+ const cmd={kind:'model.observe',intent:'adopt-evidence',id:model.id,expectedRevision:1,probeOperationId:'evidence'};
+ const adopted=h.f.execute(cmd);
+ assert.equal(adopted.status,'committed');
+ assert.deepEqual(h.f.execute(cmd),adopted);
+ const record=h.f.query('model',model.id).value;
+ assert.equal(record.observation.sourceRevision,'evidence');
+ assert.deepEqual(record.observation.capabilities,{text:'supported',stream:'unknown',tools:'unknown',image:'unknown',reasoning:'unknown'});
+ const request=h.f.request('request.send',target);
+ const input={...h.input,modelId:model.id,modelRevision:2};
+ assert.equal((await h.transport.send(request,'stream-unverified',input)).status,'blocked');
+ assert.equal((await h.transport.send(request,'text-verified',{...input,stream:false})).status,'ok');
+ assert.equal(h.calls(),2);
+});
+
+test('probe evidence cannot be adopted after its connection revision changes',async t=>{
+ const h=await setup(t,(req,res)=>{
+  res.writeHead(200,{'content-type':'application/json'});
+  res.end(JSON.stringify({choices:[{index:0,message:{role:'assistant',content:'OK'},finish_reason:'stop'}]}));
+ });
+ const probe=h.f.request('model.probe',`model:${h.m.id}`);
+ assert.equal((await h.transport.probeGeneration(probe,'stale-evidence',h.m.id,1,2,1000)).status,'ok');
+ assert.equal(h.f.execute({kind:'connection.edit',intent:'edit-connection',id:h.c.id,expectedRevision:1,name:'edited'}).status,'committed');
+ const result=h.f.execute({kind:'model.observe',intent:'adopt-stale',id:h.m.id,expectedRevision:2,probeOperationId:'stale-evidence'});
+ assert.equal(result.reason,'probe_evidence_mismatch');
  assert.equal(h.f.query('model',h.m.id).value.revision,2);
 });

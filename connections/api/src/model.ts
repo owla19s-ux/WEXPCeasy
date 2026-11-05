@@ -20,7 +20,7 @@ export type ApiCommand=
  | (Edit&{kind:'connection.edit';name?:string;provider?:string;protocol?:string;endpoint?:string;endpointMode?:'base'|'request';credentialRef?:CredentialReference|null;enabled?:boolean;parameters?:Parameters})
  | (Base&{kind:'model.create';connectionId:string;name:string;modelId:string;parameters:Parameters})
  | (Edit&{kind:'model.edit';name?:string;parameters?:Parameters})
- | (Edit&{kind:'model.observe'});
+ | (Edit&{kind:'model.observe';probeOperationId?:string});
 export type ApiMutation={status:'committed';id:string;revision:number}|{status:'rejected'|'unavailable'|'failed_no_commit';reason:string}|{status:'unknown';intent:string;id?:string};
 export type ApiQuery={kind:'connection'|'model';id:string}|{kind:'connections'}|{kind:'models';connectionId:string};
 export type ApiQueryResult={status:'ok';value:ApiConnection|ApiModel|Array<ApiConnection|ApiModel>}|Exclude<ApiMutation,{status:'committed'}>;
@@ -98,7 +98,7 @@ export function command(value:unknown):ApiCommand {
  else if(kind==='connection.edit'){required=['id','expectedRevision'];optional=['name','provider','protocol','endpoint','endpointMode','credentialRef','enabled','parameters'];}
  else if(kind==='model.create')required=['connectionId','name','modelId','parameters'];
  else if(kind==='model.edit'){required=['id','expectedRevision'];optional=['name','parameters'];}
- else if(kind==='model.observe')required=['id','expectedRevision'];else return fail('unsupported_command');
+ else if(kind==='model.observe'){required=['id','expectedRevision'];optional=['probeOperationId'];}else return fail('unsupported_command');
  if(!closed(c,['kind','intent',...required],optional)||!text(c['intent'])||String(c['intent']).length>256)return fail('invalid_request');
  for(const [key,v] of Object.entries(c)){
   if(['kind','intent'].includes(key))continue;
