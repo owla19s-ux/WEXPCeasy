@@ -53,16 +53,17 @@ export function createApiService(store:Store,permission:PermissionReader,options
      const evidence=operation?.observations.find(row=>row.id==='api-probe-result'&&row.phase==='observed')?.value;
      const binding=operation?.connection;
      const scopeHash=createHash('sha256').update(canonical(probe.decision.scope)).digest('hex');
-     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||binding.adapterVersion!=='openai-chat-probe-1'
+     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!['openai-chat-probe-1','openai-chat-stream-probe-1'].includes(binding.adapterVersion)
        ||binding.connectionId!==connection.id||binding.configRevision!==connection.revision||!connection.enabled
        ||!object(evidence)||evidence.source!=='probe'||evidence.scopeHash!==scopeHash
        ||evidence.connectionId!==connection.id||evidence.connectionRevision!==connection.revision
+       ||(evidence.stream===true)!==(binding.adapterVersion==='openai-chat-stream-probe-1')
        ||evidence.modelId!==item.id||evidence.modelRevision!==item.revision)
       fail('probe_evidence_mismatch','unavailable');
      verifyProbe=()=>recheck(probe.request,probe.decision);
      observed={connectionId:connection.id,connectionRevision:connection.revision,modelId:item.modelId,
       source:'probe',sourceRevision:c.probeOperationId,observedAt:evidence.observedAt,
-      capabilities:{text:'supported',stream:'unknown',tools:'unknown',image:'unknown',reasoning:'unknown'},parameters:{}};
+      capabilities:{text:'supported',stream:evidence.stream===true?'supported':'unknown',tools:'unknown',image:'unknown',reasoning:'unknown'},parameters:{}};
     }else{
      if(!options.observer)fail('observer_unavailable','unavailable');
 

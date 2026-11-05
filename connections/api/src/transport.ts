@@ -19,7 +19,7 @@ export type ApiDirectoryResult=
  | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;source:'provider';observedAt:string;modelIds:string[];providerRequestId?:string}}
  | {status:'blocked'|'unknown';operationId:string;reason:string};
 export type ApiProbeResult=
- | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;modelId:string;modelRevision:number;source:'probe';observedAt:string;usage:ChatStreamResult['usage'];providerRequestId?:string}}
+ | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;modelId:string;modelRevision:number;source:'probe';stream?:true;observedAt:string;usage:ChatStreamResult['usage'];providerRequestId?:string}}
  | {status:'blocked'|'unknown';operationId:string;reason:string};
 type Ledger=ReturnType<typeof createOperationLedger>;
 export type ApiSendResult={status:'ok';operationId:string;result:ChatStreamResult&{providerRequestId?:string}}|{status:'blocked'|'unknown';operationId:string;reason:string};
@@ -41,7 +41,7 @@ export interface ApiTransportOptions {
 /** Host-owned ledger; no retries, credential storage, or tool execution. */
 export function createApiTransport(api:ApiService,permission:PermissionReader,ledger:Ledger,options:ApiTransportOptions){
  let stopped=false;const active=new Set<AbortController>(),pending=new Set<Promise<void>>();
- async function diagnose(request:object,operationId:string,targetId:string,expectedRevision:number,timeoutMs:number,signal:AbortSignal|undefined,probe?:{modelRevision:number}):Promise<ApiDirectoryResult|ApiProbeResult>{
+ async function diagnose(request:object,operationId:string,targetId:string,expectedRevision:number,timeoutMs:number,signal:AbortSignal|undefined,probe?:{modelRevision:number;stream:boolean}):Promise<ApiDirectoryResult|ApiProbeResult>{
   const blocked=(reason:string):ApiDirectoryResult=>({status:'blocked',operationId,reason});
   if(stopped||signal?.aborted)return blocked('stopped_or_cancelled');
   if(!text(operationId)||!text(targetId)||!revision(expectedRevision)||!revision(timeoutMs)||timeoutMs>2147483647)return blocked('invalid_diagnostic_request');
@@ -72,7 +72,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(!probe&&connection.endpointMode!=='base')return blocked('directory_route_unsupported');
    const url=new URL(connection.endpoint);
    if(connection.endpointMode==='base')url.pathname=url.pathname.replace(/\/$/,'')+(probe?'/chat/completions':'/models');
-   const probeBody=model?{model:model.modelId,messages:[{role:'user',content:'Reply with OK.'}],stream:false,max_tokens:8}:null;
+   const probeBody=model?{model:model.modelId,messages:[{role:'user',content:'Reply with OK.'}],stream:probe?.stream===true,max_tokens:8}:null;
    const current=()=>{
     if(stopped||controller.signal.aborted)return false;
     try{
@@ -96,7 +96,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    }
    if(!current())return blocked('authorization_or_configuration_changed');
    const fingerprint=createHash('sha256').update(canonical({scope:decision.scope,connection,model:model??null,probeBody,url:url.href,timeoutMs})).digest('hex');
-   if(ledger.prepare(operationId,fingerprint,{connectionId,configRevision:expectedRevision,adapterId:'connections/api',adapterVersion:probe?'openai-chat-probe-1':'openai-chat-models-1',endpoint:url.href}).status!=='ok')
+   if(ledger.prepare(operationId,fingerprint,{connectionId,configRevision:expectedRevision,adapterId:'connections/api',adapterVersion:probe?(probe.stream?'openai-chat-stream-probe-1':'openai-chat-probe-1'):'openai-chat-models-1',endpoint:url.href}).status!=='ok')
     return {status:'unknown',operationId,reason:'prepare_unconfirmed'};
    if(!current())return blocked('authorization_or_configuration_changed');
    if(ledger.markDispatched(operationId).status!=='ok')return {status:'unknown',operationId,reason:'dispatch_record_unconfirmed'};
@@ -106,12 +106,13 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    }
    timer=setTimeout(()=>{timedOut=true;abort();},timeoutMs);
    dispatched=true;
-   const response=await fetch(url,{method:probe?'POST':'GET',...(probeBody?{body:JSON.stringify(probeBody)}:{}),redirect:'manual',signal:controller.signal,headers:{accept:'application/json',...(probeBody?{'content-type':'application/json'}:{}),...(token?{authorization:'Bearer '+token}:{})}});
+   const response=await fetch(url,{method:probe?'POST':'GET',...(probeBody?{body:JSON.stringify(probeBody)}:{}),redirect:'manual',signal:controller.signal,headers:{accept:probe?.stream?'text/event-stream':'application/json',...(probeBody?{'content-type':'application/json'}:{}),...(token?{authorization:'Bearer '+token}:{})}});
    if(!current())return unknown('authorization_or_configuration_changed');
    const receivedCorrelation=requestCorrelation(response);
    if(!token||!JSON.stringify(receivedCorrelation).includes(token))correlation=receivedCorrelation;
    if(!response.ok)return unknown(providerError(response.status));
-   if(!response.body||!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type')??''))return unknown('invalid_response_content_type');
+   const contentType=probe?.stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i;
+   if(!response.body||!contentType.test(response.headers.get('content-type')??''))return unknown('invalid_response_content_type');
    const reader=response.body.getReader(),decoder=new TextDecoder('utf-8',{fatal:true});
    let bytes=0,body='';
    try{
@@ -127,10 +128,11 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    }finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
    if(model){
     const bytes=new TextEncoder().encode(body);
-    const result=await decodeChatResponse((async function*(){yield bytes;})(),{signal:controller.signal});
+    const decode=probe?.stream?decodeChatStream:decodeChatResponse;
+    const result=await decode((async function*(){yield bytes;})(),{signal:controller.signal});
     if(!result.text.trim())return unknown('empty_probe_response');
     if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
-    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,observedAt:new Date().toISOString(),usage:result.usage,...correlation};
+    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,...(probe?.stream?{stream:true as const}:{}),observedAt:new Date().toISOString(),usage:result.usage,...correlation};
     if(!current())return unknown('authorization_or_configuration_changed');
     if(ledger.observe(operationId,receiptId,{...observation,scopeHash:createHash('sha256').update(canonical(decision.scope)).digest('hex')},'observed').status!=='ok')
      return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
@@ -170,9 +172,9 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
   if(result.observation.source==='provider')return {...result,observation:result.observation};
   throw Error('unexpected_diagnostic_result');
  },
- async probeGeneration(request:object,operationId:string,modelId:string,connectionRevision:number,modelRevision:number,timeoutMs:number,signal?:AbortSignal):Promise<ApiProbeResult>{
+ async probeGeneration(request:object,operationId:string,modelId:string,connectionRevision:number,modelRevision:number,timeoutMs:number,signal?:AbortSignal,stream=false):Promise<ApiProbeResult>{
   if(!revision(modelRevision))return {status:'blocked',operationId,reason:'invalid_model_revision'};
-  const result=await diagnose(request,operationId,modelId,connectionRevision,timeoutMs,signal,{modelRevision});
+  const result=await diagnose(request,operationId,modelId,connectionRevision,timeoutMs,signal,{modelRevision,stream:stream===true});
   if(result.status!=='ok')return result;
   if(result.observation.source==='probe')return {...result,observation:result.observation};
   throw Error('unexpected_diagnostic_result');

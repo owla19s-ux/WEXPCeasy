@@ -208,3 +208,24 @@ test('probe evidence cannot be adopted after its connection revision changes',as
  assert.equal(result.reason,'probe_evidence_mismatch');
  assert.equal(h.f.query('model',h.m.id).value.revision,2);
 });
+
+test('SSE probe adoption requires a complete stream and enables ordinary streaming',async t=>{
+ let incomplete=true;
+ const h=await setup(t,async (req,res)=>{
+  const chunks=[];
+  for await(const chunk of req)chunks.push(chunk);
+  assert.equal(JSON.parse(Buffer.concat(chunks).toString()).stream,true);
+  assert.equal(req.headers.accept,'text/event-stream');
+  res.writeHead(200,{'content-type':'text/event-stream'});
+  res.end(incomplete?body.replace(/data: \[DONE\]/,''):body);
+ });
+ const model=h.f.model(h.c.id,{modelId:'stream-manual'});
+ const target=`model:${model.id}`,request=h.f.request('model.probe',target);
+ assert.equal((await h.transport.probeGeneration(request,'truncated',model.id,1,1,1000,undefined,true)).status,'unknown');
+ incomplete=false;
+ const result=await h.transport.probeGeneration(request,'stream-proof',model.id,1,1,1000,undefined,true);
+ assert.equal(result.observation.stream,true);
+ assert.equal(h.f.execute({kind:'model.observe',intent:'adopt-stream',id:model.id,expectedRevision:1,probeOperationId:'stream-proof'}).status,'committed');
+ assert.equal(h.f.query('model',model.id).value.observation.capabilities.stream,'supported');
+ assert.equal((await h.transport.send(h.f.request('request.send',target),'stream-send',{...h.input,modelId:model.id,modelRevision:2})).status,'ok');
+});
