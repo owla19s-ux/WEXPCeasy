@@ -298,3 +298,48 @@ test('a text-only probe cannot overwrite existing verified streaming and tool ev
  assert.equal(stored.observation.capabilities.tools,'supported');
  assert.equal(stored.observation.capabilities.stream,'supported');
 });
+
+test('reasoning is separate from incremental text and usage keeps provider counters',async()=>{
+ const {decodeChatStream,decodeChatResponse}=await import('../../../dist/connections/api/src/index.js');
+ const usage={prompt_tokens:5,completion_tokens:4,total_tokens:9,prompt_cache_hit_tokens:2,completion_tokens_details:{reasoning_tokens:3}};
+ const choice={index:0,finish_reason:'stop'};
+ const bytes=async function*(value){yield new TextEncoder().encode(value);};
+ const frame=JSON.stringify({choices:[{...choice,delta:{role:'assistant',content:'answer',reasoning_content:'reason'}}],usage});
+ const wire='data: '+frame+'\n\ndata: [DONE]\n\n';
+ await assert.rejects(decodeChatStream(bytes(wire)),/unsupported_stream_delta/);
+ const deltas=[];
+ const result=await decodeChatStream(bytes(wire),{allowReasoning:true,onText:text=>deltas.push(text)});
+ assert.deepEqual(deltas,['answer']);
+ assert.deepEqual(result,{text:'answer',reasoning:'reason',usage:{inputTokens:5,outputTokens:4,totalTokens:9,cachedInputTokens:2,reasoningOutputTokens:3}});
+ const json=JSON.stringify({choices:[{...choice,message:{role:'assistant',content:'answer',reasoning_content:'reason'}}],usage});
+ assert.deepEqual(await decodeChatResponse(bytes(json),{allowReasoning:true}),result);
+ await assert.rejects(decodeChatResponse(bytes(json.replace('"reasoning_tokens":3','"reasoning_tokens":5')),{allowReasoning:true}),/invalid_provider_usage/);
+});
+
+test('a verified output limit rejects oversized requests before HTTP dispatch',async t=>{
+ const h=fixture(t,{observer:{resolve(r,c,m){
+  return {connectionId:c.id,connectionRevision:c.revision,modelId:m.modelId,source:'provider',sourceRevision:'limit-fixture',observedAt:'2026-11-05T00:00:00Z',capabilities:{text:'supported',stream:'supported',tools:'unknown',image:'unknown',reasoning:'unknown'},parameters:{max_tokens:{type:'integer'}},limits:{contextWindow:100,maxOutputTokens:20}};
+ }}});
+ const c=h.connection(),m=h.model(c.id);
+ assert.equal(h.execute({kind:'model.observe',intent:'observe-limit',id:m.id,expectedRevision:1}).status,'committed');
+ const request=h.request('request.prepare',`model:${m.id}`);
+ const input={requestId:'limit',connectionId:c.id,connectionRevision:1,modelId:m.id,modelRevision:2,context:null,parameters:{max_tokens:{mode:'value',value:20}},messages:[{role:'user',content:'hello'}],timeoutMs:1000,stream:false};
+ assert.equal(h.service.prepare(request,input).status,'ok');
+ assert.equal(h.service.prepare(request,{...input,parameters:{max_tokens:{mode:'value',value:21}}}).reason,'model_output_limit_exceeded');
+});
+
+test('provider refusal and truncation preserve distinct sanitized receipts',async t=>{
+ const h=await setup(t,(req,res)=>{
+  const refused=h.calls()===1;
+  res.writeHead(200,{'content-type':'application/json'});
+  res.end(JSON.stringify({choices:[{index:0,
+   message:{role:'assistant',content:refused?null:'partial',refusal:refused?'private refusal text':null},
+   finish_reason:refused?'stop':'length'
+  }]}));
+ });
+ const input={...h.input,stream:false};
+ assert.equal((await h.transport.send(h.request(),'refused',input)).reason,'provider_refusal');
+ assert.equal((await h.transport.send(h.request(),'truncated-output',input)).reason,'provider_output_truncated');
+ assert.equal(JSON.stringify(h.ledger.get('refused')).includes('private refusal text'),false);
+ assert.equal(h.ledger.get('truncated-output').phase,'unknown');
+});

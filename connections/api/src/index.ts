@@ -8,3 +8,4 @@ export type {ApiSendResult,ApiDirectoryResult,ApiProbeResult,ApiTransportOptions
 export {decodeChatResponse} from './response.js';
 export type {ChatResponseOptions} from './response.js';
 export type {ToolDefinition,ToolSchema,ToolProposal} from './model.js';
+export type {ChatUsage} from './usage.js';

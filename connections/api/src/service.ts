@@ -76,7 +76,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
       const prior=priorEvidence.capabilities[key];
       return (prior==='supported'||prior==='unsupported')&&observed.capabilities[key]!==prior;
      });
-     if(losesCapability||Object.keys(priorEvidence.parameters).length)fail('probe_would_replace_verified_evidence');
+     if(losesCapability||Object.keys(priorEvidence.parameters).length||Object.keys(priorEvidence.limits??{}).length)fail('probe_would_replace_verified_evidence');
     }
     item.observation=observed;item.revision++;result=item;break;}
   }
@@ -123,6 +123,13 @@ export function createApiService(store:Store,permission:PermissionReader,options
     const prior=settings.get(name);if(prior){if(canonical(prior.setting)!==canonical(setting))fail('parameter_conflict');prior.sources.push(source);}else settings.set(name,{setting,sources:[source]});
    }
    for(const [name,row] of settings){sources[name]=row.sources;if(row.setting.mode!=='value')continue;const spec=observed.parameters[name];if(!spec)fail('parameter_unsupported');if(!parameterValue(row.setting.value,spec))fail('parameter_invalid');values[name]=row.setting.value;}
+   const outputLimit=observed.limits?.maxOutputTokens;
+   if(outputLimit!==undefined){
+    for(const key of ['max_tokens','max_completion_tokens']){
+     const value=values[key];
+     if(typeof value==='number'&&value>outputLimit)fail('model_output_limit_exceeded');
+    }
+   }
    const url=new URL(connection.endpoint);if(connection.endpointMode==='base')url.pathname=url.pathname.replace(/\/$/,'')+'/chat/completions';
    const wireTools=tools.map(t=>({type:'function',function:t}));
    const data={...(tools.length?{tools}:{}),requestId:p.requestId,context:p.context,conversation:d.scope.conversation,connection:capture(connection),model:capture(model),url:url.href,body:{...values,model:model.modelId,messages:p.messages,stream:p.stream,...(tools.length?{tools:wireTools as unknown as Json}:{} )},parameterSources:sources,parameterSettings:Object.fromEntries([...settings].map(([name,row])=>[name,row.setting])),timeoutMs:p.timeoutMs,...(p.headersTimeoutMs===undefined?{}:{headersTimeoutMs:p.headersTimeoutMs}),...(p.idleTimeoutMs===undefined?{}:{idleTimeoutMs:p.idleTimeoutMs})};

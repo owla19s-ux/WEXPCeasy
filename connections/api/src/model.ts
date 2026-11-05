@@ -9,7 +9,7 @@ export interface ApiConnection {id:string;revision:number;name:string;provider:s
 export type Capability='text'|'stream'|'tools'|'image'|'reasoning';
 export type CapabilityState='supported'|'unsupported'|'unknown'|'unverified';
 export interface ParameterSpec {type:'number'|'integer'|'boolean'|'string'|'object'|'array'|'null';minimum?:number;maximum?:number;enum?:Json[]}
-export interface ModelObservation {connectionId:string;connectionRevision:number;modelId:string;source:'provider'|'probe';sourceRevision:string;observedAt:string;capabilities:Record<Capability,CapabilityState>;parameters:Record<string,ParameterSpec>}
+export interface ModelObservation {connectionId:string;connectionRevision:number;modelId:string;source:'provider'|'probe';sourceRevision:string;observedAt:string;capabilities:Record<Capability,CapabilityState>;parameters:Record<string,ParameterSpec>;limits?:{contextWindow?:number;maxOutputTokens?:number}}
 export interface ApiModel {id:string;revision:number;connectionId:string;name:string;modelId:string;parameters:Parameters;observation:ModelObservation|null}
 /** Returns existing verified observations; network probes require their own controlled operation. */
 export interface ModelObserver {resolve(request:object,connection:Readonly<ApiConnection>,model:Readonly<ApiModel>):ModelObservation|undefined}
@@ -77,8 +77,12 @@ function specs(value:unknown):boolean {
   return !Object.hasOwn(s,'enum')||(Array.isArray(s['enum'])&&s['enum'].length>0&&validJson(s['enum'])&&s['enum'].every(x=>baseType(x as Json,s['type'] as ParameterSpec['type'])));
  });
 }
+function observationLimits(value:unknown):boolean {
+ return value===undefined||(closed(value,[],['contextWindow','maxOutputTokens'])&&Object.values(value).every(revision)
+  &&!(typeof value.contextWindow==='number'&&typeof value.maxOutputTokens==='number'&&value.maxOutputTokens>value.contextWindow));
+}
 export function observation(value:unknown):value is ModelObservation {
- return closed(value,['connectionId','connectionRevision','modelId','source','sourceRevision','observedAt','capabilities','parameters'])&&text(value['connectionId'])&&revision(value['connectionRevision'])&&text(value['modelId'])&&['provider','probe'].includes(String(value['source']))&&text(value['sourceRevision'])&&typeof value['observedAt']==='string'&&Number.isFinite(Date.parse(value['observedAt']))&&closed(value['capabilities'],['text','stream','tools','image','reasoning'])&&Object.values(value['capabilities']).every(v=>['supported','unsupported','unknown','unverified'].includes(String(v)))&&specs(value['parameters']);
+ return closed(value,['connectionId','connectionRevision','modelId','source','sourceRevision','observedAt','capabilities','parameters'],['limits'])&&observationLimits(value.limits)&&text(value['connectionId'])&&revision(value['connectionRevision'])&&text(value['modelId'])&&['provider','probe'].includes(String(value['source']))&&text(value['sourceRevision'])&&typeof value['observedAt']==='string'&&Number.isFinite(Date.parse(value['observedAt']))&&closed(value['capabilities'],['text','stream','tools','image','reasoning'])&&Object.values(value['capabilities']).every(v=>['supported','unsupported','unknown','unverified'].includes(String(v)))&&specs(value['parameters']);
 }
 function model(value:unknown):value is ApiModel{return closed(value,['id','revision','connectionId','name','modelId','parameters','observation'])&&['id','connectionId','name','modelId'].every(k=>text(value[k]))&&revision(value['revision'])&&parameters(value['parameters'])&&(value['observation']===null||observation(value['observation']));}
 export function decode(value:Json):State {

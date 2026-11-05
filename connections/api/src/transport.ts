@@ -1,3 +1,4 @@
+import {ProviderTerminalError} from './terminal.js';
 import type {Json} from '../../../shared/src/index.js';
 import {createHash} from 'node:crypto';
 import type {PermissionReader,Decision} from '../../../permissions/src/index.js';
@@ -158,8 +159,8 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
    return {status:'ok',operationId,observation};
-  }catch{
-   return dispatched?unknown(timedOut?'timeout':stopped?'stopped':signal?.aborted?'cancelled':(probe?'probe_response_unconfirmed':'directory_response_unconfirmed')):blocked('directory_unavailable');
+  }catch(error){
+   return dispatched?unknown(timedOut?'timeout':stopped?'stopped':signal?.aborted?'cancelled':(error instanceof ProviderTerminalError?error.reason:probe?'probe_response_unconfirmed':'directory_response_unconfirmed')):blocked('directory_unavailable');
   }finally{
    if(timer)clearTimeout(timer);
    signal?.removeEventListener('abort',abort);
@@ -267,15 +268,16 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     pendingText=pendingText.slice(end);
     onText(next);
    };
-   const result=await (snapshot.body.stream?decodeChatStream(chunks(),{signal:abortSignal,...(onText?{onText:publish}:{}),...(snapshot.tools?{tools:snapshot.tools}:{})}):decodeChatResponse(chunks(),{signal:abortSignal,...(snapshot.tools?{tools:snapshot.tools}:{})}));
+   const allowReasoning=snapshot.connection.provider==='deepseek'&&snapshot.model.observation?.capabilities.reasoning==='supported';
+   const result=await (snapshot.body.stream?decodeChatStream(chunks(),{signal:abortSignal,allowReasoning,...(onText?{onText:publish}:{}),...(snapshot.tools?{tools:snapshot.tools}:{})}):decodeChatResponse(chunks(),{signal:abortSignal,allowReasoning,...(snapshot.tools?{tools:snapshot.tools}:{})}));
    if(!current())return unknown('authorization_or_configuration_changed');
    if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
    if(snapshot.body.stream&&onText){publish('',true);if(!current()||abortSignal.aborted)return unknown('authorization_or_configuration_changed');}
-   const receipt=ledger.observe(operationId,'api-result',{text:result.text,usage:result.usage,...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
+   const receipt=ledger.observe(operationId,'api-result',{text:result.text,usage:result.usage,...(result.reasoning?{reasoning:result.reasoning}:{}),...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
    if(receipt.status!=='ok')return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
    return {status:'ok',operationId,result:{...result,...correlation}};
-  }catch{return dispatched?unknown(phaseTimeout??(timedOut?'timeout':stopped?'stopped':signal?.aborted?'cancelled':'response_unconfirmed')):blocked('dependency_unavailable');}
+  }catch(error){return dispatched?unknown(phaseTimeout??(timedOut?'timeout':stopped?'stopped':signal?.aborted?'cancelled':error instanceof ProviderTerminalError?error.reason:'response_unconfirmed')):blocked('dependency_unavailable');}
   finally{clearPhase();if(timer)clearTimeout(timer);signal?.removeEventListener('abort',abort);if(controller){active.delete(controller);controller.abort();}pending.delete(finished);settle();}
  }
  });

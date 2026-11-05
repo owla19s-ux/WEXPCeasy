@@ -1,8 +1,10 @@
+import {checkFinishReason,checkRefusal} from './terminal.js';
+import {decodeUsage} from './usage.js';
 import {closed} from './model.js';
 import {captureTools,createToolAccumulator} from './tools.js';
 import type {ToolDefinition} from './model.js';
 import type {ChatStreamResult} from './stream.js';
-export interface ChatResponseOptions {tools?:readonly ToolDefinition[];signal?:AbortSignal;maxBytes?:number;maxTextBytes?:number}
+export interface ChatResponseOptions {allowReasoning?:boolean;tools?:readonly ToolDefinition[];signal?:AbortSignal;maxBytes?:number;maxTextBytes?:number}
 /** Bounded Chat JSON response with explicitly declared tool proposals. Never returns raw provider errors or partial content. */
 export async function decodeChatResponse(source:AsyncIterable<Uint8Array>,options:ChatResponseOptions={}):Promise<ChatStreamResult>{
  const declarations=captureTools(options.tools),accumulator=createToolAccumulator(declarations);
@@ -17,14 +19,18 @@ export async function decodeChatResponse(source:AsyncIterable<Uint8Array>,option
  if(response.error!==undefined)throw Error('provider_response_error');
  if(!Array.isArray(response.choices)||response.choices.length!==1)throw Error('unsupported_response_choices');
  const choice=record(response.choices[0]);if(choice.index!==0)throw Error('unsuccessful_response_finish');
+ checkFinishReason(choice.finish_reason);
  const message=record(choice.message);
- if(Object.keys(message).some(key=>!['role','content',...(declarations.length?['tool_calls']:[])].includes(key)))throw Error('unsupported_response_message');
+ if(Object.keys(message).some(key=>!['role','content','refusal',...(options.allowReasoning?['reasoning_content']:[]),...(declarations.length?['tool_calls']:[])].includes(key)))throw Error('unsupported_response_message');
+ checkRefusal(message.refusal);
  if(message.tool_calls!==undefined){if(!Array.isArray(message.tool_calls))throw Error('invalid_tool_calls');accumulator.push(message.tool_calls.map((v:unknown,index:number)=>{if(!closed(v,['id','type','function']))throw Error('invalid_tool_calls');return {...v,index};}));}
  const toolCalls=accumulator.finish(choice.finish_reason);
  if(toolCalls.length&&(message.content===null||message.content===undefined))message.content='';
  if(message.role!=='assistant'||typeof message.content!=='string')throw Error('invalid_response_message');
- if(Buffer.byteLength(message.content,'utf8')>maxText)throw Error('response_text_limit');
+ const reasoning=message.reasoning_content??'';
+ if(typeof reasoning!=='string')throw Error('invalid_response_reasoning');
+ if(Buffer.byteLength(message.content,'utf8')+Buffer.byteLength(reasoning,'utf8')>maxText)throw Error('response_text_limit');
  let usage:ChatStreamResult['usage']=null;
- if(response.usage!==undefined&&response.usage!==null){const u=record(response.usage),a=u.prompt_tokens,b=u.completion_tokens,c=u.total_tokens;if(![a,b,c].every(n=>typeof n==='number'&&Number.isSafeInteger(n)&&n>=0))throw Error('invalid_response_usage');usage={inputTokens:a as number,outputTokens:b as number,totalTokens:c as number};}
- return {text:message.content,usage,...(toolCalls.length?{toolCalls}:{} )};
+ if(response.usage!==undefined&&response.usage!==null)usage=decodeUsage(response.usage);
+ return {text:message.content,usage,...(reasoning?{reasoning}:{}),...(toolCalls.length?{toolCalls}:{} )};
 }
