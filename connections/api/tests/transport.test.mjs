@@ -159,7 +159,7 @@ test('generation probe requires an exact grant and both current revisions',async
 
 test('generation probe treats provider failure as a diagnostic receipt without changing the model',async t=>{
  const h=await setup(t,(req,res)=>{
-  res.writeHead(429,{'content-type':'application/json','x-request-id':'limited-provider-123'});
+  res.writeHead(429,{'content-type':'application/json','x-request-id':'limited-provider-123','retry-after':'12'});
   res.end(JSON.stringify({error:'private response body'}));
  });
  const request=h.f.request('model.probe',`model:${h.m.id}`);
@@ -167,6 +167,8 @@ test('generation probe treats provider failure as a diagnostic receipt without c
  assert.equal(r.reason,'provider_rate_limited');
  assert.equal(h.ledger.get('limited-probe').phase,'unknown');
  assert.equal(h.ledger.get('limited-probe').observations[0].value.providerRequestId,'limited-provider-123');
+ assert.equal(h.ledger.get('limited-probe').observations[0].value.httpStatus,429);
+ assert.equal(h.ledger.get('limited-probe').observations[0].value.retryAfterSeconds,12);
  assert.equal(JSON.stringify(h.ledger.get('limited-probe')).includes('private response body'),false);
  assert.equal(h.f.query('model',h.m.id).value.revision,2);
 });
@@ -265,4 +267,19 @@ test('incremental text never exposes a credential split across SSE frames',async
  assert.equal(result.status,'unknown');
  assert.ok('safe prefix: '.startsWith(received));
  assert.equal(JSON.stringify(h.ledger.get('split-secret')).includes(token),false);
+});
+
+test('generation distinguishes response header and body idle timeouts',async t=>{
+ const h=await setup(t,(req,res)=>{
+  if(h.calls()===2){
+   res.writeHead(200,{'content-type':'text/event-stream'});
+   res.write(': waiting\n\n');
+  }
+ });
+ const header=await h.transport.send(h.request(),'header-timeout',{...h.input,headersTimeoutMs:80,timeoutMs:2000});
+ assert.equal(header.reason,'headers_timeout');
+ const body=await h.transport.send(h.request(),'body-timeout',{...h.input,idleTimeoutMs:80,timeoutMs:2000});
+ assert.equal(body.reason,'body_idle_timeout');
+ assert.equal(h.ledger.get('header-timeout').phase,'unknown');
+ assert.equal(h.ledger.get('body-timeout').phase,'unknown');
 });

@@ -96,7 +96,10 @@ export function createApiService(store:Store,permission:PermissionReader,options
  }
  function prepare(request:object,input:Preparation):ReturnType<ApiService['prepare']>{
   try{
-   const p=capture(input);if(!closed(p,['requestId','connectionId','connectionRevision','modelId','modelRevision','context','parameters','messages','timeoutMs','stream'],['tools'])||!text(p.requestId)||!text(p.connectionId)||!text(p.modelId)||!revision(p.connectionRevision)||!revision(p.modelRevision)||(p.context!==null&&!text(p.context))||!parameters(p.parameters)||!revision(p.timeoutMs)||typeof p.stream!=='boolean'||!Array.isArray(p.messages)||p.messages.length===0||!p.messages.every(m=>closed(m,['role','content'])&&['system','user','assistant'].includes(String(m.role))&&typeof m.content==='string'))fail('invalid_preparation');
+   const p=capture(input);if(!closed(p,['requestId','connectionId','connectionRevision','modelId','modelRevision','context','parameters','messages','timeoutMs','stream'],['tools','headersTimeoutMs','idleTimeoutMs'])||!text(p.requestId)||!text(p.connectionId)||!text(p.modelId)||!revision(p.connectionRevision)||!revision(p.modelRevision)||(p.context!==null&&!text(p.context))||!parameters(p.parameters)||!revision(p.timeoutMs)||typeof p.stream!=='boolean'||!Array.isArray(p.messages)||p.messages.length===0||!p.messages.every(m=>closed(m,['role','content'])&&['system','user','assistant'].includes(String(m.role))&&typeof m.content==='string'))fail('invalid_preparation');
+   for(const limit of [p.headersTimeoutMs,p.idleTimeoutMs]){
+    if(limit!==undefined&&(!revision(limit)||limit>2147483647))fail('invalid_phase_timeout');
+   }
    let tools:ReturnType<typeof captureTools>;try{tools=captureTools(p.tools);}catch{fail('invalid_tool_declarations');}
    const d=authorize(request,{action:'request.prepare',target:`model:${p.modelId}`,context:p.context});
    // Requiring both reads protects metadata, credential references and model existence in returned plans.
@@ -113,7 +116,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
    for(const [name,row] of settings){sources[name]=row.sources;if(row.setting.mode!=='value')continue;const spec=observed.parameters[name];if(!spec)fail('parameter_unsupported');if(!parameterValue(row.setting.value,spec))fail('parameter_invalid');values[name]=row.setting.value;}
    const url=new URL(connection.endpoint);if(connection.endpointMode==='base')url.pathname=url.pathname.replace(/\/$/,'')+'/chat/completions';
    const wireTools=tools.map(t=>({type:'function',function:t}));
-   const data={...(tools.length?{tools}:{}),requestId:p.requestId,context:p.context,conversation:d.scope.conversation,connection:capture(connection),model:capture(model),url:url.href,body:{...values,model:model.modelId,messages:p.messages,stream:p.stream,...(tools.length?{tools:wireTools as unknown as Json}:{} )},parameterSources:sources,parameterSettings:Object.fromEntries([...settings].map(([name,row])=>[name,row.setting])),timeoutMs:p.timeoutMs};
+   const data={...(tools.length?{tools}:{}),requestId:p.requestId,context:p.context,conversation:d.scope.conversation,connection:capture(connection),model:capture(model),url:url.href,body:{...values,model:model.modelId,messages:p.messages,stream:p.stream,...(tools.length?{tools:wireTools as unknown as Json}:{} )},parameterSources:sources,parameterSettings:Object.fromEntries([...settings].map(([name,row])=>[name,row.setting])),timeoutMs:p.timeoutMs,...(p.headersTimeoutMs===undefined?{}:{headersTimeoutMs:p.headersTimeoutMs}),...(p.idleTimeoutMs===undefined?{}:{idleTimeoutMs:p.idleTimeoutMs})};
    const encoded=canonical(data);if(Buffer.byteLength(encoded,'utf8')>maxBytes)fail('snapshot_too_large');
    recheck(cr.request,cr.decision);recheck(mr.request,mr.decision);recheck(request,d);
    return {status:'ok',snapshot:freeze({...data,fingerprint:createHash('sha256').update(encoded).digest('hex')})};

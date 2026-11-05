@@ -12,6 +12,11 @@ function requestCorrelation(response:Response):{providerRequestId?:string}{
  const id=response.headers.get('x-request-id');
  return id&&/^[-a-zA-Z0-9_.:]{1,256}$/.test(id)?{providerRequestId:id}:{};
 }
+function failureMetadata(response:Response,token?:string):{httpStatus:number;retryAfterSeconds?:number}{
+ const value=response.headers.get('retry-after');
+ const seconds=value&&(!token||!value.includes(token))&&/^\d{1,10}$/.test(value)?Number(value):undefined;
+ return {httpStatus:response.status,...(seconds===undefined?{}:{retryAfterSeconds:seconds})};
+}
 function providerError(status:number):string {
  return status===401||status===403?'provider_authorization':status===429?'provider_rate_limited':status>=300&&status<400?'redirect_refused':'provider_http_error';
 }
@@ -55,7 +60,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
   let timer:ReturnType<typeof setTimeout>|undefined;
   let timedOut=false,dispatched=false;
   const receiptId=probe?'api-probe-result':'api-directory-result';
-  let correlation:{providerRequestId?:string}={};
+  let correlation:{providerRequestId?:string;httpStatus?:number;retryAfterSeconds?:number}={};
   const unknown=(reason:string):ApiDirectoryResult=>{
    try{ledger.observe(operationId,receiptId,{reason,...correlation},'unknown');}catch{}
    return {status:'unknown',operationId,reason};
@@ -110,7 +115,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(!current())return unknown('authorization_or_configuration_changed');
    const receivedCorrelation=requestCorrelation(response);
    if(!token||!JSON.stringify(receivedCorrelation).includes(token))correlation=receivedCorrelation;
-   if(!response.ok)return unknown(providerError(response.status));
+   if(!response.ok){correlation={...correlation,...failureMetadata(response,token)};return unknown(providerError(response.status));}
    const contentType=probe?.stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i;
    if(!response.body||!contentType.test(response.headers.get('content-type')??''))return unknown('invalid_response_content_type');
    const reader=response.body.getReader(),decoder=new TextDecoder('utf-8',{fatal:true});
@@ -183,8 +188,15 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
   let settle!:()=>void;const finished=new Promise<void>(resolve=>{settle=resolve;});pending.add(finished);
   const blocked=(reason:string):ApiSendResult=>({status:'blocked',operationId,reason});
   let dispatched=false,controller:AbortController|undefined,timer:ReturnType<typeof setTimeout>|undefined,timedOut=false;
+  let phaseTimer:ReturnType<typeof setTimeout>|undefined;
+  let phaseTimeout:'headers_timeout'|'body_idle_timeout'|undefined;
+  const clearPhase=()=>{if(phaseTimer)clearTimeout(phaseTimer);phaseTimer=undefined;};
+  const startPhase=(ms:number|undefined,reason:NonNullable<typeof phaseTimeout>)=>{
+   clearPhase();
+   if(ms!==undefined)phaseTimer=setTimeout(()=>{phaseTimeout=reason;controller?.abort();},ms);
+  };
   const abort=()=>controller?.abort();
-  let correlation:{providerRequestId?:string}={};
+  let correlation:{providerRequestId?:string;httpStatus?:number;retryAfterSeconds?:number}={};
   const unknown=(reason:string):ApiSendResult=>{try{ledger.observe(operationId,'api-result',{reason,...correlation},'unknown');}catch{}return {status:'unknown',operationId,reason};};
   try{
    if(stopped||signal?.aborted)return blocked('stopped_or_cancelled');
@@ -229,16 +241,19 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    controller=new AbortController();active.add(controller);signal?.addEventListener('abort',abort,{once:true});
    if(stopped||signal?.aborted){const receipt=ledger.observe(operationId,'api-not-dispatched',{externalDispatched:false},'observed');return receipt.status==='ok'?blocked('stopped_or_cancelled'):{status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'};}
    timer=setTimeout(()=>{timedOut=true;controller?.abort();},snapshot.timeoutMs);
+   startPhase(snapshot.headersTimeoutMs,'headers_timeout');
    dispatched=true;
    const response=await fetch(snapshot.url,{method:'POST',redirect:'manual',headers:{'content-type':'application/json',accept:snapshot.body.stream?'text/event-stream':'application/json',...(token?{authorization:'Bearer '+token}:{})},body:JSON.stringify(snapshot.body),signal:controller.signal});
+   clearPhase();
+   if(phaseTimeout)return unknown(phaseTimeout);
    if(!current())return unknown('authorization_or_configuration_changed');
    const receivedCorrelation=requestCorrelation(response);
    if(!token||!JSON.stringify(receivedCorrelation).includes(token))correlation=receivedCorrelation;
-   if(!response.ok)return unknown(providerError(response.status));
+   if(!response.ok){correlation={...correlation,...failureMetadata(response,token)};return unknown(providerError(response.status));}
    const contentType=snapshot.body.stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i;
    if(!contentType.test(response.headers.get('content-type')??'')||!response.body)return unknown('invalid_response_content_type');
    const stream=response.body,abortSignal=controller.signal;
-   async function* chunks(){const reader=stream!.getReader();try{while(true){if(!current())throw Error('authorization_changed');const item=await reader.read();if(!current())throw Error('authorization_changed');if(item.done)break;yield item.value;}}finally{await reader.cancel().catch(()=>{});reader.releaseLock();}}
+   async function* chunks(){const reader=stream!.getReader();try{while(true){if(!current())throw Error('authorization_changed');startPhase(snapshot.idleTimeoutMs,'body_idle_timeout');const item=await reader.read();clearPhase();if(phaseTimeout)throw Error(phaseTimeout);if(!current())throw Error('authorization_changed');if(item.done)break;yield item.value;}}finally{await reader.cancel().catch(()=>{});reader.releaseLock();}}
    // Hold the suffix that might complete a credential echoed across SSE chunks.
    let pendingText='';
    const publish=(delta:string,final=false)=>{
@@ -260,8 +275,8 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(receipt.status!=='ok')return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
    return {status:'ok',operationId,result:{...result,...correlation}};
-  }catch{return dispatched?unknown(timedOut?'timeout':stopped?'stopped':signal?.aborted?'cancelled':'response_unconfirmed'):blocked('dependency_unavailable');}
-  finally{if(timer)clearTimeout(timer);signal?.removeEventListener('abort',abort);if(controller){active.delete(controller);controller.abort();}pending.delete(finished);settle();}
+  }catch{return dispatched?unknown(phaseTimeout??(timedOut?'timeout':stopped?'stopped':signal?.aborted?'cancelled':'response_unconfirmed')):blocked('dependency_unavailable');}
+  finally{clearPhase();if(timer)clearTimeout(timer);signal?.removeEventListener('abort',abort);if(controller){active.delete(controller);controller.abort();}pending.delete(finished);settle();}
  }
  });
 }
