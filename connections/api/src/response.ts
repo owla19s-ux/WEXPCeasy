@@ -1,3 +1,5 @@
+import {observeProviderIdentity} from './identity.js';
+import type {ProviderIdentity} from './identity.js';
 import {checkFinishReason,checkRefusal} from './terminal.js';
 import {decodeUsage} from './usage.js';
 import {closed} from './model.js';
@@ -16,6 +18,8 @@ export async function decodeChatResponse(source:AsyncIterable<Uint8Array>,option
  check();
  const record=(v:unknown):Record<string,unknown>=>{if(!v||typeof v!=='object'||Array.isArray(v))throw Error('invalid_response_object');return v as Record<string,unknown>;};
  let response:Record<string,unknown>;try{response=record(JSON.parse(body));}catch{throw Error('invalid_response_json');}
+ const identity:ProviderIdentity={};
+ observeProviderIdentity(identity,response);
  if(response.error!==undefined)throw Error('provider_response_error');
  if(!Array.isArray(response.choices)||response.choices.length!==1)throw Error('unsupported_response_choices');
  const choice=record(response.choices[0]);if(choice.index!==0)throw Error('unsuccessful_response_finish');
@@ -32,5 +36,5 @@ export async function decodeChatResponse(source:AsyncIterable<Uint8Array>,option
  if(Buffer.byteLength(message.content,'utf8')+Buffer.byteLength(reasoning,'utf8')>maxText)throw Error('response_text_limit');
  let usage:ChatStreamResult['usage']=null;
  if(response.usage!==undefined&&response.usage!==null)usage=decodeUsage(response.usage);
- return {text:message.content,usage,...(reasoning?{reasoning}:{}),...(toolCalls.length?{toolCalls}:{} )};
+ return {text:message.content,usage,...identity,...(reasoning?{reasoning}:{}),...(toolCalls.length?{toolCalls}:{} )};
 }

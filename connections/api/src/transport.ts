@@ -1,3 +1,4 @@
+import {captureResponseFormat,validateStructuredOutput} from './tools.js';
 import {ProviderTerminalError} from './terminal.js';
 import type {Json} from '../../../shared/src/index.js';
 import {createHash} from 'node:crypto';
@@ -18,6 +19,21 @@ function failureMetadata(response:Response,token?:string):{httpStatus:number;ret
  const seconds=value&&(!token||!value.includes(token))&&/^\d{1,10}$/.test(value)?Number(value):undefined;
  return {httpStatus:response.status,...(seconds===undefined?{}:{retryAfterSeconds:seconds})};
 }
+function responseIdentity(result:ChatStreamResult){
+ return {
+  ...(result.providerResponseId===undefined?{}:{providerResponseId:result.providerResponseId}),
+  ...(result.providerModelId===undefined?{}:{providerModelId:result.providerModelId})
+ };
+}
+function networkFailure(error:unknown):string|undefined {
+ if(!(error instanceof TypeError)||!object(error.cause)&&!(error.cause instanceof Error))return;
+ const code=(error.cause as {code?:unknown}).code;
+ if(typeof code!=='string')return;
+ if(['ENOTFOUND','EAI_AGAIN'].includes(code))return 'provider_dns_failed';
+ if(['ECONNREFUSED','ENETUNREACH','EHOSTUNREACH'].includes(code))return 'provider_unreachable';
+ if(['CERT_HAS_EXPIRED','DEPTH_ZERO_SELF_SIGNED_CERT','SELF_SIGNED_CERT_IN_CHAIN','UNABLE_TO_VERIFY_LEAF_SIGNATURE','UNABLE_TO_GET_ISSUER_CERT_LOCALLY','ERR_TLS_CERT_ALTNAME_INVALID'].includes(code))return 'provider_tls_failed';
+ if(code==='UND_ERR_CONNECT_TIMEOUT')return 'provider_connect_timeout';
+}
 function providerError(status:number):string {
  return status===401||status===403?'provider_authorization':status===429?'provider_rate_limited':status>=300&&status<400?'redirect_refused':'provider_http_error';
 }
@@ -25,7 +41,7 @@ export type ApiDirectoryResult=
  | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;source:'provider';observedAt:string;modelIds:string[];providerRequestId?:string}}
  | {status:'blocked'|'unknown';operationId:string;reason:string};
 export type ApiProbeResult=
- | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;modelId:string;modelRevision:number;source:'probe';stream?:true;observedAt:string;usage:ChatStreamResult['usage'];providerRequestId?:string}}
+ | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;modelId:string;modelRevision:number;source:'probe';stream?:true;observedAt:string;usage:ChatStreamResult['usage'];providerRequestId?:string;providerResponseId?:string;providerModelId?:string}}
  | {status:'blocked'|'unknown';operationId:string;reason:string};
 type Ledger=ReturnType<typeof createOperationLedger>;
 export type ApiSendResult={status:'ok';operationId:string;result:ChatStreamResult&{providerRequestId?:string}}|{status:'blocked'|'unknown';operationId:string;reason:string};
@@ -59,7 +75,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
   active.add(controller);
   signal?.addEventListener('abort',abort,{once:true});
   let timer:ReturnType<typeof setTimeout>|undefined;
-  let timedOut=false,dispatched=false;
+  let timedOut=false,dispatched=false,receivedHeaders=false;
   const receiptId=probe?'api-probe-result':'api-directory-result';
   let correlation:{providerRequestId?:string;httpStatus?:number;retryAfterSeconds?:number}={};
   const unknown=(reason:string):ApiDirectoryResult=>{
@@ -114,6 +130,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    dispatched=true;
    const response=await fetch(url,{method:probe?'POST':'GET',...(probeBody?{body:JSON.stringify(probeBody)}:{}),redirect:'manual',signal:controller.signal,headers:{accept:probe?.stream?'text/event-stream':'application/json',...(probeBody?{'content-type':'application/json'}:{}),...(token?{authorization:'Bearer '+token}:{})}});
    if(!current())return unknown('authorization_or_configuration_changed');
+   receivedHeaders=true;
    const receivedCorrelation=requestCorrelation(response);
    if(!token||!JSON.stringify(receivedCorrelation).includes(token))correlation=receivedCorrelation;
    if(!response.ok){correlation={...correlation,...failureMetadata(response,token)};return unknown(providerError(response.status));}
@@ -138,15 +155,17 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     const result=await decode((async function*(){yield bytes;})(),{signal:controller.signal});
     if(!result.text.trim())return unknown('empty_probe_response');
     if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
-    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,...(probe?.stream?{stream:true as const}:{}),observedAt:new Date().toISOString(),usage:result.usage,...correlation};
+    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,...(probe?.stream?{stream:true as const}:{}),observedAt:new Date().toISOString(),usage:result.usage,...responseIdentity(result),...correlation};
     if(!current())return unknown('authorization_or_configuration_changed');
     if(ledger.observe(operationId,receiptId,{...observation,scopeHash:createHash('sha256').update(canonical(decision.scope)).digest('hex')},'observed').status!=='ok')
      return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
     if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
     return {status:'ok',operationId,observation};
    }
-   const decoded:unknown=JSON.parse(body);
+   let decoded:unknown;
+   try{decoded=JSON.parse(body);}catch{return unknown('invalid_model_directory');}
    if(!object(decoded)||!Array.isArray(decoded.data)||decoded.data.length>4096)return unknown('invalid_model_directory');
+   if(decoded.has_more===true)return unknown('model_directory_incomplete');
    const ids=new Set<string>();
    for(const row of decoded.data){
     if(!object(row)||!text(row.id)||ids.has(row.id))return unknown('invalid_model_directory');
@@ -160,7 +179,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
    return {status:'ok',operationId,observation};
   }catch(error){
-   return dispatched?unknown(timedOut?'timeout':stopped?'stopped':signal?.aborted?'cancelled':(error instanceof ProviderTerminalError?error.reason:probe?'probe_response_unconfirmed':'directory_response_unconfirmed')):blocked('directory_unavailable');
+   return dispatched?unknown(timedOut?'timeout':stopped?'stopped':signal?.aborted?'cancelled':(error instanceof ProviderTerminalError?error.reason:(!receivedHeaders?networkFailure(error):undefined)??(probe?'probe_response_unconfirmed':'directory_response_unconfirmed'))):blocked('directory_unavailable');
   }finally{
    if(timer)clearTimeout(timer);
    signal?.removeEventListener('abort',abort);
@@ -188,6 +207,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
  async send(request:object,operationId:string,input:Preparation,signal?:AbortSignal,onText?:(delta:string)=>void):Promise<ApiSendResult>{
   let settle!:()=>void;const finished=new Promise<void>(resolve=>{settle=resolve;});pending.add(finished);
   const blocked=(reason:string):ApiSendResult=>({status:'blocked',operationId,reason});
+  let receivedHeaders=false;
   let dispatched=false,controller:AbortController|undefined,timer:ReturnType<typeof setTimeout>|undefined,timedOut=false;
   let phaseTimer:ReturnType<typeof setTimeout>|undefined;
   let phaseTimeout:'headers_timeout'|'body_idle_timeout'|undefined;
@@ -248,6 +268,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    clearPhase();
    if(phaseTimeout)return unknown(phaseTimeout);
    if(!current())return unknown('authorization_or_configuration_changed');
+   receivedHeaders=true;
    const receivedCorrelation=requestCorrelation(response);
    if(!token||!JSON.stringify(receivedCorrelation).includes(token))correlation=receivedCorrelation;
    if(!response.ok){correlation={...correlation,...failureMetadata(response,token)};return unknown(providerError(response.status));}
@@ -268,16 +289,21 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     pendingText=pendingText.slice(end);
     onText(next);
    };
+   const outputSchema=captureResponseFormat(snapshot.body.response_format);
    const allowReasoning=snapshot.connection.provider==='deepseek'&&snapshot.model.observation?.capabilities.reasoning==='supported';
-   const result=await (snapshot.body.stream?decodeChatStream(chunks(),{signal:abortSignal,allowReasoning,...(onText?{onText:publish}:{}),...(snapshot.tools?{tools:snapshot.tools}:{})}):decodeChatResponse(chunks(),{signal:abortSignal,allowReasoning,...(snapshot.tools?{tools:snapshot.tools}:{})}));
+   const result=await (snapshot.body.stream?decodeChatStream(chunks(),{signal:abortSignal,allowReasoning,...(onText&&outputSchema===undefined?{onText:publish}:{}),...(snapshot.tools?{tools:snapshot.tools}:{})}):decodeChatResponse(chunks(),{signal:abortSignal,allowReasoning,...(snapshot.tools?{tools:snapshot.tools}:{})}));
    if(!current())return unknown('authorization_or_configuration_changed');
    if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
+   if(outputSchema!==undefined&&!result.toolCalls?.length){
+    try{validateStructuredOutput(result.text,outputSchema);}catch{return unknown('invalid_structured_output');}
+    if(snapshot.body.stream&&onText)publish(result.text,true);
+   }
    if(snapshot.body.stream&&onText){publish('',true);if(!current()||abortSignal.aborted)return unknown('authorization_or_configuration_changed');}
-   const receipt=ledger.observe(operationId,'api-result',{text:result.text,usage:result.usage,...(result.reasoning?{reasoning:result.reasoning}:{}),...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
+   const receipt=ledger.observe(operationId,'api-result',{text:result.text,usage:result.usage,...responseIdentity(result),...(result.reasoning?{reasoning:result.reasoning}:{}),...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
    if(receipt.status!=='ok')return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
    return {status:'ok',operationId,result:{...result,...correlation}};
-  }catch(error){return dispatched?unknown(phaseTimeout??(timedOut?'timeout':stopped?'stopped':signal?.aborted?'cancelled':error instanceof ProviderTerminalError?error.reason:'response_unconfirmed')):blocked('dependency_unavailable');}
+  }catch(error){return dispatched?unknown(phaseTimeout??(timedOut?'timeout':stopped?'stopped':signal?.aborted?'cancelled':error instanceof ProviderTerminalError?error.reason:(!receivedHeaders?networkFailure(error):undefined)??'response_unconfirmed')):blocked('dependency_unavailable');}
   finally{clearPhase();if(timer)clearTimeout(timer);signal?.removeEventListener('abort',abort);if(controller){active.delete(controller);controller.abort();}pending.delete(finished);settle();}
  }
  });

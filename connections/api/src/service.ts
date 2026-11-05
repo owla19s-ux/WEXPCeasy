@@ -1,5 +1,5 @@
 import type {Operation} from '../../src/index.js';
-import {captureTools} from './tools.js';
+import {captureTools,captureResponseFormat} from './tools.js';
 import {createHash,randomUUID} from 'node:crypto';
 import type {Store,Json} from '../../../shared/src/index.js';
 import type {PermissionReader,Decision,Scope} from '../../../permissions/src/index.js';
@@ -123,6 +123,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
     const prior=settings.get(name);if(prior){if(canonical(prior.setting)!==canonical(setting))fail('parameter_conflict');prior.sources.push(source);}else settings.set(name,{setting,sources:[source]});
    }
    for(const [name,row] of settings){sources[name]=row.sources;if(row.setting.mode!=='value')continue;const spec=observed.parameters[name];if(!spec)fail('parameter_unsupported');if(!parameterValue(row.setting.value,spec))fail('parameter_invalid');values[name]=row.setting.value;}
+   try{captureResponseFormat(values.response_format);}catch{fail('invalid_response_format');}
    const outputLimit=observed.limits?.maxOutputTokens;
    if(outputLimit!==undefined){
     for(const key of ['max_tokens','max_completion_tokens']){

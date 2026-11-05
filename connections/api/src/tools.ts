@@ -35,6 +35,24 @@ function argumentsObject(raw:string):Record<string,Json>{
  try{parsed=capture(parsed);}catch{throw Error('invalid_tool_arguments');}
  if(!object(parsed))throw Error('invalid_tool_arguments');return parsed as Record<string,Json>;
 }
+export function captureResponseFormat(value:unknown):ToolSchema|null|undefined {
+ if(value===undefined)return;
+ if(closed(value,['type'])&&value.type==='text')return;
+ if(closed(value,['type'])&&value.type==='json_object')return null;
+ if(!closed(value,['type','json_schema'])||value.type!=='json_schema'
+  ||!closed(value.json_schema,['name','schema','strict'],['description'])||value.json_schema.strict!==true)
+  throw Error('invalid_response_format');
+ const schema=value.json_schema;
+ const declaration={name:schema.name,parameters:schema.schema,
+  ...(schema.description===undefined?{}:{description:schema.description})};
+ return captureTools([declaration])[0]!.parameters;
+}
+
+export function validateStructuredOutput(raw:string,schema:ToolSchema|null):void {
+ const value=argumentsObject(raw);
+ if(schema!==null&&!matches(value,schema))throw Error('structured_output_schema_mismatch');
+}
+
 /** Accumulates wire fragments only; proposals become visible after validated terminal completion. */
 export function createToolAccumulator(definitions:readonly ToolDefinition[]){
  const rows:{id:string;name:string;raw:string}[]=[],ids=new Set<string>();let argumentBytes=0;

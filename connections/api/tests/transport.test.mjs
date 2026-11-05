@@ -9,9 +9,9 @@ import {openSqliteStore} from '../../../dist/shared/src/index.js';
 import {createOperationLedger} from '../../../dist/connections/src/index.js';
 import {createApiTransport} from '../../../dist/connections/api/src/index.js';
 const body='data: {"choices":[{"index":0,"delta":{"content":"hello"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n';
-async function setup(t,handler,connectionPatch={},toolCapability='unknown',credentials){let calls=0;const server=createServer((req,res)=>{calls++;handler(req,res);});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.closeAllConnections();server.close();});
+async function setup(t,handler,connectionPatch={},toolCapability='unknown',credentials,parameterSpecs={}){let calls=0;const server=createServer((req,res)=>{calls++;handler(req,res);});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>{server.closeAllConnections();server.close();});
 let ledger;
-const f=fixture(t,{readProbeOperation:id=>ledger.get(id),observer:{resolve(r,c,m){return {connectionId:c.id,connectionRevision:c.revision,modelId:m.modelId,source:'probe',sourceRevision:'test',observedAt:'2026-11-05T00:00:00Z',capabilities:{text:'supported',stream:'supported',tools:toolCapability,image:'unknown',reasoning:'unknown'},parameters:{}};}}});
+const f=fixture(t,{readProbeOperation:id=>ledger.get(id),observer:{resolve(r,c,m){return {connectionId:c.id,connectionRevision:c.revision,modelId:m.modelId,source:'probe',sourceRevision:'test',observedAt:'2026-11-05T00:00:00Z',capabilities:{text:'supported',stream:'supported',tools:toolCapability,image:'unknown',reasoning:'unknown'},parameters:parameterSpecs};}}});
 const c=f.connection({endpoint:`http://127.0.0.1:${server.address().port}/v1`,credentialRef:null,...connectionPatch}),m=f.model(c.id);f.execute({kind:'model.observe',intent:'observe',id:m.id,expectedRevision:1});
 const dir=mkdtempSync(join(tmpdir(),'api-operation-')),db=openSqliteStore(join(dir,'ops.sqlite'),'operations');t.after(()=>{db.close();rmSync(dir,{recursive:true,force:true});});ledger=createOperationLedger(db);
 const transport=createApiTransport(f.service,f.permission,ledger,{derivePrepareRequest:request=>f.request('request.prepare',f.permission.evaluate(request).scope.target),credentials});
@@ -342,4 +342,46 @@ test('provider refusal and truncation preserve distinct sanitized receipts',asyn
  assert.equal((await h.transport.send(h.request(),'truncated-output',input)).reason,'provider_output_truncated');
  assert.equal(JSON.stringify(h.ledger.get('refused')).includes('private refusal text'),false);
  assert.equal(h.ledger.get('truncated-output').phase,'unknown');
+});
+
+test('structured output validates the declaration before dispatch and the result before publication',async t=>{
+ let answer='{"ok":"wrong"}';
+ const h=await setup(t,(req,res)=>{
+  res.writeHead(200,{'content-type':'text/event-stream'});
+  res.end('data: '+JSON.stringify({choices:[{index:0,delta:{content:answer},finish_reason:'stop'}]})+'\n\ndata: [DONE]\n\n');
+ },{},'unknown',undefined,{response_format:{type:'object'}});
+ const schema={type:'object',properties:{ok:{type:'boolean'}},required:['ok'],additionalProperties:false};
+ const input=value=>({...h.input,parameters:{response_format:{mode:'value',value}}});
+ const declaration={type:'json_schema',json_schema:{name:'answer',strict:true,schema}};
+ assert.equal((await h.transport.send(h.request(),'bad-format',input({type:'json_schema',json_schema:{name:'answer',schema}}))).status,'blocked');
+ assert.equal(h.calls(),0);
+ const seen=[];
+ const publish=delta=>seen.push(delta);
+ assert.equal((await h.transport.send(h.request(),'bad-output',input(declaration),undefined,publish)).reason,'invalid_structured_output');
+ assert.deepEqual(seen,[]);
+ answer='{"ok":true}';
+ const result=await h.transport.send(h.request(),'good-output',input(declaration),undefined,publish);
+ assert.equal(result.status,'ok');
+ assert.deepEqual(seen,[answer]);
+});
+
+test('provider response identity is retained and mixed SSE identities are rejected',async t=>{
+ const h=await setup(t,(req,res)=>{
+  const frame=(id,content,finish_reason)=>'data: '+JSON.stringify({id,model:'provider-model',choices:[{index:0,delta:{content},finish_reason}]})+'\n\n';
+  res.writeHead(200,{'content-type':'text/event-stream'});
+  res.end(frame('reply-a','hello',null)+frame(h.calls()===1?'reply-a':'reply-b','', 'stop')+'data: [DONE]\n\n');
+ });
+ const good=await h.transport.send(h.request(),'identity-ok',h.input);
+ assert.equal(good.result.providerResponseId,'reply-a');
+ assert.equal(h.ledger.get('identity-ok').observations[0].value.providerModelId,'provider-model');
+ assert.equal((await h.transport.send(h.request(),'identity-mixed',h.input)).status,'unknown');
+});
+
+test('network diagnostics persist only classified error reasons',async t=>{
+ const h=await setup(t,()=>{});
+ t.mock.method(globalThis,'fetch',async()=>{throw new TypeError('private transport message',{cause:{code:'ENOTFOUND',hostname:'private hostname'}});});
+ assert.equal((await h.transport.send(h.request(),'dns-failed',h.input)).reason,'provider_dns_failed');
+ const request=h.f.request('directory.refresh',`connection:${h.c.id}`);
+ assert.equal((await h.transport.refreshDirectory(request,'directory-dns',h.c.id,1,1000)).reason,'provider_dns_failed');
+ assert.equal(JSON.stringify(h.ledger.get('dns-failed')).includes('private'),false);
 });

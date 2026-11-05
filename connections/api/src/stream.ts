@@ -1,3 +1,5 @@
+import {observeProviderIdentity} from './identity.js';
+import type {ProviderIdentity} from './identity.js';
 import {checkFinishReason,checkRefusal} from './terminal.js';
 import type {ChatUsage} from './usage.js';
 import {decodeUsage} from './usage.js';
@@ -5,8 +7,9 @@ import {captureTools,createToolAccumulator} from './tools.js';
 import type {ToolDefinition,ToolProposal} from './model.js';
 /** OpenAI Chat SSE decoder with explicitly declared tool proposals. Transport/authorization remain host responsibilities. */
 export interface ChatStreamOptions {onText?:(delta:string)=>void;allowReasoning?:boolean;tools?:readonly ToolDefinition[];signal?:AbortSignal;maxBytes?:number;maxFrameBytes?:number;maxFrames?:number;maxTextBytes?:number}
-export interface ChatStreamResult {reasoning?:string;toolCalls?:ToolProposal[];text:string;usage:null|ChatUsage}
+export interface ChatStreamResult extends ProviderIdentity {reasoning?:string;toolCalls?:ToolProposal[];text:string;usage:null|ChatUsage}
 export async function decodeChatStream(source:AsyncIterable<Uint8Array>,options:ChatStreamOptions={}):Promise<ChatStreamResult>{
+ const identity:ProviderIdentity={};
  const declarations=captureTools(options.tools),accumulator=createToolAccumulator(declarations);let toolCalls:ToolProposal[]=[];
  const limit=(v:number|undefined,fallback:number)=>{const n=v??fallback;if(!Number.isSafeInteger(n)||n<=0)throw Error('invalid_stream_limit');return n;};
  const maxBytes=limit(options.maxBytes,8*1024*1024),maxFrame=limit(options.maxFrameBytes,256*1024),maxFrames=limit(options.maxFrames,100000),maxText=limit(options.maxTextBytes,4*1024*1024);
@@ -21,6 +24,7 @@ export async function decodeChatStream(source:AsyncIterable<Uint8Array>,options:
   if(done)throw Error('stream_after_done');
   if(payload==='[DONE]'){if(!finished)throw Error('stream_missing_finish');done=true;return;}
   let chunk:Record<string,unknown>;try{chunk=record(JSON.parse(payload));}catch{throw Error('invalid_stream_json');}
+  observeProviderIdentity(identity,chunk);
   if(chunk.error!==undefined)throw Error('provider_stream_error');
   if(!Array.isArray(chunk.choices)||chunk.choices.length>1)throw Error('unsupported_stream_choices');
   if(chunk.choices.length===1)checkFinishReason(record(chunk.choices[0]).finish_reason);
@@ -59,5 +63,5 @@ export async function decodeChatStream(source:AsyncIterable<Uint8Array>,options:
  };
  check();
  try{for await(const chunk of source){check();if(!(chunk instanceof Uint8Array))throw Error('invalid_stream_bytes');bytes+=chunk.byteLength;if(bytes>maxBytes)throw Error('stream_byte_limit');feed(decoder.decode(chunk,{stream:true}));publish();}feed(decoder.decode());publish();}catch(error){if(error instanceof TypeError)throw Error('invalid_stream_encoding');throw error;}
- check();if(line.length||data.length||!done||!finished)throw Error('incomplete_stream');return {text,usage,...(reasoning?{reasoning}:{}),...(toolCalls.length?{toolCalls}:{} )};
+ check();if(line.length||data.length||!done||!finished)throw Error('incomplete_stream');return {text,usage,...identity,...(reasoning?{reasoning}:{}),...(toolCalls.length?{toolCalls}:{} )};
 }
