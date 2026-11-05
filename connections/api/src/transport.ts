@@ -124,7 +124,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    }
    if(!current())return blocked('authorization_or_configuration_changed');
    const fingerprint=createHash('sha256').update(canonical({scope:decision.scope,connection,model:model??null,probeBody,url:url.href,timeoutMs})).digest('hex');
-   if(ledger.prepare(operationId,fingerprint,{connectionId,configRevision:expectedRevision,adapterId:'connections/api',adapterVersion:probe?(probe.tools?'openai-chat-tool-probe-1':probe.stream?'openai-chat-stream-probe-1':'openai-chat-probe-1'):'openai-chat-models-1',endpoint:url.href}).status!=='ok')
+   if(ledger.prepare(operationId,fingerprint,{connectionId,configRevision:expectedRevision,adapterId:'connections/api',adapterVersion:probe?(probe.tools?(probe.stream?'openai-chat-stream-tool-probe-1':'openai-chat-tool-probe-1'):probe.stream?'openai-chat-stream-probe-1':'openai-chat-probe-1'):'openai-chat-models-1',endpoint:url.href}).status!=='ok')
     return {status:'unknown',operationId,reason:'prepare_unconfirmed'};
    if(!current())return blocked('authorization_or_configuration_changed');
    if(ledger.markDispatched(operationId).status!=='ok')return {status:'unknown',operationId,reason:'dispatch_record_unconfirmed'};
@@ -204,9 +204,9 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
   if(result.observation.source==='provider')return {...result,observation:result.observation};
   throw Error('unexpected_diagnostic_result');
  },
- async probeGeneration(request:object,operationId:string,modelId:string,connectionRevision:number,modelRevision:number,timeoutMs:number,signal?:AbortSignal,mode:boolean|'tools'=false):Promise<ApiProbeResult>{
+ async probeGeneration(request:object,operationId:string,modelId:string,connectionRevision:number,modelRevision:number,timeoutMs:number,signal?:AbortSignal,mode:boolean|'tools'|'stream-tools'=false):Promise<ApiProbeResult>{
   if(!revision(modelRevision))return {status:'blocked',operationId,reason:'invalid_model_revision'};
-  const result=await diagnose(request,operationId,modelId,connectionRevision,timeoutMs,signal,{modelRevision,stream:mode===true,tools:mode==='tools'});
+  const result=await diagnose(request,operationId,modelId,connectionRevision,timeoutMs,signal,{modelRevision,stream:mode===true||mode==='stream-tools',tools:mode==='tools'||mode==='stream-tools'});
   if(result.status!=='ok')return result;
   if(result.observation.source==='probe')return {...result,observation:result.observation};
   throw Error('unexpected_diagnostic_result');

@@ -9,7 +9,7 @@ export interface ApiConnection {id:string;revision:number;name:string;provider:s
 export type Capability='text'|'stream'|'tools'|'image'|'reasoning';
 export type CapabilityState='supported'|'unsupported'|'unknown'|'unverified';
 export interface ParameterSpec {type:'number'|'integer'|'boolean'|'string'|'object'|'array'|'null';minimum?:number;maximum?:number;enum?:Json[]}
-export interface ModelObservation {connectionId:string;connectionRevision:number;modelId:string;source:'provider'|'probe';sourceRevision:string;observedAt:string;capabilities:Record<Capability,CapabilityState>;parameters:Record<string,ParameterSpec>;toolProbe?:{operationId:string;observedAt:string};limits?:{contextWindow?:number;maxOutputTokens?:number}}
+export interface ModelObservation {connectionId:string;connectionRevision:number;modelId:string;source:'provider'|'probe';sourceRevision:string;observedAt:string;capabilities:Record<Capability,CapabilityState>;parameters:Record<string,ParameterSpec>;toolProbe?:{operationId:string;observedAt:string;stream?:true};limits?:{contextWindow?:number;maxOutputTokens?:number}}
 export interface ApiModel {id:string;revision:number;connectionId:string;name:string;modelId:string;parameters:Parameters;observation:ModelObservation|null}
 /** Returns existing verified observations; network probes require their own controlled operation. */
 export interface ModelObserver {resolve(request:object,connection:Readonly<ApiConnection>,model:Readonly<ApiModel>):ModelObservation|undefined}
@@ -82,7 +82,7 @@ function specs(value:unknown):boolean {
  });
 }
 function toolProbeEvidence(value:unknown):boolean {
- return value===undefined||(closed(value,['operationId','observedAt'])&&text(value.operationId)
+ return value===undefined||(closed(value,['operationId','observedAt'],['stream'])&&(value.stream===undefined||value.stream===true)&&text(value.operationId)
   &&typeof value.observedAt==='string'&&Number.isFinite(Date.parse(value.observedAt)));
 }
 function observationLimits(value:unknown):boolean {

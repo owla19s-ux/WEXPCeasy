@@ -492,3 +492,27 @@ test('tool probe verifies a fixed proposal and retains existing text, stream and
  assert.equal(result.status,'ok');
  assert.deepEqual(result.result.toolCalls,[{id:'probe-call',name:'wex_probe',arguments:{ok:true}}]);
 });
+
+test('streaming tool probe requires complete tool fragments and retains the stream evidence',async t=>{
+ const frame=(delta,finish_reason=null)=>'data: '+JSON.stringify({choices:[{index:0,delta,finish_reason}]})+'\n\n';
+ const h=await setup(t,async(req,res)=>{
+  const chunks=[];
+  for await(const chunk of req)chunks.push(chunk);
+  assert.equal(JSON.parse(Buffer.concat(chunks).toString()).stream,true);
+  assert.equal(req.headers.accept,'text/event-stream');
+  res.writeHead(200,{'content-type':'text/event-stream'});
+  res.write(frame({tool_calls:[{index:0,id:'probe-call',type:'function',function:{name:'wex_probe',arguments:'{"ok":'}}]}));
+  res.end(frame({tool_calls:[{index:0,function:{arguments:'true}'}}]},'tool_calls')+(h.calls()===1?'':'data: [DONE]\n\n'));
+ });
+ const request=h.f.request('model.probe',`model:${h.m.id}`);
+ const run=id=>h.transport.probeGeneration(request,id,h.m.id,1,2,1000,undefined,'stream-tools');
+ assert.equal((await run('incomplete-stream-tool')).status,'unknown');
+ const proof=await run('complete-stream-tool');
+ assert.equal(proof.status,'ok');
+ assert.equal(proof.observation.tools,true);
+ assert.equal(proof.observation.stream,true);
+ assert.equal(h.f.execute({kind:'model.observe',intent:'stream-tool-proof',id:h.m.id,expectedRevision:2,probeOperationId:'complete-stream-tool'}).status,'committed');
+ const model=h.f.query('model',h.m.id).value;
+ assert.equal(model.observation.toolProbe.stream,true);
+ assert.equal(model.observation.capabilities.tools,'supported');
+});
