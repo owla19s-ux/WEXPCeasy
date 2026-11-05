@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import type {PermissionReader,Decision} from '../../../permissions/src/index.js';
 import type {createOperationLedger} from '../../src/index.js';
 import type {ApiService} from './service.js';
-import type {CredentialReference,Preparation} from './model.js';
+import type {CredentialReference,Preparation,ToolDefinition} from './model.js';
 import {canonical,capture,object,text,revision} from './model.js';
 import {decodeChatStream} from './stream.js';
 import {decodeChatResponse} from './response.js';
@@ -38,11 +38,15 @@ function networkFailure(error:unknown):string|undefined {
 function providerError(status:number):string {
  return status===401||status===403?'provider_authorization':status===429?'provider_rate_limited':status>=300&&status<400?'redirect_refused':'provider_http_error';
 }
+const toolProbeDeclaration:ToolDefinition={
+ name:'wex_probe',
+ parameters:{type:'object',properties:{ok:{type:'boolean',enum:[true]}},required:['ok'],additionalProperties:false}
+};
 export type ApiDirectoryResult=
  | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;source:'provider';observedAt:string;modelIds:string[];providerRequestId?:string}}
  | {status:'blocked'|'unknown';operationId:string;reason:string};
 export type ApiProbeResult=
- | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;modelId:string;modelRevision:number;source:'probe';stream?:true;observedAt:string;usage:ChatStreamResult['usage'];providerRequestId?:string;providerResponseId?:string;providerModelId?:string}}
+ | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;modelId:string;modelRevision:number;source:'probe';stream?:true;tools?:true;observedAt:string;usage:ChatStreamResult['usage'];providerRequestId?:string;providerResponseId?:string;providerModelId?:string}}
  | {status:'blocked'|'unknown';operationId:string;reason:string};
 type Ledger=ReturnType<typeof createOperationLedger>;
 export type ApiSendResult={status:'ok';operationId:string;result:ChatStreamResult&{providerRequestId?:string}}|{status:'blocked'|'unknown';operationId:string;reason:string};
@@ -64,7 +68,7 @@ export interface ApiTransportOptions {
 /** Host-owned ledger; no retries, credential storage, or tool execution. */
 export function createApiTransport(api:ApiService,permission:PermissionReader,ledger:Ledger,options:ApiTransportOptions){
  let stopped=false;const active=new Set<AbortController>(),pending=new Set<Promise<void>>();
- async function diagnose(request:object,operationId:string,targetId:string,expectedRevision:number,timeoutMs:number,signal:AbortSignal|undefined,probe?:{modelRevision:number;stream:boolean}):Promise<ApiDirectoryResult|ApiProbeResult>{
+ async function diagnose(request:object,operationId:string,targetId:string,expectedRevision:number,timeoutMs:number,signal:AbortSignal|undefined,probe?:{modelRevision:number;stream:boolean;tools:boolean}):Promise<ApiDirectoryResult|ApiProbeResult>{
   const blocked=(reason:string):ApiDirectoryResult=>({status:'blocked',operationId,reason});
   if(stopped||signal?.aborted)return blocked('stopped_or_cancelled');
   if(!text(operationId)||!text(targetId)||!revision(expectedRevision)||!revision(timeoutMs)||timeoutMs>2147483647)return blocked('invalid_diagnostic_request');
@@ -95,7 +99,8 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(!probe&&connection.endpointMode!=='base')return blocked('directory_route_unsupported');
    const url=new URL(connection.endpoint);
    if(connection.endpointMode==='base')url.pathname=url.pathname.replace(/\/$/,'')+(probe?'/chat/completions':'/models');
-   const probeBody=model?{model:model.modelId,messages:[{role:'user',content:'Reply with OK.'}],stream:probe?.stream===true,max_tokens:8}:null;
+   const probeBody=model?{model:model.modelId,messages:[{role:'user',content:probe?.tools?'Propose wex_probe with ok set to true.':'Reply with OK.'}],stream:probe?.stream===true,max_tokens:probe?.tools?64:8,
+    ...(probe?.tools?{tools:[{type:'function',function:toolProbeDeclaration}],tool_choice:{type:'function',function:{name:toolProbeDeclaration.name}}}:{})}:null;
    const current=()=>{
     if(stopped||controller.signal.aborted)return false;
     try{
@@ -119,7 +124,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    }
    if(!current())return blocked('authorization_or_configuration_changed');
    const fingerprint=createHash('sha256').update(canonical({scope:decision.scope,connection,model:model??null,probeBody,url:url.href,timeoutMs})).digest('hex');
-   if(ledger.prepare(operationId,fingerprint,{connectionId,configRevision:expectedRevision,adapterId:'connections/api',adapterVersion:probe?(probe.stream?'openai-chat-stream-probe-1':'openai-chat-probe-1'):'openai-chat-models-1',endpoint:url.href}).status!=='ok')
+   if(ledger.prepare(operationId,fingerprint,{connectionId,configRevision:expectedRevision,adapterId:'connections/api',adapterVersion:probe?(probe.tools?'openai-chat-tool-probe-1':probe.stream?'openai-chat-stream-probe-1':'openai-chat-probe-1'):'openai-chat-models-1',endpoint:url.href}).status!=='ok')
     return {status:'unknown',operationId,reason:'prepare_unconfirmed'};
    if(!current())return blocked('authorization_or_configuration_changed');
    if(ledger.markDispatched(operationId).status!=='ok')return {status:'unknown',operationId,reason:'dispatch_record_unconfirmed'};
@@ -153,10 +158,11 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(model){
     const bytes=new TextEncoder().encode(body);
     const decode=probe?.stream?decodeChatStream:decodeChatResponse;
-    const result=await decode((async function*(){yield bytes;})(),{signal:controller.signal});
-    if(!result.text.trim())return unknown('empty_probe_response');
+    const result=await decode((async function*(){yield bytes;})(),{signal:controller.signal,...(probe?.tools?{tools:[toolProbeDeclaration]}:{})});
+    if(probe?.tools&&result.toolCalls?.length!==1)return unknown('tool_probe_proposal_missing');
+    if(!probe?.tools&&!result.text.trim())return unknown('empty_probe_response');
     if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
-    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,...(probe?.stream?{stream:true as const}:{}),observedAt:new Date().toISOString(),usage:result.usage,...responseIdentity(result),...correlation};
+    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,...(probe?.tools?{tools:true as const}:{}),...(probe?.stream?{stream:true as const}:{}),observedAt:new Date().toISOString(),usage:result.usage,...responseIdentity(result),...correlation};
     if(!current())return unknown('authorization_or_configuration_changed');
     if(ledger.observe(operationId,receiptId,{...observation,scopeHash:createHash('sha256').update(canonical(decision.scope)).digest('hex')},'observed').status!=='ok')
      return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
@@ -198,9 +204,9 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
   if(result.observation.source==='provider')return {...result,observation:result.observation};
   throw Error('unexpected_diagnostic_result');
  },
- async probeGeneration(request:object,operationId:string,modelId:string,connectionRevision:number,modelRevision:number,timeoutMs:number,signal?:AbortSignal,stream=false):Promise<ApiProbeResult>{
+ async probeGeneration(request:object,operationId:string,modelId:string,connectionRevision:number,modelRevision:number,timeoutMs:number,signal?:AbortSignal,mode:boolean|'tools'=false):Promise<ApiProbeResult>{
   if(!revision(modelRevision))return {status:'blocked',operationId,reason:'invalid_model_revision'};
-  const result=await diagnose(request,operationId,modelId,connectionRevision,timeoutMs,signal,{modelRevision,stream:stream===true});
+  const result=await diagnose(request,operationId,modelId,connectionRevision,timeoutMs,signal,{modelRevision,stream:mode===true,tools:mode==='tools'});
   if(result.status!=='ok')return result;
   if(result.observation.source==='probe')return {...result,observation:result.observation};
   throw Error('unexpected_diagnostic_result');

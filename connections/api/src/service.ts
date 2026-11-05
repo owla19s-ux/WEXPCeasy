@@ -48,22 +48,31 @@ export function createApiService(store:Store,permission:PermissionReader,options
    case 'connection.edit':{const item=find(next.connections,c.id);expected(item,c.expectedRevision);for(const field of ['name','provider','protocol','endpoint','endpointMode','credentialRef','enabled','parameters'] as const)if(Object.hasOwn(c,field))Object.assign(item,{[field]:c[field]});item.endpoint=endpoint(item.endpoint,item.endpointMode);item.revision++;result=item;break;}
    case 'model.create':{find(next.connections,c.connectionId);if(next.models.some(m=>m.connectionId===c.connectionId&&m.modelId===c.modelId))fail('duplicate_model_unsupported');const item:ApiModel={id:id(next),revision:1,connectionId:c.connectionId,name:c.name,modelId:c.modelId,parameters:c.parameters,observation:null};next.models.push(item);result=item;break;}
    case 'model.edit':{const item=find(next.models,c.id);expected(item,c.expectedRevision);if(c.name!==undefined)item.name=c.name;if(c.parameters!==undefined)item.parameters=c.parameters;item.revision++;result=item;break;}
-   case 'model.observe':{const item=find(next.models,c.id);expected(item,c.expectedRevision);const connection=find(next.connections,item.connectionId);let observed;
+   case 'model.observe':{const item=find(next.models,c.id);expected(item,c.expectedRevision);const connection=find(next.connections,item.connectionId);let observed,toolProbe=false;
     if(c.probeOperationId){
      const probe=derived(request,d,{action:'model.probe',target:`model:${item.id}`,context:null});
      const operation=options.readProbeOperation?.(c.probeOperationId);
      const evidence=operation?.observations.find(row=>row.id==='api-probe-result'&&row.phase==='observed')?.value;
      const binding=operation?.connection;
      const scopeHash=createHash('sha256').update(canonical(probe.decision.scope)).digest('hex');
-     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!['openai-chat-probe-1','openai-chat-stream-probe-1'].includes(binding.adapterVersion)
+     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!['openai-chat-probe-1','openai-chat-stream-probe-1','openai-chat-tool-probe-1'].includes(binding.adapterVersion)
        ||binding.connectionId!==connection.id||binding.configRevision!==connection.revision||!connection.enabled
        ||!object(evidence)||evidence.source!=='probe'||evidence.scopeHash!==scopeHash
        ||evidence.connectionId!==connection.id||evidence.connectionRevision!==connection.revision
+       ||(evidence.tools===true)!==(binding.adapterVersion==='openai-chat-tool-probe-1')
        ||(evidence.stream===true)!==(binding.adapterVersion==='openai-chat-stream-probe-1')
        ||evidence.modelId!==item.id||evidence.modelRevision!==item.revision)
       fail('probe_evidence_mismatch','unavailable');
      verifyProbe=()=>recheck(probe.request,probe.decision);
-     observed={connectionId:connection.id,connectionRevision:connection.revision,modelId:item.modelId,
+     toolProbe=evidence.tools===true;
+     if(toolProbe){
+      const prior=item.observation;
+      if(!prior||prior.connectionRevision!==connection.revision||prior.capabilities.text!=='supported')
+       fail('tool_probe_requires_current_text_evidence','unavailable');
+      if(prior.capabilities.tools==='unsupported')fail('tool_probe_conflicts_with_verified_evidence');
+      observed={...prior,capabilities:{...prior.capabilities,tools:'supported'},
+       toolProbe:{operationId:c.probeOperationId,observedAt:evidence.observedAt}};
+     }else observed={connectionId:connection.id,connectionRevision:connection.revision,modelId:item.modelId,
       source:'probe',sourceRevision:c.probeOperationId,observedAt:evidence.observedAt,
       capabilities:{text:'supported',stream:evidence.stream===true?'supported':'unknown',tools:'unknown',image:'unknown',reasoning:'unknown'},parameters:{}};
     }else{
@@ -73,7 +82,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
     }
     if(!observation(observed)||observed.connectionId!==connection.id||observed.connectionRevision!==connection.revision||observed.modelId!==item.modelId)fail('observation_identity_mismatch','unavailable');
     const priorEvidence=item.observation;
-    if(c.probeOperationId&&priorEvidence?.connectionRevision===connection.revision){
+    if(c.probeOperationId&&!toolProbe&&priorEvidence?.connectionRevision===connection.revision){
      const losesCapability=(Object.keys(priorEvidence.capabilities) as Array<keyof typeof priorEvidence.capabilities>).some(key=>{
       const prior=priorEvidence.capabilities[key];
       return (prior==='supported'||prior==='unsupported')&&observed.capabilities[key]!==prior;

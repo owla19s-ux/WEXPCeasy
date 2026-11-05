@@ -453,3 +453,42 @@ test('provider JSON with duplicate keys cannot overwrite response or directory e
  assert.equal((await h.transport.refreshDirectory(request,'duplicate-directory',h.c.id,1,1000)).reason,'invalid_model_directory');
  assert.equal(JSON.stringify(h.ledger.get('duplicate-response')).includes('forged'),false);
 });
+
+test('tool probe verifies a fixed proposal and retains existing text, stream and parameter evidence',async t=>{
+ const h=await setup(t,async(req,res)=>{
+  const chunks=[];
+  for await(const chunk of req)chunks.push(chunk);
+  const wire=JSON.parse(Buffer.concat(chunks).toString());
+  assert.equal(wire.tools[0].function.name,'wex_probe');
+  const probe=h.calls()<3;
+  if(probe){
+   assert.equal(wire.max_tokens,64);
+   assert.equal(wire.tool_choice.function.name,'wex_probe');
+  }
+  res.writeHead(200,{'content-type':'application/json'});
+  res.end(JSON.stringify({choices:[{index:0,message:{role:'assistant',content:null,tool_calls:[
+   {id:'probe-call',type:'function',function:{name:'wex_probe',arguments:JSON.stringify({ok:h.calls()!==1})}}
+  ]},finish_reason:'tool_calls'}]}));
+ },{},'unknown',undefined,{temperature:{type:'number'}});
+ const request=h.f.request('model.probe',`model:${h.m.id}`);
+ const wrong=await h.transport.probeGeneration(request,'bad-tool-probe',h.m.id,1,2,1000,undefined,'tools');
+ assert.equal(wrong.status,'unknown');
+ const probe=await h.transport.probeGeneration(request,'good-tool-probe',h.m.id,1,2,1000,undefined,'tools');
+ assert.equal(probe.status,'ok');
+ assert.equal(probe.observation.tools,true);
+ assert.equal(probe.observation.stream,undefined);
+ assert.equal(h.f.execute({kind:'model.observe',intent:'tool-proof',id:h.m.id,expectedRevision:2,probeOperationId:'good-tool-probe'}).status,'committed');
+ const observation=h.f.query('model',h.m.id).value.observation;
+ assert.equal(observation.capabilities.tools,'supported');
+ assert.equal(observation.capabilities.text,'supported');
+ assert.equal(observation.capabilities.stream,'supported');
+ assert.equal(observation.toolProbe.operationId,'good-tool-probe');
+ assert.deepEqual(observation.parameters,{temperature:{type:'number'}});
+ const result=await h.transport.send(h.request(),'tool-send',{
+  ...h.input,modelRevision:3,stream:false,tools:[{name:'wex_probe',parameters:{
+   type:'object',properties:{ok:{type:'boolean'}},required:['ok'],additionalProperties:false
+  }}]
+ });
+ assert.equal(result.status,'ok');
+ assert.deepEqual(result.result.toolCalls,[{id:'probe-call',name:'wex_probe',arguments:{ok:true}}]);
+});
