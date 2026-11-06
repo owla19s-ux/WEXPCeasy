@@ -13,7 +13,7 @@ async function fixture(t){
  const access=createDesktopSpace({rootId:'public-root',confirm:async()=>{confirmations++;return allow;},chooseDirectory:async()=>context});
  const host=await startFoundations({dataRoot:root,...access.policy,space:{deriveRequest:access.derive}});
  access.attach(host);t.after(async()=>{access.close();await host.stop();await rm(base,{recursive:true,force:true});});
- return {access,host,context,setAllow:value=>allow=value,count:()=>confirmations};
+ return {access,host,root,context,setAllow:value=>allow=value,count:()=>confirmations};
 }
 test('desktop Space rejects unlisted capabilities and authority/path injection before native prompts',async t=>{
  const f=await fixture(t);
@@ -40,4 +40,13 @@ test('desktop Space create/edit/group movement and restart use real owner interf
  assert.equal((await f.access.request({kind:'space.directory',id:space.id,expectedRevision:1})).status,'committed');
  const snapshot=await f.access.request({kind:'snapshot'});assert.equal(snapshot.contexts.length,1);assert.equal(snapshot.spaces[0].directory,f.context);
  assert.equal((await f.access.request({kind:'context.edit',id:context.id,expectedRevision:1,name:'stale'})).status,'rejected');
+});
+
+test('desktop Space persists across a new host and a fresh permission session',async t=>{
+ const f=await fixture(t),created=await f.access.request({kind:'space.create',name:'Persisted'});
+ assert.equal(created.status,'committed');f.access.close();assert.equal((await f.host.stop()).status,'stopped');
+ const next=createDesktopSpace({rootId:'public-root',confirm:async()=>true,chooseDirectory:async()=>undefined});
+ const reopened=await startFoundations({dataRoot:f.root,...next.policy,space:{deriveRequest:next.derive}});next.attach(reopened);
+ try{const snapshot=await next.request({kind:'snapshot'});assert.equal(snapshot.status,'ok');assert.equal(snapshot.spaces[0].id,created.id);assert.equal(snapshot.spaces[0].name,'Persisted');}
+ finally{next.close();await reopened.stop();}
 });
