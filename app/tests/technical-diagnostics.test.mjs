@@ -61,3 +61,41 @@ test('unsafe technical log paths are refused without altering a foreign file',as
  const h=await f.start({technicalDiagnostics:{}});assert.equal(h.status,'degraded');assert.equal(h.technicalDiagnostics,undefined);assert.ok(h.permissions);
  assert.equal(await readFile(file,'utf8'),'DO NOT TOUCH');
 });
+
+for(const [label,namespace,file,options,damaged] of [
+ ['active AI','ai-configurations','ai-configurations.sqlite',{ai:{bindRead:()=>undefined}},false],
+ ['failed AI','ai-configurations','ai-configurations.sqlite',{ai:{bindRead:()=>undefined}},true],
+ ['failed Conversations','conversations','conversations.sqlite',{conversations:true},true],
+]){
+ test(label+' close failure is persisted before root ownership is released',async t=>{
+  const f=await fixture(t);
+  if(damaged)f.damage(file,namespace,{version:99,format:99});
+  let failures=damaged?2:1;
+  const h=await f.start({...options,technicalDiagnostics:{},openStore(path,ns){
+   const db=openSqliteStore(path,ns);
+   return ns!==namespace?db:{...db,close(){if(failures-->0)throw Error('secret-close-path');db.close();}};
+  }});
+  assert.equal(h.status,damaged?'degraded':'ready');
+  const result=await h.stop();assert.equal(result.status,'incomplete');
+  assert.equal(h.technicalDiagnostics.read().status,'unavailable');
+  assert.equal((await f.start()).status,'failed');
+  assert.equal((await h.stop()).status,'stopped');
+  const reopened=await f.start({technicalDiagnostics:{}});
+  const history=reopened.technicalDiagnostics.read();assert.equal(history.status,'ok');
+  assert.deepEqual(history.records.map(r=>r.entry.code),damaged?['module_unavailable','release_failed']:['release_failed']);
+  assert.equal(JSON.stringify(history).includes('secret-close-path'),false);
+ });
+}
+test('partial resource close failure reports diagnostic write failure when the persistent log is full',async t=>{
+ const f=await fixture(t);f.damage('ai-configurations.sqlite','ai-configurations',{version:99});
+ let failures=2;
+ const h=await f.start({ai:{bindRead:()=>undefined},technicalDiagnostics:{maxEntries:1},openStore(path,ns){
+  const db=openSqliteStore(path,ns);
+  return ns!=='ai-configurations'?db:{...db,close(){if(failures-->0)throw Error('close uncertain');db.close();}};
+ }});
+ assert.equal((await h.stop()).status,'incomplete');
+ assert.ok(h.diagnostics.some(d=>d.module==='diagnostics'&&d.reason==='diagnostic_write_failed'));
+ assert.equal((await h.stop()).status,'stopped');
+ const reopened=await f.start({technicalDiagnostics:{}});
+ assert.deepEqual(reopened.technicalDiagnostics.read().records.map(r=>r.entry.code),['module_unavailable']);
+});
