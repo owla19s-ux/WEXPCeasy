@@ -10,6 +10,7 @@ for(const [name,corrupt] of [
  ['duplicate identity',s=>s.entries.push({...s.entries[0]})],
  ['invalid revision',s=>s.entries[0].revision=0],
  ['unknown persisted fields',s=>s.entries[0].apiKey='must-not-project'],
+ ['missing receipt',s=>s.receipts=[]],
  ['malformed receipt',s=>s.receipts[0].entry.revision=0],
  ['receipt command mismatch',s=>s.receipts[0].command='{}'],
  ['missing role reference',s=>s.entries.push({kind:'agent',id:'agent',revision:1,name:'A',roleId:'missing',positionId:'missing',model:{connectionId:'c',modelId:'m'}})],
