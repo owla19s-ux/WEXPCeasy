@@ -1,5 +1,23 @@
 # connections — WEX 内部与公共连接/适配体系
 
+## 当前源码 owner 与环境管理边界（2026-11-07）
+
+当前连接系统包含公共边界 `connections/src/` 和各自独立的 API、GitHub、Local 连接器。`connections/dsh/` 为 0.1.2 延期的外部 Agent 连接器，`connections/search/` 仅是外部 Search/Fetch 候选目录。每个子连接器有独立 owner；不能因为同属顶层 `connections/` 就跨连接器导入私有实现，细粒度静态边界见 [B3 M-01](../docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)。
+
+**新增独立模块**：[environments](../environments/README.md) 已按用户决定列为顶层源码维护域，**不是连接器**。环境发现、登记、版本和生命周期策略归 environments；本地文件/进程/安装器的受控 OS 操作归 Local；公共 Operation/回执仍由 Connections 维护；App 是可信入口，Space 只保存 Context 的工具/环境引用。不得形成第二套权限、Operation 或环境安装状态。
+
+| 子域 | 代码状态 | 主要边界 |
+|---|---|---|
+| `connections/src/` | 正式源码和测试 | 连接配置、受控派发/读取、Operation 账本 |
+| `connections/api/` | 正式源码和测试 | Provider/Model/流式；不直接执行工具提议 |
+| `connections/github/` | 基础文件读写适配及测试 | 官方 MCP Server/Octokit 尚未完整接入，GH-01～12 分项验收 |
+| `connections/local/` | 文件/目录适配及测试 | 非完整 Shell、Git 或环境安装器 |
+| `connections/dsh/` | 独立实验，未产品化 | 外部 Agent，0.1.2 |
+| `connections/search/` | 仅说明文档 | 外部搜索/抓取，未实现且无 0.1.1 扩版授权 |
+
+旧段落的“仅 DSH 子模块”或“产品公共连接协议尚未形成”等是当时研究快照，不覆盖本表已验证的源码事实。完整环境自动安装/升级/修复尚未获得 0.1.1 施工授权。
+
+
 > **代码事实核对（2026-11-04，基线 `1048b6a`）**：产品源码 6 文件、测试 10 文件，公开入口 `connections/src/index.ts`。本轮根测试覆盖 shared、permissions、app、connections 及边界工具；不代表完整本版验收。 开工须重新核对最新 main。
 
 > **当前模块施工状态（文档整理，2026-11-03）**：已有 src 最小产品实现、测试及宿主组合记录；真实服务和 UI 未验收。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
