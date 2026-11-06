@@ -20,7 +20,7 @@
 | 基础 | [Shared](../shared/README.md)、[Permissions](../permissions/README.md)、[App](../app/README.md) |
 | 扩展研究 | [WEX 插件](../plugins/README.md)、[DSH 原生兼容](../dsh/README.md)、[Accounts](../accounts/README.md) |
 
-[模块源码与证据核对](audits/document-governance-2026-11-04/MODULE-STATUS.md)记录本轮快照；[旧全模块契约索引](MODULE-CONTRACTS.md)保留历史设计和追溯，不派工。
+[2026-11-07 当前状态治理回执](audits/document-governance-2026-11-07/REPORT.md)记录最新 README/0.1.1 状态纠正及未验收事项；[2026-11-04 模块源码与证据核对](audits/document-governance-2026-11-04/MODULE-STATUS.md)只作历史快照；[旧全模块契约索引](MODULE-CONTRACTS.md)保留历史设计和追溯，不派工。
 
 ## 架构、决策、实验与审查
 
