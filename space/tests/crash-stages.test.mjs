@@ -52,3 +52,25 @@ for(const stage of ['pending','create','ready']){
   });
  }
 }
+
+test('S19 unresolved destructive and migration commands cannot alter healthy Context bodies or organization data',async t=>{
+ const h=await fixture(t),service=await h.open(),context=await h.create(service);
+ const space=await h.exec(service,{kind:'space.create',intent:'space',name:'Workspace'});
+ const group=await h.exec(service,{kind:'group.create',intent:'group',spaceId:space.id,name:'Group'});
+ const publicDb=openSqliteStore(join(h.root,'wex-space.sqlite'),'space-registry');
+ const contextDb=openSqliteStore(join(h.a,'wex-context.sqlite'),'space-context');
+ try{
+  const beforePublic=publicDb.read(),beforeContext=contextDb.read();
+  for(const command of [
+   {kind:'space.delete',id:space.id},
+   {kind:'group.delete',id:group.id},
+   {kind:'context.delete',id:context.id},
+   {kind:'context.move',id:context.id,location:h.b},
+   {kind:'placement.add',contextId:context.id,spaceId:space.id},
+  ]){
+   const result=await h.exec(service,{...command,intent:'blocked-'+command.kind,expectedRevision:1});
+   assert.equal(result.reason,'unsupported_command');assert.deepEqual(publicDb.read(),beforePublic);assert.deepEqual(contextDb.read(),beforeContext);
+  }
+  assert.equal((await h.query(service,context.id)).value.id,context.id);
+ }finally{publicDb.close();contextDb.close();}
+});
