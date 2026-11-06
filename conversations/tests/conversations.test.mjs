@@ -37,6 +37,9 @@ test('conversation recovers original messages, cancellation and immutable resend
     assert.deepEqual(conversation.messages.map(item => item.segments[0].text), ['original','revised','answer']);
     assert.equal(conversation.messages[1].replaces, 'first');
     assert.equal(conversation.generations[1].outputMessageId, 'reply');
+    assert.equal(change('bad-selection', 6, { kind: 'select', messageId: 'reply', segmentIds: ['missing'] }).status, 'invalid_transition');
+    assert.equal(change('select', 6, { kind: 'select', messageId: 'reply', segmentIds: ['p'] }).status, 'committed');
+    assert.deepEqual(service.read(request, 'chat').conversation.selections, [{ messageId: 'reply', segmentIds: ['p'] }]);
   } finally {
     store.close();
     rmSync(dir, { recursive: true, force: true });
