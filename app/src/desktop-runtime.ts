@@ -37,6 +37,9 @@ export async function runDesktop(options:{url:string;preload:string;start:()=>Pr
  // Begin ownership before awaiting page load, so a concurrent close waits for startup.
  const startup=lifecycle.start();
  void startup.then(value=>{host=value;if(phase==='starting')phase=value?.status??'failed';},()=>{phase='failed';});
- await window.loadURL(options.url);
+ try{await window.loadURL(options.url);}catch{
+  // Startup already owns providers: failure must use the same confirmed-release path.
+  phase='failed';app.quit();
+ }
  return Object.freeze({window,readStatus,lifecycle});
 }
