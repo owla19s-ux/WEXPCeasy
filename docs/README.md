@@ -1,5 +1,10 @@
 # WEX 文档索引
 
+## 环境管理独立 owner（2026-11-07）
+
+[environments 源码维护入口](../environments/README.md) 已创建，为环境管理独立业务模块；Local 是受控本机执行连接器，Connections 是公共调用与 Operation 宿主，三者不得合并职责。目录尚无产品实现。施工范围与版本门槛见 [B3 D-10](versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)。
+
+
 施工入口：[根 README](../README.md) → 当前模块 README → 源码与测试。这里按需检索，不另立阅读顺序或派工规则。文档职责与冲突处理统一见 [权威与维护规则](DOCUMENT-AUTHORITY-AND-MAINTENANCE-2026-11-02.md)。
 
 ## 正式产品与当前版本
