@@ -88,6 +88,20 @@ function validateState(state: State): void {
   }
 }
 
+function readConfigurationState(store:Store) {
+  const snapshot = store.read();
+  const state = snapshot.revision === 0 && snapshot.value === null
+    ? { version: 1, entries: [], receipts: [] } as State
+    : snapshot.value as unknown as State;
+  validateState(state);
+  return { revision: snapshot.revision, state };
+}
+
+/** Trusted host-only readiness check. Returns no configuration, identity, revision, or permission facts. */
+export function inspectAiConfigurationStore(store:Store):{status:'ready'|'unavailable'} {
+ try{readConfigurationState(store);return {status:'ready'};}catch{return {status:'unavailable'};}
+}
+
 export function createAiConfigurations(
   store: Store,
   authorize: (request: object, access: ConfigAccess) => boolean,
@@ -98,20 +112,13 @@ export function createAiConfigurations(
     catch { return false; }
   }
 
-  function readState() {
-    const snapshot = store.read();
-    const state = snapshot.revision === 0 && snapshot.value === null
-      ? { version: 1, entries: [], receipts: [] } as State
-      : snapshot.value as unknown as State;
-    validateState(state);
-    return { revision: snapshot.revision, state };
-  }
+
 
   return Object.freeze({
     read(request: object, kind: Configuration['kind'], id: string) {
       if (!validId(id) || !allowed(request, { action: 'read', kind, id })) return { status: 'denied' } as const;
       try {
-        const entry = readState().state.entries.find(item => item.kind === kind && item.id === id);
+        const entry = readConfigurationState(store).state.entries.find(item => item.kind === kind && item.id === id);
         if (!allowed(request, { action: 'read', kind, id })) return { status: 'denied' } as const;
         return entry
           ? { status: 'ok', entry: { ...normalize(entry), id, revision: entry.revision } } as const
@@ -128,7 +135,7 @@ export function createAiConfigurations(
           expectedRevision < 0 || expectedRevision === Number.MAX_SAFE_INTEGER) return { status: 'invalid' } as const;
       if (!allowed(request, { action: 'write', kind: value.kind, id })) return { status: 'denied' } as const;
       try {
-        const { state, revision } = readState();
+        const { state, revision } = readConfigurationState(store);
         if (value.kind === 'agent') {
           const refs = [{ kind: 'role', id: value.roleId }, { kind: 'position', id: value.positionId }] as const;
           if (refs.some(ref => !allowed(request, { action: 'read', ...ref }) ||
