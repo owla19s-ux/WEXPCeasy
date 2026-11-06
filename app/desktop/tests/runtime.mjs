@@ -30,7 +30,7 @@ try{
  const wc=runtime.window.webContents;
  const facts=await wc.executeJavaScript(`(async()=>({node:typeof require,process:typeof process,bridge:Object.keys(window.wexHost).sort(),reply:await window.wexHost.readStatus(),title:document.title,text:document.body.innerText}))()`);
  assert.equal(facts.node,'undefined');assert.equal(facts.process,'undefined');
- assert.deepEqual(facts.bridge,['readStatus','requestQuit']);assert.equal(facts.reply.ok,true);
+ assert.deepEqual(facts.bridge,['readStatus','requestQuit','space']);assert.equal(facts.reply.ok,true);
  assert.equal(facts.reply.value.phase,'ready');assert.equal(facts.title,'WEXPCeasy');assert.match(facts.text,/WEXPCeasy/);
  const prefs=wc.getLastWebPreferences();assert.equal(prefs.sandbox,true);assert.equal(prefs.contextIsolation,true);assert.equal(prefs.nodeIntegration,false);
  assert.equal((await lstat(join(root,'.wex-write-lock'))).isDirectory(),true);
@@ -41,6 +41,7 @@ try{
  for(const method of ['readStatus','requestQuit']){
   assert.deepEqual(await foreign.webContents.executeJavaScript('window.wexHost.'+method+'()'),{ok:false,error:'untrusted_sender'});
  }
+ assert.deepEqual(await foreign.webContents.executeJavaScript("window.wexHost.space({kind:'snapshot'})"),{ok:false,error:'untrusted_sender'});
  foreign.destroy();assert.equal(runtime.readStatus().phase,'ready');
  await writeFile(resolve('desktop-acceptance',process.platform+'.png'),(await wc.capturePage()).toPNG());
  // A close failure must leave the process and root lease alive, then permit retry.
