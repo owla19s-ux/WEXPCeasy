@@ -120,7 +120,15 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
     decision.scope.action===action&&decision.scope.target==='conversation:'+id;
   });
   const sender=deps['api'] as FoundationApiClient|undefined;
-  const client=Object.freeze({service,...(sender?{generation:createConversationGeneration(service,sender)}:{})});
+  const client=Object.freeze({service,...(sender?{generation:createConversationGeneration(service,sender,(request,id)=>{
+   const decision=permission.evaluate(request);
+   if(decision.status!=='allow'||decision.scope.resource!=='conversations'||
+      decision.scope.action!=='receipt.read'||decision.scope.target!=='operation:'+id)return;
+   const operation=apiLedger?.get(id);
+   const result=operation?.observations.find(item=>item.id==='api-result'&&item.phase==='observed')?.value;
+   if(permission.recheck(request,decision).status!=='allow'||!result||typeof result!=='object'||Array.isArray(result))return;
+   if(typeof result.requestId==='string'&&typeof result.text==='string')return {requestId:result.requestId,text:result.text};
+  })}:{})});
   conversations=client;
   const stores=new Set([store]);
   return {value:client,stop:async()=>{await closeStores(stores);conversations=undefined;}};

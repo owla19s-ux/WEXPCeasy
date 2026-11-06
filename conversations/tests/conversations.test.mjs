@@ -69,7 +69,7 @@ test('dispatch claims once and forwards cancellation without saving a late reply
       },
     });
     const input = { conversationId: 'chat', generationId: 'gen', operationId: 'op',
-      replyId: 'reply', intent: 'send', expectedRevision: 3, preparation: {},
+      replyId: 'reply', intent: 'send', expectedRevision: 3, preparation: {requestId:'request'},
       requests: { read: request, dispatch: request, api: request, finish: request, fail: request, unknown: request },
       onText: text => deltas.push(text) };
     const pending = generation.send(input);

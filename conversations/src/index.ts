@@ -7,6 +7,8 @@ export type Generation = {
   id: string; inputMessageId: string; outputMessageId?: string;
   status: 'pending' | 'running' | 'completed' | 'cancelled' | 'failed' | 'unknown';
   operationId?: string;
+  requestId?: string;
+  replyId?: string;
 };
 export type Conversation = {
   id: string; revision: number; messages: Message[]; generations: Generation[];
@@ -19,7 +21,7 @@ export type ConversationChange =
   | { kind: 'resend'; messageId: string; replaces: string; segments: Segment[]; generationId: string }
   | { kind: 'begin'; generationId: string; inputMessageId: string }
   | { kind: 'finish'; generationId: string; messageId: string; segments: Segment[] }
-  | { kind: 'dispatch'; generationId: string; operationId: string }
+  | { kind: 'dispatch'; generationId: string; operationId: string; requestId?: string; replyId?: string }
   | { kind: 'cancel' | 'fail' | 'unknown'; generationId: string };
 type State = { format: 1; conversations: Conversation[]; receipts: Record<string, { fingerprint: string; revision: number }> };
 
@@ -58,7 +60,12 @@ function normalize(change: ConversationChange): ConversationChange {
       messageId: change.messageId, segments: segments(change.segments) };
     case 'dispatch':
       if (!id(change.operationId)) throw Error('invalid_operation_id');
-      return { kind: change.kind, generationId: change.generationId, operationId: change.operationId };
+      if (change.requestId === undefined && change.replyId === undefined) {
+        return { kind: change.kind, generationId: change.generationId, operationId: change.operationId };
+      }
+      if (!id(change.requestId) || !id(change.replyId)) throw Error('invalid_dispatch_identity');
+      return { kind: change.kind, generationId: change.generationId, operationId: change.operationId,
+        requestId: change.requestId, replyId: change.replyId };
     case 'unknown':
     case 'cancel':
     case 'fail': return { kind: change.kind, generationId: change.generationId };
@@ -97,6 +104,10 @@ function apply(conversation: Conversation, change: Exclude<ConversationChange, {
     if (generation.status !== 'pending' || conversation.generations.some(item => item.operationId === change.operationId)) return false;
     generation.status = 'running';
     generation.operationId = change.operationId;
+    if (change.requestId && change.replyId) {
+      generation.requestId = change.requestId;
+      generation.replyId = change.replyId;
+    }
     return true;
   }
   if (change.kind === 'finish') {
@@ -220,7 +231,10 @@ type ApiSender = {
 };
 
 /** Coordinates one logical generation with one explicit API operation. */
-export function createConversationGeneration(service: ConversationService, api: ApiSender) {
+export function createConversationGeneration(
+  service: ConversationService, api: ApiSender,
+  readReceipt?: (request: object, operationId: string) => { requestId: string; text: string } | undefined,
+) {
   const active = new Map<string, AbortController>();
   return Object.freeze({
     async send(input: {
@@ -248,7 +262,7 @@ export function createConversationGeneration(service: ConversationService, api: 
       }));
       const preparation: Preparation = { ...structuredClone(input.preparation), messages };
       const claimed = service.change(requests.dispatch, { conversationId, intent, expectedRevision,
-        change: { kind: 'dispatch', generationId, operationId } });
+        change: { kind: 'dispatch', generationId, operationId, requestId: preparation.requestId, replyId } });
       if (claimed.status !== 'committed') return claimed;
       const controller = new AbortController();
       const key = conversationId + ':' + generationId;
@@ -275,6 +289,24 @@ export function createConversationGeneration(service: ConversationService, api: 
       } finally {
         active.delete(key);
       }
+    },
+
+    recover(requests: { read: object; receipt: object; finish: object }, conversationId: string,
+      generationId: string, intent: string) {
+      const observed = service.read(requests.read, conversationId);
+      if (observed.status !== 'ok') return observed;
+      const generation = observed.conversation.generations.find(item => item.id === generationId);
+      if (generation?.status !== 'running' || active.has(conversationId + ':' + generationId) ||
+          !generation.operationId || !generation.requestId || !generation.replyId) {
+        return { status: 'invalid_transition' } as const;
+      }
+      let receipt;
+      try { receipt = readReceipt?.(requests.receipt, generation.operationId); }
+      catch { return { status: 'unavailable' } as const; }
+      if (!receipt || receipt.requestId !== generation.requestId) return { status: 'unavailable' } as const;
+      return service.change(requests.finish, { conversationId, intent,
+        expectedRevision: observed.conversation.revision, change: { kind: 'finish', generationId,
+          messageId: generation.replyId, segments: [{ id: 'text', text: receipt.text }] } });
     },
 
     cancel(request: object, conversationId: string, generationId: string, intent: string, expectedRevision: number) {
