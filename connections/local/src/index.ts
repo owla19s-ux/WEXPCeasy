@@ -1,3 +1,4 @@
+import type {FileHandle} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import type {ConnectionConfig,ConfiguredDispatchAdapter,ReadAdapter,AdapterAccess} from '../../src/index.js';
 import type {Json} from '../../../shared/src/index.js';
