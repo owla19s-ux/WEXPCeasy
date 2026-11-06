@@ -1,5 +1,12 @@
 # connections/github
 
+## 官方组件、模块边界与当前版本（2026-11-07）
+
+本目录是独立 GitHub **远端 API** 连接器，不负责 `connections/local/` 的本地 Git，也不是 [environments](../../environments/README.md) 环境管理器。现有 `src/index.ts` 包含受限文件读写与结构兼容的客户端工厂接口，**不等于已将官方 GitHub MCP Server 或 Octokit SDK 完整产品化集成**。
+
+`CONTRACT.md` 的 GH-01～GH-12 及更广泛官方覆盖描述属于完整目标及历史研究规格，其“无产品 GitHub 代码”是历史快照。**正式施工入口**：[B3 D-06/D-06A](../../docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)；先核验许可证、官方版本、依赖与运行/分发，再按 M-01 检验连接器 owner 隔离。GitHub MCP 的协议/运行适配归本模块；App 仅负责宿主装配，不能复制 GitHub 协议、凭证或 Operation 账本。0.1.1 必需能力与长期完整官方工具覆盖分别验收。
+
+
 > **当前代码事实（2026-11-07，`main bd72dfea`）**：`connections/github/src/index.ts` 已存在，`tests/` 下有文件、客户端访问及真实读写测试入口；最新 SHA 的 **GitHub official SDK read acceptance** 工作流成功。仅说明对应读取验收成功，不等于已验收真实写入、官方 MCP Server 完整工具集或 GH-01～GH-12 全覆盖。
 
 GitHub 操作与连接配置。权限使用共用机制；专属面板留在本模块。
