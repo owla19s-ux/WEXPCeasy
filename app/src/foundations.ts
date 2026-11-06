@@ -10,7 +10,7 @@ import {lstat} from 'node:fs/promises';
 import {join} from 'node:path';
 import {inspectRoot,directoryLock,openSqliteStore,createPersistedDiagnostics} from '../../shared/src/index.js';
 import type {Root,RootLock,ManagedStore,Store,LockResult,PersistedDiagnosticOptions,DiagnosticCode} from '../../shared/src/index.js';
-import {createPermissions} from '../../permissions/src/index.js';
+import {createPermissions,inspectPermissionStore} from '../../permissions/src/index.js';
 import type {TrustPort,Permissions} from '../../permissions/src/index.js';
 import {createApiService,createApiTransport} from '../../connections/api/src/index.js';
 import type {ApiService,ApiOptions,ApiCredentialPort} from '../../connections/api/src/index.js';
@@ -101,7 +101,9 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  return {value:Object.freeze({read:()=>store.read(),commit:(...a:Parameters<Store['commit']>)=>store.commit(...a),query:(intent:string)=>store.query(intent)}),stop:async()=>{store.close();}};
  }},
  {id:'permissions',requires:['shared'],async start(deps){
- permissions=createPermissions(deps['shared'] as Store,trust);
+ const store=deps['shared'] as Store;
+ if(inspectPermissionStore(store).status!=='ready')throw Error('permission_storage_unavailable');
+ permissions=createPermissions(store,trust);
  return {value:Object.freeze({evaluate:permissions.evaluate,recheck:permissions.recheck}),stop:async()=>{permissions=undefined;}};
  }},
  ...(options.space?[{id:'space',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
