@@ -1,27 +1,12 @@
 # connections/api
 
-> **代码事实核对（2026-11-04，基线 `1048b6a`）**：未发现本域产品 src/、tests/ 或公开 index.ts；现有说明是设计/施工目标，不能表述为已实现。 开工须重新核对最新 main。
-
-> **当前模块施工状态（文档整理，2026-11-03）**：有 Pi AI 兼容性研究，正式 Provider 产品实现待核查。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
+> **2026-11-06 最新代码状态（main `c7f1c827`，非完整模块验收）**：已有产品公开入口 `connections/api/src/index.ts`，并有 `service.ts`、`model.ts`、`identity.ts`、`transport.ts`、`stream.ts`、`response.ts`、`tools.ts`、`continuation.ts`、`usage.ts`、`json.ts`、`terminal.ts` 等实际实现；`connections/api/tests/` 存在独立测试，`app/tests/api.test.mjs` 存在真实宿主组合验证。已纳入 `npm run test:api` 与根 `npm test`。最新 SHA 的 Foundation verification 为 success。原 2026-11-03/04 “无产品代码”描述只属于历史快照，不能用于重复施工。
 >
-> **模块职责**：Provider/Model 配置、请求协议与流式适配。
+> **当前目标：B1-03 API 0.1.1 范围收口**。核对现有 Provider / Connection / Model / 非秘密参数与凭证引用、模型观察、请求准备与发送、非流式与 SSE、取消/超时/失败诊断、工具提议与受控续接、配置和操作持久化及重启恢复。按实际测试逐项分类为“已有证据/缺口/未获确认/延期”，先修本版必要缺口，不把持续增加高级 Provider 能力当作 B1 完成门槛。
 >
-> **下一施工范围**：先核查代码与实验适用性；不把候选 SDK 直接视作已批准替换。
+> **责任边界**：本域只做 Provider/Model 协议与请求，不执行模型生成的工具提议；真实副作用走 Connections 受控边界，角色归 AI、消息/逻辑生成归 Conversations，权限归 Permissions，秘密值不能直接进入非秘密配置。Pi AI 兼容实验不等于整体无退化替换授权；不得为赶进度擅换产品协议实现。
 >
-> **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
->
-> **研究迁移**：历史深度契约归档于 [docs/research/contracts/connections/api/CONTRACT-archive.md](../../docs/research/contracts/connections/api/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
-
-
-API 配置与模型协议适配。AI 配置引用连接，不复制密钥；不将工具意图直接当作已执行事实。
-
-状态：2026-10-30 按用户确认建立的源码维护目录，当前只有职责说明，尚无产品实现。目录不是运行时数据路径，也不代表独立插件、进程或编译包。
-
-[源码目录与 Windows 数据要求](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
-
-修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
-
-
+> **下一阶段交接**：B1-03 给出公开端口、已验证能力、剩余缺口及完整测试命令/结果，由验收模式更新状态；B1 还须完成 AI、Conversations、基础 Connections 与 Data/Logs，之后才能进入 B2 完整业务闭环。源码事实始终以开工时最新 main 为准。
 ## 2026-10-30 目录职责补充
 
 首版原生 API 客户端：多 Provider 与模型连接、请求及流式结果。厂商协议、鉴权和解析就近放入按需创建的 providers/ 适配器；能力由可信宿主装配并接入 connections 受控边界，凭证与权限由 WEX 统一管理。独立于 DSH，不把模型工具意图直接视作已执行事实。
