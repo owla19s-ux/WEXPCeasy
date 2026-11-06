@@ -16,8 +16,8 @@ const fields=['subject','entry','conversation','context','resource','action','ta
 function scopeOf(input:Scope):Scope {return Object.fromEntries(fields.map(k=>[k,input[k]])) as unknown as Scope;}
 function valid(s:Scope):boolean{return fields.every(k=>k==='context'||k==='conversation'?s[k]===null||typeof s[k]==='string'&&(k==='context'||s[k]!.length>0):k==='relationshipGeneration'?Number.isSafeInteger(s[k])&&s[k]>0:typeof s[k]==='string'&&s[k].length>0);}
 function same(a:Scope,b:Scope):boolean{return fields.every(k=>a[k]===b[k]);}
-function decode(value:Json):State{
- if(value===null)return {format:1,generation:0,events:[]};
+function decode(value:Json,revision:number):State{
+ if(value===null){if(revision!==0)throw Error('incompatible permission state');return {format:1,generation:0,events:[]};}
  const s=value as unknown as State;
  if(s.format!==1||!Number.isSafeInteger(s.generation)||s.generation<0||!Array.isArray(s.events)||s.events.some(e=>!valid(e.scope)||!['grant','revoke'].includes(e.kind)||typeof e.intent!=='string'||typeof e.command!=='string'||!Number.isSafeInteger(e.generation)))throw Error('incompatible permission state');
  return s;
@@ -37,7 +37,7 @@ export function createPermissions(store:Store,trust:TrustPort):Permissions{
   if(f.conversationEnabled!==true)return {status:'deny',reason:'scope_disabled_or_restricted'};
  }else return {status:'indeterminate',reason:'entry_policy_unresolved'};
  if(f.moduleEnabled!==true||f.globalEnabled!==true||f.sourceAllowed!==true)return {status:'deny',reason:'scope_disabled_or_restricted'};
- const snap=store.read(),state=decode(snap.value);
+ const snap=store.read(),state=decode(snap.value,snap.revision);
  const latest=state.events.findLast(e=>same(e.scope,f));
  if(latest?.kind!=='grant')return {status:'deny',reason:'no_current_grant'};
  return Object.freeze({status:'allow',revision:snap.revision,generation:state.generation,scope:Object.freeze(scopeOf(f))});
@@ -47,7 +47,7 @@ export function createPermissions(store:Store,trust:TrustPort):Permissions{
  try{
  if(!trust.canManage(change))return {status:'denied',reason:'management_not_authorized'};
  if(!valid(change.scope)||!change.intent||!Number.isSafeInteger(change.expectedRevision)||change.expectedRevision<0)return {status:'denied',reason:'invalid_scope'};
- const snap=store.read(),state=decode(snap.value);
+ const snap=store.read(),state=decode(snap.value,snap.revision);
  const scope=scopeOf(change.scope);const command=JSON.stringify({kind,expectedRevision:change.expectedRevision,scope});
  const prior=state.events.find(e=>e.intent===change.intent);
  if(prior){if(prior.command!==command)return {status:'not_committed',reason:'intent_conflict'};return store.query(change.intent)??{status:'unknown',intent:change.intent};}
@@ -64,6 +64,6 @@ export function createPermissions(store:Store,trust:TrustPort):Permissions{
  return now;
  },
  grant:(c:Change)=>mutate('grant',c),revoke:(c:Change)=>mutate('revoke',c),
- history(request:object){try{if(!trust.canReadHistory(request))return {status:'denied' as const};const snap=store.read();return {status:'ok' as const,revision:snap.revision,records:structuredClone(decode(snap.value).events)};}catch{return {status:'unavailable' as const};}}
+ history(request:object){try{if(!trust.canReadHistory(request))return {status:'denied' as const};const snap=store.read();return {status:'ok' as const,revision:snap.revision,records:structuredClone(decode(snap.value,snap.revision).events)};}catch{return {status:'unavailable' as const};}}
  });
 }
