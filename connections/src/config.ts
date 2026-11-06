@@ -4,12 +4,12 @@ export interface ConnectionConfig {id:string;adapter:string;endpoint:string;cred
 interface State {format:1;items:ConnectionConfig[]}
 export type ConfigResult={status:'ok';revision:number;config:ConnectionConfig}|{status:'conflict'|'unavailable'|'unknown';reason:string};
 export type ConfigRemovalResult={status:'ok';revision:number;id:string}|{status:'conflict'|'unavailable'|'unknown';reason:string};
-function valid(x:ConnectionConfig):boolean {return !!x&&typeof x.id==='string'&&x.id.length>0&&typeof x.adapter==='string'&&x.adapter.length>0&&typeof x.endpoint==='string'&&x.endpoint.length>0&&(x.credentialRef===null||typeof x.credentialRef==='string')&&typeof x.enabled==='boolean';}
+function valid(x:ConnectionConfig):boolean {return !!x&&Object.getPrototypeOf(x)===Object.prototype&&isDeepStrictEqual(Object.keys(x).sort(),['adapter','credentialRef','enabled','endpoint','id'])&&typeof x.id==='string'&&x.id.length>0&&typeof x.adapter==='string'&&x.adapter.length>0&&typeof x.endpoint==='string'&&x.endpoint.length>0&&(x.credentialRef===null||typeof x.credentialRef==='string'&&x.credentialRef.length>0)&&typeof x.enabled==='boolean';}
 function decode(value:Json):State {
  if(value===null)return {format:1,items:[]};
  if(!value||typeof value!=='object'||Array.isArray(value))throw Error('invalid_config_state');
  const s=value as unknown as State;
- if(s.format!==1||!Array.isArray(s.items)||s.items.some(x=>!valid(x))||new Set(s.items.map(x=>x.id)).size!==s.items.length)throw Error('invalid_config_state');
+ if(!isDeepStrictEqual(Object.keys(s).sort(),['format','items'])||s.format!==1||!Array.isArray(s.items)||s.items.some(x=>!valid(x))||new Set(s.items.map(x=>x.id)).size!==s.items.length)throw Error('invalid_config_state');
  return s;
 }
 /** Host-owned configuration store. Caller must authorize configuration access. */
