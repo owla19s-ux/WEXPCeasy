@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import type { Json, Store } from '../../shared/src/index.js';
 
 export type ModelReference = { connectionId: string; modelId: string };
@@ -37,6 +38,51 @@ function normalize(value: Configuration): Configuration {
   }
 }
 
+
+/** Persisted state is evidence, not trusted input. Never repair or normalize damaged records in place. */
+function validateState(state: State): void {
+  if (!state || state.version !== 1 || !Array.isArray(state.entries) || !Array.isArray(state.receipts) ||
+      !isDeepStrictEqual(Object.keys(state).sort(), ['entries', 'receipts', 'version'])) {
+    throw Error('unsupported_configuration_store');
+  }
+  const identities = new Set<string>();
+  function entryValid(entry: Entry): void {
+    if (!entry || !validId(entry.id) || !Number.isSafeInteger(entry.revision) || entry.revision < 1 ||
+        !isDeepStrictEqual(entry, { ...normalize(entry), id: entry.id, revision: entry.revision })) {
+      throw Error('invalid_configuration_entry');
+    }
+  }
+  for (const entry of state.entries) {
+    entryValid(entry);
+    const key = entry.kind + ':' + entry.id;
+    if (identities.has(key)) throw Error('duplicate_configuration');
+    identities.add(key);
+  }
+  for (const entry of state.entries) {
+    if (entry.kind === 'agent' &&
+        (!identities.has('role:' + entry.roleId) || !identities.has('position:' + entry.positionId))) {
+      throw Error('invalid_configuration_reference');
+    }
+  }
+  const intents = new Set<string>();
+  for (const receipt of state.receipts) {
+    if (!receipt || !validId(receipt.intent) || intents.has(receipt.intent) ||
+        typeof receipt.command !== 'string' ||
+        !isDeepStrictEqual(Object.keys(receipt).sort(), ['command', 'entry', 'intent'])) {
+      throw Error('invalid_configuration_receipt');
+    }
+    entryValid(receipt.entry);
+    const entry = receipt.entry;
+    const current = state.entries.find(item => item.kind === entry.kind && item.id === entry.id);
+    if (!current || current.revision < entry.revision ||
+        (current.revision === entry.revision && !isDeepStrictEqual(current, entry)) ||
+        !isDeepStrictEqual(JSON.parse(receipt.command), {
+          id: entry.id, expectedRevision: entry.revision - 1, value: normalize(entry),
+        })) throw Error('invalid_configuration_receipt');
+    intents.add(receipt.intent);
+  }
+}
+
 export function createAiConfigurations(
   store: Store,
   authorize: (request: object, access: ConfigAccess) => boolean,
@@ -52,9 +98,7 @@ export function createAiConfigurations(
     const state = snapshot.revision === 0 && snapshot.value === null
       ? { version: 1, entries: [], receipts: [] } as State
       : snapshot.value as unknown as State;
-    if (state?.version !== 1 || !Array.isArray(state.entries) || !Array.isArray(state.receipts)) {
-      throw Error('unsupported_configuration_store');
-    }
+    validateState(state);
     return { revision: snapshot.revision, state };
   }
 
