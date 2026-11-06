@@ -14,7 +14,7 @@ async function fixture(t){
  function open(){const raw=openSqliteStore(path,'credentials'),db={...raw,close(){raw.close();dbs.delete(db);}};dbs.add(db);return {db,vault:createCredentialVault(db,cipher,()=>allowed)};}
  const h=open(),binding={connectionId:'connection-a',endpoint:'https://example.test/v1/',provider:'test-provider'};
  t.after(async()=>{for(const db of dbs)db.close();await rm(dir,{recursive:true,force:true});});
- return {...h,path,open,binding,deny(){allowed=false;},unavailable(){available=false;}};
+ return {...h,path,open,binding,cipher,deny(){allowed=false;},unavailable(){available=false;}};
 }
 test('vault stores ciphertext only and survives actual SQLite reopen',async t=>{
  const h=await fixture(t),secret='test-only-secret-ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -44,4 +44,26 @@ test('unavailable encryption refuses persistence and never falls back to plainte
  const h=await fixture(t);h.unavailable();
  assert.equal(h.vault.put({}, {id:'key-a',intent:'one',expectedRevision:0,binding:h.binding,secret:'must-not-persist'}).status,'unavailable');
  assert.equal(h.db.read().revision,0);
+});
+
+test('ciphertext cannot be relabelled for another endpoint or credential revision',async t=>{
+ const h=await fixture(t);h.vault.put({}, {id:'key-a',intent:'one',expectedRevision:0,binding:h.binding,secret:'bound-fixture'});
+ const snapshot=h.db.read(),state=structuredClone(snapshot.value);state.entries[0].binding.endpoint='https://attacker.test/';state.entries[0].revision=2;state.intents.push('tamper');
+ assert.equal(h.db.commit({intent:'tamper',expectedRevision:snapshot.revision,value:state}).status,'committed');
+ assert.equal(h.vault.resolve({},{id:'key-a',revision:2},{...h.binding,endpoint:'https://attacker.test/'}).status,'denied');
+});
+test('weak cipher fallback and authorization loss during sealing cannot persist a credential',async t=>{
+ const h=await fixture(t),echo=createCredentialVault(h.db,{available:()=>true,seal:value=>value,unseal:value=>value},()=>true);
+ assert.equal(echo.put({}, {id:'key-a',intent:'echo',expectedRevision:0,binding:h.binding,secret:'never-plaintext'}).status,'unavailable');
+ const seal=h.cipher.seal;h.cipher.seal=value=>{const result=seal(value);h.deny();return result;};
+ assert.equal(h.vault.put({}, {id:'key-a',intent:'denied',expectedRevision:0,binding:h.binding,secret:'revoked'}).status,'denied');
+ assert.equal(h.db.read().revision,0);
+});
+test('uncertain credential commit is retained and never automatically resealed or replayed',async t=>{
+ const h=await fixture(t);let writes=0;
+ const store={...h.db,commit(input){writes++;const result=h.db.commit(input);return result.status==='committed'?{status:'unknown',intent:input.intent}:result;}};
+ const vault=createCredentialVault(store,h.cipher,()=>true),input={id:'key-a',intent:'uncertain',expectedRevision:0,binding:h.binding,secret:'unknown-fixture'};
+ assert.deepEqual(vault.put({},input),{status:'unknown',intent:'uncertain'});
+ assert.equal(vault.put({},input).status,'conflict');assert.equal(writes,1);
+ assert.equal(vault.resolve({},{id:'key-a',revision:1},h.binding).status,'ok');
 });
