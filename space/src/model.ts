@@ -21,8 +21,9 @@ export interface ToolView extends Tool {availability:ToolAvailability;sourceRevi
 export interface ContextView extends Context {resources:Address[];associations:Association[];tools:ToolView[]}
 export type Mutation={status:'committed';id:string;revision:number}|{status:'rejected'|'unavailable'|'failed_no_commit';reason:string}|{status:'unknown';intent:string;id?:string};
 export type ContextSummary={status:'available';id:string;revision:number;name:string;description:string}|{status:'unavailable';id:string;reason:string};
+export interface ContextOrganization {contextId:string;revision:number;spaceId:string|null;groupId:string|null}
 export interface ContextLocation {id:string;location:string;registration:'pending'|'ready';status:'available'|'unavailable';observedAt:string;revision?:number;reason?:string}
-export type QueryResult={status:'ok';value:ContextView|ContextLocation|Array<Category|Space|Group|ContextSummary>;complete?:boolean}|Exclude<Mutation,{status:'committed'}>;
+export type QueryResult={status:'ok';value:ContextView|ContextLocation|ContextOrganization|Array<Category|Space|Group|ContextSummary>;complete?:boolean}|Exclude<Mutation,{status:'committed'}>;
 interface Base {intent:string}
 interface Revision extends Base {id:string;expectedRevision:number}
 interface InContext extends Base {contextId:string}
@@ -37,6 +38,7 @@ export type SpaceCommand=
  | (Base&{kind:'context.create';location:string;name:string;description?:string})
  | (Base&{kind:'context.attach';location:string;expectedContextId?:string})
  | (Revision&{kind:'context.edit';name:string;description?:string})
+ | (InContext&{kind:'context.group';spaceId:string;groupId:string|null;expectedRevision:number})
  | (InContext&{kind:'address.add';name:string;address:string;notes?:string;purpose?:AddressPurpose;type?:string|null;source?:string|null})
  | (InContext&Revision&{kind:'address.edit';name:string;address:string;notes?:string;purpose?:AddressPurpose;type?:string|null;source?:string|null})
  | (InContext&Revision&{kind:'address.remove'|'association.remove'|'tool.remove'})
@@ -44,14 +46,14 @@ export type SpaceCommand=
  | (InContext&Target&{kind:'association.add'|'tool.add';purpose:string})
  | (InContext&Revision&Target&{kind:'association.replace';purpose:string})
  | (InContext&Revision&{kind:'tool.set';enabled:boolean});
-export type SpaceQuery={kind:'contexts'}|{kind:'context';id:string}|{kind:'context.location';id:string}|{kind:'organization';entity:'category'|'space'|'group'};
+export type SpaceQuery={kind:'context.organization';id:string}|{kind:'contexts'}|{kind:'context';id:string}|{kind:'context.location';id:string}|{kind:'organization';entity:'category'|'space'|'group'};
 export interface ProjectionScope {action:string;target:string;context:string|null}
 export type OwnerObservation=({status:'available';sourceRevision:string;observedAt:string;availability?:ToolAvailability}&Target)|{status:'denied'|'unavailable'|'unsupported'};
 /** available confirms visible target identity; optional availability describes current capability state.
  * denied/unavailable without identity evidence cannot disclose a stored selection. */
 export interface OwnerPort {resolve(request:object,target:Target):Promise<OwnerObservation>}
 export interface Intent {key:string;command:string;id:string;revision:number;phase:'prepared'|'committed'}
-export interface Registration {id:string;location:string;rootId:string;phase:'pending'|'ready';key:string;command:string}
+export interface Registration {id:string;location:string;rootId:string;phase:'pending'|'ready';key:string;command:string;organization?:{revision:number;spaceId:string;groupId:string|null}}
 export interface Registry {format:1;domain:'space';rootId:string;categories:Category[];spaces:Space[];groups:Group[];contexts:Registration[];intents:Intent[]}
 export interface Body {format:1;domain:'context';rootId:string;context:Context;resources:Address[];associations:Association[];tools:Tool[];intents:Intent[]}
 export class Failure extends Error {constructor(readonly status:'rejected'|'unavailable'|'failed_no_commit',readonly reason:string){super(reason);}}
@@ -84,6 +86,7 @@ const fields:Record<string,string[]>={
  'space.directory':['id','expectedRevision','location'],
  'group.create':['spaceId','name'],'group.edit':['id','expectedRevision','name','order'],
  'context.attach':['location','expectedContextId'],
+ 'context.group':['contextId','spaceId','groupId','expectedRevision'],
  'context.create':['location','name','description'],'context.edit':['id','expectedRevision','name','description'],
  'address.add':['contextId','name','address','notes','purpose','type','source'],'address.edit':['contextId','id','expectedRevision','name','address','notes','purpose','type','source'],
  'address.remove':['contextId','id','expectedRevision'],'association.remove':['contextId','id','expectedRevision'],'tool.remove':['contextId','id','expectedRevision'],
@@ -105,7 +108,8 @@ export function command(input:unknown):SpaceCommand {
   else if(k==='location'&&kind==='space.directory'&&x===null)continue;
   else if(k==='categoryId'){if(x!==undefined&&x!==null&&!nonempty(x))return fail('invalid_command');}
   else if(k==='order'){if(x!==undefined&&(!Number.isSafeInteger(x)||Number(x)<0))return fail('invalid_command');}
-  else if(k==='expectedRevision'){if(!revision(x))return fail('invalid_command');}
+  else if(k==='groupId'&&kind==='context.group'&&x===null)continue;
+  else if(k==='expectedRevision'){if(kind==='context.group'?!Number.isSafeInteger(x)||Number(x)<0:!revision(x))return fail('invalid_command');}
   else if(k==='enabled'){if(typeof x!=='boolean')return fail('invalid_command');}
   else if(k==='id'&&kind==='primary.select'&&x===null)continue;
   else if(!nonempty(x))return fail('invalid_command');
@@ -122,10 +126,16 @@ function envelope(value:unknown,domain:string,rootId:string):asserts value is Re
  if(value['rootId']!==rootId)return fail('identity_conflict','unavailable');
  if(!intents(value['intents']))return fail('corrupt_intents','unavailable');
 }
+function validOrganization(value:unknown,state:Registry):boolean{
+ if(!exact(value,['revision','spaceId','groupId']))return false;
+ const position=value as NonNullable<Registration['organization']>;
+ return revision(position.revision)&&nonempty(position.spaceId)&&state.spaces.some(space=>space.id===position.spaceId)&&
+  (position.groupId===null||nonempty(position.groupId)&&state.groups.some(group=>group.id===position.groupId&&group.spaceId===position.spaceId));
+}
 export function registry(value:Json,rootId:string):Registry {
  if(value===null)return {format:1,domain:'space',rootId,categories:[],spaces:[],groups:[],contexts:[],intents:[]};
  envelope(value,'space',rootId);const s=value as unknown as Registry;
- if(!exact(s,['format','domain','rootId','categories','spaces','groups','contexts','intents'])||!Array.isArray(s.categories)||!s.categories.every(x=>named(x)&&exact(x,['id','revision','name']))||!Array.isArray(s.spaces)||!s.spaces.every(x=>named(x)&&exact(x,['id','revision','name','description','categoryId',...(Object.hasOwn(x,'directory')?['directory']:[])])&&(!Object.hasOwn(x,'directory')||x.directory===null||nonempty(x.directory))&&typeof x.description==='string'&&(x.categoryId===null||s.categories.some(c=>c.id===x.categoryId)))||!Array.isArray(s.groups)||!s.groups.every(x=>named(x)&&exact(x,['id','revision','name','spaceId','order'])&&Number.isSafeInteger(x.order)&&x.order>=0&&s.spaces.some(p=>p.id===x.spaceId))||!Array.isArray(s.contexts)||!s.contexts.every(x=>object(x)&&exact(x,['id','location','rootId','phase','key','command'])&&nonempty(x.id)&&nonempty(x.location)&&nonempty(x.rootId)&&nonempty(x.key)&&typeof x.command==='string'&&['pending','ready'].includes(x.phase))||!unique([...s.categories,...s.spaces,...s.groups,...s.contexts])||new Set(s.contexts.map(x=>x.location)).size!==s.contexts.length||new Set(s.contexts.map(x=>x.key)).size!==s.contexts.length)return fail('corrupt_registry','unavailable');
+ if(!exact(s,['format','domain','rootId','categories','spaces','groups','contexts','intents'])||!Array.isArray(s.categories)||!s.categories.every(x=>named(x)&&exact(x,['id','revision','name']))||!Array.isArray(s.spaces)||!s.spaces.every(x=>named(x)&&exact(x,['id','revision','name','description','categoryId',...(Object.hasOwn(x,'directory')?['directory']:[])])&&(!Object.hasOwn(x,'directory')||x.directory===null||nonempty(x.directory))&&typeof x.description==='string'&&(x.categoryId===null||s.categories.some(c=>c.id===x.categoryId)))||!Array.isArray(s.groups)||!s.groups.every(x=>named(x)&&exact(x,['id','revision','name','spaceId','order'])&&Number.isSafeInteger(x.order)&&x.order>=0&&s.spaces.some(p=>p.id===x.spaceId))||!Array.isArray(s.contexts)||!s.contexts.every(x=>object(x)&&exact(x,['id','location','rootId','phase','key','command',...(Object.hasOwn(x,'organization')?['organization']:[])])&&nonempty(x.id)&&nonempty(x.location)&&nonempty(x.rootId)&&nonempty(x.key)&&typeof x.command==='string'&&['pending','ready'].includes(x.phase)&&(!Object.hasOwn(x,'organization')||x.phase==='ready'&&validOrganization(x.organization,s)))||!unique([...s.categories,...s.spaces,...s.groups,...s.contexts])||new Set(s.contexts.map(x=>x.location)).size!==s.contexts.length||new Set(s.contexts.map(x=>x.key)).size!==s.contexts.length)return fail('corrupt_registry','unavailable');
  return s;
 }
 export function body(value:Json,rootId:string,expectedId:string):Body {
