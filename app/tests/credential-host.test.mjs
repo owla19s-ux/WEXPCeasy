@@ -42,7 +42,7 @@ test('private API credential delivery follows authoritative connection route and
  const apiRequest=(action,target)=>request('connections/api',action,target);
  const options={dataRoot:root,credentials:{cipher},trust:{current:r=>facts.get(r),canManage:c=>approved.has(c),canReadHistory:r=>r===history},
   api:{deriveRequest:(_parent,p)=>requests.get(JSON.stringify(['connections/api',p.action,p.target,p.context])),
-   observer:{resolve(_request,connection,model){return {connectionId:connection.id,connectionRevision:connection.revision,modelId:model.id,source:'provider',sourceRevision:'fixture',observedAt:new Date().toISOString(),capabilities:{text:'supported',stream:'supported',tools:'unsupported',image:'unsupported',reasoning:'unknown'},parameters:{}};}}}};
+   observer:{resolve(_request,connection,model){return {connectionId:connection.id,connectionRevision:connection.revision,modelId:model.modelId,source:'provider',sourceRevision:'fixture',observedAt:new Date().toISOString(),capabilities:{text:'supported',stream:'supported',tools:'unsupported',image:'unsupported',reasoning:'unknown'},parameters:{}};}}}};
  host=await startFoundations(options);
  // Only the HTTP response/OS encryption/native identity are fixtures. No external request or real Key.
  const originalFetch=globalThis.fetch,secret='fixture-token';
