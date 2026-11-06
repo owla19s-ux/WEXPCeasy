@@ -41,7 +41,7 @@ function decode(v:Json):State {
  return s;
 }
 export function createOperationLedger(store:Store){
- function read(){const s=store.read();return {revision:s.revision,operations:clone(decode(s.value).operations)};}
+ function read(){const s=store.read();if(s.value===null&&s.revision!==0)throw Error('invalid_operation_state');return {revision:s.revision,operations:clone(decode(s.value).operations)};}
  function write(intent:string,revision:number,operations:Operation[]):CommitResult{return store.commit({intent,expectedRevision:revision,value:{format:1,operations:clone(operations)} as unknown as Json});}
  function result(commit:CommitResult,operation:Operation):OperationResult {
   if(commit.status==='committed'){

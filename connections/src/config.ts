@@ -14,7 +14,7 @@ function decode(value:Json):State {
 }
 /** Host-owned configuration store. Caller must authorize configuration access. */
 export function createConnectionConfigs(store:Store){
- const read=()=>{const s=store.read();return {revision:s.revision,items:structuredClone(decode(s.value).items)};};
+ const read=()=>{const s=store.read();if(s.value===null&&s.revision!==0)throw Error('invalid_config_state');return {revision:s.revision,items:structuredClone(decode(s.value).items)};};
  return Object.freeze({
   read,
   remove(id:string,expectedRevision:number,intent:string):ConfigRemovalResult{
