@@ -1,5 +1,10 @@
 # connections/api
 
+## API 连接器与其他 owner（2026-11-07）
+
+本模块是独立 Provider/Model 协议 owner；公共配置与外部操作事实通过 `connections/src/index.ts` 公开机制衔接，模型调用的逻辑生成与历史归 Conversations，角色/职责归 AI。**模型产生的工具意图不是授权或成功执行**，不得调用 GitHub/Local 私有实现。API Provider 所需 Node/Python/代理等工具环境如涉及用户环境登记/安装，须分别由 [environments](../../environments/README.md) 与 Local 提供受控能力；API 不成为安装管理器。此前按历史 B1 任务描述的 AI/Conversations 未实现状态不再是当前源码事实。
+
+
 > **2026-11-06 最新代码状态（main `c7f1c827`，非完整模块验收）**：已有产品公开入口 `connections/api/src/index.ts`，并有 `service.ts`、`model.ts`、`identity.ts`、`transport.ts`、`stream.ts`、`response.ts`、`tools.ts`、`continuation.ts`、`usage.ts`、`json.ts`、`terminal.ts` 等实际实现；`connections/api/tests/` 存在独立测试，`app/tests/api.test.mjs` 存在真实宿主组合验证。已纳入 `npm run test:api` 与根 `npm test`。最新 SHA 的 Foundation verification 为 success。原 2026-11-03/04 “无产品代码”描述只属于历史快照，不能用于重复施工。
 >
 > **当前目标：B1-03 API 0.1.1 范围收口**。核对现有 Provider / Connection / Model / 非秘密参数与凭证引用、模型观察、请求准备与发送、非流式与 SSE、取消/超时/失败诊断、工具提议与受控续接、配置和操作持久化及重启恢复。按实际测试逐项分类为“已有证据/缺口/未获确认/延期”，先修本版必要缺口，不把持续增加高级 Provider 能力当作 B1 完成门槛。
