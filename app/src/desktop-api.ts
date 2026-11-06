@@ -149,7 +149,8 @@ export function createDesktopApi(options:{authority:DesktopAuthority;confirm:(su
    const current=await model(input.id);
    return execute({...input,intent:randomUUID(),...(input.parameters?{parameters:{...current.parameters,...input.parameters} as Parameters}:{})});
   }
-  return execute({...input,intent:randomUUID()});
+  if(input.kind==='connection.delete'||input.kind==='model.delete')return execute({...input,intent:randomUUID()});
+  return {status:'rejected',reason:'unsupported_operation'};
  }
  return Object.freeze({derive,
   attach(value:FoundationHost){if(host)throw Error('already_attached');host=value;authority.attach(value);},
