@@ -23,7 +23,7 @@ function captureBinding(value:CredentialBinding):Readonly<CredentialBinding>{
 export function createCredentialVault(store:Store,cipher:CredentialCipher,authorize:(request:object,access:CredentialAccess)=>boolean){
  function read(){
   const snapshot=store.read();
-  const stored=snapshot.revision===0&&snapshot.value===null?{format:2,domain:'credentials',entries:[],intents:[],receipts:[]}:snapshot.value as unknown as State;
+  const stored:State=snapshot.revision===0&&snapshot.value===null?{format:2,domain:'credentials',entries:[],intents:[],receipts:[]}:snapshot.value as unknown as State;
   const legacy=(stored as {format:number})?.format===1;
   if(!exact(stored,legacy?['format','domain','entries','intents']:['format','domain','entries','intents','receipts'])||(!legacy&&stored.format!==2)||stored.domain!=='credentials'||!Array.isArray(stored.entries)||!Array.isArray(stored.intents))throw Error('credential_store_unavailable');
   // Read-only legacy normalization; only a later confirmed mutation writes format 2.
