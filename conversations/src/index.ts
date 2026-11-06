@@ -1,0 +1,145 @@
+import type { Json, Store } from '../../shared/src/index.js';
+
+export type Segment = { id: string; text: string };
+export type Message = { id: string; role: 'user' | 'assistant'; segments: Segment[]; replaces?: string };
+export type Generation = {
+  id: string; inputMessageId: string; outputMessageId?: string;
+  status: 'pending' | 'completed' | 'cancelled' | 'failed';
+};
+export type Conversation = {
+  id: string; revision: number; messages: Message[]; generations: Generation[];
+};
+export type ConversationChange =
+  | { kind: 'create' }
+  | { kind: 'append'; messageId: string; segments: Segment[] }
+  | { kind: 'resend'; messageId: string; replaces: string; segments: Segment[]; generationId: string }
+  | { kind: 'begin'; generationId: string; inputMessageId: string }
+  | { kind: 'finish'; generationId: string; messageId: string; segments: Segment[] }
+  | { kind: 'cancel' | 'fail'; generationId: string };
+type State = { format: 1; conversations: Conversation[]; receipts: Record<string, { fingerprint: string; revision: number }> };
+
+const id = (value: unknown): value is string =>
+  typeof value === 'string' && /^[a-zA-Z0-9_-]{1,120}$/.test(value);
+
+function segments(input: Segment[]): Segment[] {
+  if (!Array.isArray(input) || input.length === 0 || input.length > 256) throw Error('invalid_segments');
+  const seen = new Set<string>();
+  return input.map(segment => {
+    if (!id(segment.id) || seen.has(segment.id) || typeof segment.text !== 'string' ||
+        segment.text.length === 0 || segment.text.length > 32000) throw Error('invalid_segment');
+    seen.add(segment.id);
+    return { id: segment.id, text: segment.text };
+  });
+}
+
+function normalize(change: ConversationChange): ConversationChange {
+  if ('generationId' in change && !id(change.generationId)) throw Error('invalid_generation_id');
+  if ('messageId' in change && !id(change.messageId)) throw Error('invalid_message_id');
+  switch (change.kind) {
+    case 'create': return { kind: change.kind };
+    case 'append': return { kind: change.kind, messageId: change.messageId, segments: segments(change.segments) };
+    case 'resend':
+      if (!id(change.replaces)) throw Error('invalid_message_id');
+      return { kind: change.kind, messageId: change.messageId, replaces: change.replaces,
+        generationId: change.generationId, segments: segments(change.segments) };
+    case 'begin':
+      if (!id(change.inputMessageId)) throw Error('invalid_message_id');
+      return { kind: change.kind, generationId: change.generationId, inputMessageId: change.inputMessageId };
+    case 'finish': return { kind: change.kind, generationId: change.generationId,
+      messageId: change.messageId, segments: segments(change.segments) };
+    case 'cancel':
+    case 'fail': return { kind: change.kind, generationId: change.generationId };
+    default: throw Error('invalid_change');
+  }
+}
+
+function apply(conversation: Conversation, change: Exclude<ConversationChange, {kind:'create'}>): boolean {
+  if ('messageId' in change && conversation.messages.some(message => message.id === change.messageId)) return false;
+  if (change.kind === 'append' || change.kind === 'resend') {
+    if (change.kind === 'resend') {
+      if (!conversation.messages.some(message => message.id === change.replaces && message.role === 'user') ||
+          conversation.generations.some(generation => generation.id === change.generationId || generation.status === 'pending')) return false;
+      conversation.generations.push({ id: change.generationId, inputMessageId: change.messageId, status: 'pending' });
+    }
+    conversation.messages.push({ id: change.messageId, role: 'user', segments: change.segments,
+      ...(change.kind === 'resend' ? { replaces: change.replaces } : {}) });
+    return true;
+  }
+  if (change.kind === 'begin') {
+    if (!conversation.messages.some(message => message.id === change.inputMessageId && message.role === 'user') ||
+        conversation.generations.some(generation => generation.id === change.generationId || generation.status === 'pending')) return false;
+    conversation.generations.push({ id: change.generationId, inputMessageId: change.inputMessageId, status: 'pending' });
+    return true;
+  }
+  const generation = conversation.generations.find(item => item.id === change.generationId);
+  if (!generation || generation.status !== 'pending') return false;
+  if (change.kind === 'finish') {
+    conversation.messages.push({ id: change.messageId, role: 'assistant', segments: change.segments });
+    generation.status = 'completed';
+    generation.outputMessageId = change.messageId;
+  } else generation.status = change.kind === 'cancel' ? 'cancelled' : 'failed';
+  return true;
+}
+
+export function createConversations(store: Store, authorize: (
+  request: object, action: 'read' | ConversationChange['kind'], conversationId: string,
+) => boolean) {
+  function allowed(request: object, action: 'read' | ConversationChange['kind'], conversationId: string) {
+    try { return authorize(request, action, conversationId) === true; }
+    catch { return false; }
+  }
+
+  function load() {
+    const snapshot = store.read();
+    const state: State = snapshot.revision === 0 && snapshot.value === null
+      ? { format: 1, conversations: [], receipts: {} }
+      : snapshot.value as unknown as State;
+    if (state?.format !== 1 || !Array.isArray(state.conversations) ||
+        !state.receipts || Object.getPrototypeOf(state.receipts) !== Object.prototype) throw Error('invalid_store');
+    return { state, revision: snapshot.revision };
+  }
+
+  return Object.freeze({
+    read(request: object, conversationId: string) {
+      if (!id(conversationId) || !allowed(request, 'read', conversationId)) return { status: 'denied' } as const;
+      try {
+        const conversation = load().state.conversations.find(item => item.id === conversationId);
+        if (!allowed(request, 'read', conversationId)) return { status: 'denied' } as const;
+        return conversation ? { status: 'ok', conversation } as const : { status: 'not_found' } as const;
+      } catch { return { status: 'unavailable' } as const; }
+    },
+
+    change(request: object, input: { conversationId: string; intent: string; expectedRevision: number; change: ConversationChange }) {
+      const { conversationId, intent, expectedRevision } = input;
+      if (!id(conversationId) || !id(intent) || !Number.isSafeInteger(expectedRevision) ||
+          expectedRevision < 0 || expectedRevision >= Number.MAX_SAFE_INTEGER) return { status: 'invalid' } as const;
+      let change: ConversationChange;
+      try { change = normalize(input.change); } catch { return { status: 'invalid' } as const; }
+      if (!allowed(request, change.kind, conversationId)) return { status: 'denied' } as const;
+      try {
+        const { state, revision } = load();
+        if (!allowed(request, change.kind, conversationId)) return { status: 'denied' } as const;
+        const key = conversationId + ':' + intent;
+        const fingerprint = JSON.stringify({ expectedRevision, change });
+        const receipt = state.receipts[key];
+        if (receipt) return receipt.fingerprint === fingerprint
+          ? { status: 'committed', revision: receipt.revision } as const : { status: 'intent_conflict' } as const;
+        const conversation = state.conversations.find(item => item.id === conversationId);
+        if ((conversation?.revision ?? 0) !== expectedRevision) return { status: 'revision_conflict' } as const;
+        const next = expectedRevision + 1;
+        if (change.kind === 'create') {
+          if (conversation) return { status: 'invalid_transition' } as const;
+          state.conversations.push({ id: conversationId, revision: next, messages: [], generations: [] });
+        } else {
+          if (!conversation || !apply(conversation, change)) return { status: 'invalid_transition' } as const;
+          conversation.revision = next;
+        }
+        state.receipts[key] = { fingerprint, revision: next };
+        const result = store.commit({ intent: key, expectedRevision: revision, value: state as unknown as Json });
+        if (result.status === 'committed') return { status: 'committed', revision: next } as const;
+        if (result.status === 'unknown') return result;
+        return { status: result.reason } as const;
+      } catch { return { status: 'unavailable' } as const; }
+    },
+  });
+}

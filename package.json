@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node --test shared/tests/*.test.mjs permissions/tests/*.test.mjs app/tests/*.test.mjs connections/tests/*.test.mjs connections/api/tests/*.test.mjs tools/tests/*.test.mjs space/tests/*.test.mjs AI/tests/*.test.mjs && npm run check:boundaries",
+    "test": "npm run build && node --test shared/tests/*.test.mjs permissions/tests/*.test.mjs app/tests/*.test.mjs connections/tests/*.test.mjs connections/api/tests/*.test.mjs tools/tests/*.test.mjs space/tests/*.test.mjs AI/tests/*.test.mjs conversations/tests/*.test.mjs && npm run check:boundaries",
     "test:shared": "npm run build && node --test shared/tests/*.test.mjs",
     "test:permissions": "npm run build && node --test permissions/tests/*.test.mjs",
     "test:app": "npm run build && node --test app/tests/*.test.mjs",
@@ -21,7 +21,8 @@
     "test:connections": "npm run build && node --test connections/tests/*.test.mjs",
     "test:space": "npm run build && node --test space/tests/*.test.mjs",
     "test:api": "npm run build && node --test connections/api/tests/*.test.mjs",
-    "test:ai": "npm run build && node --test AI/tests/*.test.mjs"
+    "test:ai": "npm run build && node --test AI/tests/*.test.mjs",
+    "test:conversations": "npm run build && node --test conversations/tests/*.test.mjs"
   },
   "devDependencies": {
     "@types/node": "24.10.0",
