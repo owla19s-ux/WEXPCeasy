@@ -1,0 +1,33 @@
+name: B1 public contract acceptance
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Record evidence scope
+        run: |
+          node --input-type=module -e "import {writeFileSync} from 'node:fs'; writeFileSync('b1-evidence.json',JSON.stringify({sha:process.env.GITHUB_SHA,runtime:process.version,scope:'B1 public contracts: process exit, SQLite recovery and fresh authorization',overallAcceptance:'not_asserted_by_workflow',limitations:['Trusted identity and Provider observations are fixtures','No authenticated GitHub service call','No paid Provider call','No Windows validation','No B2 complete chain validation']},null,2));"
+      - name: Independently verify public contracts
+        run: node --test --test-reporter=junit --test-reporter-destination=b1-acceptance.xml app/tests/b1-acceptance.test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b1-public-contracts-${{ github.sha }}
+          path: |
+            b1-evidence.json
+            b1-acceptance.xml
+          if-no-files-found: error
