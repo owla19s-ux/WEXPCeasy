@@ -8,7 +8,12 @@ import type {PermissionReader,Decision,Scope} from '../../../permissions/src/ind
 import {Failure,fail,text,revision,closed,object,capture,canonical,freeze,parameters,parameterValue,endpoint,observation,decode,command} from './model.js';
 import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,ModelObservation,ModelObserver,State,Intent,Preparation,RequestSnapshot,Parameters} from './model.js';
 interface Projection {action:string;target:string;context:string|null}
-export interface ApiOptions {readToolRound?:ToolRoundReader;id?:()=>string;observer?:ModelObserver;deriveRequest?:(parent:object,scope:Projection)=>object|undefined;maxSnapshotBytes?:number;readProbeOperation?:(id:string)=>Operation|undefined}
+export interface ApiDeletionGuard {
+ /** The trusted host must block new references until release and confirm existing references are absent. */
+ acquire(request:object,target:Readonly<{kind:'connection'|'model';id:string;revision:number}>):
+  {status:'clear';release():void}|{status:'referenced'|'unavailable'};
+}
+export interface ApiOptions {deletionGuard?:ApiDeletionGuard;readToolRound?:ToolRoundReader;id?:()=>string;observer?:ModelObserver;deriveRequest?:(parent:object,scope:Projection)=>object|undefined;maxSnapshotBytes?:number;readProbeOperation?:(id:string)=>Operation|undefined}
 type Allow=Extract<Decision,{status:'allow'}>;
 export interface ApiService {
  execute(request:object,input:ApiCommand,signal?:AbortSignal):ApiMutation;
@@ -58,6 +63,21 @@ export function createApiService(store:Store,permission:PermissionReader,options
     const copy:ApiConnection={...source,id:id(next),revision:1,name:c.name,credentialRef:null,enabled:false};
     next.connections.push(copy);
     result=copy;
+    break;
+   }
+   case 'connection.delete':{
+    const item=find(next.connections,c.id);
+    expected(item,c.expectedRevision);
+    if(next.models.some(model=>model.connectionId===item.id))fail('resource_referenced');
+    next.connections=next.connections.filter(connection=>connection.id!==item.id);
+    result={id:item.id,revision:item.revision+1};
+    break;
+   }
+   case 'model.delete':{
+    const item=find(next.models,c.id);
+    expected(item,c.expectedRevision);
+    next.models=next.models.filter(model=>model.id!==item.id);
+    result={id:item.id,revision:item.revision+1};
     break;
    }
    case 'model.create':{find(next.connections,c.connectionId);if(next.models.some(m=>m.connectionId===c.connectionId&&m.modelId===c.modelId))fail('duplicate_model_unsupported');const item:ApiModel={id:id(next),revision:1,connectionId:c.connectionId,name:c.name,modelId:c.modelId,parameters:c.parameters,observation:null};next.models.push(item);result=item;break;}
@@ -116,12 +136,25 @@ export function createApiService(store:Store,permission:PermissionReader,options
     item.observation=observed;item.revision++;result=item;break;}
   }
   const record:Intent={key,command:fingerprint,id:result.id,revision:result.revision,phase:'committed'},prepared=capture(state);prepared.intents.push({...record,phase:'prepared'});
+  const deletion=c.kind==='connection.delete'||c.kind==='model.delete';
   verifyDependencies();recheck(request,d);if(signal?.aborted)fail('cancelled');
-  const prep=store.commit({intent:key+':prepare',expectedRevision:snap.revision,value:prepared as unknown as Json});
-  if(prep.status==='unknown')return {status:'unknown',intent:c.intent,id:result.id};if(prep.status!=='committed')return {status:'failed_no_commit',reason:prep.reason};
-  next.intents.push(record);verifyDependencies();recheck(request,d);if(signal?.aborted)fail('cancelled');
-  const applied=store.commit({intent:key+':apply',expectedRevision:prep.revision,value:next as unknown as Json});
-  return applied.status==='committed'?{status:'committed',id:result.id,revision:result.revision}:applied.status==='unknown'?{status:'unknown',intent:c.intent,id:result.id}:{status:'failed_no_commit',reason:applied.reason};
+  const lease=deletion?options.deletionGuard?.acquire(request,Object.freeze({
+   kind:c.kind==='connection.delete'?'connection':'model',id:c.id,revision:c.expectedRevision
+  })):undefined;
+  if(deletion&&lease?.status!=='clear'){
+   if(lease?.status==='referenced')fail('resource_referenced');
+   fail('deletion_guard_unavailable','unavailable');
+  }
+  try{
+   if(lease){recheck(request,d);if(signal?.aborted)fail('cancelled');}
+   const prep=store.commit({intent:key+':prepare',expectedRevision:snap.revision,value:prepared as unknown as Json});
+   if(prep.status==='unknown')return {status:'unknown',intent:c.intent,id:result.id};if(prep.status!=='committed')return {status:'failed_no_commit',reason:prep.reason};
+   next.intents.push(record);verifyDependencies();recheck(request,d);if(signal?.aborted)fail('cancelled');
+   const applied=store.commit({intent:key+':apply',expectedRevision:prep.revision,value:next as unknown as Json});
+   return applied.status==='committed'?{status:'committed',id:result.id,revision:result.revision}:applied.status==='unknown'?{status:'unknown',intent:c.intent,id:result.id}:{status:'failed_no_commit',reason:applied.reason};
+  }finally{
+   if(lease?.status==='clear')lease.release();
+  }
  }
  function query(request:object,input:ApiQuery):ApiQueryResult {
   try{const q=capture(input);if(!object(q))fail('invalid_query');

@@ -24,8 +24,8 @@ test('configuration changes cannot smuggle reserved parameter keys or invalid pa
  for(const parameters of [{model:{mode:'value',value:'override'}},{Authorization:{mode:'value',value:'secret'}},{temperature:{mode:'value'}},{temperature:null}])assert.equal(h.connection({parameters}).status,'rejected');
  assert.equal(h.connection({parameters:{temperature:{mode:'value',value:0},custom:{mode:'disabled'}}}).status,'committed');
 });
-test('ID collisions and unsupported destructive commands do not overwrite existing records',t=>{
- const h=fixture(t,{id:()=> 'fixed'}),a=h.connection();assert.equal(a.status,'committed');assert.equal(h.connection().reason,'id_collision');assert.equal(h.model(a.id).reason,'id_collision');assert.equal(h.execute({kind:'connection.delete',intent:'delete',id:a.id}).reason,'unsupported_command');
+test('ID collisions and deletion without a trusted guard do not overwrite existing records',t=>{
+ const h=fixture(t,{id:()=> 'fixed'}),a=h.connection();assert.equal(a.status,'committed');assert.equal(h.connection().reason,'id_collision');assert.equal(h.model(a.id).reason,'id_collision');assert.equal(h.execute({kind:'connection.delete',intent:'delete',id:a.id,expectedRevision:1}).reason,'deletion_guard_unavailable');
 });
 test('bound endpoint mode distinguishes base URL from an explicit full request route',t=>{
  const h=fixture(t);assert.equal(h.connection({endpoint:'https://example.org/v1/chat/completions',endpointMode:'base'}).status,'rejected');
@@ -76,4 +76,47 @@ test('connection copy independently requires permission to read the source and c
  }
  h.permission.evaluate=evaluate;
  assert.deepEqual(h.service.query(h.request('connection.list','api:connections'),{kind:'connections'}).value.map(x=>x.id),[source.id]);
+});
+
+test('deletion checks local models and external references before committing and replays after restart',t=>{
+ const calls=[];
+ let referenced=true;
+ const h=fixture(t,{deletionGuard:{acquire(_request,target){
+  calls.push(target);
+  return referenced?{status:'referenced'}:{status:'clear',release(){calls.push('released');}};
+ }}});
+ const connection=h.connection(),model=h.model(connection.id);
+ const removeConnection={kind:'connection.delete',intent:'remove-connection',id:connection.id,expectedRevision:1};
+ const removeModel={kind:'model.delete',intent:'remove-model',id:model.id,expectedRevision:1};
+ assert.equal(h.execute(removeConnection).reason,'resource_referenced');
+ assert.deepEqual(calls,[]);
+ assert.equal(h.execute(removeModel).reason,'resource_referenced');
+ referenced=false;
+ assert.deepEqual(h.execute(removeModel),{status:'committed',id:model.id,revision:2});
+ assert.equal(h.query('model',model.id).reason,'not_found');
+ const removed=h.execute(removeConnection);
+ assert.equal(removed.status,'committed');
+ assert.equal(h.query('connection',connection.id).reason,'not_found');
+ h.reopen();
+ assert.deepEqual(h.execute(removeConnection),removed);
+ assert.deepEqual(calls,[
+  {kind:'model',id:model.id,revision:1},
+  {kind:'model',id:model.id,revision:1},'released',
+  {kind:'connection',id:connection.id,revision:1},'released'
+ ]);
+});
+
+test('deletion releases the reference guard if cancelled before writing',t=>{
+ const controller=new AbortController();
+ let released=false;
+ const h=fixture(t,{deletionGuard:{acquire(){
+  controller.abort();
+  return {status:'clear',release(){released=true;}};
+ }}});
+ const connection=h.connection();
+ const request=h.request('connection.delete',`connection:${connection.id}`);
+ const cmd={kind:'connection.delete',intent:'cancel-delete',id:connection.id,expectedRevision:1};
+ assert.equal(h.service.execute(request,cmd,controller.signal).reason,'cancelled');
+ assert.equal(released,true);
+ assert.equal(h.query('connection',connection.id).value.revision,1);
 });

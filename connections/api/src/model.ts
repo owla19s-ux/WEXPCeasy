@@ -19,6 +19,7 @@ export type ApiCommand=
  | (Base&{kind:'connection.create';name:string;provider:string;protocol:string;endpoint:string;endpointMode:'base'|'request';credentialRef:CredentialReference|null;enabled:boolean;parameters:Parameters})
  | (Edit&{kind:'connection.edit';name?:string;provider?:string;protocol?:string;endpoint?:string;endpointMode?:'base'|'request';credentialRef?:CredentialReference|null;enabled?:boolean;parameters?:Parameters})
  | (Edit&{kind:'connection.copy';name:string})
+ | (Edit&{kind:'connection.delete'|'model.delete'})
  | (Base&{kind:'model.create';connectionId:string;name:string;modelId:string;parameters:Parameters})
  | (Edit&{kind:'model.edit';name?:string;parameters?:Parameters})
  | (Edit&{kind:'model.observe';probeOperationId?:string});
@@ -109,6 +110,7 @@ export function command(value:unknown):ApiCommand {
  const kind=c['kind'];let required:string[],optional:string[]=[];
  if(kind==='connection.create')required=['name','provider','protocol','endpoint','endpointMode','credentialRef','enabled','parameters'];
  else if(kind==='connection.edit'){required=['id','expectedRevision'];optional=['name','provider','protocol','endpoint','endpointMode','credentialRef','enabled','parameters'];}
+ else if(kind==='connection.delete'||kind==='model.delete')required=['id','expectedRevision'];
  else if(kind==='connection.copy')required=['id','expectedRevision','name'];
  else if(kind==='model.create')required=['connectionId','name','modelId','parameters'];
  else if(kind==='model.edit'){required=['id','expectedRevision'];optional=['name','parameters'];}
