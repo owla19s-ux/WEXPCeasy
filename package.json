@@ -24,10 +24,21 @@
     "test:ai": "npm run build && node --test AI/tests/*.test.mjs",
     "test:conversations": "npm run build && node --test conversations/tests/*.test.mjs",
     "test:github": "npm run build && node --test connections/github/tests/*.test.mjs",
-    "test:local": "npm run build && node --test connections/local/tests/*.test.mjs"
+    "test:local": "npm run build && node --test connections/local/tests/*.test.mjs",
+    "build:desktop": "npm run build && node tools/build-desktop.mjs",
+    "start:desktop": "npm run build:desktop && electron dist/app/src/desktop-main.js",
+    "verify:desktop": "npm run build:desktop && node tools/verify-desktop.mjs"
   },
   "devDependencies": {
     "@types/node": "24.10.0",
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0",
+    "electron": "45.2.1",
+    "esbuild": "0.25.12",
     "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
   }
 }

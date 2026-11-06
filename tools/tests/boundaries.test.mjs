@@ -25,3 +25,11 @@ test('renderer cannot import permission authority through its public barrel',()=
  const files={'UI/src/main.ts':"import '../../permissions/src/index.js';",'permissions/src/index.ts':'export {};'};
  assert.ok(analyze(files).errors.some(x=>x.code==='renderer_privileged'));
 });
+
+test('desktop external imports are restricted to their owning domains',()=>{
+ const files={...good,'app/src/desktop.ts':"import {app} from 'electron';",'UI/src/view.tsx':"import {useState} from 'react'; import {createRoot} from 'react-dom/client';"};
+ assert.equal(analyze(files).errors.length,0);
+ for(const [file,name] of [['UI/src/x.ts','electron'],['space/src/x.ts','electron'],['UI/src/x.ts','some-arbitrary-package'],['app/src/x.ts','react']]){
+  assert.ok(analyze({...good,[file]:"import '"+name+"';"}).errors.some(e=>e.file===file));
+ }
+});

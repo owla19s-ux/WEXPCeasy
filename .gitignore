@@ -43,3 +43,7 @@ credentials.*
 # Isolated Python experiment caches
 __pycache__/
 *.pyc
+
+# Formal desktop bundle / acceptance output
+/desktop-dist/
+/desktop-acceptance/
