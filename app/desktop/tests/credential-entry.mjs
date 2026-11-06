@@ -33,7 +33,7 @@ async function verify(){
  }
  assert.equal((await child.webContents.executeJavaScript("window.wexCredential.submit({secret:'injected'})")).ok,false);
  const fixture='fixture-only-not-a-provider-key';
- await child.webContents.executeJavaScript("document.querySelector('input[type=password]').value="+JSON.stringify(fixture)+";document.querySelector('form').requestSubmit();true");
+ await child.webContents.executeJavaScript("document.querySelector('input[type=password]').value="+JSON.stringify(fixture)+";document.querySelector('form').requestSubmit();true").catch(error=>{if(!child.isDestroyed()||!String(error).includes('Render frame was disposed'))throw error;});
  assert.equal(await pending,fixture);assert.equal(child.isDestroyed(),true);
  const cancelled=prompt.request(target),next=BrowserWindow.getAllWindows().find(w=>w!==parent&&w!==peer);assert.ok(next);prompt.cancel();assert.equal(await cancelled,undefined);assert.equal(next.isDestroyed(),true);
  peer.destroy();parent.destroy();clearTimeout(timer);
