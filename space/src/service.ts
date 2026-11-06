@@ -100,11 +100,11 @@ export async function openSpaceService(options:SpaceOptions):Promise<SpaceOpenRe
  const root=probe.root,lock=options.lock??directoryLock,id=options.id??randomUUID;
  let registryStore:ManagedStore|undefined;const lease=await lock.acquire(root).catch(()=>({status:'unavailable' as const}));
  if(lease.status!=='acquired')return {status:'unavailable',reason:'root_lock_unavailable'};
- try{registryStore=await openStore(root,'wex-space.sqlite','space-registry',true,options.openStore);registry(registryStore.read().value,root.id);}
+ try{registryStore=await openStore(root,'wex-space.sqlite','space-registry',true,options.openStore);const initial=registryStore.read();if(initial.value===null&&initial.revision!==0)fail('corrupt_registry','unavailable');registry(initial.value,root.id);}
  catch(e){try{registryStore?.close();await lease.release();}catch{/* uncertain lease retained */}return {status:'unavailable',reason:e instanceof Failure?e.reason:'storage_unavailable'};}
  const store=registryStore;let closing=false,closed=false,quarantined=false,storeClosed=false,tail=Promise.resolve(),closePromise:Promise<void>|undefined;const orphans=new Set<()=>Promise<void>>();
  function run<T>(work:()=>Promise<T>,unavailable:T):Promise<T>{if(closing||closed||quarantined)return Promise.resolve(unavailable);const job=tail.then(work);tail=job.then(()=>{},()=>{});return job;}
- async function registrySnapshot(){if((await inspectRoot(root.path,root.id)).status!=='available')return fail('root_changed','unavailable');const snap=store.read();return {snap,state:registry(snap.value,root.id)};}
+ async function registrySnapshot(){if((await inspectRoot(root.path,root.id)).status!=='available')return fail('root_changed','unavailable');const snap=store.read();if(snap.value===null&&snap.revision!==0)fail('corrupt_registry','unavailable');return {snap,state:registry(snap.value,root.id)};}
  async function inContext<T>(location:string,rootId:string|undefined,create:boolean,work:(db:ManagedStore,contextRoot:Root)=>Promise<T>):Promise<T>{
  const probe=await inspectRoot(location,rootId);if(probe.status!=='available')return fail(probe.reason,'unavailable');
  if(probe.root.path===root.path)return fail('context_requires_separate_root');
