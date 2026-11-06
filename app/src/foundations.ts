@@ -1,3 +1,5 @@
+import {createLocalDirectoryBindings,createLocalDirectoryReader} from '../../connections/local/src/index.js';
+import type {LocalDirectoryReadOptions} from '../../connections/local/src/index.js';
 import {createGitHubFileAdapter,createGitHubConfiguredFileReader} from '../../connections/github/src/index.js';
 import type {GitHubClientFactory} from '../../connections/github/src/index.js';
 import {createLocalFileBindings,createLocalFileReader,createLocalFileAdapter} from '../../connections/local/src/index.js';
@@ -24,8 +26,9 @@ import {assemble} from './assembly.js';
 import type {Host} from './assembly.js';
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
 export type FoundationLocalFiles=Pick<ReturnType<typeof createLocalFileBindings>,'register'>&ReturnType<typeof createReadBoundary>;
-export interface FoundationOptions {githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
-export interface FoundationHost extends Host {readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
+export type FoundationLocalDirectories=Pick<ReturnType<typeof createLocalDirectoryBindings>,'register'>&ReturnType<typeof createReadBoundary>;
+export interface FoundationOptions {localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationHost extends Host {readonly localDirectories?:FoundationLocalDirectories;readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
  for(const suffix of ['', '-journal','-wal','-shm']){
   try{const info=await lstat(join(root.path,name+suffix));if(info.isSymbolicLink()||!info.isFile())throw Error('unsafe store path');}
@@ -46,8 +49,9 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  let lease:LockResult;
  try{lease=await (options.lock??directoryLock).acquire(probe.root);}catch{lease={status:'unavailable'};}
  if(lease.status!=='acquired')return Object.freeze({status:'failed',diagnostics:[{module:'shared',reason:'initialization_failed' as const}],stop:async()=>({status:'stopped' as const,failed:[]})});
+ let localDirectories:FoundationLocalDirectories|undefined;
  let localFiles:FoundationLocalFiles|undefined;
- const localFileOrphans=new Set<ReturnType<typeof createLocalFileBindings>>();
+ const localFileOrphans=new Set<{close():Promise<void>}>();
  let conversations:FoundationHost['conversations'];
  let ai:FoundationHost['ai'];
  let api:FoundationApiClient|undefined,apiService:ApiService|undefined,apiTransport:ReturnType<typeof createApiTransport>|undefined,apiLedger:ReturnType<typeof createOperationLedger>|undefined;
@@ -85,26 +89,32 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    return {value:service,stop:async()=>{await service.close();await closeStores(stores);space=undefined;}};
   }catch(error){try{await closeStores(stores);}catch{for(const db of stores)spaceOrphans.add(db);}throw error;}
  }}]:[]),
- ...((options.connections||options.api||options.localFiles||options.githubFiles)?[{id:'connections',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
+ ...((options.connections||options.api||options.localFiles||options.githubFiles||options.localDirectories)?[{id:'connections',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
   const stores=new Set<ManagedStore>();
   let files:ReturnType<typeof createLocalFileBindings>|undefined;
+  let directories:ReturnType<typeof createLocalDirectoryBindings>|undefined;
   try{
    const configs=await openDomainStore(probe.root,'connections-configs.sqlite','connection-configs',open);stores.add(configs);
    const operations=await openDomainStore(probe.root,'connections-operations.sqlite','connection-operations',open);stores.add(operations);
    const permission=deps['permissions'] as Pick<Permissions,'evaluate'|'recheck'>;
    files=options.localFiles?createLocalFileBindings(permission,options.localFiles):undefined;
+   directories=options.localDirectories?createLocalDirectoryBindings(permission):undefined;
+   const directoryReader=directories?createLocalDirectoryReader(directories.resolve,options.localDirectories):undefined;
    const adapters=[...(options.connections?.adapters??[]),...(files?[createLocalFileAdapter(files.resolve)]:[]),...(options.githubFiles?[createGitHubFileAdapter(options.githubFiles.client)]:[])];
    const readAdapters=[...(options.connections?.readAdapters??[]),...(options.githubFiles?[createGitHubConfiguredFileReader(options.githubFiles.client)]:[])];
    const service=createConnectionService(permission,configs,operations,adapters,{...(options.connections??{}),readAdapters});
    if(files)localFiles=Object.freeze({register:files.register,read:createReadBoundary(permission,createLocalFileReader(files.resolve)).read});
+   if(directories&&directoryReader)localDirectories=Object.freeze({register:directories.register,read:createReadBoundary(permission,directoryReader).read});
    apiLedger=createOperationLedger(operations);
    connections=Object.freeze({configs:service.configs,operations:service.operations,dispatch:service.dispatch,read:service.read});
    return {value:connections,stop:async()=>{
     if((await service.stop()).status!=='stopped')throw Error('connections_still_running');
-    await files?.close();
-    await closeStores(stores);connections=undefined;localFiles=undefined;
+    await files?.close();await directories?.close();
+    await closeStores(stores);connections=undefined;localFiles=undefined;localDirectories=undefined;
    }};
   }catch(error){
+   localFiles=undefined;localDirectories=undefined;
+   if(directories)try{await directories.close();}catch{localFileOrphans.add(directories);}
    if(files)try{await files.close();}catch{localFileOrphans.add(files);}
    try{await closeStores(stores);}catch{for(const store of stores)orphans.add(store);}
    throw error;
@@ -203,5 +213,5 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  };
  if(host.status==='failed')await stop();
  const current=permissions,currentConnections=connections,currentSpace=space,currentApi=api;
- return Object.freeze({...host,...(localFiles?{localFiles}:{}),...(conversations?{conversations}:{}),...(ai?{ai}:{}),...(currentApi?{api:currentApi}:{}),...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),...(currentSpace?{space:currentSpace}:{}),...(local&&host.status!=='failed'?{local:local.client}:{}),stop});
+ return Object.freeze({...host,...(localDirectories?{localDirectories}:{}),...(localFiles?{localFiles}:{}),...(conversations?{conversations}:{}),...(ai?{ai}:{}),...(currentApi?{api:currentApi}:{}),...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),...(currentSpace?{space:currentSpace}:{}),...(local&&host.status!=='failed'?{local:local.client}:{}),stop});
 }
