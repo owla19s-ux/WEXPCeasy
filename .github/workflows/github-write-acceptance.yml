@@ -1,0 +1,44 @@
+name: GitHub official SDK write acceptance
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/github-write-acceptance.yml'
+      - 'connections/github/tests/live-write.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  github-write:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Verify bounded fixture writes through the product adapter
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ github.token }}
+          retries: 0
+          script: |
+            const {pathToFileURL}=require('node:url');
+            const {writeFile}=require('node:fs/promises');
+            const {verifyGitHubWrite}=await import(pathToFileURL(process.cwd()+'/connections/github/tests/live-write.mjs').href);
+            const report=await verifyGitHubWrite({github,...context.repo,ref:context.sha,runId:context.runId,runAttempt:process.env.GITHUB_RUN_ATTEMPT});
+            await writeFile('github-write-evidence.json',JSON.stringify(report,null,2));
+            core.info('Official SDK fixture create/update, remote readback, stale SHA conflict, durable replay block and revocation verified.');
+            core.info('Audit branch: '+report.branch);
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: github-write-${{ github.sha }}
+          path: github-write-evidence.json
+          if-no-files-found: error
