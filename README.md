@@ -4,13 +4,15 @@
 >
 > 这是 AI 的施工与验收导航，不是产品说明书。完整介绍见 [docs/PROJECT.md](docs/PROJECT.md)。
 
-## 当前施工模块
+## 当前施工阶段：0.1.1 第一批 B1 收口
 
-**[Space / Context → space/README.md](space/README.md)**
+**当前版本任务入口：[B1 连续施工顺序与验收门槛](docs/versions/0.1.1/PLAN.md#31-2026-11-06-第一批现状与连续施工顺序)**。
 
-Space 是当前唯一正式施工入口。工作模式先读本文件，再读 Space 模块 README，然后核对最新代码和测试；只处理尚未实现或确有缺陷的功能，不重复施工。
+本轮经用户授权调整的是**第一批的执行顺序**，不是增加产品范围。以独立模块为施工单位，建议依次：Space 专项收尾核验 → API 0.1.1 范围收口 → shared / permissions / app 基线复验 → AI / Agent → Conversations → Connections 基础连接能力 → Data / Logs → B1-08 总验收。依赖已有真实代码可以提前做窄组合测试，但完整跨模块闭环归 B2。
 
-**下一模块：待 Space 验收后由普通对话模式确定。** 不得根据旧批次编号、历史计划或模块目录顺序自行切换。
+进入具体模块时阅读对应模块 README，检查最新源码及测试；发现旧文档和真实代码不符时，以代码与可复现证据为事实依据，向验收模式反馈，施工模式不自行修订文档。不得跳过未完成的 B1 必需模块直接宣布第一批通过，也不得为已完成的基础能力重新施工。
+
+**目前证据快照（2026-11-06，main `c7f1c827`）**：Space 与 API 均已有正式源码、测试及部分宿主组合测试；AI/roles、Conversations 和 GitHub/Local 具体连接器尚无正式产品 src/tests。最新 Foundation verification 在对应 SHA 上成功，但 CI 通过不等于 B1 整体验收。每次开工重新核对 main；快照不作为完成证明。
 
 ## 开工前检查
 
@@ -50,7 +52,7 @@ Space 是当前唯一正式施工入口。工作模式先读本文件，再读 S
 
 - [项目说明](docs/PROJECT.md)
 - [产品功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)
-- [版本范围与历史计划](docs/versions/0.1.1/PLAN.md)
+- [0.1.1 当前正式版本计划与 B1 连续施工流程](docs/versions/0.1.1/PLAN.md)
 - [文档索引与历史研究](docs/README.md)
 
 **默认阅读路径只有：根 README → 当前模块 README → 实际源码与测试。** 只有遇到明确的契约争议、未决设计或证据需求时，才定向查阅其他资料。
