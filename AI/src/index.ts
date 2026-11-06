@@ -1,6 +1,7 @@
 import type { Json, Store } from '../../shared/src/index.js';
 
 export type ModelReference = { connectionId: string; modelId: string };
+export type VerifyModel = (request: object, reference: Readonly<ModelReference>) => boolean;
 export type Configuration =
   | { kind: 'role'; name: string; prompt: string }
   | { kind: 'position'; name: string; responsibility: string }
@@ -39,6 +40,7 @@ function normalize(value: Configuration): Configuration {
 export function createAiConfigurations(
   store: Store,
   authorize: (request: object, access: ConfigAccess) => boolean,
+  verifyModel?: VerifyModel,
 ) {
   function allowed(request: object, access: ConfigAccess): boolean {
     try { return authorize(request, access) === true; }
@@ -61,6 +63,7 @@ export function createAiConfigurations(
       if (!validId(id) || !allowed(request, { action: 'read', kind, id })) return { status: 'denied' } as const;
       try {
         const entry = readState().state.entries.find(item => item.kind === kind && item.id === id);
+        if (!allowed(request, { action: 'read', kind, id })) return { status: 'denied' } as const;
         return entry
           ? { status: 'ok', entry: { ...normalize(entry), id, revision: entry.revision } } as const
           : { status: 'not_found' } as const;
@@ -89,6 +92,17 @@ export function createAiConfigurations(
         if (receipt) return receipt.command === command
           ? { status: 'committed', revision: receipt.entry.revision } as const
           : { status: 'intent_conflict' } as const;
+        if (value.kind === 'agent') {
+          let verified = false;
+          try { verified = verifyModel?.(request, Object.freeze({ ...value.model })) === true; }
+          catch { /* The owner can be unavailable. */ }
+          if (!verified) return { status: 'reference_unavailable' } as const;
+          if (!allowed(request, { action: 'read', kind: 'role', id: value.roleId }) ||
+              !allowed(request, { action: 'read', kind: 'position', id: value.positionId })) {
+            return { status: 'reference_unavailable' } as const;
+          }
+        }
+        if (!allowed(request, { action: 'write', kind: value.kind, id })) return { status: 'denied' } as const;
         const index = state.entries.findIndex(entry => entry.kind === value.kind && entry.id === id);
         if ((state.entries[index]?.revision ?? 0) !== expectedRevision) return { status: 'revision_conflict' } as const;
         const entry: Entry = { ...value, id, revision: expectedRevision + 1 };
@@ -102,4 +116,22 @@ export function createAiConfigurations(
       } catch { return { status: 'unavailable' } as const; }
     },
   });
+}
+
+/** The host binds each lookup to the caller's API model.read scope. */
+export function verifyModelWithApi(
+  api: { query(request: object, query: { kind: 'model'; id: string }): unknown },
+  bindModelRead: (request: object, modelId: string) => object | undefined,
+): VerifyModel {
+  return (request, reference) => {
+    const scoped = bindModelRead(request, reference.modelId);
+    if (!scoped) return false;
+    const result = api.query(scoped, { kind: 'model', id: reference.modelId });
+    if (typeof result !== 'object' || result === null || !('status' in result) ||
+        result.status !== 'ok' || !('value' in result)) return false;
+    const value = result.value;
+    return typeof value === 'object' && value !== null &&
+      'id' in value && value.id === reference.modelId &&
+      'connectionId' in value && value.connectionId === reference.connectionId;
+  };
 }
