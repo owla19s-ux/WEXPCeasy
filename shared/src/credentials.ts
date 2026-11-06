@@ -28,7 +28,7 @@ export function createCredentialVault(store:Store,cipher:CredentialCipher,author
    if(!exact(entry,['id','revision','binding','ciphertext','revoked'])||!id(entry.id)||seen.has(entry.id)||!Number.isSafeInteger(entry.revision)||entry.revision<1||typeof entry.revoked!=='boolean'||(entry.revoked?entry.ciphertext!==null:typeof entry.ciphertext!=='string'||!entry.ciphertext||entry.ciphertext.length>262144))throw Error('credential_store_unavailable');
    captureBinding(entry.binding);seen.add(entry.id);
   }
-  if(state.intents.some(intent=>!id(intent))||new Set(state.intents).size!==state.intents.length||state.intents.length!==snapshot.revision)throw Error('credential_store_unavailable');
+  if(state.intents.some(intent=>!id(intent))||new Set(state.intents).size!==state.intents.length||state.intents.length!==snapshot.revision||state.entries.reduce((sum,entry)=>sum+entry.revision,0)!==snapshot.revision)throw Error('credential_store_unavailable');
   return {snapshot,state};
  }
  read();
@@ -45,8 +45,9 @@ export function createCredentialVault(store:Store,cipher:CredentialCipher,author
    if(secret!==undefined){
     if(typeof secret!=='string'||!secret||secret.length>65536)return {status:'invalid'};
     if(!available())return {status:'unavailable'};
-    ciphertext=cipher.seal(secret);
-    if(typeof ciphertext!=='string'||!ciphertext||ciphertext===secret||ciphertext.length>262144||!available())return {status:'unavailable'};
+    const envelope=JSON.stringify({format:1,id:input.id,revision:input.expectedRevision+1,binding,secret});
+    ciphertext=cipher.seal(envelope);
+    if(typeof ciphertext!=='string'||!ciphertext||ciphertext===secret||ciphertext===envelope||ciphertext.length>262144||!available())return {status:'unavailable'};
    }
    const entry:Entry={id:input.id,revision:input.expectedRevision+1,binding:{...binding},ciphertext,revoked:secret===undefined};
    const next=structuredClone(state);const index=next.entries.findIndex(item=>item.id===input.id);
@@ -70,8 +71,11 @@ export function createCredentialVault(store:Store,cipher:CredentialCipher,author
     const entry=read().state.entries.find(item=>item.id===ref.id);
     if(!entry||entry.revoked||entry.revision!==ref.revision||!isDeepStrictEqual(entry.binding,binding))return {status:'denied'};
     if(!available())return {status:'unavailable'};
-    const secret=cipher.unseal(entry.ciphertext!);
-    if(!secret||typeof secret!=='string'||!available())return {status:'unavailable'};
+    const decoded=cipher.unseal(entry.ciphertext!);
+    if(typeof decoded!=='string'||decoded.length>131072||!available())return {status:'unavailable'};
+    const envelope=JSON.parse(decoded) as {format:number;id:string;revision:number;binding:CredentialBinding;secret:string};
+    if(!exact(envelope,['format','id','revision','binding','secret'])||envelope.format!==1||envelope.id!==ref.id||envelope.revision!==ref.revision||!isDeepStrictEqual(envelope.binding,binding)||typeof envelope.secret!=='string'||!envelope.secret||envelope.secret.length>65536)return {status:'denied'};
+    const secret=envelope.secret;
     const current=read().state.entries.find(item=>item.id===ref.id);
     if(!isDeepStrictEqual(entry,current)||!allowed(request,'use',ref.id,binding))return {status:'denied'};
     return {status:'ok',secret};
