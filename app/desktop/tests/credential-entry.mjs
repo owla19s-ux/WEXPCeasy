@@ -17,7 +17,7 @@ async function verify(){
  const target={connectionName:'Fixture connection',provider:'fixture',endpoint:'https://example.test/v1/'};
  const pending=prompt.request(target);
  const child=BrowserWindow.getAllWindows().find(w=>w!==parent);assert.ok(child);
- await new Promise((res,rej)=>{const until=Date.now()+10000;const loop=async()=>{try{if(await child.webContents.executeJavaScript("typeof window.wexCredential==='object'"))return res();}catch{}if(Date.now()>until)return rej(Error('credential_preload_unavailable'));setTimeout(loop,25);};void loop();});
+ await new Promise((res,rej)=>{const until=Date.now()+10000;const loop=async()=>{try{if(await child.webContents.executeJavaScript("typeof window.wexCredential==='object'&&!!document.querySelector('button[type=submit]:not(:disabled)')"))return res();}catch{}if(Date.now()>until)return rej(Error('credential_preload_unavailable'));setTimeout(loop,25);};void loop();});
  assert.deepEqual(await child.webContents.executeJavaScript('window.wexCredential.target()'),{ok:true,value:target});
  const facts=await child.webContents.executeJavaScript("({node:typeof require,process:typeof process,keys:Object.keys(window.wexCredential).sort()})");
  assert.equal(facts.node,'undefined');assert.equal(facts.process,'undefined');assert.deepEqual(facts.keys,['cancel','submit','target']);
