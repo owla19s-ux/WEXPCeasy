@@ -6,8 +6,13 @@ import type {Change,Scope} from '../../permissions/src/index.js';
 import type {SpaceCommand,SpaceQuery,QueryResult,ProjectionScope} from '../../space/src/index.js';
 import type {DesktopSpaceInput,DesktopSpaceReply} from '../../UI/src/index.js';
 const schemas:Record<string,readonly string[]>={
+ 'category.create':['kind','name'],'category.edit':['kind','id','expectedRevision','name'],
+ 'address.add':['kind','contextId','name','address','notes','purpose'],
+ 'address.edit':['kind','contextId','id','expectedRevision','name','address','notes','purpose'],
+ 'address.remove':['kind','contextId','id','expectedRevision'],
+ 'primary.select':['kind','contextId','id','expectedRevision'],
  snapshot:['kind'],'context.open':['kind','id'],
- 'space.create':['kind','name','description'],'space.edit':['kind','id','expectedRevision','name','description'],
+ 'space.create':['kind','name','description','categoryId'],'space.edit':['kind','id','expectedRevision','name','description','categoryId'],
  'space.directory':['kind','id','expectedRevision','clear'],
  'group.create':['kind','spaceId','name'],'group.edit':['kind','id','expectedRevision','name'],
  'context.create':['kind','name','description'],'context.edit':['kind','id','expectedRevision','name','description'],
@@ -15,21 +20,25 @@ const schemas:Record<string,readonly string[]>={
 };
 function capture(input:unknown):DesktopSpaceInput|undefined{
  if(!input||typeof input!=='object'||Array.isArray(input)||Object.getPrototypeOf(input)!==Object.prototype)return;
- const row=input as Record<string,unknown>,keys=schemas[String(row.kind)];if(!keys||Reflect.ownKeys(input).some(k=>typeof k!=='string'||!keys.includes(k)))return;
+ const row=input as Record<string,unknown>;if(typeof row.kind!=='string'||!Object.hasOwn(schemas,row.kind))return;const keys=schemas[row.kind];if(!keys||Reflect.ownKeys(input).some(k=>typeof k!=='string'||!keys.includes(k)))return;
  const out:Record<string,unknown>={};
  for(const key of Object.keys(row)){
   const value=row[key];
   if(key==='expectedRevision'){if(!Number.isSafeInteger(value)||Number(value)<0)return;}
   else if(key==='clear'){if(typeof value!=='boolean')return;}
-  else if(key==='groupId'&&value===null){}
-  else if(typeof value!=='string'||(key!=='description'&&!value.trim())||value.length>4096)return;
+  else if((key==='groupId'||key==='categoryId'||(key==='id'&&row.kind==='primary.select'))&&value===null){}
+  else if(key==='purpose'&&Array.isArray(value)){
+   if(value.length>32||Object.keys(value).length!==value.length||value.some(x=>typeof x!=='string'||!x.trim()||x.length>4096))return;
+   out[key]=[...value];continue;
+  }
+  else if(typeof value!=='string'||(!['description','notes','purpose'].includes(key)&&!value.trim())||value.length>4096)return;
   out[key]=value;
  }
- const required=keys.filter(k=>!['description','clear'].includes(k));
+ const required=keys.filter(k=>!['description','clear','categoryId','notes','purpose'].includes(k));
  if(required.some(k=>!Object.hasOwn(out,k)))return;
  return out as unknown as DesktopSpaceInput;
 }
-const titles:Record<string,string>={'space.create':'创建 Space','space.edit':'编辑 Space','space.directory':'变更 Space 工作目录关联','group.create':'创建分组','group.edit':'编辑分组','context.create':'创建 Context','context.edit':'编辑 Context','context.group':'移动 Context 分组','context.open':'查看 Context'};
+const titles:Record<string,string>={'category.create':'创建 Space 类别','category.edit':'编辑 Space 类别','address.add':'添加 Context 地址引用','address.edit':'编辑地址引用','address.remove':'解除地址引用（保留外部原资源）','primary.select':'选择 Context 主地址','space.create':'创建 Space','space.edit':'编辑 Space','space.directory':'变更 Space 工作目录关联','group.create':'创建分组','group.edit':'编辑分组','context.create':'创建 Context','context.edit':'编辑 Context','context.group':'移动 Context 分组','context.open':'查看 Context'};
 const key=(op:LocalOperation)=>JSON.stringify(op);
 /** Native-confirmed local UI adapter. Domain data remains in Space; no Renderer identity/grant/path API. */
 export function createDesktopSpace(options:{rootId:string;confirm:(summary:string)=>Promise<boolean>;chooseDirectory:()=>Promise<string|undefined>}){
@@ -75,28 +84,29 @@ export function createDesktopSpace(options:{rootId:string;confirm:(summary:strin
   throw Error('projection_unavailable');
  }
  async function perform(input:DesktopSpaceInput):Promise<DesktopSpaceReply>{
-  if(!await options.confirm(input.kind==='snapshot'?'读取当前数据根已登记的 Space、Group 和 Context。仅允许本次本地读取，不授予 AI、网络或文件内容访问。':'本次操作：'+titles[input.kind]+('name'in input?' — '+input.name:'')+('id'in input?'；对象 ID：'+input.id:'')+('contextId'in input?'；Context ID：'+input.contextId:'')+('spaceId'in input?'；Space ID：'+input.spaceId:'')+('groupId'in input?'；分组：'+(input.groupId??'不分组'):'')+'。仅操作所选对象，不授予 AI 或外部连接权限。'))return {status:'cancelled'};
+  if(!await options.confirm(input.kind==='snapshot'?'读取当前数据根已登记的 Space、Group 和 Context。仅允许本次本地读取，不授予 AI、网络或文件内容访问。':'本次操作：'+titles[input.kind]+('name'in input?' — '+input.name:'')+('id'in input?'；对象 ID：'+input.id:'')+('contextId'in input?'；Context ID：'+input.contextId:'')+('spaceId'in input?'；Space ID：'+input.spaceId:'')+('address'in input?'；地址：'+input.address:'')+('categoryId'in input?'；类别：'+(input.categoryId??'未分类'):'')+('groupId'in input?'；分组：'+(input.groupId??'不分组'):'')+'。仅操作所选对象，不授予 AI 或外部连接权限。'))return {status:'cancelled'};
   if(closed) return {status:'unavailable',reason:'session_closed'};
   if(input.kind==='snapshot'){
+   const categories=await query({kind:'organization',entity:'category'},operation('organization.list','root:'+options.rootId));
    const spaces=await query({kind:'organization',entity:'space'},operation('organization.list','root:'+options.rootId));
    const groups=await query({kind:'organization',entity:'group'},operation('organization.list','root:'+options.rootId));
    const contexts=await query({kind:'contexts'},operation('context.list','root:'+options.rootId));
-   if(spaces.status!=='ok'||groups.status!=='ok'||contexts.status!=='ok')return {status:'unavailable',reason:'snapshot_unavailable'};
+   if(categories.status!=='ok'||spaces.status!=='ok'||groups.status!=='ok'||contexts.status!=='ok')return {status:'unavailable',reason:'snapshot_unavailable'};
    const organizations=[];
    let complete=contexts.complete??true;
    for(const item of contexts.value as {id:string}[]){
     const org=await query({kind:'context.organization',id:item.id},operation('context.organization.read','context:'+item.id,item.id));
     if(org.status==='ok')organizations.push(org.value);else complete=false;
    }
-   return {status:'ok',view:'snapshot',spaces:spaces.value as never,groups:groups.value as never,contexts:contexts.value as never,organizations:organizations as never,complete};
+   return {status:'ok',view:'snapshot',categories:categories.value as never,spaces:spaces.value as never,groups:groups.value as never,contexts:contexts.value as never,organizations:organizations as never,complete};
   }
   if(input.kind==='context.open'){
    const context=await query({kind:'context',id:input.id},operation('context.read','context:'+input.id,input.id));
    const organization=await query({kind:'context.organization',id:input.id},operation('context.organization.read','context:'+input.id,input.id));
    const location=await query({kind:'context.location',id:input.id},operation('context.locate','context:'+input.id,input.id));
    if(context.status!=='ok'||organization.status!=='ok'||location.status!=='ok')return {status:'unavailable',reason:'context_unavailable'};
-   const value=context.value as {id:string;revision:number;name:string;description:string};
-   return {status:'ok',view:'context',context:{id:value.id,revision:value.revision,name:value.name,description:value.description},location:(location.value as {location:string}).location,organization:organization.value as never};
+   const value=context.value as import('../../space/src/index.js').ContextView;
+   return {status:'ok',view:'context',context:{id:value.id,revision:value.revision,name:value.name,description:value.description,primaryAddress:value.primaryAddress},resources:value.resources,tools:value.tools,location:(location.value as {location:string}).location,organization:organization.value as never};
   }
   let command:SpaceCommand;
   if(input.kind==='context.create'||input.kind==='space.directory'){
@@ -110,6 +120,7 @@ export function createDesktopSpace(options:{rootId:string;confirm:(summary:strin
    const current=await query({kind:'context.organization',id:command.contextId},operation('context.organization.read','context:'+command.contextId,command.contextId));
    if(current.status!=='ok')return {status:'unavailable',reason:'organization_unavailable'};
   }
+  if('categoryId'in command&&command.categoryId)permit(operation('category.read','category:'+command.categoryId));
   if('spaceId'in command)permit(operation('space.read','space:'+command.spaceId));
   if('groupId'in command&&command.groupId)permit(operation('group.read','group:'+command.groupId));
   const context='contextId'in command?command.contextId:command.kind==='context.edit'?command.id:null;
