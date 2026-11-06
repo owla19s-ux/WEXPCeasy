@@ -89,7 +89,7 @@ function contextChange(state:Body,c:SpaceCommand,id:()=>string):{id:string;revis
  case 'address.remove':case 'association.remove':case 'tool.remove':{
  const values=c.kind==='address.remove'?state.resources:c.kind==='association.remove'?state.associations:state.tools;
  const item=find<Association|Body['resources'][number]>(values,c.id);expected(item,c.expectedRevision);values.splice(values.indexOf(item as never),1);
- if(c.kind==='address.remove'&&state.context.primaryAddress===c.id){state.context.primaryAddress=null;state.context.revision++;}
+ if(c.kind==='address.remove'&&state.context.primaryAddress===c.id){expected(state.context,state.context.revision);state.context.primaryAddress=null;state.context.revision++;}
  return {id:item.id,revision:item.revision+1};
  }
  default:return fail('unsupported_command');
