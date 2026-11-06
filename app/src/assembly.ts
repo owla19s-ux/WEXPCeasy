@@ -1,7 +1,7 @@
 export interface Instance {readonly value:unknown;stop():Promise<void>}
 /** Built-in trusted definitions, never executable third-party manifests. */
 export interface ModuleDefinition {readonly id:string;readonly requires:readonly string[];start(dependencies:Readonly<Record<string,unknown>>,signal:AbortSignal):Promise<Instance>}
-export interface ModuleDiagnostic {readonly module:string;readonly reason:'dependency_missing'|'dependency_unavailable'|'initialization_failed'|'initialization_timeout'|'invalid_graph'|'release_failed'}
+export interface ModuleDiagnostic {readonly module:string;readonly reason:'dependency_missing'|'dependency_unavailable'|'initialization_failed'|'initialization_timeout'|'invalid_graph'|'release_failed'|'diagnostic_write_failed'}
 export interface StopResult {readonly status:'stopped'|'incomplete';readonly failed:readonly string[]}
 export interface Host {readonly status:'ready'|'degraded'|'failed';readonly diagnostics:readonly ModuleDiagnostic[];stop():Promise<StopResult>}
 export async function assemble(definitions:readonly ModuleDefinition[],options:{required:readonly string[];timeoutMs:number}):Promise<Host>{

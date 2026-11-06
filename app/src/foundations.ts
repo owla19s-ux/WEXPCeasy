@@ -8,8 +8,8 @@ import {createReadBoundary} from '../../connections/src/index.js';
 import {createConversations,createConversationGeneration,inspectConversationStore} from '../../conversations/src/index.js';
 import {lstat} from 'node:fs/promises';
 import {join} from 'node:path';
-import {inspectRoot,directoryLock,openSqliteStore} from '../../shared/src/index.js';
-import type {Root,RootLock,ManagedStore,Store,LockResult} from '../../shared/src/index.js';
+import {inspectRoot,directoryLock,openSqliteStore,createPersistedDiagnostics} from '../../shared/src/index.js';
+import type {Root,RootLock,ManagedStore,Store,LockResult,PersistedDiagnosticOptions,DiagnosticCode} from '../../shared/src/index.js';
 import {createPermissions} from '../../permissions/src/index.js';
 import type {TrustPort,Permissions} from '../../permissions/src/index.js';
 import {createApiService,createApiTransport} from '../../connections/api/src/index.js';
@@ -23,12 +23,13 @@ import {createLocalEntries} from './local-entries.js';
 import type {LocalEntryOptions,LocalEntryClient} from './local-entries.js';
 import {createAiConfigurations,verifyModelWithApi,inspectAiConfigurationStore} from '../../AI/src/index.js';
 import {assemble} from './assembly.js';
-import type {Host} from './assembly.js';
+import type {Host,ModuleDiagnostic} from './assembly.js';
+export type FoundationTechnicalDiagnostics=Pick<ReturnType<typeof createPersistedDiagnostics>,'read'>;
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
 export type FoundationLocalFiles=Pick<ReturnType<typeof createLocalFileBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationLocalDirectories=Pick<ReturnType<typeof createLocalDirectoryBindings>,'register'>&ReturnType<typeof createReadBoundary>;
-export interface FoundationOptions {localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
-export interface FoundationHost extends Host {readonly localDirectories?:FoundationLocalDirectories;readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
+export interface FoundationOptions {technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationHost extends Host {readonly technicalDiagnostics?:FoundationTechnicalDiagnostics;readonly localDirectories?:FoundationLocalDirectories;readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
  for(const suffix of ['', '-journal','-wal','-shm']){
   try{const info=await lstat(join(root.path,name+suffix));if(info.isSymbolicLink()||!info.isFile())throw Error('unsafe store path');}
@@ -59,6 +60,27 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  const conversationOrphans=new Set<ManagedStore>();
  const open=options.openStore??openSqliteStore,orphans=new Set<ManagedStore>(),spaceOrphans=new Set<ManagedStore>(),apiOrphans=new Set<ManagedStore>(),aiOrphans=new Set<ManagedStore>();
  const local=options.local?createLocalEntries(options.local):undefined;let stopping=false,rootActive=true;
+ const technicalStores=new Set<ManagedStore>();
+ let technicalLog:ReturnType<typeof createPersistedDiagnostics>|undefined;
+ const diagnosticIssues:ModuleDiagnostic[]=[];
+ const noteDiagnostic=(reason:ModuleDiagnostic['reason'])=>{
+  if(!diagnosticIssues.some(d=>d.reason===reason))diagnosticIssues.push({module:'diagnostics',reason});
+ };
+ if(options.technicalDiagnostics){
+  try{
+   const store=await openDomainStore(probe.root,'technical-diagnostics.sqlite','technical-diagnostics',open);
+   technicalStores.add(store);technicalLog=createPersistedDiagnostics(store,options.technicalDiagnostics);
+  }catch{
+   technicalLog=undefined;noteDiagnostic('initialization_failed');
+   try{await closeStores(technicalStores);}catch{noteDiagnostic('release_failed');}
+  }
+ }
+ const emitTechnical=(code:DiagnosticCode)=>{
+  if(technicalLog?.emit({module:'app',level:'error',code}).status==='failed')noteDiagnostic('diagnostic_write_failed');
+ };
+ const technicalDiagnostics:FoundationTechnicalDiagnostics|undefined=technicalLog?Object.freeze({
+  read(){return stopping||!technicalLog?{status:'unavailable' as const}:technicalLog.read();}
+ }):undefined;
  const trust:TrustPort={
   current(request){if(stopping)return;if(local?.owns(request))return local.current(request);const facts=options.trust.current(request);return local&&facts?.kind==='local'?undefined:facts;},
   canManage(change){return !stopping&&options.trust.canManage(change);},
@@ -209,6 +231,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
   }
  }}]:[])
  ],{required:['shared','permissions'],timeoutMs:1000});
+ for(const diagnostic of host.diagnostics)emitTechnical(diagnostic.reason==='release_failed'?'release_failed':'module_unavailable');
  let stopPromise:ReturnType<Host['stop']>|undefined;
  const stop=()=>{
  stopping=true;local?.stop();apiService?.stop();void apiTransport?.stop();
@@ -216,18 +239,23 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  const job=(async()=>{
  const result=await host.stop();
  // Keep root occupied when provider shutdown cannot confirm release.
- if(result.status==='incomplete')return result;
+ if(result.status==='incomplete'){emitTechnical('release_failed');return result;}
  try{for(const files of localFileOrphans){await files.close();localFileOrphans.delete(files);}}catch{return {status:'incomplete' as const,failed:['local-files']};}
  try{await closeStores(orphans);}catch{return {status:'incomplete' as const,failed:['connections-storage']};}
  try{await closeStores(apiOrphans);}catch{return {status:'incomplete' as const,failed:['api-storage']};}
  try{await closeStores(conversationOrphans);}catch{return {status:'incomplete' as const,failed:['conversations-storage']};}
  try{await closeStores(aiOrphans);}catch{return {status:'incomplete' as const,failed:['ai-storage']};}
  try{await closeStores(spaceOrphans);}catch{return {status:'incomplete' as const,failed:['space-storage']};}
+ try{await closeStores(technicalStores);}catch{noteDiagnostic('release_failed');return {status:'incomplete' as const,failed:['diagnostics-storage']};}
+ technicalLog=undefined;
  try{await release();rootActive=false;return result;}catch{return {status:'incomplete' as const,failed:['root-lock']};}
  })();
  stopPromise=job;void job.then(result=>{if(result.status==='incomplete')stopPromise=undefined;});return job;
  };
  if(host.status==='failed')await stop();
  const current=permissions,currentConnections=connections,currentSpace=space,currentApi=api;
- return Object.freeze({...host,...(localDirectories?{localDirectories}:{}),...(localFiles?{localFiles}:{}),...(conversations?{conversations}:{}),...(ai?{ai}:{}),...(currentApi?{api:currentApi}:{}),...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),...(currentSpace?{space:currentSpace}:{}),...(local&&host.status!=='failed'?{local:local.client}:{}),stop});
+ return Object.freeze({...host,
+ get status(){return host.status==='ready'&&diagnosticIssues.length?'degraded' as const:host.status;},
+ get diagnostics(){return Object.freeze([...host.diagnostics,...diagnosticIssues].map(d=>Object.freeze({...d})));},
+ ...(technicalDiagnostics?{technicalDiagnostics}:{}),...(localDirectories?{localDirectories}:{}),...(localFiles?{localFiles}:{}),...(conversations?{conversations}:{}),...(ai?{ai}:{}),...(currentApi?{api:currentApi}:{}),...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),...(currentSpace?{space:currentSpace}:{}),...(local&&host.status!=='failed'?{local:local.client}:{}),stop});
 }
