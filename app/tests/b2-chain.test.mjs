@@ -74,7 +74,20 @@ async function fixture(t){
   const requests={read:chatRequest('read',ctx,chatId),dispatch:chatRequest('dispatch',ctx,chatId),api:apiRequest('request.send',target,ctx),
    finish:chatRequest('finish',ctx,chatId),fail:chatRequest('fail',ctx,chatId),unknown:chatRequest('unknown',ctx,chatId)};
   return {conversationId:chatId,generationId,operationId,replyId,intent:'send-'+generationId,expectedRevision:chat(ctx,chatId).conversation.revision,requests,
-   systemPrompt:state.role.prompt,preparation:{requestId,connectionId:state.connection.id,connectionRevision:1,modelId:state.model.id,modelRevision:2,context:ctx,parameters:{},timeoutMs:2000,stream:true}};
+   systemPrompt:state.role.prompt,preparation:{requestId,connectionId:state.connection.id,connectionRevision:state.connection.revision,modelId:state.model.id,modelRevision:state.model.revision,context:ctx,parameters:{},timeoutMs:2000,stream:true}};
+ }
+ async function selection(contextId){
+  const selected=await view(contextId);assert.equal(selected.status,'ok');
+  const reference=selected.value.associations.find(a=>a.owner==='AI'&&a.targetType==='agent');assert.ok(reference);
+  const agent=host.ai.read(request(op('AI','agent.read','agent:'+reference.targetId)),'agent',reference.targetId);assert.equal(agent.status,'ok');
+  const role=host.ai.read(request(op('AI','role.read','role:'+agent.entry.roleId)),'role',agent.entry.roleId);assert.equal(role.status,'ok');
+  const position=host.ai.read(request(op('AI','position.read','position:'+agent.entry.positionId)),'position',agent.entry.positionId);assert.equal(position.status,'ok');
+  const modelReference=selected.value.associations.find(a=>a.owner==='connections/api'&&a.targetType==='model');assert.equal(modelReference.targetId,agent.entry.model.modelId);
+  const model=host.api.query(apiRequest('model.read','model:'+modelReference.targetId),{kind:'model',id:modelReference.targetId});assert.equal(model.status,'ok');
+  assert.equal(model.value.connectionId,agent.entry.model.connectionId);
+  const connection=host.api.query(apiRequest('connection.read','connection:'+model.value.connectionId),{kind:'connection',id:model.value.connectionId});assert.equal(connection.status,'ok');
+  const resource=selected.value.resources.find(r=>r.purpose==='reference');assert.ok(resource);
+  return {context:selected.value,agent:agent.entry,role:role.entry,position:position.entry,model:model.value,connection:connection.value,resource};
  }
  async function setup(){
   assert.equal(host.status,'ready');
@@ -96,16 +109,16 @@ async function fixture(t){
   for(const [owner,targetType,targetId] of [['AI','role','role'],['AI','agent','agent'],['connections/api','model',model.id]])
    assert.equal((await space({kind:'association.add',intent:'ref-'+targetId,contextId:context.id,owner,targetType,targetId,purpose:'selected'})).status,'committed');
   assert.equal((await space({kind:'address.add',intent:'resource',contextId:context.id,name:'Reference',address:file,purpose:'reference',type:'file',source:'local'})).status,'committed');
-  const fileTarget=localFileTarget('reference'),fileRead=request(op('local','read',fileTarget,context.id));
-  assert.equal((await host.localFiles.register(fileRead,fileTarget,file)).status,'bound');
+  const selected=await selection(context.id),fileTarget=localFileTarget(selected.resource.id),fileRead=request(op('local','read',fileTarget,context.id));
+  assert.equal((await host.localFiles.register(fileRead,fileTarget,selected.resource.address)).status,'bound');
   const observed=await host.localFiles.read(fileRead,fileTarget);assert.equal(observed.status,'ok');
   const inputText='question with '+observed.value.content;
   assert.equal(change(context.id,'chat',{kind:'create'}).status,'committed');
   assert.equal(change(context.id,'input',{kind:'append',messageId:'input',segments:[{id:'p',text:inputText}]}).status,'committed');
   assert.equal(change(context.id,'begin',{kind:'begin',generationId:'gen',inputMessageId:'input'}).status,'committed');
-  return {connection,model,role,agent,context,other,workspace,groupB,fileTarget,inputText};
+  return {...selected,other,workspace,groupB,fileTarget,inputText};
  }
- return {root,file,op,bind,request,apiRequest,chatRequest,chat,change,view,space,sendInput,setup,calls,get host(){return host;},
+ return {root,file,op,bind,request,apiRequest,chatRequest,chat,change,view,space,selection,sendInput,setup,calls,get host(){return host;},
   setMode(value){mode=value;},waitForRequest(){return new Promise(r=>{arrive=r;});},
   revoke:operation=>manage('revoke',operation),
   async restart(){const old=host;assert.equal((await old.stop()).status,'stopped');sources.delete(source);source={};identity={...identity,relationshipGeneration:identity.relationshipGeneration+1};sources.set(source,identity);granted.clear();host=await startFoundations(options);hosts.push(host);return old;}
@@ -116,6 +129,9 @@ test('B2-01..07 real Context to Agent/model to selected file to streamed convers
  assert.equal((await f.view(ctx)).value.associations.length,3);
  assert.equal((await f.view(state.other.id)).value.associations.length,0);
  const deltas=[],input=f.sendInput(state);input.onText=text=>deltas.push(text);
+ const beforeDenied=f.calls.length;
+ assert.equal((await f.host.api.send(input.requests.api,'wrong-context',{...input.preparation,context:state.other.id,messages:[{role:'user',content:'must not send'}]})).status,'blocked');
+ assert.equal(f.calls.length,beforeDenied);assert.equal(f.host.connections.operations.get('wrong-context'),undefined);
  assert.equal((await f.host.conversations.generation.send(input)).status,'committed');assert.equal(deltas.join(''),'answer: '+state.inputText);
  const wire=f.calls.at(-1);assert.deepEqual(wire.messages,[{role:'system',content:state.role.prompt},{role:'user',content:state.inputText}]);assert.equal(wire.model,'fixture-chat');
  const before=f.chat(ctx).conversation,operation=f.host.connections.operations.get('generation');assert.equal(operation.phase,'observed');assert.equal(operation.attempts,1);
@@ -124,13 +140,14 @@ test('B2-01..07 real Context to Agent/model to selected file to streamed convers
  f.apiRequest('connection.read','connection:'+state.connection.id);f.apiRequest('model.read','model:'+state.model.id);
  for(const [kind,id] of [['role','role'],['agent','agent']])f.request(f.op('AI',kind+'.read',kind+':'+id));
  assert.deepEqual(f.chat(ctx).conversation,before);assert.equal((await f.view(ctx)).value.associations.length,3);
+ const restored=await f.selection(ctx);assert.deepEqual(restored.agent.model,state.agent.model);assert.equal(restored.role.prompt,state.role.prompt);
  f.request(f.op('space','space.read','space:'+state.workspace.id));f.request(f.op('space','group.read','group:'+state.groupB.id));
  const organization=await f.host.space.query(f.request(f.op('space','context.organization.read','context:'+ctx,ctx)),{kind:'context.organization',id:ctx});assert.equal(organization.value.groupId,state.groupB.id);
  const read=f.request(f.op('local','read',state.fileTarget,ctx));assert.equal((await f.host.localFiles.read(read,state.fileTarget)).status,'unavailable');assert.equal((await f.host.localFiles.register(read,state.fileTarget,f.file)).status,'bound');
  const count=f.calls.length,again=f.sendInput(state);
  assert.equal((await f.host.api.send(again.requests.api,'generation',{...again.preparation,messages:wire.messages})).status,'blocked');assert.equal(f.calls.length,count);assert.deepEqual(f.host.connections.operations.get('generation'),operation);
  assert.equal(f.change(ctx,'resend',{kind:'resend',messageId:'revised',replaces:'input',generationId:'next',segments:[{id:'p',text:'revised question'}]}).status,'committed');
- assert.equal((await f.host.conversations.generation.send(f.sendInput(state,{generationId:'next',operationId:'next-operation',replyId:'next-reply',requestId:'next-request'}))).status,'committed');
+ assert.equal((await f.host.conversations.generation.send(f.sendInput({...state,...restored},{generationId:'next',operationId:'next-operation',replyId:'next-reply',requestId:'next-request'}))).status,'committed');
  assert.deepEqual(f.calls.at(-1).messages,[{role:'system',content:state.role.prompt},{role:'user',content:'revised question'}]);
  assert.deepEqual(f.chat(ctx).conversation.messages.map(m=>m.id),['input','reply','revised','next-reply']);assert.equal(await readFile(f.file,'utf8'),'selected reference');
 });

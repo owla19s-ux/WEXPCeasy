@@ -1,0 +1,43 @@
+name: B2 cross-module acceptance
+on:
+  workflow_run:
+    workflows: ['Foundation verification']
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full-chain:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      B2_SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.B2_SOURCE_SHA }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Record acceptance scope
+        run: |
+          node --input-type=module -e "import {writeFileSync} from 'node:fs'; writeFileSync('b2-evidence.json',JSON.stringify({sourceSha:process.env.B2_SOURCE_SHA,b1AcceptedBaseline:'976a4f2b9c5857351cf5b4ec485309c5662ab870',runtime:process.version,scope:'B2-01 through B2-08 real headless module chain',fixtures:['Trusted source identity and explicit test management approvals','Local HTTP/SSE Provider'],realImplementations:['App','Space','AI','Conversations','Permissions','Connections','Local file IO','SQLite'],limitations:['No paid Provider call','No Electron/Windows/UI acceptance','No workflow scheduler or DSH execution']},null,2));"
+      - name: Verify full chain after successful foundation verification
+        run: node --test --test-reporter=junit --test-reporter-destination=b2-acceptance.xml app/tests/b2-chain.test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b2-chain-${{ env.B2_SOURCE_SHA }}
+          path: |
+            b2-evidence.json
+            b2-acceptance.xml
+          if-no-files-found: error
