@@ -1,11 +1,14 @@
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {localFileTarget,localDirectoryTarget} from '../../connections/local/src/index.js';
 import type {FoundationHost,FoundationOptions} from './foundations.js';
 import type {LocalOperation} from './local-entries.js';
 import type {Change,Scope} from '../../permissions/src/index.js';
 import type {SpaceCommand,SpaceQuery,QueryResult,ProjectionScope} from '../../space/src/index.js';
 import type {DesktopSpaceInput,DesktopSpaceReply} from '../../UI/src/index.js';
 const schemas:Record<string,readonly string[]>={
+ 'resource.read':['kind','contextId','id','mode'],
  'category.create':['kind','name'],'category.edit':['kind','id','expectedRevision','name'],
  'address.add':['kind','contextId','name','address','notes','purpose'],
  'address.edit':['kind','contextId','id','expectedRevision','name','address','notes','purpose'],
@@ -25,6 +28,7 @@ function capture(input:unknown):DesktopSpaceInput|undefined{
  for(const key of Object.keys(row)){
   const value=row[key];
   if(key==='expectedRevision'){if(!Number.isSafeInteger(value)||Number(value)<0)return;}
+  else if(key==='mode'){if(!['file','directory'].includes(String(value)))return;}
   else if(key==='clear'){if(typeof value!=='boolean')return;}
   else if((key==='groupId'||key==='categoryId'||(key==='id'&&row.kind==='primary.select'))&&value===null){}
   else if(key==='purpose'&&Array.isArray(value)){
@@ -38,7 +42,7 @@ function capture(input:unknown):DesktopSpaceInput|undefined{
  if(required.some(k=>!Object.hasOwn(out,k)))return;
  return out as unknown as DesktopSpaceInput;
 }
-const titles:Record<string,string>={'category.create':'创建 Space 类别','category.edit':'编辑 Space 类别','address.add':'添加 Context 地址引用','address.edit':'编辑地址引用','address.remove':'解除地址引用（保留外部原资源）','primary.select':'选择 Context 主地址','space.create':'创建 Space','space.edit':'编辑 Space','space.directory':'变更 Space 工作目录关联','group.create':'创建分组','group.edit':'编辑分组','context.create':'创建 Context','context.edit':'编辑 Context','context.group':'移动 Context 分组','context.open':'查看 Context'};
+const titles:Record<string,string>={'resource.read':'查看已关联资源','category.create':'创建 Space 类别','category.edit':'编辑 Space 类别','address.add':'添加 Context 地址引用','address.edit':'编辑地址引用','address.remove':'解除地址引用（保留外部原资源）','primary.select':'选择 Context 主地址','space.create':'创建 Space','space.edit':'编辑 Space','space.directory':'变更 Space 工作目录关联','group.create':'创建分组','group.edit':'编辑分组','context.create':'创建 Context','context.edit':'编辑 Context','context.group':'移动 Context 分组','context.open':'查看 Context'};
 const key=(op:LocalOperation)=>JSON.stringify(op);
 /** Native-confirmed local UI adapter. Domain data remains in Space; no Renderer identity/grant/path API. */
 export function createDesktopSpace(options:{rootId:string;confirm:(summary:string)=>Promise<boolean>;chooseDirectory:()=>Promise<string|undefined>}){
@@ -83,9 +87,38 @@ export function createDesktopSpace(options:{rootId:string;confirm:(summary:strin
   }
   throw Error('projection_unavailable');
  }
+ async function readResource(input:Extract<DesktopSpaceInput,{kind:'resource.read'}>):Promise<DesktopSpaceReply>{
+  const read=()=>query({kind:'context',id:input.contextId},operation('context.read','context:'+input.contextId,input.contextId));
+  const before=await read();if(before.status!=='ok')return {status:'unavailable',reason:'context_unavailable'};
+  const resource=(before.value as import('../../space/src/index.js').ContextView).resources.find(item=>item.id===input.id);
+  if(!resource)return {status:'rejected',reason:'resource_unavailable'};
+  let path:string;
+  try{const url=new URL(resource.address);if(url.protocol!=='file:')return {status:'rejected',reason:'resource_connector_required'};path=fileURLToPath(url);}catch{return {status:'rejected',reason:'local_file_url_required'};}
+  if(!await options.confirm('本次'+(input.mode==='file'?'读取文件内容':'列出目录（不读取子项内容）')+'：'+resource.name+'\n'+path+'\n仅访问此引用；不复制文件，不授予写入或子项读取权限。'))return {status:'cancelled'};
+  if(closed)return {status:'unavailable',reason:'session_closed'};
+  const id=createHash('sha256').update(JSON.stringify([input.contextId,resource.id,resource.revision,input.mode])).digest('hex');
+  const target=input.mode==='file'?localFileTarget(id):localDirectoryTarget(id);
+  const op:LocalOperation={resource:'local',action:'read',target,context:input.contextId};
+  const port=input.mode==='file'?host?.localFiles:host?.localDirectories;
+  if(!port)return {status:'unavailable',reason:'local_resource_unavailable'};
+  permit(op);const request=bind(op)!;
+  const registered=await port.register(request,target,path);
+  if(registered.status!=='bound')return {status:'unavailable',reason:'local_resource_'+registered.status};
+  const result=await port.read(request,target);
+  if(result.status!=='ok')return {status:'unavailable',reason:'local_read_unavailable'};
+  const after=await read();
+  const current=after.status==='ok'?(after.value as import('../../space/src/index.js').ContextView).resources.find(item=>item.id===resource.id):undefined;
+  if(!current||current.revision!==resource.revision||current.address!==resource.address||closed)return {status:'rejected',reason:'resource_changed'};
+  const value=result.value as {version:string;content?:string;entries?:{name:string;kind:'file'|'directory'|'symlink'|'other'}[];complete?:boolean};
+  if(!value||typeof value.version!=='string')return {status:'unavailable',reason:'invalid_resource_observation'};
+  if(input.mode==='file'&&typeof value.content==='string')return {status:'ok',view:'file',contextId:input.contextId,addressId:resource.id,content:value.content,version:value.version};
+  if(input.mode==='directory'&&Array.isArray(value.entries)&&typeof value.complete==='boolean')return {status:'ok',view:'directory',contextId:input.contextId,addressId:resource.id,entries:value.entries,complete:value.complete,version:value.version};
+  return {status:'unavailable',reason:'invalid_resource_observation'};
+ }
  async function perform(input:DesktopSpaceInput):Promise<DesktopSpaceReply>{
   if(!await options.confirm(input.kind==='snapshot'?'读取当前数据根已登记的 Space、Group 和 Context。仅允许本次本地读取，不授予 AI、网络或文件内容访问。':'本次操作：'+titles[input.kind]+('name'in input?' — '+input.name:'')+('id'in input?'；对象 ID：'+input.id:'')+('contextId'in input?'；Context ID：'+input.contextId:'')+('spaceId'in input?'；Space ID：'+input.spaceId:'')+('address'in input?'；地址：'+input.address:'')+('categoryId'in input?'；类别：'+(input.categoryId??'未分类'):'')+('groupId'in input?'；分组：'+(input.groupId??'不分组'):'')+'。仅操作所选对象，不授予 AI 或外部连接权限。'))return {status:'cancelled'};
   if(closed) return {status:'unavailable',reason:'session_closed'};
+  if(input.kind==='resource.read')return readResource(input);
   if(input.kind==='snapshot'){
    const categories=await query({kind:'organization',entity:'category'},operation('organization.list','root:'+options.rootId));
    const spaces=await query({kind:'organization',entity:'space'},operation('organization.list','root:'+options.rootId));

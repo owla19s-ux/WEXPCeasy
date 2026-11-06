@@ -10,7 +10,7 @@ export type ContextItem=({status:'available';description:string}&SpaceName)|{sta
 export interface ContextOrganization {contextId:string;revision:number;spaceId:string|null;groupId:string|null}
 export interface AddressItem extends SpaceName {address:string;notes:string;purpose:string|string[];status:'unverified';type?:string;source?:string}
 export interface ToolItem {id:string;revision:number;owner:string;targetType:string;targetId:string;purpose:string;enabled:boolean;availability:'available'|'unavailable'|'conflict'|'unknown';sourceRevision:string;observedAt:string}
-export type DesktopSpaceInput={kind:'category.create';name:string}|{kind:'category.edit';id:string;expectedRevision:number;name:string}|
+export type DesktopSpaceInput={kind:'resource.read';contextId:string;id:string;mode:'file'|'directory'}|{kind:'category.create';name:string}|{kind:'category.edit';id:string;expectedRevision:number;name:string}|
  {kind:'address.add';contextId:string;name:string;address:string;notes?:string;purpose?:string|string[]}|{kind:'address.edit';contextId:string;id:string;expectedRevision:number;name:string;address:string;notes?:string;purpose?:string|string[]}|
  {kind:'address.remove';contextId:string;id:string;expectedRevision:number}|{kind:'primary.select';contextId:string;id:string|null;expectedRevision:number}|{kind:'snapshot'}|{kind:'context.open';id:string}|
  {kind:'space.create';name:string;description?:string;categoryId?:string|null}|{kind:'space.edit';id:string;expectedRevision:number;name:string;description?:string;categoryId?:string|null}|
@@ -19,6 +19,8 @@ export type DesktopSpaceInput={kind:'category.create';name:string}|{kind:'catego
  {kind:'context.create';name:string;description?:string}|{kind:'context.edit';id:string;expectedRevision:number;name:string;description?:string}|
  {kind:'context.group';contextId:string;spaceId:string;groupId:string|null;expectedRevision:number};
 export type DesktopSpaceReply=
+ {status:'ok';view:'file';contextId:string;addressId:string;content:string;version:string}|
+ {status:'ok';view:'directory';contextId:string;addressId:string;entries:{name:string;kind:'file'|'directory'|'symlink'|'other'}[];complete:boolean;version:string}|
  {status:'ok';view:'snapshot';categories:SpaceName[];spaces:SpaceItem[];groups:GroupItem[];contexts:ContextItem[];organizations:ContextOrganization[];complete:boolean}|
  {status:'ok';view:'context';context:SpaceName&{description:string;primaryAddress:string|null};resources:AddressItem[];tools:ToolItem[];location:string;organization:ContextOrganization}|
  {status:'committed';id:string;revision:number}|
