@@ -71,3 +71,7 @@ export function createLocalFileAdapter(resolve:LocalFileResolver):ConfiguredDisp
   }finally{await capability.release();}
  }});
 }
+
+export {localDirectoryTarget} from './target.js';
+export {createLocalDirectoryBindings,createLocalDirectoryReader} from './directories.js';
+export type {LocalDirectoryCapability,LocalDirectoryResolver,LocalDirectoryEntry,LocalDirectoryCursor,LocalDirectoryScanner,LocalDirectoryReadOptions} from './directories.js';
