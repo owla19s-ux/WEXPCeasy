@@ -30,7 +30,7 @@ async function fixture(t){
  };
  const read=h=>h.localFiles.read(request(h,'read'),target);
  const put=(h,version)=>h.connections.dispatch('local',request(h,'write'),'operation','files',1,target,'write',{kind:'replace',expectedVersion:version,content:'changed'});
- return {file,target,identity,start,setup,request,read,put,failRelease(value){failRelease=value;}};
+ return {file,target,source,identity,start,setup,request,read,put,failRelease(value){failRelease=value;}};
 }
 test('app assembles selected Local file access and restores durable receipt without restoring a path grant',async t=>{
  const f=await fixture(t),first=await f.start();await f.setup(first);
@@ -46,7 +46,7 @@ test('app assembles selected Local file access and restores durable receipt with
 test('actual local source closure denies selected-file reads and registration',async t=>{
  const f=await fixture(t),h=await f.start();await f.setup(h);
  const request=f.request(h,'read');h.local.close({});assert.equal((await h.localFiles.read(request,f.target)).status,'ok');
- f.identity.entryEnabled=false;
+ h.local.close(f.source);
  assert.equal((await h.localFiles.read(request,f.target)).status,'denied');
  assert.deepEqual(await h.localFiles.register(request,f.target,f.file),{status:'denied'});
  assert.equal(await readFile(f.file,'utf8'),'original');
