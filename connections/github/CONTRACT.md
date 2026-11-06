@@ -2,7 +2,7 @@
 
 # GitHub 连接器｜GitHub 官方完整能力接入与独立验收（2026-11-01）
 
-状态：**复用评审与移植规格；WEXPCeasy 目前无 GitHub 产品连接器实现**。上位 owner 为 connections；这份文件只细化 GitHub 适配器，不建立另一套 Operation 或授权系统。
+状态：**历史复用评审与完整目标规格**。截至 2026-11-07 已有 `connections/github/src/index.ts` 的基础 GitHub 文件读写适配，但官方 MCP Server/Octokit 全套产品依赖和完整 GH-01～GH-12 验收尚未完成；当前任务范围见 [模块 README](README.md) 与 [B3 D-06A](../../docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)。上位 owner 为 connections；这份文件只细化 GitHub 适配器，不建立另一套 Operation 或授权系统。
 
 ## 一、官方能力作为产品实现基线（用户最新决策）
 
