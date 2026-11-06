@@ -4,15 +4,15 @@
 >
 > 这是 AI 的施工与验收导航，不是产品说明书。完整介绍见 [docs/PROJECT.md](docs/PROJECT.md)。
 
-## 当前施工阶段：0.1.1 第一批 B1 收口
+## 当前施工阶段：0.1.1 模块收口与桌面 B3 接线
 
-**当前版本任务入口：[B1 连续施工任务书](docs/versions/0.1.1/B1-EXECUTION-TASK-2026-11-06.md)**；[正式计划与顺序](docs/versions/0.1.1/PLAN.md#31-2026-11-06-第一批现状与连续施工顺序)。
+**当前桌面施工任务入口：[B3 桌面 UI、连接器接入与 Windows 交付](docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)**；基础模块残余事项见 [B1 连续施工任务](docs/versions/0.1.1/B1-EXECUTION-TASK-2026-11-06.md)。版本边界与退出标准见 [0.1.1 正式计划](docs/versions/0.1.1/PLAN.md)。
 
-本轮经用户授权调整的是**第一批的执行顺序**，不是增加产品范围。以独立模块为施工单位，建议依次：Space 专项收尾核验 → API 0.1.1 范围收口 → shared / permissions / app 基线复验 → AI / Agent → Conversations → Connections 基础连接能力 → Data / Logs → B1-08 总验收。依赖已有真实代码可以提前做窄组合测试，但完整跨模块闭环归 B2。
+**当前执行导航（2026-11-07）**：B1 各主要 owner 已有正式源码和独立测试，B1/B2/B3 的自动化测试并不替代批次签收。下一步优先在已实现的 Electron/React + Space UI 基础上接线可信业务 IPC、API/Agent 配置、Conversations 对话页、设置/权限、多视图与 Windows 安装恢复；GitHub 官方能力专项按连接器 owner 独立推进。按模块完成、逐项验收，不重复建立已有基础代码。
 
 进入具体模块时阅读对应模块 README，检查最新源码及测试；发现旧文档和真实代码不符时，以代码与可复现证据为事实依据，向验收模式反馈，施工模式不自行修订文档。不得跳过未完成的 B1 必需模块直接宣布第一批通过，也不得为已完成的基础能力重新施工。
 
-**目前证据快照（2026-11-06，main `c7f1c827`）**：Space 与 API 均已有正式源码、测试及部分宿主组合测试；AI/roles、Conversations 和 GitHub/Local 具体连接器尚无正式产品 src/tests。最新 Foundation verification 在对应 SHA 上成功，但 CI 通过不等于 B1 整体验收。每次开工重新核对 main；快照不作为完成证明。
+**核对快照（2026-11-07，`main bd72dfea`）**：`space/`、`connections/api/`、`AI/`、`conversations/`、`connections/github/`、`connections/local/` 均存在产品 `src/` 与独立测试；正式 `app/src/desktop-*.ts`、`UI/src/renderer.tsx`、`UI/src/space.tsx` 已存在。该 SHA 上 B1、B2、B3 桌面宿主、Foundation、GitHub read 和文档审计工作流成功；但当前 Renderer 主入口只挂载宿主状态与 SpacePanel，不能据此认定完整对话/设置 UI 或 Windows 安装交付已完成。**本段是带 SHA 的事实快照，每次开工仍必须重新核对最新 main。**
 
 ## 开工前检查
 
