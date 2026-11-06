@@ -59,3 +59,23 @@ test('closing while native consent is pending prevents late writes',async t=>{
  try{const pending=access.request({kind:'space.create',name:'late'});await entering;access.close();resolveConsent(true);assert.equal((await pending).status,'unavailable');}
  finally{await host.stop();await rm(base,{recursive:true,force:true});}
 });
+
+test('desktop category navigation and Space reassignment preserve owner revisions',async t=>{
+ const f=await fixture(t);
+ const category=await f.access.request({kind:'category.create',name:'Projects'});assert.equal(category.status,'committed');
+ const created=await f.access.request({kind:'space.create',name:'Workspace',categoryId:category.id});assert.equal(created.status,'committed');
+ assert.equal((await f.access.request({kind:'category.edit',id:category.id,expectedRevision:1,name:'Renamed category'})).status,'committed');
+ const snapshot=await f.access.request({kind:'snapshot'});assert.equal(snapshot.categories[0].name,'Renamed category');assert.equal(snapshot.spaces[0].categoryId,category.id);
+ assert.equal((await f.access.request({kind:'category.edit',id:category.id,expectedRevision:1,name:'Stale'})).status,'rejected');
+});
+test('desktop address lifecycle keeps remote primary and separate local operation references',async t=>{
+ const f=await fixture(t),created=await f.access.request({kind:'context.create',name:'Resources'});
+ const remote=await f.access.request({kind:'address.add',contextId:created.id,name:'Main repository',address:'https://github.com/example/project',notes:'remote source',purpose:['reference','operation']});assert.equal(remote.status,'committed');
+ const local=await f.access.request({kind:'address.add',contextId:created.id,name:'Outputs',address:'file:///selected/output',notes:'separate location',purpose:['output']});assert.equal(local.status,'committed');
+ assert.equal((await f.access.request({kind:'primary.select',contextId:created.id,id:remote.id,expectedRevision:1})).status,'committed');
+ let detail=await f.access.request({kind:'context.open',id:created.id});assert.equal(detail.context.primaryAddress,remote.id);assert.equal(detail.resources.length,2);assert.equal(detail.resources[0].status,'unverified');
+ assert.equal((await f.access.request({kind:'address.edit',contextId:created.id,id:local.id,expectedRevision:1,name:'Artifacts',address:'file:///selected/output',notes:'updated',purpose:['output','reference']})).status,'committed');
+ assert.equal((await f.access.request({kind:'address.edit',contextId:created.id,id:local.id,expectedRevision:1,name:'Stale',address:'x'})).status,'rejected');
+ assert.equal((await f.access.request({kind:'address.remove',contextId:created.id,id:remote.id,expectedRevision:1})).status,'committed');
+ detail=await f.access.request({kind:'context.open',id:created.id});assert.equal(detail.context.primaryAddress,null);assert.equal(detail.resources[0].name,'Artifacts');
+});
