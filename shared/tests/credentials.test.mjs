@@ -97,7 +97,7 @@ test('legacy credential data remains readable and upgrades only on a confirmed m
  assert.equal(vault.resolve({}, {id:'legacy-key',revision:1},h.binding).secret,'legacy-fixture');assert.equal(h.db.read().value.format,1);
  assert.equal(vault.query({}, {id:'legacy-key',intent:'legacy-intent',binding:h.binding}).status,'unknown');
  assert.equal(vault.put({}, {id:'new-key',intent:'new-intent',expectedRevision:0,binding:h.binding,secret:'new-fixture'}).status,'committed');
- const state=h.db.read().value;assert.equal(state.format,2);assert.equal(state.entries[0].ciphertext,ciphertext);
+ const state=h.db.read().value;assert.equal(state.format,3);assert.equal(state.entries[0].ciphertext,ciphertext);
  assert.equal(vault.resolve({}, {id:'legacy-key',revision:1},h.binding).status,'ok');
  assert.equal(vault.query({}, {id:'new-key',intent:'new-intent',binding:h.binding}).status,'committed');
 });
@@ -107,4 +107,21 @@ test('receipt query rechecks authorization after reading its durable proof',asyn
  const store={...h.db,query(intent){const proof=h.db.query(intent);allowed=false;return proof;}};
  const vault=createCredentialVault(store,h.cipher,()=>allowed);
  assert.equal(vault.query({}, {id:'key-a',intent:'save',binding:h.binding}).status,'denied');
+});
+
+test('missing receipt records in the current format block further credential access',async t=>{
+ const h=await fixture(t);h.vault.put({}, {id:'key-a',intent:'one',expectedRevision:0,binding:h.binding,secret:'fixture'});
+ const snapshot=h.db.read(),state=structuredClone(snapshot.value);
+ state.receipts=[];state.intents.push('tamper');state.entries[0].revision++;
+ h.db.commit({intent:'tamper',expectedRevision:snapshot.revision,value:state});
+ assert.throws(()=>createCredentialVault(h.db,h.cipher,()=>true));
+});
+test('early receipt format remains readable without inventing missing historical proofs',async t=>{
+ const h=await fixture(t),ciphertext=h.cipher.seal(JSON.stringify({format:1,id:'early-key',revision:1,binding:h.binding,secret:'early-fixture'}));
+ const value={format:2,domain:'credentials',entries:[{id:'early-key',revision:1,binding:h.binding,ciphertext,revoked:false}],intents:['early'],receipts:[{intent:'early',id:'early-key',revision:1,storeRevision:1,operation:'put',binding:h.binding}]};
+ h.db.commit({intent:'early',expectedRevision:0,value});
+ const vault=createCredentialVault(h.db,h.cipher,()=>true);
+ assert.equal(vault.query({}, {id:'early-key',intent:'early',binding:h.binding}).status,'committed');assert.equal(h.db.read().value.format,2);
+ assert.equal(vault.put({}, {id:'next-key',intent:'next',expectedRevision:0,binding:h.binding,secret:'fixture'}).status,'committed');
+ assert.equal(h.db.read().value.format,3);assert.equal(h.db.read().value.entries[0].ciphertext,ciphertext);
 });
