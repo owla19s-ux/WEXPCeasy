@@ -1,5 +1,12 @@
 # connections/local
 
+## 与独立 environments 模块的职责边界（2026-11-07）
+
+[environments](../../environments/README.md) 是与 Connections 并列的顶层**环境生命周期业务 owner**。Local 只负责受控本机资源定位、文件目录、将来获批的工具/进程/安装器执行适配与真实结果观察，不拥有环境登记、版本策略、安装计划、升级/卸载和恢复权威，也不自行决定 Context 环境选择。
+
+当前 Local 产品实现以文件/目录和有限的文件替换为主，**没有正式环境安装器、Shell、完整本地 Git**。F06-009/010 的环境识别与选择须按正式版本范围单独核对；不能因 Context 可添加工具、文件可读或 App 能选择目录就断言环境管理已完成。下载安装、提权、修改 PATH/注册表和执行任意脚本需独立批准与 Permissions + Connections Operation 授权/回执，不得另建账本。未来环境安装策略归 environments，本机执行端口仍由 Local owner 提供。
+
+
 > **当前代码事实（2026-11-07，`main bd72dfea`）**：`connections/local/src/index.ts`、`file-capability.ts`、`directories.ts`、`bindings.ts` 等已存在；`tests/` 包含文件、目录与绑定测试。现有范围主要是受控文件/目录能力，不能推定 Shell、编译器、本地 Git 或 Windows 实机均已交付。
 
 > **当前模块施工状态（文档整理，2026-11-03）**：候选契约与 Windows 风险已记录，产品实现待核查。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
