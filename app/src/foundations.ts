@@ -30,7 +30,7 @@ export type FoundationTechnicalDiagnostics=Pick<ReturnType<typeof createPersiste
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
 export type FoundationLocalFiles=Pick<ReturnType<typeof createLocalFileBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationLocalDirectories=Pick<ReturnType<typeof createLocalDirectoryBindings>,'register'>&ReturnType<typeof createReadBoundary>;
-export type FoundationCredentials=Pick<ReturnType<typeof createCredentialVault>,'put'|'revoke'>&{available():boolean};
+export type FoundationCredentials=Pick<ReturnType<typeof createCredentialVault>,'put'|'revoke'|'query'>&{available():boolean};
 export interface FoundationOptions {credentials?:{cipher:CredentialCipher};technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
 export interface FoundationHost extends Host {readonly credentials?:FoundationCredentials;readonly technicalDiagnostics?:FoundationTechnicalDiagnostics;readonly localDirectories?:FoundationLocalDirectories;readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
@@ -120,7 +120,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    credentialVault=createCredentialVault(db,options.credentials!.cipher,(request,access)=>{
     const decision=access.action==='manage'?credentialManagement.get(request):credentialUses.get(request)?.decision;
     if(!decision||permission.recheck(request,decision).status!=='allow')return false;
-    if(access.action==='manage')return decision.scope.resource==='credentials'&&decision.scope.target==='credential:'+access.id&&decision.scope.context===null&&['credential.write','credential.revoke'].includes(decision.scope.action);
+    if(access.action==='manage')return decision.scope.resource==='credentials'&&decision.scope.target==='credential:'+access.id&&decision.scope.context===null&&['credential.write','credential.revoke','credential.receipt'].includes(decision.scope.action);
     const use=credentialUses.get(request);
     return !!use&&use.reference.id===access.id&&use.binding.connectionId===access.binding.connectionId&&use.binding.endpoint===access.binding.endpoint&&use.binding.provider===access.binding.provider;
    });
@@ -136,6 +136,11 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
      if(stopping||!credentialVault)return {status:'unavailable' as const};
      const vault=ready(request,'credential.write',input.id);if(!vault)return {status:'denied' as const};
      try{return vault.put(request,input);}finally{credentialManagement.delete(request);}
+    },
+    query(request:object,input:Parameters<FoundationCredentials['query']>[1]){
+     if(stopping||!credentialVault)return {status:'unavailable' as const};
+     const vault=ready(request,'credential.receipt',input.id);if(!vault)return {status:'denied' as const};
+     try{return vault.query(request,input);}finally{credentialManagement.delete(request);}
     },
     revoke(request:object,input:Parameters<FoundationCredentials['revoke']>[1]){
      if(stopping||!credentialVault)return {status:'unavailable' as const};
