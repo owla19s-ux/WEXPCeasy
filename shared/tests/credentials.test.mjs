@@ -8,10 +8,10 @@ import {openSqliteStore,createCredentialVault} from '../../dist/shared/src/index
 // AES is a test cipher fixture. Windows DPAPI/OS backend needs separate platform evidence.
 async function fixture(t){
  const dir=await mkdtemp(join(tmpdir(),'wex-credential-')),path=join(dir,'credentials.sqlite'),key=randomBytes(32);
- let allowed=true,available=true;const dbs=[];
- const cipher={available:()=>available,seal(secret){const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',key,iv);return Buffer.concat([iv,c.getAuthTag?.bind?Buffer.alloc(0):Buffer.alloc(0),c.update(secret,'utf8'),c.final(),c.getAuthTag()]).toString('base64');},
+ let allowed=true,available=true;const dbs=new Set();
+ const cipher={available:()=>available,seal(secret){const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',key,iv);const body=Buffer.concat([c.update(secret,'utf8'),c.final()]);return Buffer.concat([iv,body,c.getAuthTag()]).toString('base64');},
   unseal(value){const bytes=Buffer.from(value,'base64'),d=createDecipheriv('aes-256-gcm',key,bytes.subarray(0,12));d.setAuthTag(bytes.subarray(-16));return Buffer.concat([d.update(bytes.subarray(12,-16)),d.final()]).toString('utf8');}};
- function open(){const db=openSqliteStore(path,'credentials');dbs.push(db);return {db,vault:createCredentialVault(db,cipher,()=>allowed)};}
+ function open(){const raw=openSqliteStore(path,'credentials'),db={...raw,close(){raw.close();dbs.delete(db);}};dbs.add(db);return {db,vault:createCredentialVault(db,cipher,()=>allowed)};}
  const h=open(),binding={connectionId:'connection-a',endpoint:'https://example.test/v1/',provider:'test-provider'};
  t.after(async()=>{for(const db of dbs)db.close();await rm(dir,{recursive:true,force:true});});
  return {...h,path,open,binding,deny(){allowed=false;},unavailable(){available=false;}};
