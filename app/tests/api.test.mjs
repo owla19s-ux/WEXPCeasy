@@ -43,3 +43,20 @@ test('AI host binds model and configuration reads to independently granted scope
  const fresh = h.host.local.bind(h.source,{resource:'AI',action:'agent.read',target:'agent:agent',context:null});
  assert.deepEqual(h.host.ai.read(fresh,'agent','agent').entry.model,agent.model);
 });
+
+test('host conversation storage restores messages under fresh entry bindings', async t => {
+ const h = await fixture(t, {conversations:true});
+ const {service} = h.host.conversations;
+ const create = h.request('create','conversation:chat','conversations');
+ const read = h.request('read','conversation:chat','conversations');
+ const input = {conversationId:'chat',intent:'create',expectedRevision:0,change:{kind:'create'}};
+ assert.equal(service.change(read,input).status,'denied');
+ assert.equal(service.change(create,input).status,'committed');
+ const append = h.request('append','conversation:chat','conversations');
+ assert.equal(service.change(append,{conversationId:'chat',intent:'append',expectedRevision:1,
+  change:{kind:'append',messageId:'input',segments:[{id:'p',text:'hello'}]}}).status,'committed');
+ await h.restart();
+ assert.equal(h.host.conversations.service.read(read,'chat').status,'denied');
+ const fresh = h.host.local.bind(h.source,{resource:'conversations',action:'read',target:'conversation:chat',context:null});
+ assert.equal(h.host.conversations.service.read(fresh,'chat').conversation.messages[0].segments[0].text,'hello');
+});
