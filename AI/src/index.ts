@@ -81,6 +81,11 @@ function validateState(state: State): void {
         })) throw Error('invalid_configuration_receipt');
     intents.add(receipt.intent);
   }
+  for (const entry of state.entries) {
+    if (!state.receipts.some(receipt => isDeepStrictEqual(receipt.entry, entry))) {
+      throw Error('missing_configuration_receipt');
+    }
+  }
 }
 
 export function createAiConfigurations(
