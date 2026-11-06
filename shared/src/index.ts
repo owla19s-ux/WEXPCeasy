@@ -4,3 +4,6 @@ export {inspectRoot,resolveWithin,directoryLock,createDirectoryLock} from './pat
 export type {Root,RootResult,RootFs,RootLock,LockResult} from './paths.js';
 export {createDiagnostics} from './diagnostics.js';
 export type {Diagnostic,DiagnosticCode} from './diagnostics.js';
+
+export {createPersistedDiagnostics} from './persisted-diagnostics.js';
+export type {DiagnosticRecord,PersistedDiagnosticOptions} from './persisted-diagnostics.js';
