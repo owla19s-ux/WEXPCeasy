@@ -1,3 +1,5 @@
+import {createCredentialVault} from '../../shared/src/index.js';
+import type {CredentialCipher,CredentialBinding} from '../../shared/src/index.js';
 import {createLocalDirectoryBindings,createLocalDirectoryReader} from '../../connections/local/src/index.js';
 import type {LocalDirectoryReadOptions} from '../../connections/local/src/index.js';
 import {createGitHubFileAdapter,createGitHubConfiguredFileReader} from '../../connections/github/src/index.js';
@@ -11,7 +13,7 @@ import {join} from 'node:path';
 import {inspectRoot,directoryLock,openSqliteStore,createPersistedDiagnostics} from '../../shared/src/index.js';
 import type {Root,RootLock,ManagedStore,Store,LockResult,PersistedDiagnosticOptions,DiagnosticCode} from '../../shared/src/index.js';
 import {createPermissions,inspectPermissionStore} from '../../permissions/src/index.js';
-import type {TrustPort,Permissions} from '../../permissions/src/index.js';
+import type {TrustPort,Permissions,Decision} from '../../permissions/src/index.js';
 import {createApiService,createApiTransport} from '../../connections/api/src/index.js';
 import type {ApiService,ApiOptions,ApiCredentialPort} from '../../connections/api/src/index.js';
 import {createOperationLedger} from '../../connections/src/index.js';
@@ -28,8 +30,9 @@ export type FoundationTechnicalDiagnostics=Pick<ReturnType<typeof createPersiste
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
 export type FoundationLocalFiles=Pick<ReturnType<typeof createLocalFileBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationLocalDirectories=Pick<ReturnType<typeof createLocalDirectoryBindings>,'register'>&ReturnType<typeof createReadBoundary>;
-export interface FoundationOptions {technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
-export interface FoundationHost extends Host {readonly technicalDiagnostics?:FoundationTechnicalDiagnostics;readonly localDirectories?:FoundationLocalDirectories;readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
+export type FoundationCredentials=Pick<ReturnType<typeof createCredentialVault>,'put'|'revoke'>&{available():boolean};
+export interface FoundationOptions {credentials?:{cipher:CredentialCipher};technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationHost extends Host {readonly credentials?:FoundationCredentials;readonly technicalDiagnostics?:FoundationTechnicalDiagnostics;readonly localDirectories?:FoundationLocalDirectories;readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
  for(const suffix of ['', '-journal','-wal','-shm']){
   try{const info=await lstat(join(root.path,name+suffix));if(info.isSymbolicLink()||!info.isFile())throw Error('unsafe store path');}
@@ -50,6 +53,10 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  let lease:LockResult;
  try{lease=await (options.lock??directoryLock).acquire(probe.root);}catch{lease={status:'unavailable'};}
  if(lease.status!=='acquired')return Object.freeze({status:'failed',diagnostics:[{module:'shared',reason:'initialization_failed' as const}],stop:async()=>({status:'stopped' as const,failed:[]})});
+ let credentialVault:ReturnType<typeof createCredentialVault>|undefined,credentials:FoundationCredentials|undefined;
+ const credentialStores=new Set<ManagedStore>();
+ const credentialManagement=new WeakMap<object,Extract<Decision,{status:'allow'}>>();
+ const credentialUses=new WeakMap<object,{decision:Extract<Decision,{status:'allow'}>;reference:{id:string;revision:number};binding:CredentialBinding}>();
  let localDirectories:FoundationLocalDirectories|undefined;
  let localFiles:FoundationLocalFiles|undefined;
  const localFileOrphans=new Set<{close():Promise<void>}>();
@@ -106,6 +113,39 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  permissions=createPermissions(store,trust);
  return {value:Object.freeze({evaluate:permissions.evaluate,recheck:permissions.recheck}),stop:async()=>{permissions=undefined;}};
  }},
+ ...(options.credentials?[{id:'credentials',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
+  const permission=deps['permissions'] as Pick<Permissions,'evaluate'|'recheck'>;
+  try{
+   const db=await openDomainStore(probe.root,'wex-credentials.sqlite','credentials',open);credentialStores.add(db);
+   credentialVault=createCredentialVault(db,options.credentials!.cipher,(request,access)=>{
+    const decision=access.action==='manage'?credentialManagement.get(request):credentialUses.get(request)?.decision;
+    if(!decision||permission.recheck(request,decision).status!=='allow')return false;
+    if(access.action==='manage')return decision.scope.resource==='credentials'&&decision.scope.target==='credential:'+access.id&&decision.scope.context===null&&['credential.write','credential.revoke'].includes(decision.scope.action);
+    const use=credentialUses.get(request);
+    return !!use&&use.reference.id===access.id&&use.binding.connectionId===access.binding.connectionId&&use.binding.endpoint===access.binding.endpoint&&use.binding.provider===access.binding.provider;
+   });
+   const ready=(request:object,action:string,id:string)=>{
+    if(stopping||!credentialVault)return;
+    const decision=permission.evaluate(request);
+    if(decision.status!=='allow'||decision.scope.resource!=='credentials'||decision.scope.action!==action||decision.scope.target!=='credential:'+id||decision.scope.context!==null)return;
+    credentialManagement.set(request,decision);return credentialVault;
+   };
+   credentials=Object.freeze({
+    available(){try{return !stopping&&!!credentialVault&&options.credentials!.cipher.available()===true;}catch{return false;}},
+    put(request:object,input:Parameters<FoundationCredentials['put']>[1]){
+     if(stopping||!credentialVault)return {status:'unavailable' as const};
+     const vault=ready(request,'credential.write',input.id);if(!vault)return {status:'denied' as const};
+     try{return vault.put(request,input);}finally{credentialManagement.delete(request);}
+    },
+    revoke(request:object,input:Parameters<FoundationCredentials['revoke']>[1]){
+     if(stopping||!credentialVault)return {status:'unavailable' as const};
+     const vault=ready(request,'credential.revoke',input.id);if(!vault)return {status:'denied' as const};
+     try{return vault.revoke(request,input);}finally{credentialManagement.delete(request);}
+    }
+   });
+   return {value:Object.freeze({available:true}),stop:async()=>{await closeStores(credentialStores);credentialVault=undefined;credentials=undefined;}};
+  }catch(error){credentialVault=undefined;credentials=undefined;try{await closeStores(credentialStores);}catch{/* retained for host shutdown retry */}throw error;}
+ }}]:[]),
  ...(options.space?[{id:'space',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
   const stores=new Set<ManagedStore>();
   const trackedOpen:NonNullable<SpaceOptions['openStore']>=(path,namespace)=>{
@@ -149,7 +189,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    throw error;
   }
  }}]:[]),
- ...(options.api?[{id:'api',requires:['permissions','connections'],async start(deps:Readonly<Record<string,unknown>>){
+ ...(options.api?[{id:'api',requires:options.credentials?['permissions','connections','credentials']:['permissions','connections'],async start(deps:Readonly<Record<string,unknown>>){
   const stores=new Set<ManagedStore>();
   try{
    const store=await openDomainStore(probe.root,'api-configurations.sqlite','api-configurations',open);stores.add(store);
@@ -157,7 +197,32 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    const derive=options.api!.deriveRequest??(local?((parent:object,scope:{action:string;target:string;context:string|null})=>local.client.derive(parent,scope)):undefined);
    const service=createApiService(store,permission,{...options.api,readProbeOperation:id=>apiLedger?.get(id),...(derive?{deriveRequest:derive}:{})});
    if(!apiLedger)throw Error('operation_ledger_unavailable');
-   const transport=createApiTransport(service,permission,apiLedger,{...(options.api?.credentials?{credentials:options.api.credentials}:{}),derivePrepareRequest(parent){
+   const vaultPort:ApiCredentialPort|undefined=options.credentials?{resolve(request,binding){
+    if(stopping||!credentialVault)return;
+    const decision=permission.evaluate(request);
+    if(decision.status!=='allow'||decision.scope.resource!=='connections/api'||!['request.send','model.probe','directory.refresh'].includes(decision.scope.action))return;
+    const readConnection=derive?.(request,{action:'connection.read',target:'connection:'+binding.connectionId,context:null});if(!readConnection)return;
+    const read=service.query(readConnection,{kind:'connection',id:binding.connectionId});
+    if(read.status!=='ok'||Array.isArray(read.value)||!('endpoint'in read.value))return;
+    const connection=read.value;
+    if(connection.id!==binding.connectionId||connection.revision!==binding.connectionRevision||connection.provider!==binding.provider||connection.credentialRef?.id!==binding.reference.id||connection.credentialRef.revision!==binding.reference.revision)return;
+    if(decision.scope.action==='directory.refresh'){if(decision.scope.target!=='connection:'+connection.id)return;}
+    else{
+     if(!decision.scope.target.startsWith('model:'))return;
+     const modelId=decision.scope.target.slice(6),r=derive?.(request,{action:'model.read',target:'model:'+modelId,context:null});if(!r)return;
+     const model=service.query(r,{kind:'model',id:modelId});
+     if(model.status!=='ok'||Array.isArray(model.value)||!('connectionId'in model.value)||model.value.connectionId!==connection.id)return;
+    }
+    const route=new URL(connection.endpoint);
+    if(connection.endpointMode==='base')route.pathname=route.pathname.replace(/\/$/,'')+(decision.scope.action==='directory.refresh'?'/models':'/chat/completions');
+    if(route.href!==binding.endpoint)return;
+    const destination={connectionId:connection.id,endpoint:connection.endpoint,provider:connection.provider};
+    credentialUses.set(request,{decision,reference:binding.reference,binding:destination});
+    try{const value=credentialVault.resolve(request,binding.reference,destination);return value.status==='ok'?value.secret:undefined;}
+    finally{credentialUses.delete(request);}
+   }}:undefined;
+   const credentialPort=options.api?.credentials??vaultPort;
+   const transport=createApiTransport(service,permission,apiLedger,{...(credentialPort?{credentials:credentialPort}:{}),derivePrepareRequest(parent){
     const decision=permission.evaluate(parent);if(decision.status!=='allow')return;
     return derive?.(parent,{action:'request.prepare',target:decision.scope.target,context:decision.scope.context});
    }});
@@ -252,6 +317,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  try{await closeStores(conversationOrphans);}catch{return incompleteRelease('conversations-storage');}
  try{await closeStores(aiOrphans);}catch{return incompleteRelease('ai-storage');}
  try{await closeStores(spaceOrphans);}catch{return incompleteRelease('space-storage');}
+ try{await closeStores(credentialStores);credentialVault=undefined;credentials=undefined;}catch{return incompleteRelease('credentials-storage');}
  try{await closeStores(technicalStores);}catch{noteDiagnostic('release_failed');return {status:'incomplete' as const,failed:['diagnostics-storage']};}
  technicalLog=undefined;
  try{await release();rootActive=false;return result;}catch{return {status:'incomplete' as const,failed:['root-lock']};}
@@ -263,5 +329,5 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  return Object.freeze({...host,
  get status(){return host.status==='ready'&&diagnosticIssues.length?'degraded' as const:host.status;},
  get diagnostics(){return Object.freeze([...host.diagnostics,...diagnosticIssues].map(d=>Object.freeze({...d})));},
- ...(technicalDiagnostics?{technicalDiagnostics}:{}),...(localDirectories?{localDirectories}:{}),...(localFiles?{localFiles}:{}),...(conversations?{conversations}:{}),...(ai?{ai}:{}),...(currentApi?{api:currentApi}:{}),...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),...(currentSpace?{space:currentSpace}:{}),...(local&&host.status!=='failed'?{local:local.client}:{}),stop});
+ ...(credentials?{credentials}:{}),...(technicalDiagnostics?{technicalDiagnostics}:{}),...(localDirectories?{localDirectories}:{}),...(localFiles?{localFiles}:{}),...(conversations?{conversations}:{}),...(ai?{ai}:{}),...(currentApi?{api:currentApi}:{}),...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),...(currentSpace?{space:currentSpace}:{}),...(local&&host.status!=='failed'?{local:local.client}:{}),stop});
 }
