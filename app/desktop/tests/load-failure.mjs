@@ -10,7 +10,7 @@ import {startFoundations} from '../../../dist/app/src/index.js';
 import {openSqliteStore} from '../../../dist/shared/src/index.js';
 async function verify(){
  app.enableSandbox();
- const root=await mkdtemp(join(tmpdir(),'wex-desktop-load-failure-'));
+ const root=process.env.WEX_DESKTOP_FIXTURE_ROOT;assert.ok(root,'parent-owned test root');
  await writeFile(join(root,'.wex-root.json'),JSON.stringify({format:1,id:randomUUID()}));
  for(const folder of ['electron-user','electron-session'])await mkdir(join(root,folder));
  app.setPath('userData',join(root,'electron-user'));app.setPath('sessionData',join(root,'electron-session'));
@@ -24,6 +24,6 @@ async function verify(){
  assert.equal((await runtime.lifecycle.stop()).status,'stopped');
  const report={source:process.env.GITHUB_SHA,platform:process.platform,checks:['page load failure requests confirmed release','failed release keeps root lease and process','retry completes release']};
  await writeFile(resolve('desktop-acceptance',process.platform+'-load-failure.json'),JSON.stringify(report,null,2));
- console.log('DESKTOP_LOAD_FAILURE '+JSON.stringify(report));clearTimeout(timer);await rm(root,{recursive:true,force:true});app.quit();
+ console.log('DESKTOP_LOAD_FAILURE '+JSON.stringify(report));clearTimeout(timer);app.quit();
 }
 void verify().catch(error=>{console.error(error);app.exit(1);});

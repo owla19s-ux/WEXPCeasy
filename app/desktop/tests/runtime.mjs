@@ -1,4 +1,4 @@
-import {app} from 'electron';
+import {app,BrowserWindow} from 'electron';
 import assert from 'node:assert/strict';
 import {mkdtemp,writeFile,lstat,rm,mkdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -10,7 +10,7 @@ import {startFoundations} from '../../../dist/app/src/index.js';
 import {openSqliteStore} from '../../../dist/shared/src/index.js';
 async function verify(){
 app.enableSandbox();
-const root=await mkdtemp(join(tmpdir(),'wex-desktop-'));
+const root=process.env.WEX_DESKTOP_FIXTURE_ROOT;assert.ok(root,'parent-owned test root');
 const id=randomUUID();await writeFile(join(root,'.wex-root.json'),JSON.stringify({format:1,id}));
 await mkdir(join(root,'electron-user'));await mkdir(join(root,'electron-session'));
 app.setPath('userData',join(root,'electron-user'));
@@ -33,7 +33,14 @@ try{
  const prefs=wc.getLastWebPreferences();assert.equal(prefs.sandbox,true);assert.equal(prefs.contextIsolation,true);assert.equal(prefs.nodeIntegration,false);
  assert.equal((await lstat(join(root,'.wex-write-lock'))).isDirectory(),true);
  const network=await wc.executeJavaScript(`fetch('https://example.com').then(()=>false,()=>true)`);assert.equal(network,true);
- const before=wc.getURL();await wc.executeJavaScript(`window.open('https://example.com');true`);assert.equal(wc.getURL(),before);
+ const before=wc.getURL();await wc.executeJavaScript(`window.open('https://example.com');true`);assert.equal(wc.getURL(),before);assert.equal(BrowserWindow.getAllWindows().length,1);
+ const foreign=new BrowserWindow({show:false,webPreferences:{preload:resolve('desktop-dist/preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
+ await foreign.loadURL(before);
+ for(const method of ['readStatus','requestQuit']){
+  assert.deepEqual(await foreign.webContents.executeJavaScript('window.wexHost.'+method+'()'),{ok:false,error:'untrusted_sender'});
+ }
+ foreign.destroy();assert.equal(runtime.readStatus().phase,'ready');
+ await writeFile(resolve('desktop-acceptance',process.platform+'.png'),(await wc.capturePage()).toPNG());
  // A close failure must leave the process and root lease alive, then permit retry.
  const quitReply=await wc.executeJavaScript('window.wexHost.requestQuit()');assert.deepEqual(quitReply,{ok:true,value:{accepted:true}});
  await new Promise((res,rej)=>{const end=Date.now()+8000;const poll=()=>runtime.readStatus().phase==='release-pending'?res():Date.now()>end?rej(Error('release phase timeout')):setTimeout(poll,20);poll();});
@@ -41,9 +48,9 @@ try{
  assert.equal((await runtime.lifecycle.stop()).status,'stopped');
  const reopened=await startFoundations({dataRoot:root,trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false}});
  assert.equal(reopened.status,'ready');assert.equal((await reopened.stop()).status,'stopped');
- const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,checks:['sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
+ const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,checks:['sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
  await writeFile(resolve('desktop-acceptance',process.platform+'.json'),JSON.stringify(report,null,2));
- console.log('DESKTOP_ACCEPTANCE '+JSON.stringify(report));clearTimeout(timer);await rm(root,{recursive:true,force:true});app.quit();
+ console.log('DESKTOP_ACCEPTANCE '+JSON.stringify(report));clearTimeout(timer);app.quit();
 }catch(error){console.error(error);clearTimeout(timer);app.exit(1);}
 
 }

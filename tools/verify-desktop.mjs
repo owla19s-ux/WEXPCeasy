@@ -5,12 +5,16 @@ import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
 import electron from 'electron';
 await mkdir('desktop-acceptance',{recursive:true});
-function run(args){return new Promise((resolve,reject)=>{
- const child=spawn(electron,args,{stdio:'inherit',env:{...process.env,ELECTRON_ENABLE_LOGGING:'1'}});
+function run(args,fixtureRoot){return new Promise((resolve,reject)=>{
+ const child=spawn(electron,args,{stdio:'inherit',env:{...process.env,ELECTRON_ENABLE_LOGGING:'1',...(fixtureRoot?{WEX_DESKTOP_FIXTURE_ROOT:fixtureRoot}:{})}});
  child.on('error',reject);child.on('exit',code=>resolve(code??1));
 });}
 for(const entry of ['runtime.mjs','load-failure.mjs']){
- if(await run(['app/desktop/tests/'+entry])!==0)process.exit(1);
+ const root=await mkdtemp(join(tmpdir(),'wex-desktop-fixture-'));
+ let code;
+ try{code=await run(['app/desktop/tests/'+entry],root);}
+ finally{await rm(root,{recursive:true,force:true,maxRetries:10,retryDelay:150});}
+ if(code!==0)process.exit(1);
 }
 const parent=await mkdtemp(join(tmpdir(),'wex-invalid-root-')),missing=join(parent,'missing-root');
 assert.equal(await run(['dist/app/src/desktop-main.js','--data-root',missing]),1);
