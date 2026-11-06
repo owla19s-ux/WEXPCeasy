@@ -18,14 +18,18 @@ function canonical(v:Json,ancestors=new Set<object>()):string {
  }finally{ancestors.delete(v);}
 }
 function validJson(value:Json):boolean {try{canonical(value);return true;}catch{return false;}}
+function closed(value:unknown,required:string[],optional:string[]=[]):boolean{
+ return !!value&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype&&
+  required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>required.includes(key)||optional.includes(key));
+}
 function nonempty(value:unknown):value is string {return typeof value==='string'&&value.length>0;}
 function validConnection(c:OperationConnection):boolean {
- return !!c&&nonempty(c.connectionId)&&Number.isSafeInteger(c.configRevision)&&c.configRevision>0&&nonempty(c.adapterId)&&nonempty(c.adapterVersion)&&nonempty(c.endpoint);
+ return closed(c,['connectionId','configRevision','adapterId','adapterVersion','endpoint'])&&nonempty(c.connectionId)&&Number.isSafeInteger(c.configRevision)&&c.configRevision>0&&nonempty(c.adapterId)&&nonempty(c.adapterVersion)&&nonempty(c.endpoint);
 }
 function validOperation(o:Operation):boolean {
- if(!o||typeof o!=='object'||!nonempty(o.id)||!nonempty(o.fingerprint)||!Array.isArray(o.observations))return false;
+ if(!closed(o,['id','fingerprint','phase','attempts','observations'],['connection'])||!nonempty(o.id)||!nonempty(o.fingerprint)||!Array.isArray(o.observations))return false;
  if(o.connection!==undefined&&!validConnection(o.connection))return false;
- if(o.observations.some(x=>!x||!nonempty(x.id)||!['observed','unknown'].includes(x.phase)||!validJson(x.value)))return false;
+ if(o.observations.some(x=>!closed(x,['id','phase','value'])||!nonempty(x.id)||!['observed','unknown'].includes(x.phase)||!validJson(x.value)))return false;
  if(new Set(o.observations.map(x=>x.id)).size!==o.observations.length)return false;
  if(o.phase==='prepared')return o.attempts===0&&o.observations.length===0;
  if(o.attempts!==1)return false;
@@ -37,7 +41,7 @@ function validOperation(o:Operation):boolean {
 function decode(v:Json):State {
  if(v===null)return {format:1,operations:[]};
  const s=v as unknown as State;
- if(!s||s.format!==1||!Array.isArray(s.operations)||s.operations.some(o=>!validOperation(o))||new Set(s.operations.map(o=>o.id)).size!==s.operations.length)throw Error('invalid_operation_state');
+ if(!closed(s,['format','operations'])||s.format!==1||!Array.isArray(s.operations)||s.operations.some(o=>!validOperation(o))||new Set(s.operations.map(o=>o.id)).size!==s.operations.length)throw Error('invalid_operation_state');
  return s;
 }
 export function createOperationLedger(store:Store){
