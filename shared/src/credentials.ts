@@ -6,7 +6,9 @@ export interface CredentialBinding {readonly connectionId:string;readonly endpoi
 export interface CredentialCipher {available():boolean;seal(secret:string):string;unseal(ciphertext:string):string}
 export interface CredentialAccess {readonly action:'manage'|'use';readonly id:string;readonly binding:Readonly<CredentialBinding>}
 interface Entry {id:string;revision:number;binding:CredentialBinding;ciphertext:string|null;revoked:boolean}
-interface State {format:1;domain:'credentials';entries:Entry[];intents:string[]}
+interface Receipt {intent:string;id:string;revision:number;storeRevision:number;operation:'put'|'revoke';binding:CredentialBinding}
+interface State {format:2;domain:'credentials';entries:Entry[];intents:string[];receipts:Receipt[]}
+export type CredentialReceipt={status:'committed';reference:CredentialReference;operation:'put'|'revoke';current:'current'|'superseded'|'revoked'}|{status:'unknown';intent:string}|{status:'denied'|'invalid'|'unavailable'};
 export type CredentialMutation={status:'committed';reference:CredentialReference}|{status:'unknown';intent:string}|{status:'denied'|'invalid'|'conflict'|'unavailable'};
 const exact=(value:unknown,keys:string[])=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype&&isDeepStrictEqual(Object.keys(value).sort(),[...keys].sort());
 const id=(value:unknown):value is string=>typeof value==='string'&&/^[a-zA-Z0-9_-]{1,128}$/.test(value);
@@ -21,14 +23,24 @@ function captureBinding(value:CredentialBinding):Readonly<CredentialBinding>{
 export function createCredentialVault(store:Store,cipher:CredentialCipher,authorize:(request:object,access:CredentialAccess)=>boolean){
  function read(){
   const snapshot=store.read();
-  const state:State=snapshot.revision===0&&snapshot.value===null?{format:1,domain:'credentials',entries:[],intents:[]}:snapshot.value as unknown as State;
-  if(!exact(state,['format','domain','entries','intents'])||state.format!==1||state.domain!=='credentials'||!Array.isArray(state.entries)||!Array.isArray(state.intents))throw Error('credential_store_unavailable');
+  const stored=snapshot.revision===0&&snapshot.value===null?{format:2,domain:'credentials',entries:[],intents:[],receipts:[]}:snapshot.value as unknown as State;
+  const legacy=(stored as {format:number})?.format===1;
+  if(!exact(stored,legacy?['format','domain','entries','intents']:['format','domain','entries','intents','receipts'])||(!legacy&&stored.format!==2)||stored.domain!=='credentials'||!Array.isArray(stored.entries)||!Array.isArray(stored.intents))throw Error('credential_store_unavailable');
+  // Read-only legacy normalization; only a later confirmed mutation writes format 2.
+  const state:State=legacy?{...stored,format:2,receipts:[]}:stored;
   const seen=new Set<string>();
   for(const entry of state.entries){
    if(!exact(entry,['id','revision','binding','ciphertext','revoked'])||!id(entry.id)||seen.has(entry.id)||!Number.isSafeInteger(entry.revision)||entry.revision<1||typeof entry.revoked!=='boolean'||(entry.revoked?entry.ciphertext!==null:typeof entry.ciphertext!=='string'||!entry.ciphertext||entry.ciphertext.length>262144))throw Error('credential_store_unavailable');
    captureBinding(entry.binding);seen.add(entry.id);
   }
   if(state.intents.some(intent=>!id(intent))||new Set(state.intents).size!==state.intents.length||state.intents.length!==snapshot.revision||state.entries.reduce((sum,entry)=>sum+entry.revision,0)!==snapshot.revision)throw Error('credential_store_unavailable');
+  if(!Array.isArray(state.receipts))throw Error('credential_store_unavailable');
+  const receiptIntents=new Set<string>();
+  for(const receipt of state.receipts){
+   const entry=state.entries.find(item=>item.id===receipt.id);
+   if(!exact(receipt,['intent','id','revision','storeRevision','operation','binding'])||!id(receipt.intent)||receiptIntents.has(receipt.intent)||!entry||!Number.isSafeInteger(receipt.revision)||receipt.revision<1||receipt.revision>entry.revision||!Number.isSafeInteger(receipt.storeRevision)||receipt.storeRevision<1||state.intents[receipt.storeRevision-1]!==receipt.intent||!['put','revoke'].includes(receipt.operation))throw Error('credential_store_unavailable');
+   captureBinding(receipt.binding);receiptIntents.add(receipt.intent);
+  }
   return {snapshot,state};
  }
  read();
@@ -52,6 +64,7 @@ export function createCredentialVault(store:Store,cipher:CredentialCipher,author
    const entry:Entry={id:input.id,revision:input.expectedRevision+1,binding:{...binding},ciphertext,revoked:secret===undefined};
    const next=structuredClone(state);const index=next.entries.findIndex(item=>item.id===input.id);
    if(index<0)next.entries.push(entry);else next.entries[index]=entry;next.intents.push(input.intent);
+   next.receipts.push({intent:input.intent,id:entry.id,revision:entry.revision,storeRevision:snapshot.revision+1,operation:secret===undefined?'revoke':'put',binding:{...binding}});
    if(!allowed(request,'manage',input.id,binding))return {status:'denied'};
    const result=store.commit({intent:input.intent,expectedRevision:snapshot.revision,value:next as unknown as Json});
    return result.status==='committed'?{status:'committed',reference:{id:entry.id,revision:entry.revision}}:result.status==='unknown'?{status:'unknown',intent:input.intent}:result.reason==='revision_conflict'?{status:'conflict'}:{status:'unavailable'};
@@ -63,6 +76,22 @@ export function createCredentialVault(store:Store,cipher:CredentialCipher,author
   },
   revoke(request:object,input:{id:string;intent:string;expectedRevision:number}):CredentialMutation{
    try{const entry=read().state.entries.find(item=>item.id===input.id);if(!entry)return {status:'denied'};return commit(request,{id:input.id,intent:input.intent,expectedRevision:input.expectedRevision},captureBinding(entry.binding),undefined);}catch{return {status:'unavailable'};}
+  },
+  query(request:object,input:{id:string;intent:string;binding:CredentialBinding}):CredentialReceipt{
+   try{
+    const captured={id:input.id,intent:input.intent},binding=captureBinding(input.binding);
+    if(!id(captured.id)||!id(captured.intent))return {status:'invalid'};
+    if(!allowed(request,'manage',captured.id,binding))return {status:'denied'};
+    const state=read().state,receipt=state.receipts.find(item=>item.intent===captured.intent);
+    if(!receipt)return {status:'unknown',intent:captured.intent};
+    if(receipt.id!==captured.id||!isDeepStrictEqual(receipt.binding,binding))return {status:'denied'};
+    const proof=store.query(captured.intent);
+    if(!allowed(request,'manage',captured.id,binding))return {status:'denied'};
+    if(proof?.status!=='committed'||proof.revision!==receipt.storeRevision)return {status:'unknown',intent:captured.intent};
+    const latest=read().state,again=latest.receipts.find(item=>item.intent===captured.intent),entry=latest.entries.find(item=>item.id===captured.id);
+    if(!isDeepStrictEqual(receipt,again)||!entry||!allowed(request,'manage',captured.id,binding))return {status:'denied'};
+    return {status:'committed',reference:{id:receipt.id,revision:receipt.revision},operation:receipt.operation,current:entry.revoked?'revoked':entry.revision===receipt.revision?'current':'superseded'};
+   }catch{return {status:'unavailable'};}
   },
   resolve(request:object,reference:CredentialReference,input:CredentialBinding):{status:'ok';secret:string}|{status:'denied'|'unavailable'}{
    try{

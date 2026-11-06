@@ -9,4 +9,4 @@ export {createPersistedDiagnostics} from './persisted-diagnostics.js';
 export type {DiagnosticRecord,PersistedDiagnosticOptions} from './persisted-diagnostics.js';
 
 export {createCredentialVault} from './credentials.js';
-export type {CredentialCipher,CredentialBinding,CredentialAccess,CredentialReference,CredentialMutation} from './credentials.js';
+export type {CredentialCipher,CredentialBinding,CredentialAccess,CredentialReference,CredentialMutation,CredentialReceipt} from './credentials.js';

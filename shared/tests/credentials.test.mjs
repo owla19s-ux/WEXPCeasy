@@ -88,3 +88,23 @@ test('receipt absence stays unknown and revoked authorization cannot reveal rece
  assert.equal(h.vault.query({}, {id:'key-a',intent:'saved',binding:{...h.binding,endpoint:'https://other.test/'}}).status,'denied');
  h.deny();assert.equal(h.vault.query({}, {id:'key-a',intent:'saved',binding:h.binding}).status,'denied');
 });
+
+test('legacy credential data remains readable and upgrades only on a confirmed mutation',async t=>{
+ const h=await fixture(t),ciphertext=h.cipher.seal(JSON.stringify({format:1,id:'legacy-key',revision:1,binding:h.binding,secret:'legacy-fixture'}));
+ const legacy={format:1,domain:'credentials',entries:[{id:'legacy-key',revision:1,binding:h.binding,ciphertext,revoked:false}],intents:['legacy-intent']};
+ assert.equal(h.db.commit({intent:'legacy-intent',expectedRevision:0,value:legacy}).status,'committed');
+ const vault=createCredentialVault(h.db,h.cipher,()=>true);
+ assert.equal(vault.resolve({}, {id:'legacy-key',revision:1},h.binding).secret,'legacy-fixture');assert.equal(h.db.read().value.format,1);
+ assert.equal(vault.query({}, {id:'legacy-key',intent:'legacy-intent',binding:h.binding}).status,'unknown');
+ assert.equal(vault.put({}, {id:'new-key',intent:'new-intent',expectedRevision:0,binding:h.binding,secret:'new-fixture'}).status,'committed');
+ const state=h.db.read().value;assert.equal(state.format,2);assert.equal(state.entries[0].ciphertext,ciphertext);
+ assert.equal(vault.resolve({}, {id:'legacy-key',revision:1},h.binding).status,'ok');
+ assert.equal(vault.query({}, {id:'new-key',intent:'new-intent',binding:h.binding}).status,'committed');
+});
+test('receipt query rechecks authorization after reading its durable proof',async t=>{
+ const h=await fixture(t);h.vault.put({}, {id:'key-a',intent:'save',expectedRevision:0,binding:h.binding,secret:'fixture'});
+ let allowed=true;
+ const store={...h.db,query(intent){const proof=h.db.query(intent);allowed=false;return proof;}};
+ const vault=createCredentialVault(store,h.cipher,()=>allowed);
+ assert.equal(vault.query({}, {id:'key-a',intent:'save',binding:h.binding}).status,'denied');
+});
