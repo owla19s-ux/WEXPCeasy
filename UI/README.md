@@ -1,10 +1,10 @@
 # UI
 
-> **代码事实核对（2026-11-04，基线 `1048b6a`）**：没有本域产品 src/tests；Electron/React 代码在 experiments/electron-host-spike/，不能当正式页面已接线。 开工须重新核对最新 main。
+> **当前代码事实（2026-11-07，`main bd72dfea`）**：正式 `UI/src/index.ts` 定义受限桌面桥、`UI/src/renderer.tsx` 运行 React，`UI/src/space.tsx` 与 `space-addresses.tsx` 提供 Space/Context 操作页面。Renderer 当前主要挂载宿主状态及 SpacePanel；Agent、Conversations、设置页、多视图未有完整正式页面接线验收。历史 2026-11-04 的无产品 UI 判断已失效。
 
-WEX 内置界面。主 UI 入口未来负责导航、加载页面和挂载模块面板；按实际页面分组。暂不创建未选语言的 main.* 文件。
+WEX 内置界面。主入口已经采用 React/TypeScript，负责导航、加载页面和挂载模块面板；模块业务由各自 owner 维护，UI 仅调用受限宿主桥。不得把旧研究中的“语言未定”作为当前开工事实。
 
-状态：2026-10-30 按用户确认建立的源码维护目录，当前只有职责说明，尚无产品实现。目录不是运行时数据路径，也不代表独立插件、进程或编译包。
+状态：已具备正式 UI 入口、Space 页面及基础测试/桌面验证；仍为 **B3 部分实现**，不是完成的 Windows 交付。当前功能到 UI 的映射和 PC 设置页设计以 `UI/CONTRACT.md` 与 0.1.1 B3 任务书为准。
 
 [源码目录与 Windows 数据要求](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
 
@@ -41,7 +41,7 @@ WEX 内置界面。主 UI 入口未来负责导航、加载页面和挂载模块
 
 ## 第八批验证补充（2026-10-31）
 
-正式页面/IPC协议尚未产品化；隔离React最小页面已验证窄preload状态查询、错误反馈与Renderer无Node。负例探针属于测试preload，不是公开产品API。AST新增禁止UI直接导入permissions等特权领域；业务事实仍由owner持有。见[第八批报告](../docs/batch8/REPORT.md)与[实验说明](../experiments/electron-host-spike/README.md)。
+**历史第八批结论（2026-10-31）**：当时正式页面/IPC 尚未产品化；隔离React最小页面已验证窄preload状态查询、错误反馈与Renderer无Node。负例探针属于测试preload，不是公开产品API。AST新增禁止UI直接导入permissions等特权领域；业务事实仍由owner持有。见[第八批报告](../docs/batch8/REPORT.md)与[实验说明](../experiments/electron-host-spike/README.md)。
 
 ## G5/G7：内部检索与输入附件
 
