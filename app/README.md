@@ -1,12 +1,12 @@
 # app
 
-> **代码事实核对（2026-11-04，基线 `1048b6a`）**：产品源码 4 文件、测试 4 文件，公开入口 `app/src/index.ts`。本轮根测试覆盖 shared、permissions、app、connections 及边界工具；不代表完整本版验收。 开工须重新核对最新 main。
+> **当前代码事实（2026-11-07，`main bd72dfea`）**：已有正式 `app/src/desktop-main.ts`、`desktop-runtime.ts`、`desktop-space.ts`、`desktop-api.ts`、`desktop-authority.ts`、`desktop-credentials.ts`、preload 与桌面测试；最新 SHA 的 B3 desktop host acceptance 成功。不能据此认定 Agent/Conversations 全部 IPC、Windows 安装及真实操作完整验收。
 
 > **当前模块施工状态（文档整理，2026-11-03）**：已有 app/src/index.ts、headless 验证入口；正式 Windows UI/IPC/安装未验收。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
 >
 > **模块职责**：可信宿主装配、生命周期与平台接线。
 >
-> **下一施工范围**：复核现有宿主能力与测试，未批准的 UI/平台扩展不在本模块抢先实现。
+> **下一施工范围**：按 B3 D-01 复核已有桌面可信入口并补实际业务 IPC、授权接线与错误恢复；按 D-09 完成 Windows 安装/数据持续性验收，不在主进程重写领域 owner。
 >
 > **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
 >
@@ -17,7 +17,7 @@
 
 - **公开代码入口**：`app/src/index.ts`；可信模块装配、生命周期与 `startFoundations`，支持可选 connections 服务装配。
 - **运行验证**：`npm run test:app`；无窗口诊断入口 `npm run start:headless -- <已有数据根>`；跨模块验证另运行 `npm test`。
-- **未实现或未验收**：正式 Electron/React UI、Preload/IPC、Windows 安装和 E4 实机；第八批隔离实验不能替代正式桌面产品。
+- **部分实现/未验收**：正式 Electron/React 宿主、preload 和 Space/API 窄 IPC 已有代码及 CI；其他业务 IPC、Windows 安装包、首次数据根选择、重装恢复和 Windows E4 实机仍需验证。历史第八批隔离实验不再代表当前全部进度。
 - **施工依据**：[0.1.1 正式计划](../docs/versions/0.1.1/PLAN.md) → [本域契约](../docs/research/contracts/app/CONTRACT-archive.md) → `app/src/` 与 `app/tests/`。最新连接组合事实另见 [施工回执](CONNECTIONS-INTEGRATION-2026-11-02.md)。
 
 
