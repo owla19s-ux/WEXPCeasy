@@ -53,3 +53,12 @@ test('file targets cannot be reinterpreted as directory targets',async t=>{
  const h=await fixture(t);assert.throws(()=>local.localDirectoryTarget('../private'));
  assert.equal((await h.bindings.register(h.request,local.localFileTarget('selected'),h.dir)).status,'denied');
 });
+
+test('uncertain directory cursor release keeps selection cleanup pending until an explicit retry succeeds',async t=>{
+ let fail=true,closes=0;
+ const h=await fixture(t,{scanner:{async open(){return {async read(){return null;},async close(){closes++;if(fail)throw Error('cursor release unconfirmed');}};}}});
+ await h.bindings.register(h.request,h.target,h.dir);
+ assert.equal((await h.reader.read(h.request,h.target)).status,'unavailable');
+ await assert.rejects(()=>h.bindings.close());
+ fail=false;await h.bindings.close();assert.ok(closes>=2);
+});
