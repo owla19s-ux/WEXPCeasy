@@ -5,7 +5,7 @@ import type {GitHubClientFactory} from '../../connections/github/src/index.js';
 import {createLocalFileBindings,createLocalFileReader,createLocalFileAdapter} from '../../connections/local/src/index.js';
 import type {LocalFileBindingOptions} from '../../connections/local/src/index.js';
 import {createReadBoundary} from '../../connections/src/index.js';
-import {createConversations,createConversationGeneration} from '../../conversations/src/index.js';
+import {createConversations,createConversationGeneration,inspectConversationStore} from '../../conversations/src/index.js';
 import {lstat} from 'node:fs/promises';
 import {join} from 'node:path';
 import {inspectRoot,directoryLock,openSqliteStore} from '../../shared/src/index.js';
@@ -21,7 +21,7 @@ import {openSpaceService} from '../../space/src/index.js';
 import type {SpaceService,SpaceOptions} from '../../space/src/index.js';
 import {createLocalEntries} from './local-entries.js';
 import type {LocalEntryOptions,LocalEntryClient} from './local-entries.js';
-import {createAiConfigurations,verifyModelWithApi} from '../../AI/src/index.js';
+import {createAiConfigurations,verifyModelWithApi,inspectAiConfigurationStore} from '../../AI/src/index.js';
 import {assemble} from './assembly.js';
 import type {Host} from './assembly.js';
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
@@ -56,6 +56,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  let ai:FoundationHost['ai'];
  let api:FoundationApiClient|undefined,apiService:ApiService|undefined,apiTransport:ReturnType<typeof createApiTransport>|undefined,apiLedger:ReturnType<typeof createOperationLedger>|undefined;
  let permissions:Permissions|undefined,connections:ConnectionClient|undefined,space:SpaceService|undefined;const release=lease.release;
+ const conversationOrphans=new Set<ManagedStore>();
  const open=options.openStore??openSqliteStore,orphans=new Set<ManagedStore>(),spaceOrphans=new Set<ManagedStore>(),apiOrphans=new Set<ManagedStore>(),aiOrphans=new Set<ManagedStore>();
  const local=options.local?createLocalEntries(options.local):undefined;let stopping=false,rootActive=true;
  const trust:TrustPort={
@@ -140,6 +141,9 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  ...(options.conversations?[{id:'conversations',requires:options.api?['permissions','api']:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
   const permission=deps['permissions'] as Permissions;
   const store=await openDomainStore(probe.root,'conversations.sqlite','conversations',open);
+  const stores=new Set([store]);
+  try{
+  if(inspectConversationStore(store).status!=='ready')throw Error('conversation_storage_unavailable');
   const service=createConversations(store,(request,action,id)=>{
    const decision=permission.evaluate(request);
    return decision.status==='allow'&&decision.scope.resource==='conversations'&&
@@ -156,8 +160,12 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    if(typeof result.requestId==='string'&&typeof result.text==='string')return {requestId:result.requestId,text:result.text};
   })}:{})});
   conversations=client;
-  const stores=new Set([store]);
   return {value:client,stop:async()=>{await closeStores(stores);conversations=undefined;}};
+  }catch(error){
+   conversations=undefined;
+   try{await closeStores(stores);}catch{for(const db of stores)conversationOrphans.add(db);}
+   throw error;
+  }
  }}]:[]),
  ...(options.ai?[{id:'ai',requires:options.api?['permissions','api']:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
   const permission=deps['permissions'] as Permissions;
@@ -175,7 +183,9 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    if(permission.recheck(parent,before).status==='allow')return request;
   };
   const store=await openDomainStore(probe.root,'ai-configurations.sqlite','ai-configurations',open);
-  const stores=new Set([store]);aiOrphans.add(store);
+  const stores=new Set([store]);
+  try{
+  if(inspectAiConfigurationStore(store).status!=='ready')throw Error('ai_storage_unavailable');
   const apiClient=deps['api'] as FoundationApiClient|undefined;
   const client=createAiConfigurations(store,(request,access)=>{
    const decision=permission.evaluate(request);
@@ -190,8 +200,13 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
   },apiClient?verifyModelWithApi(apiClient,(parent,id)=>scopedRead(parent,{
    resource:'connections/api',action:'model.read',target:'model:'+id,context:null
   })):undefined);
-  ai=client;aiOrphans.delete(store);
+  ai=client;
   return {value:client,stop:async()=>{await closeStores(stores);ai=undefined;}};
+  }catch(error){
+   ai=undefined;
+   try{await closeStores(stores);}catch{for(const db of stores)aiOrphans.add(db);}
+   throw error;
+  }
  }}]:[])
  ],{required:['shared','permissions'],timeoutMs:1000});
  let stopPromise:ReturnType<Host['stop']>|undefined;
@@ -205,6 +220,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  try{for(const files of localFileOrphans){await files.close();localFileOrphans.delete(files);}}catch{return {status:'incomplete' as const,failed:['local-files']};}
  try{await closeStores(orphans);}catch{return {status:'incomplete' as const,failed:['connections-storage']};}
  try{await closeStores(apiOrphans);}catch{return {status:'incomplete' as const,failed:['api-storage']};}
+ try{await closeStores(conversationOrphans);}catch{return {status:'incomplete' as const,failed:['conversations-storage']};}
  try{await closeStores(aiOrphans);}catch{return {status:'incomplete' as const,failed:['ai-storage']};}
  try{await closeStores(spaceOrphans);}catch{return {status:'incomplete' as const,failed:['space-storage']};}
  try{await release();rootActive=false;return result;}catch{return {status:'incomplete' as const,failed:['root-lock']};}
