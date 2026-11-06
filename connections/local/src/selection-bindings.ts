@@ -60,11 +60,11 @@ export function createSelectedBindings(permission:PermissionReader,options:Selec
   const decision=authorize(access.request,target,mode);if(!decision)throw Error('local_capability_unavailable');
   const selected=files.get(target);if(!selected)throw Error('local_capability_unavailable');
   let handle:FileHandle|undefined,lease:Extract<LockResult,{status:'acquired'}>|undefined,released=false,cleanupPromise:Promise<void>|undefined;
-  active++;
+  active++;const retained=new Set<()=>Promise<void>>();
   const check=()=>!released&&files.get(target)===selected&&access.check()===true&&current(access.request,decision);
   const cleanup=():Promise<void>=>{
    if(cleanupPromise)return cleanupPromise;
-   const job=(async()=>{if(handle){await handle.close();handle=undefined;}if(lease){await lease.release();lease=undefined;}pending.delete(cleanup);})();
+   const job=(async()=>{for(const cleanup of retained){await cleanup();retained.delete(cleanup);}if(handle){await handle.close();handle=undefined;}if(lease){await lease.release();lease=undefined;}pending.delete(cleanup);})();
    cleanupPromise=job;void job.catch(()=>{quarantined=true;cleanupPromise=undefined;});return job;
   };
   pending.add(cleanup);
@@ -85,6 +85,7 @@ export function createSelectedBindings(permission:PermissionReader,options:Selec
     await realpath(selected.locator)!==selected.path||!check())throw Error('local_capability_unavailable');
    const file=handle;
    const capability:LocalFileCapability=Object.freeze({handle:file,exclusive:mode==='write'&&!!lease,check,
+    retain(cleanup:()=>Promise<void>){if(released||typeof cleanup!=='function')throw Error('local_capability_released');retained.add(cleanup);},
     async release(){if(!released){released=true;active--;}await cleanup();}});
    return capability;
   }catch{

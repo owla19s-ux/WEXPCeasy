@@ -4,5 +4,5 @@ import type {AdapterAccess} from '../../src/index.js';
  * Host opens the selected exact file, pins identity and rechecks current request permissions.
  * exclusive refers to WEX resource coordination, not control of external processes.
  */
-export interface LocalFileCapability {handle:FileHandle;exclusive:boolean;check():boolean;release():Promise<void>}
+export interface LocalFileCapability {handle:FileHandle;exclusive:boolean;check():boolean;release():Promise<void>;retain?(cleanup:()=>Promise<void>):void}
 export type LocalFileResolver=(target:string,mode:'read'|'write',access?:AdapterAccess)=>Promise<LocalFileCapability>;

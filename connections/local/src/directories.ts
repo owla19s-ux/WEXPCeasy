@@ -6,7 +6,7 @@ import type {Json} from '../../../shared/src/index.js';
 import type {AdapterAccess,ReadAdapter} from '../../src/index.js';
 import {createSelectedBindings} from './selection-bindings.js';
 import {validateLocalDirectoryTarget} from './target.js';
-export interface LocalDirectoryCapability {handle:FileHandle;check():boolean;release():Promise<void>}
+export interface LocalDirectoryCapability {handle:FileHandle;check():boolean;release():Promise<void>;retain(cleanup:()=>Promise<void>):void}
 export type LocalDirectoryResolver=(target:string,access?:AdapterAccess)=>Promise<LocalDirectoryCapability>;
 export interface LocalDirectoryEntry {name:string;kind:'file'|'directory'|'symlink'|'other'}
 export interface LocalDirectoryCursor {read():Promise<LocalDirectoryEntry|null>;close():Promise<void>}
@@ -14,7 +14,11 @@ export interface LocalDirectoryScanner {open(handle:FileHandle):Promise<LocalDir
 export interface LocalDirectoryReadOptions {maxEntries?:number;scanner?:LocalDirectoryScanner}
 export function createLocalDirectoryBindings(permission:PermissionReader){
  const selected=createSelectedBindings(permission,{kind:'directory',validateTarget:validateLocalDirectoryTarget});
- const resolve:LocalDirectoryResolver=(target,access)=>selected.resolve(target,'read',access);
+ const resolve:LocalDirectoryResolver=async(target,access)=>{
+  const capability=await selected.resolve(target,'read',access);
+  if(!capability.retain){await capability.release();throw Error('directory_cleanup_unavailable');}
+  return {handle:capability.handle,check:capability.check,release:capability.release,retain:capability.retain};
+ };
  return Object.freeze({register:selected.register,resolve,close:selected.close});
 }
 const pinnedScanner:LocalDirectoryScanner={async open(handle){
@@ -39,6 +43,7 @@ export function createLocalDirectoryReader(resolve:LocalDirectoryResolver,option
    if(!capability.check())throw Error('directory_access_unavailable');
    const before=await capability.handle.stat({bigint:true});if(!before.isDirectory())throw Error('directory_identity_unavailable');
    cursor=await scanner.open(capability.handle);
+   const opened=cursor;capability.retain(()=>opened.close());
    const entries:LocalDirectoryEntry[]=[],names=new Set<string>();let complete=true;
    for(;;){
     if(signal.aborted||!capability.check())throw Error('directory_access_unavailable');
@@ -56,7 +61,7 @@ export function createLocalDirectoryReader(resolve:LocalDirectoryResolver,option
    const version=createHash('sha256').update(identity(after)+':'+JSON.stringify({entries,complete})).digest('hex');
    return {entries:entries as unknown as Json,complete,version,observedAt:new Date().toISOString()};
   }finally{
-   try{await cursor?.close();}finally{await capability.release();}
+   await capability.release();
   }
  }});
 }
