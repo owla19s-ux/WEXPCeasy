@@ -53,6 +53,34 @@ try{
  assert.equal((await invoke({kind:'context.create',name:'Injected',location:'/untrusted'})).status,'rejected');
  const checked=await invoke({kind:'snapshot'});assert.equal(checked.spaces.length,1);assert.equal(checked.organizations[0].groupId,group.id);
  
+// Category and address controls are exercised in the actual Renderer.
+ const choose=async(selector,value)=>wc.executeJavaScript(`(()=>{const field=document.querySelector(${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(field.tagName==='SELECT'?HTMLSelectElement.prototype:field.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set.call(field,${JSON.stringify(value)});field.dispatchEvent(new Event(field.tagName==='SELECT'?'change':'input',{bubbles:true}));return true;})()`);
+ await choose('form select','category.create');await choose('form input','Desktop category');await new Promise(r=>setTimeout(r,25));
+ await wc.executeJavaScript("document.querySelector('form').requestSubmit();true");
+ await waitFor("[...document.querySelectorAll('select[aria-label=\"导航类别\"] option')].some(x=>x.textContent==='Desktop category')");
+ const withCategory=await invoke({kind:'snapshot'});assert.equal(withCategory.categories.length,1);
+ const savedCategory=withCategory.categories[0];assert.equal((await invoke({kind:'space.edit',id:withCategory.spaces[0].id,expectedRevision:withCategory.spaces[0].revision,name:'Desktop Space',categoryId:savedCategory.id})).status,'committed');
+ await click('刷新工作区');await waitFor("!document.querySelector('nav button').disabled");
+ await wc.executeJavaScript("[...document.querySelectorAll('nav button')].find(x=>x.textContent.includes('Desktop Context')).click();true");
+ await waitFor("!!document.querySelector('form[aria-label=\"地址引用\"]')");
+ await choose('input[name="address-name"]','Remote repository');await choose('input[name="address-value"]','https://github.com/example/project');await choose('textarea[name="address-notes"]','reference source');await new Promise(r=>setTimeout(r,25));
+ await wc.executeJavaScript("document.querySelector('form[aria-label=\"地址引用\"]').requestSubmit();true");
+ await waitFor("[...document.querySelectorAll('.address-card strong')].some(x=>x.textContent==='Remote repository')");
+ await click('设为主地址');await waitFor("document.querySelector('.address-card strong').textContent.includes('主地址')");
+ const previewFile=join(contextRoot,'preview.txt');await writeFile(previewFile,'<script>window.resourceExecuted=true</script>Selected local text');
+ const linked=await invoke({kind:'address.add',contextId:created.id,name:'Selected local file',address:pathToFileURL(previewFile).href,notes:'no import',purpose:['reference','operation']});assert.equal(linked.status,'committed');
+ const fileRead=await invoke({kind:'resource.read',contextId:created.id,id:linked.id,mode:'file'});
+ if(process.platform==='linux')assert.equal(fileRead.status,'ok');else assert.ok(['ok','unavailable'].includes(fileRead.status));
+ await wc.executeJavaScript("[...document.querySelectorAll('nav button')].find(x=>x.textContent.includes('Desktop Context')).click();true");
+ await waitFor("[...document.querySelectorAll('.address-card strong')].some(x=>x.textContent==='Selected local file')");
+ if(fileRead.status==='ok'){
+  await wc.executeJavaScript("[...document.querySelectorAll('.address-card')].find(x=>x.textContent.includes('Selected local file')).querySelector('button').click();true");
+  await waitFor("!!document.querySelector('[aria-label=\"资源预览\"] pre')");
+  assert.equal(await wc.executeJavaScript('window.resourceExecuted'),undefined);
+  assert.match(await wc.executeJavaScript("document.querySelector('[aria-label=\"资源预览\"] pre').textContent"),/Selected local text/);
+ }
+ const retained=await invoke({kind:'context.open',id:created.id});assert.equal(retained.resources.length,2);assert.ok(retained.context.primaryAddress);
+ 
  const prefs=wc.getLastWebPreferences();assert.equal(prefs.sandbox,true);assert.equal(prefs.contextIsolation,true);assert.equal(prefs.nodeIntegration,false);
  assert.equal((await lstat(join(root,'.wex-write-lock'))).isDirectory(),true);
  const network=await wc.executeJavaScript(`fetch('https://example.com').then(()=>false,()=>true)`);assert.equal(network,true);
@@ -74,7 +102,7 @@ try{
  assert.equal((await runtime.lifecycle.stop()).status,'stopped');
  const reopened=await startFoundations({dataRoot:root,trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false}});
  assert.equal(reopened.status,'ready');assert.equal((await reopened.stop()).status,'stopped');
- const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,checks:['React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
+ const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,fixtures:['native dialog responses','native directory selection','one permissions-store close failure'],limits:['Windows Local handle/scanner availability is reported explicitly','not an installer or manual Windows acceptance'],checks:['category creation and address form/primary selection through actual React DOM','controlled Local resource preview or explicit platform unavailability','React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
  await writeFile(resolve('desktop-acceptance',process.platform+'.json'),JSON.stringify(report,null,2));
  console.log('DESKTOP_ACCEPTANCE '+JSON.stringify(report));clearTimeout(timer);app.quit();
 }catch(error){console.error(error);clearTimeout(timer);app.exit(1);}

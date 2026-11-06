@@ -18,7 +18,7 @@ async function fixture(t){
 }
 test('desktop Space rejects unlisted capabilities and authority/path injection before native prompts',async t=>{
  const f=await fixture(t);
- for(const input of [null,{kind:'context.destroy',id:'x'},{kind:'space.create',name:'x',authorized:true},{kind:'context.create',name:'x',location:'/tmp/injected'},{kind:'snapshot',scope:{}}]){
+ for(const input of [{kind:'__proto__'},{kind:'constructor'},null,{kind:'context.destroy',id:'x'},{kind:'space.create',name:'x',authorized:true},{kind:'context.create',name:'x',location:'/tmp/injected'},{kind:'snapshot',scope:{}}]){
   assert.equal((await f.access.request(input)).status,'rejected');
  }
  assert.equal(f.count(),0);
@@ -93,4 +93,20 @@ test('Context resources read only through Local bindings and never follow inject
  assert.equal((await f.access.request({kind:'resource.read',contextId:context.id,id:'missing',mode:'file'})).status,'rejected');
  assert.equal((await f.access.request({kind:'address.remove',contextId:context.id,id:address.id,expectedRevision:1})).status,'committed');
  assert.equal((await f.access.request({kind:'resource.read',contextId:context.id,id:address.id,mode:'file'})).status,'rejected');
+});
+
+test('categories and multi-address primary references survive a fresh SQLite host',async t=>{
+ const f=await fixture(t);
+ const category=await f.access.request({kind:'category.create',name:'Persistent category'});
+ const space=await f.access.request({kind:'space.create',name:'Saved space',categoryId:category.id});
+ const context=await f.access.request({kind:'context.create',name:'Saved context'});
+ const address=await f.access.request({kind:'address.add',contextId:context.id,name:'Remote',address:'https://github.com/example/repo',notes:'original',purpose:['reference','operation']});
+ await f.access.request({kind:'primary.select',contextId:context.id,id:address.id,expectedRevision:1});
+ f.access.close();assert.equal((await f.host.stop()).status,'stopped');
+ const access=createDesktopSpace({rootId:'public-root',confirm:async()=>true,chooseDirectory:async()=>undefined});
+ const host=await startFoundations({dataRoot:f.root,...access.policy,space:{deriveRequest:access.derive}});access.attach(host);
+ try{
+  const snapshot=await access.request({kind:'snapshot'});assert.equal(snapshot.categories[0].id,category.id);assert.equal(snapshot.spaces[0].id,space.id);assert.equal(snapshot.spaces[0].categoryId,category.id);
+  const detail=await access.request({kind:'context.open',id:context.id});assert.equal(detail.context.primaryAddress,address.id);assert.deepEqual(detail.resources[0].purpose,['reference','operation']);assert.equal(detail.resources[0].notes,'original');
+ }finally{access.close();await host.stop();}
 });
