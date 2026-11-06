@@ -50,7 +50,8 @@ test('GitHub app read refuses a disabled connection before requesting an SDK cli
 test('stopping App while GitHub client is being prepared keeps root locked and prevents late SDK mutation',async t=>{
  let enter,release;const entered=new Promise(r=>enter=r),gate=new Promise(r=>release=r);
  const f=await fixture(t,async()=>{enter();await gate;}),h=await f.start();f.setup(h);f.grant(h,'write');
- const pending=f.put(h);await entered;
+ const pending=f.put(h);
+ assert.equal(await Promise.race([entered.then(()=> 'entered'),pending.then(()=> 'completed')]),'entered');
  assert.equal((await h.stop()).status,'incomplete');assert.equal((await f.start()).status,'failed');
  release();assert.equal((await pending).status,'observed');assert.equal(f.calls(),0);assert.equal(f.remote(),'text');
  assert.equal((await h.stop()).status,'stopped');assert.equal((await f.start()).status,'ready');
