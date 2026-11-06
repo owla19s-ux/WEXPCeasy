@@ -41,6 +41,8 @@
 
 ### 3.1 2026-11-06 第一批现状与连续施工顺序
 
+**当前可执行任务书**：[B1 连续施工、模块收口与独立验收任务](B1-EXECUTION-TASK-2026-11-06.md)；下表为顺序及证据快照，任务书规定持续执行和回执要求。
+
 **本节是 B1 的当前执行导航；B1-01～08 原有任务编号和 B2/B3 边界均不变。** 事实快照基于 `main c7f1c827`；该提交对应的 Foundation verification 为 success。它仅说明当前 CI 验证成功，不代表每项功能或 Windows 实机已被验收。开工前应读取最新 main，并核对 [/actions/runs](https://github.com/owla19s-ux/WEXPCeasy/actions/runs) 总运行集合。
 
 | 优先顺序 | 原任务编号 | 2026-11-06 观察 | 接下来做什么及退出凭据 |
