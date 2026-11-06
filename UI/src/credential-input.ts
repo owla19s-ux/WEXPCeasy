@@ -1,6 +1,6 @@
 type Reply<T>={ok:true;value:T}|{ok:false;error:string};
 type CredentialBridge={target():Promise<Reply<{connectionName:string;provider:string;endpoint:string}>>;submit(secret:string):Promise<Reply<{accepted:true}>>;cancel():Promise<Reply<{accepted:true}>>};
-const bridge=(window as Window&{wexCredential:CredentialBridge}).wexCredential;
+const bridge=(window as unknown as {wexCredential:CredentialBridge}).wexCredential;
 const form=document.querySelector('form')!,input=document.querySelector<HTMLInputElement>('#secret')!,submit=document.querySelector<HTMLButtonElement>('button[type=submit]')!,message=document.querySelector<HTMLElement>('[role=alert]')!;
 document.querySelector('#cancel')!.addEventListener('click',()=>{input.value='';void bridge.cancel();});
 form.addEventListener('submit',event=>{
