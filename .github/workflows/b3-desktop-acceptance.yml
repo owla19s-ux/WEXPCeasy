@@ -21,7 +21,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build:desktop
-      - run: node --test app/tests/desktop-host.test.mjs tools/tests/boundaries.test.mjs
+      - run: node --test app/tests/desktop-host.test.mjs app/tests/desktop-space.test.mjs tools/tests/boundaries.test.mjs
       - name: Actual sandboxed Electron on Linux
         if: runner.os == 'Linux'
         run: xvfb-run -a node tools/verify-desktop.mjs

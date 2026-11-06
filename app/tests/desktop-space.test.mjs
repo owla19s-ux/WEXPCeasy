@@ -50,3 +50,12 @@ test('desktop Space persists across a new host and a fresh permission session',a
  try{const snapshot=await next.request({kind:'snapshot'});assert.equal(snapshot.status,'ok');assert.equal(snapshot.spaces[0].id,created.id);assert.equal(snapshot.spaces[0].name,'Persisted');}
  finally{next.close();await reopened.stop();}
 });
+
+test('closing while native consent is pending prevents late writes',async t=>{
+ const base=await mkdtemp(join(tmpdir(),'wex-space-consent-'));await writeFile(join(base,'.wex-root.json'),JSON.stringify({format:1,id:'public-root'}));
+ let resolveConsent,entered;const entering=new Promise(r=>entered=r);
+ const access=createDesktopSpace({rootId:'public-root',confirm:()=>{entered();return new Promise(r=>resolveConsent=r);},chooseDirectory:async()=>undefined});
+ const host=await startFoundations({dataRoot:base,...access.policy,space:{deriveRequest:access.derive}});access.attach(host);
+ try{const pending=access.request({kind:'space.create',name:'late'});await entering;access.close();resolveConsent(true);assert.equal((await pending).status,'unavailable');}
+ finally{await host.stop();await rm(base,{recursive:true,force:true});}
+});

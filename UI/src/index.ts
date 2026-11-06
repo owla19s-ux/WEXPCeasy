@@ -16,7 +16,7 @@ export type DesktopSpaceInput={kind:'snapshot'}|{kind:'context.open';id:string}|
  {kind:'context.group';contextId:string;spaceId:string;groupId:string|null;expectedRevision:number};
 export type DesktopSpaceReply=
  {status:'ok';view:'snapshot';spaces:SpaceItem[];groups:GroupItem[];contexts:ContextItem[];organizations:ContextOrganization[];complete:boolean}|
- {status:'ok';view:'context';context:SpaceName&{description:string};organization:ContextOrganization}|
+ {status:'ok';view:'context';context:SpaceName&{description:string};location:string;organization:ContextOrganization}|
  {status:'committed';id:string;revision:number}|
  {status:'cancelled'}|{status:'unknown';intent:string;id?:string}|
  {status:'unavailable'|'rejected'|'failed_no_commit';reason:string};

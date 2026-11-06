@@ -29,6 +29,7 @@ function capture(input:unknown):DesktopSpaceInput|undefined{
  if(required.some(k=>!Object.hasOwn(out,k)))return;
  return out as unknown as DesktopSpaceInput;
 }
+const titles:Record<string,string>={'space.create':'创建 Space','space.edit':'编辑 Space','space.directory':'变更 Space 工作目录关联','group.create':'创建分组','group.edit':'编辑分组','context.create':'创建 Context','context.edit':'编辑 Context','context.group':'移动 Context 分组','context.open':'查看 Context'};
 const key=(op:LocalOperation)=>JSON.stringify(op);
 /** Native-confirmed local UI adapter. Domain data remains in Space; no Renderer identity/grant/path API. */
 export function createDesktopSpace(options:{rootId:string;confirm:(summary:string)=>Promise<boolean>;chooseDirectory:()=>Promise<string|undefined>}){
@@ -74,7 +75,7 @@ export function createDesktopSpace(options:{rootId:string;confirm:(summary:strin
   throw Error('projection_unavailable');
  }
  async function perform(input:DesktopSpaceInput):Promise<DesktopSpaceReply>{
-  if(!await options.confirm(input.kind==='snapshot'?'读取当前数据根已登记的 Space、Group 和 Context。仅允许本次本地读取，不授予 AI、网络或文件内容访问。':'本次操作：'+input.kind+('name'in input?' — '+input.name:'')+('id'in input?'；对象 ID：'+input.id:'')+('contextId'in input?'；Context ID：'+input.contextId:'')+('spaceId'in input?'；Space ID：'+input.spaceId:'')+('groupId'in input?'；分组：'+(input.groupId??'不分组'):'')+'。仅修改所选对象，不授予 AI 或外部连接权限。'))return {status:'cancelled'};
+  if(!await options.confirm(input.kind==='snapshot'?'读取当前数据根已登记的 Space、Group 和 Context。仅允许本次本地读取，不授予 AI、网络或文件内容访问。':'本次操作：'+titles[input.kind]+('name'in input?' — '+input.name:'')+('id'in input?'；对象 ID：'+input.id:'')+('contextId'in input?'；Context ID：'+input.contextId:'')+('spaceId'in input?'；Space ID：'+input.spaceId:'')+('groupId'in input?'；分组：'+(input.groupId??'不分组'):'')+'。仅操作所选对象，不授予 AI 或外部连接权限。'))return {status:'cancelled'};
   if(closed) return {status:'unavailable',reason:'session_closed'};
   if(input.kind==='snapshot'){
    const spaces=await query({kind:'organization',entity:'space'},operation('organization.list','root:'+options.rootId));
@@ -92,9 +93,10 @@ export function createDesktopSpace(options:{rootId:string;confirm:(summary:strin
   if(input.kind==='context.open'){
    const context=await query({kind:'context',id:input.id},operation('context.read','context:'+input.id,input.id));
    const organization=await query({kind:'context.organization',id:input.id},operation('context.organization.read','context:'+input.id,input.id));
-   if(context.status!=='ok'||organization.status!=='ok')return {status:'unavailable',reason:'context_unavailable'};
+   const location=await query({kind:'context.location',id:input.id},operation('context.locate','context:'+input.id,input.id));
+   if(context.status!=='ok'||organization.status!=='ok'||location.status!=='ok')return {status:'unavailable',reason:'context_unavailable'};
    const value=context.value as {id:string;revision:number;name:string;description:string};
-   return {status:'ok',view:'context',context:{id:value.id,revision:value.revision,name:value.name,description:value.description},organization:organization.value as never};
+   return {status:'ok',view:'context',context:{id:value.id,revision:value.revision,name:value.name,description:value.description},location:(location.value as {location:string}).location,organization:organization.value as never};
   }
   let command:SpaceCommand;
   if(input.kind==='context.create'||input.kind==='space.directory'){
