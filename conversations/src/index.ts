@@ -271,7 +271,12 @@ export function createConversationGeneration(
         let result: ApiSendResult;
         try {
           result = await api.send(requests.api, operationId, preparation, controller.signal, delta => {
-            if (!controller.signal.aborted) onText?.(delta);
+            if (controller.signal.aborted || active.get(key) !== controller) return;
+            const visible = service.read(requests.read, conversationId);
+            if (visible.status !== 'ok') return;
+            const current = visible.conversation.generations.find(item => item.id === generationId);
+            if (current?.status !== 'running' || current.operationId !== operationId) return;
+            onText?.(delta);
           });
         } catch {
           result = { status: 'unknown', operationId, reason: 'api_result_unconfirmed' };
