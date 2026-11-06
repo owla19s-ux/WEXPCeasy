@@ -25,8 +25,8 @@ test('command cancellation before commit and permissions unavailable do not crea
 });
 
 test('service stop inside the final permission recheck blocks the API business commit',t=>{
- const h=fixture(t),original=h.permission.recheck.bind(h.permission);let count=0;
- h.permission.recheck=(request,prior)=>{const result=original(request,prior);if(++count===2)h.service.stop();return result;};
+ const h=fixture(t),original=h.permission.recheck.bind(h.permission);
+ h.permission.recheck=(request,prior)=>{const result=original(request,prior);if(h.db.read().value?.intents.some(intent=>intent.phase==='prepared'))h.service.stop();return result;};
  const result=h.execute(creation);assert.equal(result.status,'unavailable');assert.equal(h.db.read().value.connections.length,0);
 });
 test('unknown API aggregate versions are blocked without downgrade or blank reconstruction',t=>{

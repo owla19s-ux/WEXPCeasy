@@ -46,11 +46,11 @@ export function createApiService(store:Store,permission:PermissionReader,options
   if(d.scope.resource!=='connections/api'||d.scope.action!==wanted.action||d.scope.target!==wanted.target||d.scope.context!==wanted.context)return fail('scope_mismatch');return d;
  }
  function recheck(request:object,d:Allow){live();let now:Decision;try{now=permission.recheck(request,d);}catch{return fail('permission_unavailable','unavailable');}live();if(now.status!=='allow'||canonical(now)!==canonical(d))fail(now.status==='allow'?'stale_authorization':now.reason);}
- function snapshot(){live();return readState();}
+ function snapshot(request:object,decision:Allow){live();const result=readState();recheck(request,decision);return result;}
  function id(s:State){const value=allocate();if(!text(value)||[...s.connections,...s.models,...s.intents].some(x=>x.id===value))fail('id_collision');return value;}
  function derived(parent:object,d:Allow,wanted:Projection){const request=options.deriveRequest?.(parent,wanted);if(!request)fail('reference_unavailable');try{const decision=authorize(request,wanted);if(!sameActor(d.scope,decision.scope))fail('reference_unavailable');recheck(request,decision);return {request,decision};}catch{return fail('reference_unavailable');}}
  function mutate(request:object,c:ApiCommand,d:Allow,signal?:AbortSignal):ApiMutation {
-  const {snap,state}=snapshot(),key=createHash('sha256').update(canonical({scope:d.scope,intent:c.intent})).digest('hex'),fingerprint=canonical(c),prior=state.intents.find(x=>x.key===key);
+  const {snap,state}=snapshot(request,d),key=createHash('sha256').update(canonical({scope:d.scope,intent:c.intent})).digest('hex'),fingerprint=canonical(c),prior=state.intents.find(x=>x.key===key);
   let verifyDependencies=()=>{};
   if(c.kind==='connection.copy'){
    const sourceRead=derived(request,d,{action:'connection.read',target:`connection:${c.id}`,context:null});
@@ -166,14 +166,14 @@ export function createApiService(store:Store,permission:PermissionReader,options
    if(q.kind==='connections'||q.kind==='models'){
     if(q.kind==='connections'?!closed(q,['kind']):!closed(q,['kind','connectionId'])||!text(q.connectionId))fail('invalid_query');
     const kind=q.kind==='connections'?'connection':'model',d=authorize(request,{action:`${kind}.list`,target:q.kind==='connections'?'api:connections':`connection:${q.connectionId}`,context:null});
-    if(!options.deriveRequest)fail('projection_binding_unavailable','unavailable');const {state}=snapshot(),items=q.kind==='connections'?state.connections:state.models.filter(m=>m.connectionId===q.connectionId);
+    if(!options.deriveRequest)fail('projection_binding_unavailable','unavailable');const {state}=snapshot(request,d),items=q.kind==='connections'?state.connections:state.models.filter(m=>m.connectionId===q.connectionId);
     const rows:{request:object;decision:Allow;value:ApiConnection|ApiModel}[]=[];
     for(const item of items){try{const r=derived(request,d,{action:`${kind}.read`,target:`${kind}:${item.id}`,context:null});rows.push({...r,value:capture(item)});}catch{/* omit inaccessible identities */}}
     const visible:Array<ApiConnection|ApiModel>=[];for(const row of rows){try{recheck(row.request,row.decision);visible.push(row.value);}catch{/* no stale names or counts */}}
     recheck(request,d);return {status:'ok',value:visible};
    }
    if(!closed(q,['kind','id'])||!['connection','model'].includes(q.kind)||!text(q.id))fail('invalid_query');const d=authorize(request,{action:`${q.kind}.read`,target:`${q.kind}:${q.id}`,context:null});
-   const {state}=snapshot(),value=capture(q.kind==='connection'?find(state.connections,q.id):find(state.models,q.id));recheck(request,d);return {status:'ok',value};
+   const {state}=snapshot(request,d),value=capture(q.kind==='connection'?find(state.connections,q.id):find(state.models,q.id));recheck(request,d);return {status:'ok',value};
   }catch(e){return error(e,'query',true);}
  }
  function prepare(request:object,input:Preparation):ReturnType<ApiService['prepare']>{
@@ -187,7 +187,9 @@ export function createApiService(store:Store,permission:PermissionReader,options
    const d=authorize(request,{action:'request.prepare',target:`model:${p.modelId}`,context:p.context});
    // Requiring both reads protects metadata, credential references and model existence in returned plans.
    const cr=derived(request,d,{action:'connection.read',target:`connection:${p.connectionId}`,context:null}),mr=derived(request,d,{action:'model.read',target:`model:${p.modelId}`,context:null});
-   const {state}=snapshot(),connection=find(state.connections,p.connectionId),model=find(state.models,p.modelId);
+   const {state}=snapshot(request,d);
+   recheck(cr.request,cr.decision);recheck(mr.request,mr.decision);
+   const connection=find(state.connections,p.connectionId),model=find(state.models,p.modelId);
    if(connection.revision!==p.connectionRevision||model.revision!==p.modelRevision)fail('revision_conflict');if(model.connectionId!==connection.id)fail('model_connection_mismatch');if(!connection.enabled)fail('connection_disabled');if(connection.protocol!=='openai-chat')fail('unsupported_protocol');
    const observed=model.observation;if(!observed)fail('capability_unverified');if(observed.connectionRevision!==connection.revision)fail('capability_observation_stale');
    if(observed.capabilities.text!=='supported'||(p.stream&&observed.capabilities.stream!=='supported'))fail('capability_unsupported_or_unknown');
@@ -228,7 +230,8 @@ export function createApiService(store:Store,permission:PermissionReader,options
    const wanted={target:`model:${id}`,context:null};
    const decision=authorize(request,{...wanted,action:'model.probe'});
    const modelRead=derived(request,decision,{...wanted,action:'model.read'});
-   const {state}=snapshot();
+   const {state}=snapshot(request,decision);
+   recheck(modelRead.request,modelRead.decision);
    const model=find(state.models,id);
    const connectionRead=derived(request,decision,{target:`connection:${model.connectionId}`,context:null,action:'connection.read'});
    const connection=find(state.connections,model.connectionId);
@@ -241,7 +244,9 @@ export function createApiService(store:Store,permission:PermissionReader,options
    const wanted={target:`connection:${id}`,context:null};
    const decision=authorize(request,{...wanted,action:'directory.refresh'});
    const read=derived(request,decision,{...wanted,action:'connection.read'});
-   const connection=freeze(capture(find(snapshot().state.connections,id)));
+   const {state}=snapshot(request,decision);
+   recheck(read.request,read.decision);
+   const connection=freeze(capture(find(state.connections,id)));
    recheck(read.request,read.decision);
    recheck(request,decision);
    return connection;
