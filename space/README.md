@@ -1,5 +1,9 @@
 # Space / Context｜0.1.1 模块施工规范
 
+> **2026-11-06 最新代码状态更新（证据快照 `c7f1c827`，不是正式完整验收）**：已存在 `space/src/index.ts`、`model.ts`、`service.ts`、`storage.ts`、`recovery.ts` 及 `space/tests/` 下正式测试。根 `package.json` 已包含 `test:space`，`npm test` 已包含 Space 测试；App/Permissions 也有 Space 组合测试。此前注明“没有 src/tests、未接入构建”的描述是 2026-11-04 及更早的**历史开工快照**，不得再用作待实现判断。当前进入 B1-02 专项收尾：逐项对照 §3 与 §5，核实稳定能力、真实持久化/恢复、外域 owner 缺失时的受控行为及剩余阻塞；只修真实缺口，不重新建立 Space 模块。对应提交的 Foundation verification 成功，但尚无本次独立 S01～S20 完整验收回执或 Windows 实机证据。
+>
+> **产品语义约束**：用户已明确不把 Placement 作为产品设计层级。下文涉及 Placement 的条款属于历史内部关系方案及现存实现核对对象，**不构成新增 Placement 产品层级或本轮扩展授权**；正式后续施工须保持 Space、Space 类别、Group、Context 的产品语义，并对内部关系实现与此语义是否冲突进行审查，未确认前不主动增加/改造其业务结构。
+
 > **代码事实核对（2026-11-04，基线 `1048b6a`）**：未发现本域产品 src/、tests/ 或公开 index.ts；现有说明是设计/施工目标，不能表述为已实现。 开工须重新核对最新 main。
 
 > 当前施工模块：Space。施工 AI 只修改源码与测试，不修改本文。**本文描述目标，不代表代码已实现。**
@@ -347,6 +351,8 @@ S19 本期只验“实际删除始终阻塞”与预检质量，不要求实现�
 L1/L2 含义见 §5.1。S16 只在替身有效窗口与可恢复持久化替身中验证 SPC-01～04 的结果分类，不承诺无限期去重。
 
 ## 6. 施工状态与未决
+
+**2026-11-06 状态优先说明**：§6 以下旧基线、无源码断言及“待施工”叙述保留作历史追溯，不能覆盖本文件顶部的最新代码状态。下一步是以最新 main 复查实际 API、测试和 S01～S20 覆盖，再确定通过、修复或阻塞；不以旧环境 133 项基线代替现有 CI。
 
 **历史核查记录**：根 `package.json` 与 `tsconfig.json` 的版本、编译配置及 Space 未接线情况；`space/src/index.ts` 未找到。**本次机制补全核查（2026-11-03，main 3461d60）**：递归目录清单中 space/ 仅有 README；`tsconfig.json` 未纳入 `space/src`，`package.json` 无 `test:space`；shared 已公开真实 SQLite Store/CAS/query，permissions 已公开 evaluate/recheck 且拒绝非对话入口。本地 Linux / Node 24.22.1 基线 `npm run build`、`npm test`（133/133）、`npm run check:boundaries` 通过，只覆盖现有模块。未核验 CI 结果，**未执行** Space 构建、Space 测试与 Windows 实机验证。
 
