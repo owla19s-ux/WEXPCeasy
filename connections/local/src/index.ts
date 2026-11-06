@@ -1,25 +1,14 @@
 import {createHash} from 'node:crypto';
-import type {FileHandle} from 'node:fs/promises';
 import type {ConnectionConfig,ConfiguredDispatchAdapter,ReadAdapter,AdapterAccess} from '../../src/index.js';
 import type {Json} from '../../../shared/src/index.js';
 
-/** Trusted host capability, never an object supplied by Renderer/model input.
- * The host opens the authorized exact file, pins its identity, and supplies current permission recheck.
- * Writes additionally require exclusive WEX resource coordination; this is not a lock on external processes.
- * release owns handle/lease cleanup. Missing or uncertain host evidence must fail closed.
- */
-export interface LocalFileCapability {
- handle:FileHandle;exclusive:boolean;check():boolean;release():Promise<void>;
-}
-export type LocalFileResolver=(target:string,mode:'read'|'write',access?:AdapterAccess)=>Promise<LocalFileCapability>;
+import type {LocalFileResolver} from './file-capability.js';
+export type {LocalFileCapability,LocalFileResolver} from './file-capability.js';
+import {validateLocalFileTarget as validateTarget} from './target.js';
+export {localFileTarget} from './target.js';
+export {createLocalFileBindings} from './bindings.js';
+export type {LocalFileBindingOptions,LocalFileIdentity} from './bindings.js';
 const limit=1024*1024;
-export function localFileTarget(id:string):string {
- if(typeof id!=='string'||!/^[a-zA-Z0-9_-]{1,128}$/.test(id))throw Error('invalid_local_file_target');
- return 'local-file:'+id;
-}
-function validateTarget(target:string):void {
- if(typeof target!=='string'||!target.startsWith('local-file:')||localFileTarget(target.slice(11))!==target)throw Error('invalid_local_file_target');
-}
 const digest=(bytes:Uint8Array|string)=>createHash('sha256').update(bytes).digest('hex');
 async function snapshot(handle:FileHandle):Promise<{bytes:Buffer;version:string}> {
  const before=await handle.stat({bigint:true});
