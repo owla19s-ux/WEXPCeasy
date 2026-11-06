@@ -10,6 +10,8 @@ import {startFoundations} from '../../../dist/app/src/index.js';
 import {openSqliteStore} from '../../../dist/shared/src/index.js';
 async function verify(){
 app.enableSandbox();
+// Xvfb has no GPU; use Chromium software rendering for the CI bitmap only.
+if(process.platform==='linux')app.disableHardwareAcceleration();
 const root=process.env.WEX_DESKTOP_FIXTURE_ROOT;assert.ok(root,'parent-owned test root');
 const id=randomUUID();await writeFile(join(root,'.wex-root.json'),JSON.stringify({format:1,id}));
 await mkdir(join(root,'electron-user'));await mkdir(join(root,'electron-session'));
@@ -21,7 +23,7 @@ const startup=()=>startFoundations({dataRoot:root,expectedRootId:id,trust:{curre
  openStore(path,namespace){const db=openSqliteStore(path,namespace);return {...db,close(){if(failClose){failClose=false;throw Error('injected-close');}db.close();}};}});
 const timer=setTimeout(()=>{console.error('desktop_runtime_timeout');app.exit(1);},45000);
 try{
- const runtime=await runDesktop({url:pathToFileURL(resolve('desktop-dist/index.html')).href,preload:resolve('desktop-dist/preload.cjs'),start:startup,show:false});
+ const runtime=await runDesktop({url:pathToFileURL(resolve('desktop-dist/index.html')).href,preload:resolve('desktop-dist/preload.cjs'),start:startup,show:process.platform==='linux'});
  const host=await runtime.lifecycle.start();
  assert.equal(host.status,'ready');for(const name of ['space','api','ai','conversations','connections','localFiles','localDirectories','permissions'])assert.ok(host[name],name);
  assert.deepEqual(host.permissions.evaluate({}),{status:'indeterminate',reason:'trusted_facts_missing'});
@@ -48,7 +50,7 @@ try{
  assert.equal((await runtime.lifecycle.stop()).status,'stopped');
  const reopened=await startFoundations({dataRoot:root,trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false}});
  assert.equal(reopened.status,'ready');assert.equal((await reopened.stop()).status,'stopped');
- const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,checks:['sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
+ const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,checks:['sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
  await writeFile(resolve('desktop-acceptance',process.platform+'.json'),JSON.stringify(report,null,2));
  console.log('DESKTOP_ACCEPTANCE '+JSON.stringify(report));clearTimeout(timer);app.quit();
 }catch(error){console.error(error);clearTimeout(timer);app.exit(1);}
