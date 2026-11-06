@@ -1,9 +1,10 @@
+import type {AdapterAccess} from './adapter-access.js';
 import {createHash} from 'node:crypto';
 import type {PermissionReader} from '../../permissions/src/index.js';
 import type {Json} from '../../shared/src/index.js';
 import type {OperationConnection,createOperationLedger} from './operations.js';
 type Ledger=ReturnType<typeof createOperationLedger>;
-export interface DispatchAdapter {readonly id:string;execute(target:string,payload:Json):Promise<Json>}
+export interface DispatchAdapter {readonly id:string;execute(target:string,payload:Json,access?:AdapterAccess):Promise<Json>}
 export interface DispatchGuard {readonly connection:OperationConnection;check():boolean}
 export type DispatchResult={status:'observed'|'blocked'|'unknown';reason:string;operationId:string};
 function canonical(value:Json,ancestors=new Set<object>()):string {
@@ -49,14 +50,18 @@ export function createDispatchBoundary(permission:PermissionReader,ledger:Ledger
    };
    if(permission.recheck(request,final).status!=='allow')return notDispatched('authorization_revoked');
    if(guard&&!guard.check())return notDispatched('connection_changed');
+   let active=true;
+   const access:AdapterAccess=Object.freeze({request,check(){
+    try{return active&&permission.recheck(request,final).status==='allow'&&(!guard||guard.check());}catch{return false;}
+   }});
    try{
-    const value=await adapter.execute(target,capturedPayload);
+    const value=await adapter.execute(target,capturedPayload,access);
     const observed=ledger.observe(id,'result',value,'observed');
     return observed.status==='ok'?{status:'observed',reason:'result_recorded',operationId:id}:{status:'unknown',reason:'result_persistence_'+observed.status,operationId:id};
    }catch{
     ledger.observe(id,'exception',{reason:'adapter_exception'},'unknown');
     return {status:'unknown',reason:'external_outcome_unconfirmed',operationId:id};
-   }
+   }finally{active=false;}
   }catch{return {status:'unknown',reason:'dependency_unavailable',operationId:id};}
  }});
 }

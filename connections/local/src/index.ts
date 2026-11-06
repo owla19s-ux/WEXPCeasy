@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import type {FileHandle} from 'node:fs/promises';
-import type {ConnectionConfig,ConfiguredDispatchAdapter,ReadAdapter} from '../../src/index.js';
+import type {ConnectionConfig,ConfiguredDispatchAdapter,ReadAdapter,AdapterAccess} from '../../src/index.js';
 import type {Json} from '../../../shared/src/index.js';
 
 /** Trusted host capability, never an object supplied by Renderer/model input.
@@ -11,7 +11,7 @@ import type {Json} from '../../../shared/src/index.js';
 export interface LocalFileCapability {
  handle:FileHandle;exclusive:boolean;check():boolean;release():Promise<void>;
 }
-export type LocalFileResolver=(target:string,mode:'read'|'write')=>Promise<LocalFileCapability>;
+export type LocalFileResolver=(target:string,mode:'read'|'write',access?:AdapterAccess)=>Promise<LocalFileCapability>;
 const limit=1024*1024;
 export function localFileTarget(id:string):string {
  if(typeof id!=='string'||!/^[a-zA-Z0-9_-]{1,128}$/.test(id))throw Error('invalid_local_file_target');
@@ -36,9 +36,9 @@ async function snapshot(handle:FileHandle):Promise<{bytes:Buffer;version:string}
 }
 /** Use through createReadBoundary. No payload path is opened here. */
 export function createLocalFileReader(resolve:LocalFileResolver):ReadAdapter {
- return Object.freeze({id:'local',async read(target:string,signal:AbortSignal):Promise<Json>{
+ return Object.freeze({id:'local',async read(target:string,signal:AbortSignal,access?:AdapterAccess):Promise<Json>{
   validateTarget(target);if(signal.aborted)throw Error('cancelled');
-  const capability=await resolve(target,'read');
+  const capability=await resolve(target,'read',access);
   try{
    if(capability.check()!==true)throw Error('local_permission_unavailable');
    const value=await snapshot(capability.handle);
@@ -53,7 +53,7 @@ export function createLocalFileReader(resolve:LocalFileResolver):ReadAdapter {
  * Connections records the original Operation and must not automatically retry. No external-process atomic CAS claim.
  */
 export function createLocalFileAdapter(resolve:LocalFileResolver):ConfiguredDispatchAdapter {
- return Object.freeze({id:'local',version:'0.1.1',async execute(connection:Readonly<ConnectionConfig>,target:string,payload:Json):Promise<Json>{
+ return Object.freeze({id:'local',version:'0.1.1',async execute(connection:Readonly<ConnectionConfig>,target:string,payload:Json,access?:AdapterAccess):Promise<Json>{
   validateTarget(target);
   if(connection.adapter!=='local'||connection.endpoint!=='local:files'||connection.credentialRef!==null||!connection.enabled)return {status:'rejected',reason:'local_connection_unavailable'};
   if(!payload||typeof payload!=='object'||Array.isArray(payload)||
@@ -62,7 +62,7 @@ export function createLocalFileAdapter(resolve:LocalFileResolver):ConfiguredDisp
    !/^[a-f0-9]{64}$/.test(payload['expectedVersion']))return {status:'rejected',reason:'invalid_local_file_update'};
   const bytes=Buffer.from(payload['content'],'utf8');
   if(bytes.length>limit||bytes.toString('utf8')!==payload['content'])return {status:'rejected',reason:'invalid_local_file_update'};
-  const capability=await resolve(target,'write');
+  const capability=await resolve(target,'write',access);
   try{
    if(capability.exclusive!==true||capability.check()!==true)return {status:'rejected',reason:'local_write_capability_unavailable'};
    const before=await snapshot(capability.handle);

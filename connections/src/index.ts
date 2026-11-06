@@ -1,5 +1,7 @@
+import type {AdapterAccess} from './adapter-access.js';
+export type {AdapterAccess} from './adapter-access.js';
 import type {PermissionReader} from '../../permissions/src/index.js';
-export interface ReadAdapter {readonly id:string;read(target:string,signal:AbortSignal):Promise<unknown>}
+export interface ReadAdapter {readonly id:string;read(target:string,signal:AbortSignal,access?:AdapterAccess):Promise<unknown>}
 export type ReadResult={status:'ok';value:unknown}|{status:'denied'|'unavailable'|'cancelled';reason:string};
 export function createReadBoundary(permission:PermissionReader,adapter:ReadAdapter){
  return {async read(request:object,target:string,signal=new AbortController().signal):Promise<ReadResult>{
@@ -9,11 +11,15 @@ export function createReadBoundary(permission:PermissionReader,adapter:ReadAdapt
   if(first.scope.resource!==adapter.id||first.scope.target!==target||first.scope.action!=='read')return {status:'denied',reason:'scope_mismatch'};
   const current=permission.recheck(request,first);
   if(current.status!=='allow')return {status:'denied',reason:'stale'};
+  let active=true;
+  const access:AdapterAccess=Object.freeze({request,check(){
+   try{return active&&!signal.aborted&&permission.recheck(request,current).status==='allow';}catch{return false;}
+  }});
   try{
-   const value=await adapter.read(target,signal);
+   const value=await adapter.read(target,signal,access);
    if(signal.aborted||permission.recheck(request,current).status!=='allow')return {status:'denied',reason:'revoked_or_cancelled'};
    return {status:'ok',value};
-  }catch{return {status:'unavailable',reason:'adapter_failed'};}
+  }catch{return {status:'unavailable',reason:'adapter_failed'};}finally{active=false;}
  }};
 }
 

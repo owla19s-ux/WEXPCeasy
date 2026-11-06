@@ -1,3 +1,4 @@
+import type {AdapterAccess} from './adapter-access.js';
 import type {PermissionReader} from '../../permissions/src/index.js';
 import type {Json} from '../../shared/src/index.js';
 import type {ConnectionConfig,createConnectionConfigs} from './config.js';
@@ -8,7 +9,7 @@ import type {DispatchResult} from './dispatch.js';
 export interface ConfiguredDispatchAdapter {
  readonly id:string;
  readonly version:string;
- execute(connection:Readonly<ConnectionConfig>,target:string,payload:Json):Promise<Json>;
+ execute(connection:Readonly<ConnectionConfig>,target:string,payload:Json,access?:AdapterAccess):Promise<Json>;
 }
 /** Trusted host entry: configuration is inspected only after target authorization. */
 export function createConfiguredDispatchBoundary(permission:PermissionReader,ledger:ReturnType<typeof createOperationLedger>,configs:ReturnType<typeof createConnectionConfigs>,adapter:ConfiguredDispatchAdapter){
@@ -36,7 +37,7 @@ export function createConfiguredDispatchBoundary(permission:PermissionReader,led
     const item=current.items.find(c=>c.id===connectionId);
     return current.revision===connection.configRevision&&adapter.id===connection.adapterId&&adapter.version===connection.adapterVersion&&!!item&&item.enabled&&item.adapter===captured.adapter&&item.endpoint===captured.endpoint&&item.credentialRef===captured.credentialRef;
    };
-   return await createDispatchBoundary(permission,ledger,{id:adapter.id,execute:(target,value)=>adapter.execute(captured,target,value)},{connection,check}).dispatch(request,id,target,fingerprint,capturedPayload);
+   return await createDispatchBoundary(permission,ledger,{id:adapter.id,execute:(target,value,access)=>adapter.execute(captured,target,value,access)},{connection,check}).dispatch(request,id,target,fingerprint,capturedPayload);
   }catch{return {status:'unknown',reason:'dependency_unavailable',operationId:id};}
  }});
 }
