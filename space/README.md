@@ -4,11 +4,11 @@
 >
 > **产品语义约束**：用户已明确不把 Placement 作为产品设计层级。下文涉及 Placement 的条款属于历史内部关系方案及现存实现核对对象，**不构成新增 Placement 产品层级或本轮扩展授权**；正式后续施工须保持 Space、Space 类别、Group、Context 的产品语义，并对内部关系实现与此语义是否冲突进行审查，未确认前不主动增加/改造其业务结构。
 
-> **代码事实核对（2026-11-04，基线 `1048b6a`）**：未发现本域产品 src/、tests/ 或公开 index.ts；现有说明是设计/施工目标，不能表述为已实现。 开工须重新核对最新 main。
+> **历史快照说明（2026-11-04）**：当时未发现产品 src/tests；该结论已由 2026-11-06 代码事实及本次 `bd72dfea` 核对覆盖，不能作为当前待施工判断。
 
 > 当前施工模块：Space。施工 AI 只修改源码与测试，不修改本文。**本文描述目标，不代表代码已实现。**
 >
-> 技术基线（开工重新核对）：TypeScript 5.9.3、Node.js >=24.9、ESM/NodeNext、strict 类型检查；桌面宿主计划 Electron + React，Space 领域代码不得依赖 React。当前仓库的 `tsconfig.json` 尚未纳入 `space/src/**/*.ts`，`package.json` 尚无 `test:space`；已查询的 `space/src/index.ts` 不存在。开工须先重新核对最新 main。
+> 技术基线：TypeScript 5.9.3、Node.js >=24.9、ESM/NodeNext、strict 类型检查；Space 领域代码不得依赖 React。**当前** `space/src/index.ts`、`space/tests/`、`npm run test:space` 均已存在并纳入根测试；开工依然要重新核对最新 main 和真实测试结果。
 
 > **产品与内部模型边界（2026-11-04）**：产品组织概念为 Space → Space 类别 → Group → Context。以下 Placement 描述保留内部关系研究，不新增用户必须管理的独立层级；其必要性、存储方式与界面表达仍需后续确认，本轮不改变数据结构。
 
