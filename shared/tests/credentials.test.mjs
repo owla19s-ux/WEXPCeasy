@@ -49,6 +49,7 @@ test('unavailable encryption refuses persistence and never falls back to plainte
 test('ciphertext cannot be relabelled for another endpoint or credential revision',async t=>{
  const h=await fixture(t);h.vault.put({}, {id:'key-a',intent:'one',expectedRevision:0,binding:h.binding,secret:'bound-fixture'});
  const snapshot=h.db.read(),state=structuredClone(snapshot.value);state.entries[0].binding.endpoint='https://attacker.test/';state.entries[0].revision=2;state.intents.push('tamper');
+ if(state.receipts)state.receipts.push({intent:'tamper',id:'key-a',revision:2,storeRevision:2,operation:'put',binding:{...h.binding,endpoint:'https://attacker.test/'}});
  assert.equal(h.db.commit({intent:'tamper',expectedRevision:snapshot.revision,value:state}).status,'committed');
  assert.equal(h.vault.resolve({},{id:'key-a',revision:2},{...h.binding,endpoint:'https://attacker.test/'}).status,'denied');
 });
@@ -124,4 +125,11 @@ test('early receipt format remains readable without inventing missing historical
  assert.equal(vault.query({}, {id:'early-key',intent:'early',binding:h.binding}).status,'committed');assert.equal(h.db.read().value.format,2);
  assert.equal(vault.put({}, {id:'next-key',intent:'next',expectedRevision:0,binding:h.binding,secret:'fixture'}).status,'committed');
  assert.equal(h.db.read().value.format,3);assert.equal(h.db.read().value.entries[0].ciphertext,ciphertext);
+});
+
+test('a confirmed receipt does not confer permission to use its credential',async t=>{
+ const h=await fixture(t);h.vault.put({}, {id:'key-a',intent:'saved',expectedRevision:0,binding:h.binding,secret:'fixture'});
+ const manager=createCredentialVault(h.db,h.cipher,(_request,access)=>access.action==='manage');
+ assert.equal(manager.query({}, {id:'key-a',intent:'saved',binding:h.binding}).status,'committed');
+ assert.equal(manager.resolve({}, {id:'key-a',revision:1},h.binding).status,'denied');
 });

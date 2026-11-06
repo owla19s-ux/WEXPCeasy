@@ -7,7 +7,8 @@ export interface CredentialCipher {available():boolean;seal(secret:string):strin
 export interface CredentialAccess {readonly action:'manage'|'use';readonly id:string;readonly binding:Readonly<CredentialBinding>}
 interface Entry {id:string;revision:number;binding:CredentialBinding;ciphertext:string|null;revoked:boolean}
 interface Receipt {intent:string;id:string;revision:number;storeRevision:number;operation:'put'|'revoke';binding:CredentialBinding}
-interface State {format:2;domain:'credentials';entries:Entry[];intents:string[];receipts:Receipt[]}
+interface State {format:3;domain:'credentials';entries:Entry[];intents:string[];receipts:Receipt[];legacyRevision:number}
+/** Historical commit proof and current stored revision only; never a use grant or decryption guarantee. */
 export type CredentialReceipt={status:'committed';reference:CredentialReference;operation:'put'|'revoke';current:'current'|'superseded'|'revoked'}|{status:'unknown';intent:string}|{status:'denied'|'invalid'|'unavailable'};
 export type CredentialMutation={status:'committed';reference:CredentialReference}|{status:'unknown';intent:string}|{status:'denied'|'invalid'|'conflict'|'unavailable'};
 const exact=(value:unknown,keys:string[])=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype&&isDeepStrictEqual(Object.keys(value).sort(),[...keys].sort());
@@ -23,11 +24,13 @@ function captureBinding(value:CredentialBinding):Readonly<CredentialBinding>{
 export function createCredentialVault(store:Store,cipher:CredentialCipher,authorize:(request:object,access:CredentialAccess)=>boolean){
  function read(){
   const snapshot=store.read();
-  const stored:State=snapshot.revision===0&&snapshot.value===null?{format:2,domain:'credentials',entries:[],intents:[],receipts:[]}:snapshot.value as unknown as State;
-  const legacy=(stored as {format:number})?.format===1;
-  if(!exact(stored,legacy?['format','domain','entries','intents']:['format','domain','entries','intents','receipts'])||(!legacy&&stored.format!==2)||stored.domain!=='credentials'||!Array.isArray(stored.entries)||!Array.isArray(stored.intents))throw Error('credential_store_unavailable');
-  // Read-only legacy normalization; only a later confirmed mutation writes format 2.
-  const state:State=legacy?{...stored,format:2,receipts:[]}:stored;
+  const stored:State=snapshot.revision===0&&snapshot.value===null?{format:3,domain:'credentials',entries:[],intents:[],receipts:[],legacyRevision:0}:snapshot.value as unknown as State;
+  const format=(stored as {format:number})?.format;
+  const fields=format===1?['format','domain','entries','intents']:format===2?['format','domain','entries','intents','receipts']:['format','domain','entries','intents','receipts','legacyRevision'];
+  if(!exact(stored,fields)||![1,2,3].includes(format)||stored.domain!=='credentials'||!Array.isArray(stored.entries)||!Array.isArray(stored.intents))throw Error('credential_store_unavailable');
+  // Legacy formats remain read-only until a later confirmed mutation; encrypted entries are never rewritten.
+  const state:State=format===3?stored:{...stored,format:3,receipts:format===1?[]:stored.receipts,legacyRevision:snapshot.revision};
+  if(!Number.isSafeInteger(state.legacyRevision)||state.legacyRevision<0||state.legacyRevision>snapshot.revision)throw Error('credential_store_unavailable');
   const seen=new Set<string>();
   for(const entry of state.entries){
    if(!exact(entry,['id','revision','binding','ciphertext','revoked'])||!id(entry.id)||seen.has(entry.id)||!Number.isSafeInteger(entry.revision)||entry.revision<1||typeof entry.revoked!=='boolean'||(entry.revoked?entry.ciphertext!==null:typeof entry.ciphertext!=='string'||!entry.ciphertext||entry.ciphertext.length>262144))throw Error('credential_store_unavailable');
@@ -35,12 +38,13 @@ export function createCredentialVault(store:Store,cipher:CredentialCipher,author
   }
   if(state.intents.some(intent=>!id(intent))||new Set(state.intents).size!==state.intents.length||state.intents.length!==snapshot.revision||state.entries.reduce((sum,entry)=>sum+entry.revision,0)!==snapshot.revision)throw Error('credential_store_unavailable');
   if(!Array.isArray(state.receipts))throw Error('credential_store_unavailable');
-  const receiptIntents=new Set<string>();
+  const receiptIntents=new Set<string>(),receiptRevisions=new Set<number>();
   for(const receipt of state.receipts){
    const entry=state.entries.find(item=>item.id===receipt.id);
-   if(!exact(receipt,['intent','id','revision','storeRevision','operation','binding'])||!id(receipt.intent)||receiptIntents.has(receipt.intent)||!entry||!Number.isSafeInteger(receipt.revision)||receipt.revision<1||receipt.revision>entry.revision||!Number.isSafeInteger(receipt.storeRevision)||receipt.storeRevision<1||state.intents[receipt.storeRevision-1]!==receipt.intent||!['put','revoke'].includes(receipt.operation))throw Error('credential_store_unavailable');
-   captureBinding(receipt.binding);receiptIntents.add(receipt.intent);
+   if(!exact(receipt,['intent','id','revision','storeRevision','operation','binding'])||!id(receipt.intent)||receiptIntents.has(receipt.intent)||!entry||!Number.isSafeInteger(receipt.revision)||receipt.revision<1||receipt.revision>entry.revision||!Number.isSafeInteger(receipt.storeRevision)||receipt.storeRevision<1||receiptRevisions.has(receipt.storeRevision)||state.intents[receipt.storeRevision-1]!==receipt.intent||!['put','revoke'].includes(receipt.operation))throw Error('credential_store_unavailable');
+   captureBinding(receipt.binding);receiptIntents.add(receipt.intent);receiptRevisions.add(receipt.storeRevision);
   }
+  for(let revision=state.legacyRevision+1;revision<=snapshot.revision;revision++)if(!receiptRevisions.has(revision))throw Error('credential_receipt_missing');
   return {snapshot,state};
  }
  read();
