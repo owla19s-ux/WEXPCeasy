@@ -95,7 +95,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    const service=createConnectionService(permission,configs,operations,adapters,options.connections??{});
    if(files)localFiles=Object.freeze({register:files.register,read:createReadBoundary(permission,createLocalFileReader(files.resolve)).read});
    apiLedger=createOperationLedger(operations);
-   connections=Object.freeze({configs:service.configs,operations:service.operations,dispatch:service.dispatch});
+   connections=Object.freeze({configs:service.configs,operations:service.operations,dispatch:service.dispatch,read:service.read});
    return {value:connections,stop:async()=>{
     if((await service.stop()).status!=='stopped')throw Error('connections_still_running');
     await files?.close();
