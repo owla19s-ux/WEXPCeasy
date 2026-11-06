@@ -31,6 +31,7 @@ test('configured read is tracked during shutdown and a stale connection revision
  const gate=new Promise(r=>release=r),arrived=new Promise(r=>entered=r);
  const h=fixture(t,{id:'fixture',version:'1',async read(){calls++;entered();await gate;return 'visible';}});
  assert.equal(typeof h.service.read,'function');
+ assert.equal((await h.service.read('fixture',h.request,'c',2,'item')).status,'unavailable');assert.equal(calls,0);
  const pending=h.read();await arrived;
  assert.equal((await h.service.stop()).status,'incomplete');
  assert.equal((await h.read()).status,'unavailable');release();

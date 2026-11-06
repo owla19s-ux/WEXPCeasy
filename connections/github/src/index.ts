@@ -1,4 +1,4 @@
-import type {ConnectionConfig,ConfiguredDispatchAdapter,ReadAdapter,AdapterAccess} from '../../src/index.js';
+import type {ConnectionConfig,ConfiguredDispatchAdapter,ReadAdapter,AdapterAccess,ConfiguredReadAdapter} from '../../src/index.js';
 import type {Json} from '../../../shared/src/index.js';
 
 export interface GitHubFile {owner:string;repo:string;ref:string;path:string}
@@ -87,4 +87,12 @@ export function createGitHubFileAdapter(client:GitHubClientFactory):ConfiguredDi
    data['content']['path']!==file.path||!sha(data['content']['sha'])||!sha(data['commit']['sha']))throw Error('github_write_receipt_unconfirmed');
   return {status:'written',...file,sha:data['content']['sha'],commitSha:data['commit']['sha']};
  }});
+}
+
+/** Per-call connection capture and revocation are supplied by createConfiguredReadBoundary. */
+export function createGitHubConfiguredFileReader(client:GitHubClientFactory):ConfiguredReadAdapter {
+ return Object.freeze({id:'github',version:'0.1.1',
+  read(connection:Readonly<ConnectionConfig>,target:string,signal:AbortSignal,access?:AdapterAccess):Promise<unknown>{
+   return createGitHubFileReader(connection,client).read(target,signal,access);
+  }});
 }

@@ -1,3 +1,5 @@
+import {createGitHubFileAdapter,createGitHubConfiguredFileReader} from '../../connections/github/src/index.js';
+import type {GitHubClientFactory} from '../../connections/github/src/index.js';
 import {createLocalFileBindings,createLocalFileReader,createLocalFileAdapter} from '../../connections/local/src/index.js';
 import type {LocalFileBindingOptions} from '../../connections/local/src/index.js';
 import {createReadBoundary} from '../../connections/src/index.js';
@@ -12,7 +14,7 @@ import {createApiService,createApiTransport} from '../../connections/api/src/ind
 import type {ApiService,ApiOptions,ApiCredentialPort} from '../../connections/api/src/index.js';
 import {createOperationLedger} from '../../connections/src/index.js';
 import {createConnectionService} from '../../connections/src/index.js';
-import type {ConnectionClient,ConfiguredDispatchAdapter} from '../../connections/src/index.js';
+import type {ConnectionClient,ConfiguredDispatchAdapter,ConfiguredReadAdapter} from '../../connections/src/index.js';
 import {openSpaceService} from '../../space/src/index.js';
 import type {SpaceService,SpaceOptions} from '../../space/src/index.js';
 import {createLocalEntries} from './local-entries.js';
@@ -22,7 +24,7 @@ import {assemble} from './assembly.js';
 import type {Host} from './assembly.js';
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
 export type FoundationLocalFiles=Pick<ReturnType<typeof createLocalFileBindings>,'register'>&ReturnType<typeof createReadBoundary>;
-export interface FoundationOptions {localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationOptions {githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
 export interface FoundationHost extends Host {readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
  for(const suffix of ['', '-journal','-wal','-shm']){
@@ -83,7 +85,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    return {value:service,stop:async()=>{await service.close();await closeStores(stores);space=undefined;}};
   }catch(error){try{await closeStores(stores);}catch{for(const db of stores)spaceOrphans.add(db);}throw error;}
  }}]:[]),
- ...((options.connections||options.api||options.localFiles)?[{id:'connections',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
+ ...((options.connections||options.api||options.localFiles||options.githubFiles)?[{id:'connections',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
   const stores=new Set<ManagedStore>();
   let files:ReturnType<typeof createLocalFileBindings>|undefined;
   try{
@@ -91,8 +93,9 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    const operations=await openDomainStore(probe.root,'connections-operations.sqlite','connection-operations',open);stores.add(operations);
    const permission=deps['permissions'] as Pick<Permissions,'evaluate'|'recheck'>;
    files=options.localFiles?createLocalFileBindings(permission,options.localFiles):undefined;
-   const adapters=[...(options.connections?.adapters??[]),...(files?[createLocalFileAdapter(files.resolve)]:[])];
-   const service=createConnectionService(permission,configs,operations,adapters,options.connections??{});
+   const adapters=[...(options.connections?.adapters??[]),...(files?[createLocalFileAdapter(files.resolve)]:[]),...(options.githubFiles?[createGitHubFileAdapter(options.githubFiles.client)]:[])];
+   const readAdapters=[...(options.connections?.readAdapters??[]),...(options.githubFiles?[createGitHubConfiguredFileReader(options.githubFiles.client)]:[])];
+   const service=createConnectionService(permission,configs,operations,adapters,{...(options.connections??{}),readAdapters});
    if(files)localFiles=Object.freeze({register:files.register,read:createReadBoundary(permission,createLocalFileReader(files.resolve)).read});
    apiLedger=createOperationLedger(operations);
    connections=Object.freeze({configs:service.configs,operations:service.operations,dispatch:service.dispatch,read:service.read});
