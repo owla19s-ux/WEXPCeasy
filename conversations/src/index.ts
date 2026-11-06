@@ -275,9 +275,11 @@ export function createConversationGeneration(
       requests: { read: object; dispatch: object; api: object; finish: object; fail: object; unknown: object };
       preparation: Omit<Preparation, 'messages'>;
       onText?: (delta: string) => void;
+      systemPrompt?: string;
     }) {
-      const { conversationId, generationId, operationId, replyId, intent, expectedRevision, onText } = input;
+      const { conversationId, generationId, operationId, replyId, intent, expectedRevision, onText, systemPrompt } = input;
       const requests = { ...input.requests };
+      if (systemPrompt !== undefined && (typeof systemPrompt !== 'string' || systemPrompt.length === 0 || systemPrompt.length > 32000)) return { status: 'invalid' } as const;
       if (!id(replyId) || !id(intent) || intent.length > 110) return { status: 'invalid' } as const;
       const observed = service.read(requests.read, conversationId);
       if (observed.status !== 'ok') return observed;
@@ -289,9 +291,10 @@ export function createConversationGeneration(
           conversation.messages.some(item => item.id === replyId)) return { status: 'invalid_transition' } as const;
       const replacedIndex = message.replaces
         ? conversation.messages.findIndex(item => item.id === message.replaces) : messageIndex;
-      const messages = [...conversation.messages.slice(0, replacedIndex), message].map(item => ({
+      const messages: Preparation['messages'] = [...conversation.messages.slice(0, replacedIndex), message].map(item => ({
         role: item.role, content: item.segments.map(segment => segment.text).join('\n'),
       }));
+      if (systemPrompt !== undefined) messages.unshift({ role: 'system', content: systemPrompt });
       const preparation: Preparation = { ...structuredClone(input.preparation), messages };
       const claimed = service.change(requests.dispatch, { conversationId, intent, expectedRevision,
         change: { kind: 'dispatch', generationId, operationId, requestId: preparation.requestId, replyId } });
