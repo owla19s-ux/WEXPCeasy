@@ -243,9 +243,8 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const preparedDecision=permission.evaluate(prepareRequest);
    const sameActor=(a:Extract<Decision,{status:'allow'}>,b:Extract<Decision,{status:'allow'}>)=>['subject','entry','conversation','context','relationship','relationshipGeneration'].every(k=>a.scope[k as keyof typeof a.scope]===b.scope[k as keyof typeof b.scope]);
    if(preparedDecision.status!=='allow'||!sameActor(initial,preparedDecision))return blocked('prepare_actor_mismatch');
-   const prepared=api.prepare(prepareRequest,p);if(prepared.status!=='ok')return blocked('preparation_rejected');
+   const prepared=api.prepare(prepareRequest,p);if(prepared.status!=='ok')return blocked('reason' in prepared&&prepared.reason==='timeout_out_of_range'?prepared.reason:'preparation_rejected');
    const snapshot=prepared.snapshot;
-   if(snapshot.timeoutMs>2147483647)return blocked('timeout_out_of_range');
    const current=()=>{if(!allowed())return false;const next=api.prepare(prepareRequest,p);return next.status==='ok'&&next.snapshot.fingerprint===snapshot.fingerprint;};
    const fingerprint=createHash('sha256').update(canonical({scope:initial.scope,snapshot:snapshot.fingerprint})).digest('hex');
    if(ledger.get(operationId))return blocked('already_recorded_no_automatic_retry');

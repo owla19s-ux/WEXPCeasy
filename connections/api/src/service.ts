@@ -141,6 +141,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
  function prepare(request:object,input:Preparation):ReturnType<ApiService['prepare']>{
   try{
    const p=capture(input);if(!closed(p,['requestId','connectionId','connectionRevision','modelId','modelRevision','context','parameters','messages','timeoutMs','stream'],['tools','headersTimeoutMs','idleTimeoutMs','toolContinuation'])||!text(p.requestId)||!text(p.connectionId)||!text(p.modelId)||!revision(p.connectionRevision)||!revision(p.modelRevision)||(p.context!==null&&!text(p.context))||!parameters(p.parameters)||!revision(p.timeoutMs)||typeof p.stream!=='boolean'||!Array.isArray(p.messages)||p.messages.length===0||!p.messages.every(m=>closed(m,['role','content'])&&['system','user','assistant'].includes(String(m.role))&&typeof m.content==='string'))fail('invalid_preparation');
+   if(p.timeoutMs>2147483647)fail('timeout_out_of_range');
    for(const limit of [p.headersTimeoutMs,p.idleTimeoutMs]){
     if(limit!==undefined&&(!revision(limit)||limit>2147483647))fail('invalid_phase_timeout');
    }

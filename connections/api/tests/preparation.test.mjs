@@ -61,3 +61,10 @@ test('registered API and Model identity projections require per-target permissio
  const target={owner:'connections/api',targetType:'model',targetId:f.m.id};const o=f.h.service.resolve(parent,target);assert.equal(o.status,'available');assert.equal(o.targetId,f.m.id);assert.equal(o.sourceRevision,'1');assert.equal('credentialRef'in o,false);assert.equal(f.h.query('model',f.m.id).value.observation,null);
  f.h.revoke();assert.equal(f.h.service.resolve(parent,target).status,'denied');
 });
+
+test('preparation rejects deadlines above the supported timer range',t=>{
+ const h=setup(t);
+ assert.equal(h.observe().status,'committed');
+ assert.equal(h.prepare({timeoutMs:2147483647}).status,'ok');
+ assert.equal(h.prepare({timeoutMs:2147483648}).reason,'timeout_out_of_range');
+});
