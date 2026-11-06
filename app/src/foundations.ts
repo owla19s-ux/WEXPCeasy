@@ -78,6 +78,10 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  const emitTechnical=(code:DiagnosticCode)=>{
   if(technicalLog?.emit({module:'app',level:'error',code}).status==='failed')noteDiagnostic('diagnostic_write_failed');
  };
+ const incompleteRelease=(failed:string)=>{
+  emitTechnical('release_failed');
+  return {status:'incomplete' as const,failed:[failed]};
+ };
  const technicalDiagnostics:FoundationTechnicalDiagnostics|undefined=technicalLog?Object.freeze({
   read(){return stopping||!technicalLog?{status:'unavailable' as const}:technicalLog.read();}
  }):undefined;
@@ -240,12 +244,12 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  const result=await host.stop();
  // Keep root occupied when provider shutdown cannot confirm release.
  if(result.status==='incomplete'){emitTechnical('release_failed');return result;}
- try{for(const files of localFileOrphans){await files.close();localFileOrphans.delete(files);}}catch{return {status:'incomplete' as const,failed:['local-files']};}
- try{await closeStores(orphans);}catch{return {status:'incomplete' as const,failed:['connections-storage']};}
- try{await closeStores(apiOrphans);}catch{return {status:'incomplete' as const,failed:['api-storage']};}
- try{await closeStores(conversationOrphans);}catch{return {status:'incomplete' as const,failed:['conversations-storage']};}
- try{await closeStores(aiOrphans);}catch{return {status:'incomplete' as const,failed:['ai-storage']};}
- try{await closeStores(spaceOrphans);}catch{return {status:'incomplete' as const,failed:['space-storage']};}
+ try{for(const files of localFileOrphans){await files.close();localFileOrphans.delete(files);}}catch{return incompleteRelease('local-files');}
+ try{await closeStores(orphans);}catch{return incompleteRelease('connections-storage');}
+ try{await closeStores(apiOrphans);}catch{return incompleteRelease('api-storage');}
+ try{await closeStores(conversationOrphans);}catch{return incompleteRelease('conversations-storage');}
+ try{await closeStores(aiOrphans);}catch{return incompleteRelease('ai-storage');}
+ try{await closeStores(spaceOrphans);}catch{return incompleteRelease('space-storage');}
  try{await closeStores(technicalStores);}catch{noteDiagnostic('release_failed');return {status:'incomplete' as const,failed:['diagnostics-storage']};}
  technicalLog=undefined;
  try{await release();rootActive=false;return result;}catch{return {status:'incomplete' as const,failed:['root-lock']};}
