@@ -4,7 +4,8 @@ import {fileURLToPath} from 'node:url';
 import {localFileTarget,localDirectoryTarget} from '../../connections/local/src/index.js';
 import type {FoundationHost,FoundationOptions} from './foundations.js';
 import type {LocalOperation} from './local-entries.js';
-import type {Change,Scope} from '../../permissions/src/index.js';
+import {createDesktopAuthority} from './desktop-authority.js';
+import type {DesktopAuthority} from './desktop-authority.js';
 import type {SpaceCommand,SpaceQuery,QueryResult,ProjectionScope} from '../../space/src/index.js';
 import type {DesktopSpaceInput,DesktopSpaceReply} from '../../UI/src/index.js';
 const schemas:Record<string,readonly string[]>={
@@ -45,32 +46,17 @@ function capture(input:unknown):DesktopSpaceInput|undefined{
 const titles:Record<string,string>={'resource.read':'查看已关联资源','category.create':'创建 Space 类别','category.edit':'编辑 Space 类别','address.add':'添加 Context 地址引用','address.edit':'编辑地址引用','address.remove':'解除地址引用（保留外部原资源）','primary.select':'选择 Context 主地址','space.create':'创建 Space','space.edit':'编辑 Space','space.directory':'变更 Space 工作目录关联','group.create':'创建分组','group.edit':'编辑分组','context.create':'创建 Context','context.edit':'编辑 Context','context.group':'移动 Context 分组','context.open':'查看 Context'};
 const key=(op:LocalOperation)=>JSON.stringify(op);
 /** Native-confirmed local UI adapter. Domain data remains in Space; no Renderer identity/grant/path API. */
-export function createDesktopSpace(options:{rootId:string;confirm:(summary:string)=>Promise<boolean>;chooseDirectory:()=>Promise<string|undefined>}){
- const source={},historyToken={},session=randomUUID(),management=new WeakSet<object>(),requests=new WeakMap<object,LocalOperation>();
- const enabled=new Set<string>(),pending=new Map<string,LocalOperation>();
+export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:string;confirm:(summary:string)=>Promise<boolean>;chooseDirectory:()=>Promise<string|undefined>}){
+ const authority=options.authority??createDesktopAuthority(),policy=authority.policy;
+ const pending=new Map<string,LocalOperation>();
  let host:FoundationHost|undefined,closed=false,busy=false,reading=false;
- const identity={subject:'desktop-user',entry:'desktop:'+session,relationship:'desktop:'+session,relationshipGeneration:1,moduleEnabled:true,globalEnabled:true,sourceAllowed:true,entryEnabled:true};
- const policy:Pick<FoundationOptions,'trust'|'local'>={
-  trust:{current:()=>undefined,canManage:change=>!closed&&management.has(change),canReadHistory:r=>!closed&&r===historyToken},
-  local:{current:(candidate,op)=>!closed&&candidate===source&&enabled.has(key(op))?identity:undefined}
- };
  const operation=(action:string,target:string,context:string|null=null):LocalOperation=>({resource:'space',action,target,context});
- const bind=(op:LocalOperation)=>{const request=host?.local?.bind(source,op);if(request)requests.set(request,op);return request;};
- function permit(op:LocalOperation){
-  if(closed||!host?.permissions||!host.local)throw Error('space_unavailable');
-  enabled.add(key(op));const request=bind(op);if(!request)throw Error('entry_unavailable');
-  if(host.permissions.evaluate(request).status==='allow')return;
-  const history=host.permissions.history(historyToken);if(history.status!=='ok')throw Error('permission_history_unavailable');
-  const scope:Scope={subject:identity.subject,entry:identity.entry,relationship:identity.relationship,relationshipGeneration:1,conversation:null,...op};
-  const change:Change={intent:randomUUID(),expectedRevision:history.revision,scope};
-  management.add(change);const result=host.permissions.grant(change);management.delete(change);
-  if(result.status!=='committed')throw Error('permission_commit_unconfirmed');
- }
+ const permit=authority.permit,bind=authority.bind;
  const derive=(parent:object,wanted:ProjectionScope):object|undefined=>{
-  if(closed||!requests.has(parent)||!['context.read','space.read','group.read','category.read'].includes(wanted.action))return;
+  if(closed||!authority.owns(parent,'space')||!['context.read','space.read','group.read','category.read'].includes(wanted.action))return;
   const op=operation(wanted.action,wanted.target,wanted.context);
-  if(!enabled.has(key(op))){if(reading)pending.set(key(op),op);return;}
-  const child=host?.local?.derive(parent,wanted);if(child)requests.set(child,op);return child;
+  if(!authority.enabled(op)){if(reading)pending.set(key(op),op);return;}
+  return authority.derive(parent,wanted);
  };
  async function query(input:SpaceQuery,op:LocalOperation):Promise<QueryResult>{
   permit(op);
@@ -94,7 +80,7 @@ export function createDesktopSpace(options:{rootId:string;confirm:(summary:strin
   if(!resource)return {status:'rejected',reason:'resource_unavailable'};
   let path:string;
   try{const url=new URL(resource.address);if(url.protocol!=='file:')return {status:'rejected',reason:'resource_connector_required'};path=fileURLToPath(url);}catch{return {status:'rejected',reason:'local_file_url_required'};}
-  if(!await options.confirm('本次'+(input.mode==='file'?'读取文件内容':'列出目录（不读取子项内容）')+'：'+resource.name+'\n'+path+'\n仅访问此引用；不复制文件，不授予写入或子项读取权限。'))return {status:'cancelled'};
+  if(!await authority.confirm(options.confirm,'本次'+(input.mode==='file'?'读取文件内容':'列出目录（不读取子项内容）')+'：'+resource.name+'\n'+path+'\n仅访问此引用；不复制文件，不授予写入或子项读取权限。'))return {status:'cancelled'};
   if(closed)return {status:'unavailable',reason:'session_closed'};
   const id=createHash('sha256').update(JSON.stringify([input.contextId,resource.id,resource.revision,input.mode])).digest('hex');
   const target=input.mode==='file'?localFileTarget(id):localDirectoryTarget(id);
@@ -116,7 +102,7 @@ export function createDesktopSpace(options:{rootId:string;confirm:(summary:strin
   return {status:'unavailable',reason:'invalid_resource_observation'};
  }
  async function perform(input:DesktopSpaceInput):Promise<DesktopSpaceReply>{
-  if(!await options.confirm(input.kind==='snapshot'?'读取当前数据根已登记的 Space、Group 和 Context。仅允许本次本地读取，不授予 AI、网络或文件内容访问。':'本次操作：'+titles[input.kind]+('name'in input?' — '+input.name:'')+('id'in input?'；对象 ID：'+input.id:'')+('contextId'in input?'；Context ID：'+input.contextId:'')+('spaceId'in input?'；Space ID：'+input.spaceId:'')+('address'in input?'；地址：'+input.address:'')+('categoryId'in input?'；类别：'+(input.categoryId??'未分类'):'')+('groupId'in input?'；分组：'+(input.groupId??'不分组'):'')+'。仅操作所选对象，不授予 AI 或外部连接权限。'))return {status:'cancelled'};
+  if(!await authority.confirm(options.confirm,input.kind==='snapshot'?'读取当前数据根已登记的 Space、Group 和 Context。仅允许本次本地读取，不授予 AI、网络或文件内容访问。':'本次操作：'+titles[input.kind]+('name'in input?' — '+input.name:'')+('id'in input?'；对象 ID：'+input.id:'')+('contextId'in input?'；Context ID：'+input.contextId:'')+('spaceId'in input?'；Space ID：'+input.spaceId:'')+('address'in input?'；地址：'+input.address:'')+('categoryId'in input?'；类别：'+(input.categoryId??'未分类'):'')+('groupId'in input?'；分组：'+(input.groupId??'不分组'):'')+'。仅操作所选对象，不授予 AI 或外部连接权限。'))return {status:'cancelled'};
   if(closed) return {status:'unavailable',reason:'session_closed'};
   if(input.kind==='resource.read')return readResource(input);
   if(input.kind==='snapshot'){
@@ -163,13 +149,13 @@ export function createDesktopSpace(options:{rootId:string;confirm:(summary:strin
   // Never automatically replay writes, including unknown results.
   return await host!.space!.execute(bind(op)!,command) as DesktopSpaceReply;
  }
- return Object.freeze({policy,derive,attach(value:FoundationHost){if(host)throw Error('already_attached');host=value;},
+ return Object.freeze({policy,derive,attach(value:FoundationHost){if(host)throw Error('already_attached');host=value;authority.attach(value);},
   async request(raw:unknown):Promise<DesktopSpaceReply>{
    const input=capture(raw);if(!input)return {status:'rejected',reason:'invalid_request'};
    if(closed||!host?.space||!host.local)return {status:'unavailable',reason:'space_unavailable'};
    if(busy)return {status:'unavailable',reason:'operation_in_progress'};
-   busy=true;try{return await perform(input);}catch{return {status:'unavailable',reason:'operation_unavailable'};}finally{busy=false;}
+   busy=true;try{return await authority.run(()=>perform(input))??{status:'unavailable',reason:'operation_in_progress'};}catch{return {status:'unavailable',reason:'operation_unavailable'};}finally{busy=false;}
   },
-  close(){closed=true;enabled.clear();host?.local?.close(source);}
+  close(){closed=true;authority.close();}
  });
 }

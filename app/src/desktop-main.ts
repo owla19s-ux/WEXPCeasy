@@ -1,8 +1,9 @@
-import {app} from 'electron';
+import {app,safeStorage} from 'electron';
 import {lstatSync,readFileSync,realpathSync,mkdirSync} from 'node:fs';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {startFoundations} from './foundations.js';
+import {createWindowsCredentialCipher} from './desktop-credentials.js';
 import {runDesktop} from './desktop-runtime.js';
 // Pre-ready cache placement only. startFoundations remains the final root/lock authority.
 function selectedRoot(){
@@ -28,5 +29,5 @@ try{
   start:policy=>startFoundations({dataRoot:root.path,expectedRootId:root.id,
    trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false},
    space:{},api:{},conversations:true,ai:{bindRead:()=>undefined},localFiles:{},localDirectories:{},
-   technicalDiagnostics:{},...policy})}).catch(()=>{console.error('desktop_start_failed');app.exit(1);});
+   technicalDiagnostics:{},credentials:{cipher:createWindowsCredentialCipher(safeStorage)},...policy})}).catch(()=>{console.error('desktop_start_failed');app.exit(1);});
 }catch{console.error('desktop_start_failed: use --data-root with an existing WEX data root');app.exit(1);}
