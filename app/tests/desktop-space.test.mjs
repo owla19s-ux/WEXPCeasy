@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {startFoundations} from '../../dist/app/src/index.js';
 import {createDesktopSpace} from '../../dist/app/src/desktop-space.js';
 // Native confirmation and directory chooser are platform fixtures; all domain services and SQLite are real.
@@ -11,7 +12,7 @@ async function fixture(t){
  for(const [path,id] of [[root,'public-root'],[context,'context-root']]){await mkdir(path);await writeFile(join(path,'.wex-root.json'),JSON.stringify({format:1,id}));}
  let allow=true,confirmations=0;
  const access=createDesktopSpace({rootId:'public-root',confirm:async()=>{confirmations++;return allow;},chooseDirectory:async()=>context});
- const host=await startFoundations({dataRoot:root,...access.policy,space:{deriveRequest:access.derive}});
+ const host=await startFoundations({dataRoot:root,...access.policy,space:{deriveRequest:access.derive},localFiles:{},localDirectories:{}});
  access.attach(host);t.after(async()=>{access.close();await host.stop();await rm(base,{recursive:true,force:true});});
  return {access,host,root,context,setAllow:value=>allow=value,count:()=>confirmations};
 }
@@ -78,4 +79,18 @@ test('desktop address lifecycle keeps remote primary and separate local operatio
  assert.equal((await f.access.request({kind:'address.edit',contextId:created.id,id:local.id,expectedRevision:1,name:'Stale',address:'x'})).status,'rejected');
  assert.equal((await f.access.request({kind:'address.remove',contextId:created.id,id:remote.id,expectedRevision:1})).status,'committed');
  detail=await f.access.request({kind:'context.open',id:created.id});assert.equal(detail.context.primaryAddress,null);assert.equal(detail.resources[0].name,'Artifacts');
+});
+
+test('Context resources read only through Local bindings and never follow injected payload paths',async t=>{
+ const f=await fixture(t),file=join(f.context,'selected.txt');await writeFile(file,'selected content');
+ const context=await f.access.request({kind:'context.create',name:'File preview'});
+ const address=await f.access.request({kind:'address.add',contextId:context.id,name:'Selected file',address:pathToFileURL(file).href,purpose:['reference']});
+ assert.equal(address.status,'committed');
+ const value=await f.access.request({kind:'resource.read',contextId:context.id,id:address.id,mode:'file'});
+ if(process.platform==='linux'){assert.equal(value.status,'ok');assert.equal(value.content,'selected content');assert.match(value.version,/^[a-f0-9]{64}$/);}
+ else assert.ok(['ok','unavailable'].includes(value.status));
+ assert.equal((await f.access.request({kind:'resource.read',contextId:context.id,id:address.id,mode:'file',path:'/private'})).status,'rejected');
+ assert.equal((await f.access.request({kind:'resource.read',contextId:context.id,id:'missing',mode:'file'})).status,'rejected');
+ assert.equal((await f.access.request({kind:'address.remove',contextId:context.id,id:address.id,expectedRevision:1})).status,'committed');
+ assert.equal((await f.access.request({kind:'resource.read',contextId:context.id,id:address.id,mode:'file'})).status,'rejected');
 });
