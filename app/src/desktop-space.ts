@@ -80,8 +80,9 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
   if(!resource)return {status:'rejected',reason:'resource_unavailable'};
   let path:string;
   try{const url=new URL(resource.address);if(url.protocol!=='file:')return {status:'rejected',reason:'resource_connector_required'};path=fileURLToPath(url);}catch{return {status:'rejected',reason:'local_file_url_required'};}
-  if(!await authority.confirm(options.confirm,'本次'+(input.mode==='file'?'读取文件内容':'列出目录（不读取子项内容）')+'：'+resource.name+'\n'+path+'\n仅访问此引用；不复制文件，不授予写入或子项读取权限。'))return {status:'cancelled'};
+  const confirmed=await authority.confirm(options.confirm,'本次'+(input.mode==='file'?'读取文件内容':'列出目录（不读取子项内容）')+'：'+resource.name+'\n'+path+'\n仅访问此引用；不复制文件，不授予写入或子项读取权限。');
   if(closed)return {status:'unavailable',reason:'session_closed'};
+  if(!confirmed)return {status:'cancelled'};
   const id=createHash('sha256').update(JSON.stringify([input.contextId,resource.id,resource.revision,input.mode])).digest('hex');
   const target=input.mode==='file'?localFileTarget(id):localDirectoryTarget(id);
   const op:LocalOperation={resource:'local',action:'read',target,context:input.contextId};
@@ -102,8 +103,9 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
   return {status:'unavailable',reason:'invalid_resource_observation'};
  }
  async function perform(input:DesktopSpaceInput):Promise<DesktopSpaceReply>{
-  if(!await authority.confirm(options.confirm,input.kind==='snapshot'?'读取当前数据根已登记的 Space、Group 和 Context。仅允许本次本地读取，不授予 AI、网络或文件内容访问。':'本次操作：'+titles[input.kind]+('name'in input?' — '+input.name:'')+('id'in input?'；对象 ID：'+input.id:'')+('contextId'in input?'；Context ID：'+input.contextId:'')+('spaceId'in input?'；Space ID：'+input.spaceId:'')+('address'in input?'；地址：'+input.address:'')+('categoryId'in input?'；类别：'+(input.categoryId??'未分类'):'')+('groupId'in input?'；分组：'+(input.groupId??'不分组'):'')+'。仅操作所选对象，不授予 AI 或外部连接权限。'))return {status:'cancelled'};
-  if(closed) return {status:'unavailable',reason:'session_closed'};
+  const confirmed=await authority.confirm(options.confirm,input.kind==='snapshot'?'读取当前数据根已登记的 Space、Group 和 Context。仅允许本次本地读取，不授予 AI、网络或文件内容访问。':'本次操作：'+titles[input.kind]+('name'in input?' — '+input.name:'')+('id'in input?'；对象 ID：'+input.id:'')+('contextId'in input?'；Context ID：'+input.contextId:'')+('spaceId'in input?'；Space ID：'+input.spaceId:'')+('address'in input?'；地址：'+input.address:'')+('categoryId'in input?'；类别：'+(input.categoryId??'未分类'):'')+('groupId'in input?'；分组：'+(input.groupId??'不分组'):'')+'。仅操作所选对象，不授予 AI 或外部连接权限。');
+  if(closed)return {status:'unavailable',reason:'session_closed'};
+  if(!confirmed)return {status:'cancelled'};
   if(input.kind==='resource.read')return readResource(input);
   if(input.kind==='snapshot'){
    const categories=await query({kind:'organization',entity:'category'},operation('organization.list','root:'+options.rootId));
