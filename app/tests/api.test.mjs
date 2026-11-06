@@ -92,3 +92,36 @@ test('conversation recovers a durable API response after restart without dispatc
  assert.equal(client.service.read(read,'chat').conversation.messages[1].segments[0].text,'restored');
  assert.equal(calls,1);
 });
+
+test('unknown logical generation recovers its real durable API receipt after restart without another HTTP request', async t => {
+ let calls = 0;
+ const server = createServer((_req,res)=>{
+  calls++;
+  res.writeHead(200,{'content-type':'application/json'});
+  res.end(JSON.stringify({choices:[{index:0,message:{role:'assistant',content:'restored'},finish_reason:'stop'}]}));
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ t.after(()=>{server.closeAllConnections();server.close();});
+ const h=await fixture(t,{conversations:true});
+ const api=await configure(h,`http://127.0.0.1:${server.address().port}/v1`);
+ const scope=(action,target='conversation:chat')=>h.request(action,target,'conversations');
+ const {service,generation}=h.host.conversations;
+ const change=(intent,expectedRevision,change)=>service.change(scope(change.kind),{
+  conversationId:'chat',intent,expectedRevision,change});
+ assert.equal(change('create',0,{kind:'create'}).status,'committed');
+ assert.equal(change('append',1,{kind:'append',messageId:'input',segments:[{id:'p',text:'hello'}]}).status,'committed');
+ assert.equal(change('begin',2,{kind:'begin',generationId:'gen',inputMessageId:'input'}).status,'committed');
+ assert.equal((await generation.send({conversationId:'chat',generationId:'gen',operationId:'operation',
+  replyId:'reply',intent:'send',expectedRevision:3,preparation:api.input,
+  requests:{read:scope('read'),dispatch:scope('dispatch'),api:api.send,finish:{},fail:{},unknown:{}}})).status,'denied');
+ assert.equal(change('uncertain-finalization',4,{kind:'unknown',generationId:'gen'}).status,'committed');
+ await h.restart();
+ const client=h.host.conversations;
+ const read=h.host.local.bind(h.source,{resource:'conversations',action:'read',target:'conversation:chat',context:null});
+ const finish=scope('finish');
+ assert.equal(client.generation.recover({read,finish,receipt:{}},'chat','gen','recover').status,'unavailable');
+ assert.equal(client.generation.recover({read,finish,receipt:scope('receipt.read','operation:operation')},
+  'chat','gen','recover').status,'committed');
+ assert.equal(client.service.read(read,'chat').conversation.messages[1].segments[0].text,'restored');
+ assert.equal(calls,1);
+});
