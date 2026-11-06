@@ -533,3 +533,20 @@ test('DeepSeek diagnostic accepts verified reasoning without exposing it in the 
  const unverifiedRequest=h.f.request('model.probe',`model:${unverified.id}`);
  assert.equal((await h.transport.probeGeneration(unverifiedRequest,'unverified-reasoning',unverified.id,1,1,1000)).status,'unknown');
 });
+
+test('verified streaming probe preserves existing parameter evidence and records its own provenance',async t=>{
+ const specs={temperature:{type:'number',minimum:0,maximum:2}};
+ const h=await setup(t,(req,res)=>{
+  res.writeHead(200,{'content-type':'text/event-stream'});
+  res.end(body);
+ },{},'supported',undefined,specs);
+ const request=h.f.request('model.probe',`model:${h.m.id}`);
+ assert.equal((await h.transport.probeGeneration(request,'stream-evidence',h.m.id,1,2,1000,undefined,true)).status,'ok');
+ assert.equal(h.f.execute({kind:'model.observe',intent:'adopt-stream-evidence',id:h.m.id,expectedRevision:2,probeOperationId:'stream-evidence'}).status,'committed');
+ h.f.reopen();
+ const {observation}=h.f.query('model',h.m.id).value;
+ assert.deepEqual(observation.parameters,specs);
+ assert.equal(observation.capabilities.tools,'supported');
+ assert.equal(observation.capabilities.stream,'supported');
+ assert.equal(observation.streamProbe.operationId,'stream-evidence');
+});

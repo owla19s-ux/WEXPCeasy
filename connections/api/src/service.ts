@@ -6,7 +6,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import type {Store,Json} from '../../../shared/src/index.js';
 import type {PermissionReader,Decision,Scope} from '../../../permissions/src/index.js';
 import {Failure,fail,text,revision,closed,object,capture,canonical,freeze,parameters,parameterValue,endpoint,observation,decode,command} from './model.js';
-import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,ModelObserver,State,Intent,Preparation,RequestSnapshot,Parameters} from './model.js';
+import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,ModelObservation,ModelObserver,State,Intent,Preparation,RequestSnapshot,Parameters} from './model.js';
 interface Projection {action:string;target:string;context:string|null}
 export interface ApiOptions {readToolRound?:ToolRoundReader;id?:()=>string;observer?:ModelObserver;deriveRequest?:(parent:object,scope:Projection)=>object|undefined;maxSnapshotBytes?:number;readProbeOperation?:(id:string)=>Operation|undefined}
 type Allow=Extract<Decision,{status:'allow'}>;
@@ -62,7 +62,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
    }
    case 'model.create':{find(next.connections,c.connectionId);if(next.models.some(m=>m.connectionId===c.connectionId&&m.modelId===c.modelId))fail('duplicate_model_unsupported');const item:ApiModel={id:id(next),revision:1,connectionId:c.connectionId,name:c.name,modelId:c.modelId,parameters:c.parameters,observation:null};next.models.push(item);result=item;break;}
    case 'model.edit':{const item=find(next.models,c.id);expected(item,c.expectedRevision);if(c.name!==undefined)item.name=c.name;if(c.parameters!==undefined)item.parameters=c.parameters;item.revision++;result=item;break;}
-   case 'model.observe':{const item=find(next.models,c.id);expected(item,c.expectedRevision);const connection=find(next.connections,item.connectionId);let observed,toolProbe=false;
+   case 'model.observe':{const item=find(next.models,c.id);expected(item,c.expectedRevision);const connection=find(next.connections,item.connectionId);let observed:ModelObservation|undefined,toolProbe=false;
     if(c.probeOperationId){
      const probe=derived(request,d,{action:'model.probe',target:`model:${item.id}`,context:null});
      const operation=options.readProbeOperation?.(c.probeOperationId);
@@ -71,7 +71,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
      const scopeHash=createHash('sha256').update(canonical(probe.decision.scope)).digest('hex');
      if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!['openai-chat-probe-1','openai-chat-stream-probe-1','openai-chat-tool-probe-1','openai-chat-stream-tool-probe-1'].includes(binding.adapterVersion)
        ||binding.connectionId!==connection.id||binding.configRevision!==connection.revision||!connection.enabled
-       ||!object(evidence)||evidence.source!=='probe'||evidence.scopeHash!==scopeHash
+       ||!object(evidence)||evidence.source!=='probe'||typeof evidence.observedAt!=='string'||evidence.scopeHash!==scopeHash
        ||evidence.connectionId!==connection.id||evidence.connectionRevision!==connection.revision
        ||(evidence.tools===true)!==(['openai-chat-tool-probe-1','openai-chat-stream-tool-probe-1'].includes(binding.adapterVersion))
        ||(evidence.stream===true)!==(['openai-chat-stream-probe-1','openai-chat-stream-tool-probe-1'].includes(binding.adapterVersion))
@@ -98,11 +98,20 @@ export function createApiService(store:Store,permission:PermissionReader,options
     if(!observation(observed)||observed.connectionId!==connection.id||observed.connectionRevision!==connection.revision||observed.modelId!==item.modelId)fail('observation_identity_mismatch','unavailable');
     const priorEvidence=item.observation;
     if(c.probeOperationId&&!toolProbe&&priorEvidence?.connectionRevision===connection.revision){
+     const probeCapabilities=observed.capabilities;
      const losesCapability=(Object.keys(priorEvidence.capabilities) as Array<keyof typeof priorEvidence.capabilities>).some(key=>{
       const prior=priorEvidence.capabilities[key];
-      return (prior==='supported'||prior==='unsupported')&&observed.capabilities[key]!==prior;
+      return (prior==='supported'||prior==='unsupported')&&probeCapabilities[key]!==prior;
      });
-     if(losesCapability||Object.keys(priorEvidence.parameters).length||Object.keys(priorEvidence.limits??{}).length)fail('probe_would_replace_verified_evidence');
+     const confirmsStream=observed.capabilities.stream==='supported'
+      &&priorEvidence.capabilities.stream!=='unsupported'
+      &&priorEvidence.capabilities.text!=='unsupported';
+     if(confirmsStream){
+      observed={...priorEvidence,capabilities:{...priorEvidence.capabilities,text:'supported',stream:'supported'},
+       streamProbe:{operationId:c.probeOperationId,observedAt:observed.observedAt}};
+     }else if(losesCapability||Object.keys(priorEvidence.parameters).length||Object.keys(priorEvidence.limits??{}).length){
+      fail('probe_would_replace_verified_evidence');
+     }
     }
     item.observation=observed;item.revision++;result=item;break;}
   }
