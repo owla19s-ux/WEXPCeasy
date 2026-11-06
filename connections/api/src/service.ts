@@ -32,7 +32,12 @@ function find<T extends {id:string}>(items:T[],id:string):T{return items.find(x=
 function target(c:ApiCommand):string{return c.kind==='connection.create'?'api:connections':c.kind==='model.create'?`connection:${c.connectionId}`:c.kind.startsWith('connection.')?`connection:${c.id}`:`model:${c.id}`;}
 /** Domain-owned API configuration aggregate. Store/lock lifetime belongs to the trusted host. No network or credential resolution. */
 export function createApiService(store:Store,permission:PermissionReader,options:ApiOptions={}):ApiService {
- decode(store.read().value);const allocate=options.id??randomUUID,maxBytes=options.maxSnapshotBytes??1024*1024;
+ function readState(){
+  const snap=store.read();
+  if(snap.value===null&&snap.revision!==0)fail('incompatible_or_corrupt','unavailable');
+  return {snap,state:decode(snap.value)};
+ }
+ readState();const allocate=options.id??randomUUID,maxBytes=options.maxSnapshotBytes??1024*1024;
  if(!Number.isSafeInteger(maxBytes)||maxBytes<=0)throw Error('invalid_snapshot_limit');let stopped=false;
  function live(){if(stopped)fail('api_stopping','unavailable');}
  function authorize(request:object,wanted:Projection):Allow {
@@ -41,7 +46,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
   if(d.scope.resource!=='connections/api'||d.scope.action!==wanted.action||d.scope.target!==wanted.target||d.scope.context!==wanted.context)return fail('scope_mismatch');return d;
  }
  function recheck(request:object,d:Allow){live();let now:Decision;try{now=permission.recheck(request,d);}catch{return fail('permission_unavailable','unavailable');}live();if(now.status!=='allow'||canonical(now)!==canonical(d))fail(now.status==='allow'?'stale_authorization':now.reason);}
- function snapshot(){live();const snap=store.read();return {snap,state:decode(snap.value)};}
+ function snapshot(){live();return readState();}
  function id(s:State){const value=allocate();if(!text(value)||[...s.connections,...s.models,...s.intents].some(x=>x.id===value))fail('id_collision');return value;}
  function derived(parent:object,d:Allow,wanted:Projection){const request=options.deriveRequest?.(parent,wanted);if(!request)fail('reference_unavailable');try{const decision=authorize(request,wanted);if(!sameActor(d.scope,decision.scope))fail('reference_unavailable');recheck(request,decision);return {request,decision};}catch{return fail('reference_unavailable');}}
  function mutate(request:object,c:ApiCommand,d:Allow,signal?:AbortSignal):ApiMutation {
