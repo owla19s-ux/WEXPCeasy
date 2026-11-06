@@ -16,3 +16,30 @@ test('generic connectors and API share operation ID reservations without duplica
 test('failed API initialization retains unclosed partial store for shutdown retry',async t=>{let attempts=0;const h=await fixture(t,{api:{maxSnapshotBytes:0},openStore(path,ns){const db=openSqliteStore(path,ns);return ns!=='api-configurations'?db:{...db,close(){if(++attempts<=2)throw Error('partial-close');db.close();}};}});assert.equal(h.host.status,'degraded');assert.equal(h.host.api,undefined);assert.equal((await h.host.stop()).status,'incomplete');const busy=await startFoundations({dataRoot:h.root,trust:h.options.trust});h.hosts.push(busy);assert.equal(busy.status,'failed');assert.equal((await h.host.stop()).status,'stopped');assert.equal(attempts,3);});
 test('unavailable Connections storage blocks API assembly without damaging permissions',async t=>{const h=await fixture(t,{openStore(path,ns){if(ns==='connection-operations')throw Error('offline');return openSqliteStore(path,ns);}});assert.equal(h.host.status,'degraded');assert.equal(h.host.api,undefined);assert.equal(h.host.connections,undefined);assert.ok(h.host.permissions);assert.ok(h.host.diagnostics.some(x=>x.module==='api'&&x.reason==='dependency_unavailable'));assert.equal((await h.host.stop()).status,'stopped');});
 test('saved API client cannot mutate configurations after host shutdown',async t=>{const h=await fixture(t),f=await configure(h,'http://127.0.0.1:1'),client=h.host.api;const read=h.request('model.read',`model:${f.m.id}`);assert.equal(client.query(read,{kind:'model',id:f.m.id}).status,'ok');await h.host.stop();assert.equal(client.query(read,{kind:'model',id:f.m.id}).status,'unavailable');assert.equal(client.execute(f.send,{kind:'connection.edit',intent:'late',id:f.c.id,expectedRevision:1,enabled:false}).status,'unavailable');});
+
+test('AI host binds model and configuration reads to independently granted scopes', async t => {
+ let h;
+ h = await fixture(t, {ai: {bindRead(_parent, scope) {
+  return h.host.local.bind(h.source, scope);
+ }}});
+ const {c, m} = await configure(h, 'http://127.0.0.1:1');
+ const ai = h.host.ai;
+ function save(id, value, request = h.request(value.kind+'.write', value.kind+':'+id, 'AI')) {
+  return ai.save(request, {id, value, intent:id, expectedRevision:0});
+ }
+ assert.equal(save('role', {kind:'role',name:'Reviewer',prompt:'Review'}).status,'committed');
+ assert.equal(save('position', {kind:'position',name:'Review',responsibility:'Check'}).status,'committed');
+ const agent = {kind:'agent',name:'Worker',roleId:'role',positionId:'position',
+  model:{connectionId:c.id,modelId:m.id}};
+ const write = h.request('agent.write','agent:agent','AI');
+ assert.equal(save('agent',agent,write).status,'reference_unavailable');
+ h.request('role.read','role:role','AI');
+ h.request('position.read','position:position','AI');
+ assert.equal(save('agent',agent,write).status,'committed');
+ const read = h.request('agent.read','agent:agent','AI');
+ assert.equal(ai.read(read,'agent','agent').status,'ok');
+ await h.restart();
+ assert.equal(ai.read(read,'agent','agent').status,'denied');
+ const fresh = h.host.local.bind(h.source,{resource:'AI',action:'agent.read',target:'agent:agent',context:null});
+ assert.deepEqual(h.host.ai.read(fresh,'agent','agent').entry.model,agent.model);
+});

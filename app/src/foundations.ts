@@ -13,11 +13,12 @@ import {openSpaceService} from '../../space/src/index.js';
 import type {SpaceService,SpaceOptions} from '../../space/src/index.js';
 import {createLocalEntries} from './local-entries.js';
 import type {LocalEntryOptions,LocalEntryClient} from './local-entries.js';
+import {createAiConfigurations,verifyModelWithApi} from '../../AI/src/index.js';
 import {assemble} from './assembly.js';
 import type {Host} from './assembly.js';
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
-export interface FoundationOptions {api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
-export interface FoundationHost extends Host {readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
+export interface FoundationOptions {ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationHost extends Host {readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
  for(const suffix of ['', '-journal','-wal','-shm']){
   try{const info=await lstat(join(root.path,name+suffix));if(info.isSymbolicLink()||!info.isFile())throw Error('unsafe store path');}
@@ -38,9 +39,10 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  let lease:LockResult;
  try{lease=await (options.lock??directoryLock).acquire(probe.root);}catch{lease={status:'unavailable'};}
  if(lease.status!=='acquired')return Object.freeze({status:'failed',diagnostics:[{module:'shared',reason:'initialization_failed' as const}],stop:async()=>({status:'stopped' as const,failed:[]})});
+ let ai:FoundationHost['ai'];
  let api:FoundationApiClient|undefined,apiService:ApiService|undefined,apiTransport:ReturnType<typeof createApiTransport>|undefined,apiLedger:ReturnType<typeof createOperationLedger>|undefined;
  let permissions:Permissions|undefined,connections:ConnectionClient|undefined,space:SpaceService|undefined;const release=lease.release;
- const open=options.openStore??openSqliteStore,orphans=new Set<ManagedStore>(),spaceOrphans=new Set<ManagedStore>(),apiOrphans=new Set<ManagedStore>();
+ const open=options.openStore??openSqliteStore,orphans=new Set<ManagedStore>(),spaceOrphans=new Set<ManagedStore>(),apiOrphans=new Set<ManagedStore>(),aiOrphans=new Set<ManagedStore>();
  const local=options.local?createLocalEntries(options.local):undefined;let stopping=false,rootActive=true;
  const trust:TrustPort={
   current(request){if(stopping)return;if(local?.owns(request))return local.current(request);const facts=options.trust.current(request);return local&&facts?.kind==='local'?undefined:facts;},
@@ -106,6 +108,40 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    api=Object.freeze({execute:service.execute,query:service.query,prepare:service.prepare,resolve:service.resolve,send:transport.send,refreshDirectory:transport.refreshDirectory,probeGeneration:transport.probeGeneration});
    return {value:api,stop:async()=>{service.stop();await transport.stop();await closeStores(stores);api=undefined;}};
   }catch(error){try{await closeStores(stores);}catch{for(const db of stores)apiOrphans.add(db);}throw error;}
+ }}]:[]),
+ ...(options.ai?[{id:'ai',requires:options.api?['permissions','api']:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
+  const permission=deps['permissions'] as Permissions;
+  const bindRead=options.ai!.bindRead;
+  const scopedRead=(parent:object,scope:{resource:string;action:string;target:string;context:string|null})=>{
+   const before=permission.evaluate(parent);
+   if(before.status!=='allow'||before.scope.resource!=='AI')return;
+   const request=bindRead(parent,scope);
+   if(!request)return;
+   const read=permission.evaluate(request);
+   if(read.status!=='allow'||read.scope.resource!==scope.resource||read.scope.action!==scope.action||
+      read.scope.target!==scope.target||read.scope.context!==scope.context)return;
+   const identity=['subject','entry','conversation','relationship','relationshipGeneration'] as const;
+   if(identity.some(key=>read.scope[key]!==before.scope[key]))return;
+   if(permission.recheck(parent,before).status==='allow')return request;
+  };
+  const store=await openDomainStore(probe.root,'ai-configurations.sqlite','ai-configurations',open);
+  const stores=new Set([store]);aiOrphans.add(store);
+  const apiClient=deps['api'] as FoundationApiClient|undefined;
+  const client=createAiConfigurations(store,(request,access)=>{
+   const decision=permission.evaluate(request);
+   if(decision.status!=='allow'||decision.scope.resource!=='AI')return false;
+   const target=access.kind+':'+access.id;
+   const action=access.kind+'.'+access.action;
+   if(decision.scope.action===action&&decision.scope.target===target)return true;
+   if(access.action==='read'&&decision.scope.action==='agent.write'&&access.kind!=='agent'){
+    return scopedRead(request,{resource:'AI',action,target,context:decision.scope.context})!==undefined;
+   }
+   return false;
+  },apiClient?verifyModelWithApi(apiClient,(parent,id)=>scopedRead(parent,{
+   resource:'connections/api',action:'model.read',target:'model:'+id,context:null
+  })):undefined);
+  ai=client;aiOrphans.delete(store);
+  return {value:client,stop:async()=>{await closeStores(stores);ai=undefined;}};
  }}]:[])
  ],{required:['shared','permissions'],timeoutMs:1000});
  let stopPromise:ReturnType<Host['stop']>|undefined;
@@ -118,6 +154,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  if(result.status==='incomplete')return result;
  try{await closeStores(orphans);}catch{return {status:'incomplete' as const,failed:['connections-storage']};}
  try{await closeStores(apiOrphans);}catch{return {status:'incomplete' as const,failed:['api-storage']};}
+ try{await closeStores(aiOrphans);}catch{return {status:'incomplete' as const,failed:['ai-storage']};}
  try{await closeStores(spaceOrphans);}catch{return {status:'incomplete' as const,failed:['space-storage']};}
  try{await release();rootActive=false;return result;}catch{return {status:'incomplete' as const,failed:['root-lock']};}
  })();
@@ -125,5 +162,5 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  };
  if(host.status==='failed')await stop();
  const current=permissions,currentConnections=connections,currentSpace=space,currentApi=api;
- return Object.freeze({...host,...(currentApi?{api:currentApi}:{}),...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),...(currentSpace?{space:currentSpace}:{}),...(local&&host.status!=='failed'?{local:local.client}:{}),stop});
+ return Object.freeze({...host,...(ai?{ai}:{}),...(currentApi?{api:currentApi}:{}),...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),...(currentSpace?{space:currentSpace}:{}),...(local&&host.status!=='failed'?{local:local.client}:{}),stop});
 }
