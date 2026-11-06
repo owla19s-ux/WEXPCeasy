@@ -1,6 +1,6 @@
 import {app} from 'electron';
 import assert from 'node:assert/strict';
-import {mkdtemp,writeFile,readFile,lstat,rm} from 'node:fs/promises';
+import {mkdtemp,writeFile,lstat,rm,mkdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -8,18 +8,23 @@ import {randomUUID} from 'node:crypto';
 import {runDesktop} from '../../../dist/app/src/desktop-runtime.js';
 import {startFoundations} from '../../../dist/app/src/index.js';
 import {openSqliteStore} from '../../../dist/shared/src/index.js';
+async function verify(){
 app.enableSandbox();
 const root=await mkdtemp(join(tmpdir(),'wex-desktop-'));
 const id=randomUUID();await writeFile(join(root,'.wex-root.json'),JSON.stringify({format:1,id}));
+await mkdir(join(root,'electron-user'));await mkdir(join(root,'electron-session'));
 app.setPath('userData',join(root,'electron-user'));
 app.setPath('sessionData',join(root,'electron-session'));
 let failClose=true;
 const startup=()=>startFoundations({dataRoot:root,expectedRootId:id,trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false},
+ space:{},api:{},conversations:true,ai:{bindRead:()=>undefined},localFiles:{},localDirectories:{},technicalDiagnostics:{},
  openStore(path,namespace){const db=openSqliteStore(path,namespace);return {...db,close(){if(failClose){failClose=false;throw Error('injected-close');}db.close();}};}});
 const timer=setTimeout(()=>{console.error('desktop_runtime_timeout');app.exit(1);},45000);
 try{
  const runtime=await runDesktop({url:pathToFileURL(resolve('desktop-dist/index.html')).href,preload:resolve('desktop-dist/preload.cjs'),start:startup,show:false});
- await runtime.lifecycle.start();
+ const host=await runtime.lifecycle.start();
+ assert.equal(host.status,'ready');for(const name of ['space','api','ai','conversations','connections','localFiles','localDirectories','permissions'])assert.ok(host[name],name);
+ assert.equal(host.permissions.evaluate({}).status,'deny');
  const wc=runtime.window.webContents;
  const facts=await wc.executeJavaScript(`(async()=>({node:typeof require,process:typeof process,bridge:Object.keys(window.wexHost).sort(),reply:await window.wexHost.readStatus(),title:document.title,text:document.body.innerText}))()`);
  assert.equal(facts.node,'undefined');assert.equal(facts.process,'undefined');
@@ -40,3 +45,6 @@ try{
  await writeFile(resolve('desktop-acceptance',process.platform+'.json'),JSON.stringify(report,null,2));
  console.log('DESKTOP_ACCEPTANCE '+JSON.stringify(report));clearTimeout(timer);await rm(root,{recursive:true,force:true});app.quit();
 }catch(error){console.error(error);clearTimeout(timer);app.exit(1);}
+
+}
+void verify().catch(error=>{console.error(error);app.exit(1);});

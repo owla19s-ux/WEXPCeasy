@@ -24,9 +24,9 @@ try{
  app.enableSandbox();
  const root=selectedRoot();
  const assets=new URL('../../../desktop-dist/',import.meta.url);
- await runDesktop({url:new URL('index.html',assets).href,preload:fileURLToPath(new URL('preload.cjs',assets)),
+ void runDesktop({url:new URL('index.html',assets).href,preload:fileURLToPath(new URL('preload.cjs',assets)),
   start:()=>startFoundations({dataRoot:root.path,expectedRootId:root.id,
    trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false},
    space:{},api:{},conversations:true,ai:{bindRead:()=>undefined},localFiles:{},localDirectories:{},
-   technicalDiagnostics:{}})});
+   technicalDiagnostics:{}})}).catch(()=>{console.error('desktop_start_failed');app.exit(1);});
 }catch{console.error('desktop_start_failed: use --data-root with an existing WEX data root');app.exit(1);}
