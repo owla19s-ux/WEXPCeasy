@@ -143,6 +143,7 @@ export function createAiConfigurations(
             return { status: 'reference_unavailable' } as const;
           }
         }
+        if (!allowed(request, { action: 'write', kind: value.kind, id })) return { status: 'denied' } as const;
         const command = JSON.stringify({ id, expectedRevision, value });
         const receipt = state.receipts.find(item => item.intent === intent);
         if (receipt) return receipt.command === command
