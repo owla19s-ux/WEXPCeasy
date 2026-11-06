@@ -24,8 +24,17 @@ export function createSqliteStore(db:SqlitePort,namespace:string):ManagedStore {
  const row=db.prepare('SELECT revision FROM intents WHERE ns=? AND id=?').get(namespace,intent) as {revision:number}|undefined;
  return row?{status:'committed' as const,intent,revision:row.revision}:undefined;
  };
+ const read=():Snapshot=>{
+ const row=db.prepare('SELECT revision,body FROM snapshots WHERE ns=?').get(namespace) as {revision:number;body:string}|undefined;
+ if(!row){
+  if(db.prepare('SELECT revision FROM intents WHERE ns=? LIMIT 1').get(namespace))throw Error('snapshot_missing_with_intents');
+  return {revision:0,value:null};
+ }
+ if(!Number.isSafeInteger(row.revision)||row.revision<1)throw Error('corrupt_snapshot_revision');
+ return {revision:row.revision,value:JSON.parse(row.body) as Json};
+ };
  return Object.freeze({
- read():Snapshot {const row=db.prepare('SELECT revision,body FROM snapshots WHERE ns=?').get(namespace) as {revision:number;body:string}|undefined;return row?{revision:row.revision,value:JSON.parse(row.body) as Json}:{revision:0,value:null};},
+ read,
  query,
  commit(input:Commit):CommitResult {
  let request:string;
@@ -35,8 +44,8 @@ export function createSqliteStore(db:SqlitePort,namespace:string):ManagedStore {
  db.exec('BEGIN IMMEDIATE');begun=true;
  const old=db.prepare('SELECT request,revision FROM intents WHERE ns=? AND id=?').get(namespace,input.intent) as {request:string;revision:number}|undefined;
  if(old){db.exec('ROLLBACK');begun=false;return old.request===request?{status:'committed',intent:input.intent,revision:old.revision}:{status:'not_committed',reason:'intent_conflict'};}
- const row=db.prepare('SELECT revision FROM snapshots WHERE ns=?').get(namespace) as {revision:number}|undefined;
- if((row?.revision??0)!==input.expectedRevision){db.exec('ROLLBACK');begun=false;return {status:'not_committed',reason:'revision_conflict'};}
+ const snapshot=read();
+ if(snapshot.revision!==input.expectedRevision){db.exec('ROLLBACK');begun=false;return {status:'not_committed',reason:'revision_conflict'};}
  const revision=input.expectedRevision+1;
  db.prepare('INSERT INTO snapshots(ns,revision,body) VALUES(?,?,?) ON CONFLICT(ns) DO UPDATE SET revision=excluded.revision,body=excluded.body').run(namespace,revision,canonical(input.value));
  db.prepare('INSERT INTO intents(ns,id,request,revision) VALUES(?,?,?,?)').run(namespace,input.intent,request,revision);
