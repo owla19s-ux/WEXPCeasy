@@ -1,0 +1,37 @@
+name: GitHub official SDK read acceptance
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  github-read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Exercise product adapter with real official Octokit
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const {pathToFileURL}=require('node:url');
+            const {writeFile}=require('node:fs/promises');
+            const {verifyGitHubRead}=await import(pathToFileURL(process.cwd()+'/connections/github/acceptance/live-read.mjs').href);
+            const report=await verifyGitHubRead({github,...context.repo,ref:context.sha,workspacePath:process.cwd()});
+            await writeFile('github-read-evidence.json',JSON.stringify(report,null,2));
+            core.info('Official SDK read, pinned blob identity, default denial and revocation verified.');
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: github-read-${{ github.sha }}
+          path: github-read-evidence.json
+          if-no-files-found: error
