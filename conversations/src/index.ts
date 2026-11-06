@@ -100,7 +100,9 @@ function apply(conversation: Conversation, change: Exclude<ConversationChange, {
     return true;
   }
   const generation = conversation.generations.find(item => item.id === change.generationId);
-  if (!generation || (generation.status !== 'pending' && generation.status !== 'running')) return false;
+  const recoveredUnknown=change.kind==='finish'&&generation?.status==='unknown'&&
+    generation.operationId!==undefined&&generation.requestId!==undefined&&generation.replyId===change.messageId;
+  if (!generation || (generation.status !== 'pending' && generation.status !== 'running'&&!recoveredUnknown)) return false;
   if (change.kind === 'dispatch') {
     if (generation.status !== 'pending' || conversation.generations.some(item => item.operationId === change.operationId)) return false;
     generation.status = 'running';
@@ -331,7 +333,7 @@ export function createConversationGeneration(
       const observed = service.read(requests.read, conversationId);
       if (observed.status !== 'ok') return observed;
       const generation = observed.conversation.generations.find(item => item.id === generationId);
-      if (generation?.status !== 'running' || active.has(conversationId + ':' + generationId) ||
+      if (!generation || !['running','unknown'].includes(generation.status) || active.has(conversationId + ':' + generationId) ||
           !generation.operationId || !generation.requestId || !generation.replyId) {
         return { status: 'invalid_transition' } as const;
       }
