@@ -16,11 +16,29 @@ const fields=['subject','entry','conversation','context','resource','action','ta
 function scopeOf(input:Scope):Scope {return Object.fromEntries(fields.map(k=>[k,input[k]])) as unknown as Scope;}
 function valid(s:Scope):boolean{return fields.every(k=>k==='context'||k==='conversation'?s[k]===null||typeof s[k]==='string'&&(k==='context'||s[k]!.length>0):k==='relationshipGeneration'?Number.isSafeInteger(s[k])&&s[k]>0:typeof s[k]==='string'&&s[k].length>0);}
 function same(a:Scope,b:Scope):boolean{return fields.every(k=>a[k]===b[k]);}
+function exact(value:unknown,keys:readonly string[]):boolean{
+ if(!value||typeof value!=='object'||Array.isArray(value)||Object.getPrototypeOf(value)!==Object.prototype)return false;
+ const actual=Object.keys(value);return actual.length===keys.length&&keys.every(key=>Object.hasOwn(value,key));
+}
 function decode(value:Json,revision:number):State{
+ if(!Number.isSafeInteger(revision)||revision<0)throw Error('incompatible permission revision');
  if(value===null){if(revision!==0)throw Error('incompatible permission state');return {format:1,generation:0,events:[]};}
  const s=value as unknown as State;
- if(s.format!==1||!Number.isSafeInteger(s.generation)||s.generation<0||!Array.isArray(s.events)||s.events.some(e=>!valid(e.scope)||!['grant','revoke'].includes(e.kind)||typeof e.intent!=='string'||typeof e.command!=='string'||!Number.isSafeInteger(e.generation)))throw Error('incompatible permission state');
+ if(!exact(s,['format','generation','events'])||s.format!==1||!Array.isArray(s.events)||
+  s.generation!==revision||s.events.length!==revision)throw Error('incompatible permission state');
+ const intents=new Set<string>();
+ for(const [index,event] of s.events.entries()){
+  if(!exact(event,['intent','kind','scope','generation','command'])||!exact(event.scope,fields)||!valid(event.scope)||
+   !['grant','revoke'].includes(event.kind)||typeof event.intent!=='string'||!event.intent||event.intent.length>256||
+   intents.has(event.intent)||event.generation!==index+1||
+   event.command!==JSON.stringify({kind:event.kind,expectedRevision:index,scope:scopeOf(event.scope)}))throw Error('incompatible permission event');
+  intents.add(event.intent);
+ }
  return s;
+}
+/** Readiness only; no permission facts are projected and no state is repaired. */
+export function inspectPermissionStore(store:Store):{status:'ready'|'unavailable'}{
+ try{const snap=store.read();decode(snap.value,snap.revision);return {status:'ready'};}catch{return {status:'unavailable'};}
 }
 export function createPermissions(store:Store,trust:TrustPort):Permissions{
  const evaluate=(request:object):Decision=>{
