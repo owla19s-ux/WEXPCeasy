@@ -1,10 +1,10 @@
 # connections/github
 
-> **代码事实核对（2026-11-04，基线 `1048b6a`）**：未发现本域产品 src/、tests/ 或公开 index.ts；现有说明是设计/施工目标，不能表述为已实现。 开工须重新核对最新 main。
+> **当前代码事实（2026-11-07，`main bd72dfea`）**：`connections/github/src/index.ts` 已存在，`tests/` 下有文件、客户端访问及真实读写测试入口；最新 SHA 的 **GitHub official SDK read acceptance** 工作流成功。仅说明对应读取验收成功，不等于已验收真实写入、官方 MCP Server 完整工具集或 GH-01～GH-12 全覆盖。
 
 GitHub 操作与连接配置。权限使用共用机制；专属面板留在本模块。
 
-状态：2026-10-30 按用户确认建立的源码维护目录，当前只有职责说明，尚无产品实现。目录不是运行时数据路径，也不代表独立插件、进程或编译包。
+状态：已有基础 GitHub 适配代码与测试，官方 GitHub MCP/Octokit 的完整能力、源码归位/版本与分发方式须依 B3 D-06 逐项核验。0.1.1 必需的基础读写与长期广泛 API 覆盖分别判断；GitHub 专项不阻塞无关 UI。
 
 [源码目录与 Windows 数据要求](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
 
