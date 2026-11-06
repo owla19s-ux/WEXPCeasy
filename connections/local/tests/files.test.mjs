@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {mkdtemp,open,readFile,writeFile,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
-import {openSqliteStore} from '../../dist/shared/src/index.js';
-import {createConnectionService,createReadBoundary} from '../../dist/connections/src/index.js';
-const local=await import('../../dist/connections/local/src/index.js').catch(()=>({}));
+import {openSqliteStore} from '../../../dist/shared/src/index.js';
+import {createConnectionService,createReadBoundary} from '../../../dist/connections/src/index.js';
+const local=await import('../../../dist/connections/local/src/index.js').catch(()=>({}));
 const config={id:'files',adapter:'local',endpoint:'local:files',credentialRef:null,enabled:true};
 async function fixture(t){
  assert.equal(typeof local.createLocalFileAdapter,'function');

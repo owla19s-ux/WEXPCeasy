@@ -17,3 +17,16 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: node --test connections/tests/*.test.mjs
+      - name: Independent B1 module verification
+        run: |
+          npm run test:shared
+          npm run test:permissions
+          npm run test:app
+          npm run test:space
+          npm run test:api
+          npm run test:ai
+          npm run test:conversations
+          npm run test:connections
+          npm run test:github
+          npm run test:local
+          npm run check:boundaries

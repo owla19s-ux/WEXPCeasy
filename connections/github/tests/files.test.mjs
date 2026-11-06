@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {openSqliteStore} from '../../dist/shared/src/index.js';
-import {createConnectionService,createReadBoundary} from '../../dist/connections/src/index.js';
-const github=await import('../../dist/connections/github/src/index.js').catch(()=>({}));
+import {openSqliteStore} from '../../../dist/shared/src/index.js';
+import {createConnectionService,createReadBoundary} from '../../../dist/connections/src/index.js';
+const github=await import('../../../dist/connections/github/src/index.js').catch(()=>({}));
 const config={id:'gh',adapter:'github',endpoint:'https://api.github.com',credentialRef:'secret-ref',enabled:true};
 const spec={owner:'owner',repo:'repo',ref:'main',path:'src/a.txt'};
 const sha='a'.repeat(40),newSha='b'.repeat(40),commitSha='c'.repeat(40);
