@@ -107,6 +107,38 @@ function apply(conversation: Conversation, change: Exclude<ConversationChange, {
   return true;
 }
 
+function validateConversation(conversation: Conversation): void {
+  if (!id(conversation.id) || !Number.isSafeInteger(conversation.revision) || conversation.revision < 1 ||
+      !Array.isArray(conversation.messages) || !Array.isArray(conversation.generations)) throw Error('invalid_conversation');
+  const messages = new Map<string, Message>();
+  for (const message of conversation.messages) {
+    if (!id(message.id) || messages.has(message.id) || !['user', 'assistant'].includes(message.role)) throw Error('invalid_message');
+    segments(message.segments);
+    if (message.replaces && (message.role !== 'user' || messages.get(message.replaces)?.role !== 'user')) throw Error('invalid_replacement');
+    messages.set(message.id, message);
+  }
+  const generations = new Set<string>();
+  const operations = new Set<string>();
+  for (const generation of conversation.generations) {
+    if (!id(generation.id) || generations.has(generation.id) ||
+        messages.get(generation.inputMessageId)?.role !== 'user' ||
+        !['pending', 'running', 'completed', 'cancelled', 'failed', 'unknown'].includes(generation.status)) throw Error('invalid_generation');
+    generations.add(generation.id);
+    if (generation.operationId !== undefined) {
+      if (!id(generation.operationId) || operations.has(generation.operationId)) throw Error('invalid_operation');
+      operations.add(generation.operationId);
+    }
+    if (generation.status === 'running' && !generation.operationId) throw Error('missing_operation');
+    if (generation.outputMessageId !== undefined && messages.get(generation.outputMessageId)?.role !== 'assistant') throw Error('invalid_output');
+  }
+  for (const selection of conversation.selections ?? []) {
+    const message = messages.get(selection.messageId);
+    if (!message || !Array.isArray(selection.segmentIds) ||
+        new Set(selection.segmentIds).size !== selection.segmentIds.length ||
+        !selection.segmentIds.every(id => message.segments.some(segment => segment.id === id))) throw Error('invalid_selection');
+  }
+}
+
 export function createConversations(store: Store, authorize: (
   request: object, action: 'read' | ConversationChange['kind'], conversationId: string,
 ) => boolean) {
@@ -122,6 +154,16 @@ export function createConversations(store: Store, authorize: (
       : snapshot.value as unknown as State;
     if (state?.format !== 1 || !Array.isArray(state.conversations) ||
         !state.receipts || Object.getPrototypeOf(state.receipts) !== Object.prototype) throw Error('invalid_store');
+    const identities = new Set<string>();
+    for (const conversation of state.conversations) {
+      validateConversation(conversation);
+      if (identities.has(conversation.id)) throw Error('duplicate_conversation');
+      identities.add(conversation.id);
+    }
+    for (const receipt of Object.values(state.receipts)) {
+      if (!receipt || typeof receipt.fingerprint !== 'string' ||
+          !Number.isSafeInteger(receipt.revision) || receipt.revision < 1) throw Error('invalid_receipt');
+    }
     return { state, revision: snapshot.revision };
   }
 

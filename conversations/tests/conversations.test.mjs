@@ -84,3 +84,18 @@ test('dispatch claims once and forwards cancellation without saving a late reply
     assert.equal(conversation.generations[0].operationId, 'op');
   } finally { store.close(); }
 });
+
+test('corrupt persisted message identity is rejected without overwriting the store', () => {
+  const store = openSqliteStore(':memory:', 'conversations');
+  try {
+    const value = {format:1,receipts:{},conversations:[{id:'chat',revision:1,
+      messages:[{id:'same',role:'user',segments:[{id:'p',text:'one'}]},
+        {id:'same',role:'user',segments:[{id:'p',text:'two'}]}],generations:[]}]};
+    store.commit({intent:'seed',expectedRevision:0,value});
+    const service = createConversations(store, () => true);
+    assert.equal(service.read({}, 'chat').status, 'unavailable');
+    assert.equal(service.change({}, {conversationId:'chat',intent:'append',expectedRevision:1,
+      change:{kind:'append',messageId:'new',segments:[{id:'p',text:'three'}]}}).status,'unavailable');
+    assert.deepEqual(store.read().value,value);
+  } finally { store.close(); }
+});
