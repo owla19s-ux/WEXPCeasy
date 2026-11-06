@@ -66,9 +66,15 @@ export function createPermissions(store:Store,trust:TrustPort):Permissions{
  if(!trust.canManage(change))return {status:'denied',reason:'management_not_authorized'};
  if(!valid(change.scope)||!change.intent||!Number.isSafeInteger(change.expectedRevision)||change.expectedRevision<0)return {status:'denied',reason:'invalid_scope'};
  const snap=store.read(),state=decode(snap.value,snap.revision);
+ if(!trust.canManage(change))return {status:'denied',reason:'management_not_authorized'};
  const scope=scopeOf(change.scope);const command=JSON.stringify({kind,expectedRevision:change.expectedRevision,scope});
  const prior=state.events.find(e=>e.intent===change.intent);
- if(prior){if(prior.command!==command)return {status:'not_committed',reason:'intent_conflict'};return store.query(change.intent)??{status:'unknown',intent:change.intent};}
+ if(prior){
+ if(prior.command!==command)return {status:'not_committed',reason:'intent_conflict'};
+ const result=store.query(change.intent)??{status:'unknown' as const,intent:change.intent};
+ if(!trust.canManage(change))return {status:'denied',reason:'management_not_authorized'};
+ return result;
+ }
  if(snap.revision!==change.expectedRevision)return {status:'not_committed',reason:'revision_conflict'};
  const event:Event={intent:change.intent,kind,scope,generation:state.generation+1,command};
  const next:State={format:1,generation:event.generation,events:[...state.events,event]};
@@ -82,6 +88,11 @@ export function createPermissions(store:Store,trust:TrustPort):Permissions{
  return now;
  },
  grant:(c:Change)=>mutate('grant',c),revoke:(c:Change)=>mutate('revoke',c),
- history(request:object){try{if(!trust.canReadHistory(request))return {status:'denied' as const};const snap=store.read();return {status:'ok' as const,revision:snap.revision,records:structuredClone(decode(snap.value,snap.revision).events)};}catch{return {status:'unavailable' as const};}}
+ history(request:object){try{
+ if(!trust.canReadHistory(request))return {status:'denied' as const};
+ const snap=store.read(),events=decode(snap.value,snap.revision).events;
+ if(!trust.canReadHistory(request))return {status:'denied' as const};
+ return {status:'ok' as const,revision:snap.revision,records:structuredClone(events)};
+ }catch{return {status:'unavailable' as const};}}
  });
 }
