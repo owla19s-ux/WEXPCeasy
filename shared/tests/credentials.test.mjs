@@ -67,3 +67,24 @@ test('uncertain credential commit is retained and never automatically resealed o
  assert.equal(vault.put({},input).status,'conflict');assert.equal(writes,1);
  assert.equal(vault.resolve({},{id:'key-a',revision:1},h.binding).status,'ok');
 });
+
+test('credential receipts confirm uncertain writes after reopen without exposing or replaying secrets',async t=>{
+ const h=await fixture(t);let writes=0;
+ const store={...h.db,commit(input){writes++;const result=h.db.commit(input);return result.status==='committed'?{status:'unknown',intent:input.intent}:result;}};
+ const vault=createCredentialVault(store,h.cipher,()=>true),input={id:'key-a',intent:'receipt-one',expectedRevision:0,binding:h.binding,secret:'receipt-fixture-secret'};
+ assert.equal(vault.put({},input).status,'unknown');
+ const receipt=vault.query({}, {id:input.id,intent:input.intent,binding:h.binding});
+ assert.equal(receipt.status,'committed');assert.deepEqual(receipt.reference,{id:'key-a',revision:1});assert.equal(receipt.operation,'put');assert.equal(receipt.current,'current');
+ assert.equal(JSON.stringify(receipt).includes(input.secret),false);assert.equal(writes,1);
+ h.db.close();const reopened=h.open();assert.equal(reopened.vault.query({}, {id:input.id,intent:input.intent,binding:h.binding}).status,'committed');
+ assert.equal(reopened.vault.revoke({}, {id:'key-a',intent:'receipt-revoke',expectedRevision:1}).status,'committed');
+ assert.equal(reopened.vault.query({}, {id:'key-a',intent:input.intent,binding:h.binding}).current,'revoked');
+ assert.equal(reopened.vault.query({}, {id:'key-a',intent:'receipt-revoke',binding:h.binding}).operation,'revoke');
+});
+test('receipt absence stays unknown and revoked authorization cannot reveal receipt metadata',async t=>{
+ const h=await fixture(t);
+ assert.equal(h.vault.query({}, {id:'key-a',intent:'missing',binding:h.binding}).status,'unknown');
+ h.vault.put({}, {id:'key-a',intent:'saved',expectedRevision:0,binding:h.binding,secret:'fixture'});
+ assert.equal(h.vault.query({}, {id:'key-a',intent:'saved',binding:{...h.binding,endpoint:'https://other.test/'}}).status,'denied');
+ h.deny();assert.equal(h.vault.query({}, {id:'key-a',intent:'saved',binding:h.binding}).status,'denied');
+});
