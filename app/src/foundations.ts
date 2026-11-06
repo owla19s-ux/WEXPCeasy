@@ -1,3 +1,6 @@
+import {createLocalFileBindings,createLocalFileReader,createLocalFileAdapter} from '../../connections/local/src/index.js';
+import type {LocalFileBindingOptions} from '../../connections/local/src/index.js';
+import {createReadBoundary} from '../../connections/src/index.js';
 import {createConversations,createConversationGeneration} from '../../conversations/src/index.js';
 import {lstat} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -18,8 +21,9 @@ import {createAiConfigurations,verifyModelWithApi} from '../../AI/src/index.js';
 import {assemble} from './assembly.js';
 import type {Host} from './assembly.js';
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
-export interface FoundationOptions {conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
-export interface FoundationHost extends Host {readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
+export type FoundationLocalFiles=Pick<ReturnType<typeof createLocalFileBindings>,'register'>&ReturnType<typeof createReadBoundary>;
+export interface FoundationOptions {localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationHost extends Host {readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
  for(const suffix of ['', '-journal','-wal','-shm']){
   try{const info=await lstat(join(root.path,name+suffix));if(info.isSymbolicLink()||!info.isFile())throw Error('unsafe store path');}
@@ -40,6 +44,8 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  let lease:LockResult;
  try{lease=await (options.lock??directoryLock).acquire(probe.root);}catch{lease={status:'unavailable'};}
  if(lease.status!=='acquired')return Object.freeze({status:'failed',diagnostics:[{module:'shared',reason:'initialization_failed' as const}],stop:async()=>({status:'stopped' as const,failed:[]})});
+ let localFiles:FoundationLocalFiles|undefined;
+ const localFileOrphans=new Set<ReturnType<typeof createLocalFileBindings>>();
  let conversations:FoundationHost['conversations'];
  let ai:FoundationHost['ai'];
  let api:FoundationApiClient|undefined,apiService:ApiService|undefined,apiTransport:ReturnType<typeof createApiTransport>|undefined,apiLedger:ReturnType<typeof createOperationLedger>|undefined;
@@ -77,19 +83,26 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    return {value:service,stop:async()=>{await service.close();await closeStores(stores);space=undefined;}};
   }catch(error){try{await closeStores(stores);}catch{for(const db of stores)spaceOrphans.add(db);}throw error;}
  }}]:[]),
- ...((options.connections||options.api)?[{id:'connections',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
+ ...((options.connections||options.api||options.localFiles)?[{id:'connections',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
   const stores=new Set<ManagedStore>();
+  let files:ReturnType<typeof createLocalFileBindings>|undefined;
   try{
    const configs=await openDomainStore(probe.root,'connections-configs.sqlite','connection-configs',open);stores.add(configs);
    const operations=await openDomainStore(probe.root,'connections-operations.sqlite','connection-operations',open);stores.add(operations);
-   const service=createConnectionService(deps['permissions'] as Pick<Permissions,'evaluate'|'recheck'>,configs,operations,options.connections?.adapters??[],options.connections??{});
+   const permission=deps['permissions'] as Pick<Permissions,'evaluate'|'recheck'>;
+   files=options.localFiles?createLocalFileBindings(permission,options.localFiles):undefined;
+   const adapters=[...(options.connections?.adapters??[]),...(files?[createLocalFileAdapter(files.resolve)]:[])];
+   const service=createConnectionService(permission,configs,operations,adapters,options.connections??{});
+   if(files)localFiles=Object.freeze({register:files.register,read:createReadBoundary(permission,createLocalFileReader(files.resolve)).read});
    apiLedger=createOperationLedger(operations);
    connections=Object.freeze({configs:service.configs,operations:service.operations,dispatch:service.dispatch});
    return {value:connections,stop:async()=>{
     if((await service.stop()).status!=='stopped')throw Error('connections_still_running');
-    await closeStores(stores);connections=undefined;
+    await files?.close();
+    await closeStores(stores);connections=undefined;localFiles=undefined;
    }};
   }catch(error){
+   if(files)try{await files.close();}catch{localFileOrphans.add(files);}
    try{await closeStores(stores);}catch{for(const store of stores)orphans.add(store);}
    throw error;
   }
@@ -176,6 +189,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  const result=await host.stop();
  // Keep root occupied when provider shutdown cannot confirm release.
  if(result.status==='incomplete')return result;
+ try{for(const files of localFileOrphans){await files.close();localFileOrphans.delete(files);}}catch{return {status:'incomplete' as const,failed:['local-files']};}
  try{await closeStores(orphans);}catch{return {status:'incomplete' as const,failed:['connections-storage']};}
  try{await closeStores(apiOrphans);}catch{return {status:'incomplete' as const,failed:['api-storage']};}
  try{await closeStores(aiOrphans);}catch{return {status:'incomplete' as const,failed:['ai-storage']};}
@@ -186,5 +200,5 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  };
  if(host.status==='failed')await stop();
  const current=permissions,currentConnections=connections,currentSpace=space,currentApi=api;
- return Object.freeze({...host,...(conversations?{conversations}:{}),...(ai?{ai}:{}),...(currentApi?{api:currentApi}:{}),...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),...(currentSpace?{space:currentSpace}:{}),...(local&&host.status!=='failed'?{local:local.client}:{}),stop});
+ return Object.freeze({...host,...(localFiles?{localFiles}:{}),...(conversations?{conversations}:{}),...(ai?{ai}:{}),...(currentApi?{api:currentApi}:{}),...(current?{permissions:current}:{}),...(currentConnections?{connections:currentConnections}:{}),...(currentSpace?{space:currentSpace}:{}),...(local&&host.status!=='failed'?{local:local.client}:{}),stop});
 }
