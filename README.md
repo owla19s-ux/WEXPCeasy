@@ -1,5 +1,10 @@
 # WEX｜AI 工作入口
 
+## 环境管理独立 owner 与连接器入口（2026-11-07）
+
+环境管理已由用户确认作为独立顶层源码维护域：[environments/README.md](environments/README.md)，**与 Connections 并列，不是 Local 连接器**。当前仅有职责 README，无 `src/`、测试或可运行环境安装器。Local 为受控本机文件/目录及未来获批的进程/安装器适配；Connections 独占公共配置、Operation/回执；App 负责可信 OS 交互，Space 只引用环境。0.1.1 仅核查既定环境识别/目录/绑定能力，不自动追加完整下载安装、修复、升级、卸载。Codex 施工连接器前须读 [连接系统总入口](connections/README.md) 和 [B3 M-01 / D-10](docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)，并遵守子连接器 owner 边界。
+
+
 > 仓库：`owla19s-ux/WEXPCeasy`｜Windows PC 优先｜默认分支：`main`
 >
 > 这是 AI 的施工与验收导航，不是产品说明书。完整介绍见 [docs/PROJECT.md](docs/PROJECT.md)。
