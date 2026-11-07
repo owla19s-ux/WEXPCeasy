@@ -19,7 +19,7 @@ async function fixture(t,{api=false}={}){
  t.after(async()=>{await host.stop();await rm(root,{recursive:true,force:true});});
  function request(resource,action,target,context=null,patch={}){
   const s=scope(resource,action,target,context,patch),key=JSON.stringify(s);if(requests.has(key))return requests.get(key);
-  const r={};facts.set(r,{...s,kind:'local',entryEnabled:true,moduleEnabled:true,globalEnabled:true,conversationEnabled:true,sourceAllowed:true});
+  const r={};facts.set(r,{...s,kind:s.conversation===null?'local':'conversation',entryEnabled:true,moduleEnabled:true,globalEnabled:true,conversationEnabled:true,sourceAllowed:true});
   scopes.set(r,s);requests.set(key,r);
   const change={intent:'grant-'+(++n),expectedRevision:host.permissions.history(history).revision,scope:s};
   approved.add(change);assert.equal(host.permissions.grant(change).status,'committed');return r;
