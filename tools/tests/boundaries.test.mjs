@@ -93,3 +93,21 @@ test('source scanner includes environments and excludes its tests',async()=>{
   assert.ok(analyze(files).errors.some(e=>e.code==='reverse_app'));
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test('connector public dependency is allowed without granting nested barrels',()=>{
+ const base={
+  'connections/github/src/index.ts':"import '../../api/src/index.js';",
+  'connections/api/src/index.ts':'export {};',
+ };
+ assert.deepEqual(analyze(base).errors,[]);
+ const nested={
+  'connections/github/src/index.ts':"import '../../api/internal/src/index.js';",
+  'connections/api/internal/src/index.ts':'export {};',
+ };
+ assert.ok(analyze(nested).errors.some(e=>e.code==='private_import'));
+});
+test('renderer cannot reach concrete connector privileges through public ports',()=>{
+ const files={'UI/src/index.ts':"import '../../connections/github/src/index.js';",
+  'connections/github/src/index.ts':'export {};'};
+ assert.ok(analyze(files).errors.some(e=>e.code==='renderer_privileged'));
+});
