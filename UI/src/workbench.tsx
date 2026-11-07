@@ -1,6 +1,7 @@
 import {Fragment,useEffect,useRef,useState} from 'react';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {SpacePanel} from './space.js';
+import {MiddleWorkspace} from './middle-workspace.js';
 import {columnWidths,defaultLayout,layoutKey,panelHeights,resizeColumns,resizePanels,restoreLayout} from './layout.js';
 import type {Layout,PanelKind} from './layout.js';
 import type {DesktopBridge,DesktopStatus} from './index.js';
@@ -48,16 +49,11 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
     <div className="navigation-scroll"><button className="nav-primary" aria-pressed={!settings} onClick={()=>setSettings(false)}>{layout.collapsed?'◫':'Space / Context'}</button>
      {!layout.collapsed&&<><button disabled title="对话入口尚不可用">普通对话</button>{parts.categories}</>}
     </div>
-    <div className="navigation-bottom"><button aria-label="设置" title="设置" aria-pressed={settings} onClick={()=>setSettings(true)}>{layout.collapsed?'⚙':'设置'}</button>{layout.roleVisible&&!layout.collapsed&&role}</div>
+    <div className="navigation-bottom"><button aria-label="设置" title="设置" aria-pressed={settings} onClick={()=>setSettings(true)}>{layout.collapsed?'⚙':'设置'}</button></div>
    </aside>
-   {[0,1,2].map(i=><Divider key={i} id={'column-'+i} axis="x" layout={layout} value={widths[i]!/(widths[i]!+widths[i+1]!)*100} disabled={layout.collapsed&&i===0} onDelta={(delta,s)=>setLayout(resizeColumns(s,size.width,i,delta))} onRestore={restore} onDragging={setDragging}/>)}
-   <section data-column="structure" className="workbench-structure" style={{gridColumn:3,gridRow:1}}>
-    <h2 className="column-heading">结构与对象</h2><div className="structure-scroll">{parts.structure}</div>
-    {layout.roleVisible&&layout.collapsed&&role}<div className="view-switch"><button aria-pressed>工作区</button><button disabled title="文件视图尚不可用">文件</button><button disabled title="对话视图尚不可用">对话</button></div>
-   </section>
-   <section data-column="main" className="workbench-main" style={{gridColumn:5,gridRow:1}}>
-    <div className="content-tabs"><button aria-pressed={!settings} onClick={()=>setSettings(false)}>Space / Context</button>{settings&&<button aria-pressed onClick={()=>setSettings(true)}>设置</button>}</div>
-    <div hidden={settings} className="space-surface"><div className="surface-toolbar">{parts.toolbar}</div><div className="content-scroll">{parts.content}</div></div>
+   {[0,1].map(i=><Divider key={i} id={'column-'+i} axis="x" layout={layout} value={widths[i]!/(widths[i]!+widths[i+1]!)*100} disabled={(layout.collapsed&&i===0)||(i===1&&!layout.auxiliaryOpen)} onDelta={(delta,s)=>setLayout(resizeColumns(s,size.width,i,delta))} onRestore={restore} onDragging={setDragging}/>)}
+   <section data-column="main" className="workbench-main" style={{gridColumn:3,gridRow:1}}>
+    <div hidden={settings} className="middle-surface"><MiddleWorkspace parts={parts}/></div>
     <div data-settings hidden={!settings} className="settings-surface"><div className="settings-title"><h2>设置</h2><button onClick={()=>setSettings(false)}>返回工作区</button></div>
      <div className="settings-grid"><div className="settings-navigation">
       <details><summary>连接与服务</summary><button disabled>API 与模型</button><button disabled>Agent 与角色</button><button disabled>GitHub / Local</button></details>
@@ -75,8 +71,8 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
      </div></div>
     </div>
    </section>
-   <aside data-column="auxiliary" className="workbench-auxiliary" style={{gridColumn:7,gridRow:1}}>
-    <div className="auxiliary-heading"><h2>辅助视图</h2><button aria-label="添加辅助面板" disabled={layout.panels.length>=6} onClick={addPanel}>＋</button></div>
+   <aside data-column="auxiliary" className="workbench-auxiliary" style={{gridColumn:5,gridRow:1}}>
+    {layout.auxiliaryOpen?<><div className="auxiliary-heading"><button aria-label="收起辅助区" onClick={()=>setLayout({...layout,auxiliaryOpen:false})}>‹</button><h2>辅助视图</h2><button aria-label="添加辅助面板" disabled={layout.panels.length>=6} onClick={addPanel}>＋</button></div>
     <div className="auxiliary-stack" style={{gridTemplateRows:layout.expanded||!layout.panels.length?'minmax(0,1fr)':rows}}>
      {!layout.panels.length&&<div className="empty-panel"><p>未打开辅助面板</p><button onClick={addPanel}>添加面板</button></div>}
      {layout.panels.map((p,i)=><Fragment key={p.id}><section className="aux-panel" hidden={layout.expanded!==null&&layout.expanded!==p.id}>
@@ -92,9 +88,11 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
       {i<layout.panels.length-1&&<div hidden={layout.expanded!==null}><Divider id={'panel-'+i} axis="y" layout={layout} value={heights[i]!/(heights[i]!+heights[i+1]!)*100} disabled={p.collapsed||layout.panels[i+1]!.collapsed} onDelta={(delta,s)=>setLayout(resizePanels(s,stackHeight,i,delta))} onRestore={restore} onDragging={setDragging}/></div>}
      </Fragment>)}
     </div>
+    </>:<button className="auxiliary-toggle" aria-label="展开辅助区" title="展开辅助区" onClick={()=>setLayout({...layout,auxiliaryOpen:true})}>›</button>}
    </aside>
    {layout.bottomOpen&&<><div style={{gridColumn:'3 / -1',gridRow:2}}><Divider id="bottom" axis="y" layout={layout} value={layout.bottomRatio*100} onDelta={(delta,s)=>setLayout({...s,bottomRatio:Math.max(.12,Math.min(.5,s.bottomRatio-delta/size.height))})} onRestore={restore} onDragging={setDragging}/></div><section className="bottom-output" style={{gridColumn:'3 / -1',gridRow:3}}><strong>运行输出</strong><p>{label}</p>{status.diagnostics.map((d,i)=><p key={i}>{d.module}：{d.reason}</p>)}{error&&<p role="alert">{error}</p>}</section></>}
   </div></div>
+  {layout.roleVisible&&<div className="role-floating" aria-label="独立虚拟形象位置（角色素材未配置）">{role}</div>}
   <footer className="workbench-footer"><span>{error||(layoutSaved?'业务访问需确认授权；布局自动保存。':'布局保存不可用；本次窗口内仍可调整。')}</span><span>WEXPCeasy · 0.1.1</span></footer>
  </main>}/>;
 }
