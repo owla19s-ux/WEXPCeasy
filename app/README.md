@@ -69,7 +69,7 @@
 
 ### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md)、[实验结果](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)、[施工顺序](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/NEXT.md)。
 
 
 ## 文档入口
@@ -98,7 +98,7 @@
 
 ## 第八批验证补充（2026-10-31）
 
-当前产品装配源码与公开契约不变；隔离Electron实验真实消费app公开出口，验证ready、窗口关闭至停机、incomplete占锁/重试及启动pending退出。实验先等待初始化所有权再释放，不把故障注入/测试探针升级为产品入口。正式Electron启动器、首次选根及Windows E4仍未交付。见[第八批报告](../docs/batch8/REPORT.md)与[实验说明](../experiments/electron-host-spike/README.md)。
+当前产品装配源码与公开契约不变；隔离Electron实验真实消费app公开出口，验证ready、窗口关闭至停机、incomplete占锁/重试及启动pending退出。实验先等待初始化所有权再释放，不把故障注入/测试探针升级为产品入口。正式Electron启动器、首次选根及Windows E4仍未交付。见[第八批报告](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch8/REPORT.md)与[实验说明](../experiments/electron-host-spike/README.md)。
 
 ## G3/G6：可信入口与恢复协调
 
