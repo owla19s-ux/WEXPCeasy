@@ -58,3 +58,14 @@ test('MCP timeout also bounds a stalled trusted credential resolver',{timeout:50
   {message:'github_mcp_unavailable'});
  assert.equal(entered,true);
 });
+
+test('MCP credential lookup uses the captured connection rather than caller mutations',async()=>{
+ const input={...connection};
+ const adapter=reader('ok',{resolveCredential:async(c)=>{
+  assert.equal(c.id,'gh');assert.equal(c.endpoint,'https://api.github.com');
+  assert.equal(c.credentialRef,'fixture-ref');return 'fixture-token';
+ }});
+ const pending=adapter.read(input,target,new AbortController().signal,access());
+ input.id='other';input.endpoint='https://other.invalid';input.credentialRef='other-ref';
+ assert.equal((await pending).content,'hello');
+});
