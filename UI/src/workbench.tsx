@@ -1,5 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import type {PointerEvent as ReactPointerEvent} from 'react';
+import {ConnectionSettings} from './connection-settings.js';
 import {AiSettings} from './ai-settings.js';
 import {PermissionSettings} from './permission-settings.js';
 import {ConversationPanel} from './conversation.js';
@@ -56,11 +57,12 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
     <div hidden={settings||!conversation} className="content-scroll"><ConversationPanel bridge={bridge}/></div>
     <div data-settings hidden={!settings} className="settings-surface"><div className="settings-title"><h2>设置</h2><button onClick={()=>setSettings(false)}>返回工作区</button></div>
      <div className="settings-grid"><div className="settings-navigation">
-      <details><summary>连接与服务</summary><button aria-pressed={setting==='api'} onClick={()=>setSetting('api')}>API 与模型</button><button aria-pressed={setting==='ai'} onClick={()=>setSetting('ai')}>Agent 与角色</button><button disabled>GitHub / Local</button></details>
+      <details><summary>连接与服务</summary><button aria-pressed={setting==='api'} onClick={()=>setSetting('api')}>API 与模型</button><button aria-pressed={setting==='ai'} onClick={()=>setSetting('ai')}>Agent 与角色</button><button aria-pressed={setting==='connections'} onClick={()=>setSetting('connections')}>GitHub / Local</button></details>
       <details><summary>权限</summary><button aria-pressed={setting==='permissions'} onClick={()=>setSetting('permissions')}>当前窗口授权</button></details>
       <details><summary>验证</summary><button onClick={()=>setSetting('diagnostics')}>运行状态</button></details>
       <details open><summary>系统</summary><button aria-pressed={setting==='display'} onClick={()=>setSetting('display')}>显示与布局</button><button aria-pressed={setting==='voice'} onClick={()=>setSetting('voice')}>语音</button><button aria-pressed={setting==='diagnostics'} onClick={()=>setSetting('diagnostics')}>运行诊断</button></details>
      </div><div className="settings-detail">
+      {setting==='connections'&&<ConnectionSettings bridge={bridge}/>}
       {setting==='ai'&&<AiSettings bridge={bridge}/>}
       {setting==='permissions'&&<PermissionSettings bridge={bridge}/>}
       {setting==='api'&&<ApiSettings bridge={bridge}/>}

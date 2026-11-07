@@ -1,3 +1,4 @@
+import {createServer} from 'node:http';
 import {app,BrowserWindow} from 'electron';
 import assert from 'node:assert/strict';
 import {mkdtemp,writeFile,lstat,rm,mkdir} from 'node:fs/promises';
@@ -19,6 +20,16 @@ app.setPath('userData',join(root,'electron-user'));
 app.setPath('sessionData',join(root,'electron-session'));
 const contextRoot=join(root,'selected-context');await mkdir(contextRoot);await writeFile(join(contextRoot,'.wex-root.json'),JSON.stringify({format:1,id:randomUUID()}));
 let nativeAllowed=true;const confirmations=[];
+const providerCalls=[];
+const provider=createServer(async(req,res)=>{
+ const chunks=[];for await(const chunk of req)chunks.push(chunk);
+ const input=JSON.parse(Buffer.concat(chunks).toString());providerCalls.push(input);
+ res.writeHead(200,{'content-type':'text/event-stream'});
+ const frame=(content,finish_reason=null)=>'data: '+JSON.stringify({choices:[{index:0,delta:content?{content}:{},finish_reason}]})+'\n\n';
+ res.end(frame('Desktop reply')+frame(undefined,'stop')+'data: [DONE]\n\n');
+});
+await new Promise(resolve=>provider.listen(0,'127.0.0.1',resolve));
+const providerEndpoint='http://127.0.0.1:'+provider.address().port+'/v1';
 let failClose=true;
 const startup=policy=>startFoundations({dataRoot:root,expectedRootId:id,trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false},
  space:{},api:{},conversations:true,ai:{bindRead:()=>undefined},localFiles:{},localDirectories:{},technicalDiagnostics:{},
@@ -32,7 +43,7 @@ try{
  const wc=runtime.window.webContents;
  const facts=await wc.executeJavaScript(`(async()=>({node:typeof require,process:typeof process,bridge:Object.keys(window.wexHost).sort(),reply:await window.wexHost.readStatus(),title:document.title,text:document.body.innerText}))()`);
  assert.equal(facts.node,'undefined');assert.equal(facts.process,'undefined');
- assert.deepEqual(facts.bridge,['ai','api','cancelApi','cancelConversations','conversations','onConversationText','permissions','readStatus','requestQuit','space']);assert.equal(facts.reply.ok,true);
+ assert.deepEqual(facts.bridge,['ai','api','cancelApi','cancelConversations','connections','conversations','onConversationText','permissions','readStatus','requestQuit','space']);assert.equal(facts.reply.ok,true);
  assert.equal(facts.reply.value.phase,'ready');assert.equal(facts.title,'WEXPCeasy');assert.match(facts.text,/WEXPCeasy/);
 // Exercise the actual React form through DOM events; only native platform interactions are fixtures.
  const click=async text=>wc.executeJavaScript(`(()=>{const b=[...document.querySelectorAll('button')].find(x=>(x.textContent.trim()===${JSON.stringify(text)}||x.getAttribute('aria-label')===${JSON.stringify(text)}));if(!b)throw Error('button_missing');b.click();return true;})()`);
@@ -119,7 +130,7 @@ try{
  // API settings are actual React forms, not a direct domain fixture.
  await click('设置');await click('API 与模型');
  await choose('form[aria-label="API 连接配置"] input','Desktop Provider');
- await choose('form[aria-label="API 连接配置"] input[type="url"]','https://example.test/v1');
+ await choose('form[aria-label="API 连接配置"] input[type="url"]',providerEndpoint);
  await new Promise(r=>setTimeout(r,25));
  await wc.executeJavaScript("document.querySelector('form[aria-label=\"API 连接配置\"]').requestSubmit();true");
  await waitFor("[...document.querySelectorAll('[data-api-settings] li button')].some(b=>b.textContent==='Desktop Provider')");
@@ -131,7 +142,38 @@ try{
  await new Promise(r=>setTimeout(r,25));
  await wc.executeJavaScript("document.querySelector('form[aria-label=\"模型配置\"]').requestSubmit();true");
  await waitFor("[...document.querySelectorAll('[data-api-settings] li button')].some(b=>b.textContent==='Desktop Model')");
- await click('返回工作区');
+ await click('Desktop Model');await click('测试并保存模型观测');
+ await waitFor("document.querySelector('[data-api-settings] [role=\"status\"]').textContent.includes('committed')");
+ await click('Agent 与角色');await click('读取 AI 配置');
+ await choose('input[name="ai-name"]','Desktop Role');await choose('textarea[name="ai-text"]','Precise fixture role.');
+ await new Promise(r=>setTimeout(r,25));await wc.executeJavaScript("document.querySelector('form[aria-label=\"AI 配置\"]').requestSubmit();true");
+ await waitFor("[...document.querySelectorAll('[data-ai-settings] li button')].some(b=>b.textContent==='Desktop Role')");
+ await click('新建配置');await choose('select[name="ai-kind"]','position');await choose('input[name="ai-name"]','Desktop Position');await choose('textarea[name="ai-text"]','Answer carefully.');
+ await new Promise(r=>setTimeout(r,25));await wc.executeJavaScript("document.querySelector('form[aria-label=\"AI 配置\"]').requestSubmit();true");
+ await waitFor("[...document.querySelectorAll('[data-ai-settings] li button')].some(b=>b.textContent==='Desktop Position')");
+ await click('新建配置');await choose('select[name="ai-kind"]','agent');await choose('input[name="ai-name"]','Desktop Agent');
+ const aiSnapshot=await wc.executeJavaScript("window.wexHost.ai({kind:'snapshot'})");assert.equal(aiSnapshot.ok,true);
+ const role=aiSnapshot.value.entries.find(e=>e.kind==='role'),position=aiSnapshot.value.entries.find(e=>e.kind==='position');
+ await choose('select[name="ai-role"]',role.id);await choose('select[name="ai-position"]',position.id);
+ await click('读取可选模型');await waitFor("document.querySelectorAll('select[name=\"ai-model\"] option').length>1");
+ const modelOption=await wc.executeJavaScript("document.querySelector('select[name=\"ai-model\"] option:nth-child(2)').value");
+ await choose('select[name="ai-model"]',modelOption);
+ await new Promise(r=>setTimeout(r,25));await wc.executeJavaScript("document.querySelector('form[aria-label=\"AI 配置\"]').requestSubmit();true");
+ await waitFor("[...document.querySelectorAll('[data-ai-settings] li button')].some(b=>b.textContent==='Desktop Agent')");
+ await click('返回工作区');await click('普通对话');await click('新建普通对话');
+ await waitFor("document.querySelector('[data-conversations] small')?.textContent.includes('修订 1')");
+ await click('读取可用 Agent');
+ const agent=await wc.executeJavaScript("document.querySelector('[data-conversations] select option:nth-child(2)').value");
+ await choose('[data-conversations] select',agent);await choose('form[aria-label="普通对话输入"] textarea','Desktop question');
+ await new Promise(r=>setTimeout(r,25));await wc.executeJavaScript("document.querySelector('form[aria-label=\"普通对话输入\"]').requestSubmit();true");
+ await waitFor("[...document.querySelectorAll('[data-conversations] article p')].some(p=>p.textContent==='Desktop reply')");
+ assert.ok(providerCalls.some(c=>c.messages.some(m=>m.content==='Desktop question')));
+ await click('读取对话历史');await waitFor("document.querySelectorAll('nav[aria-label=\"普通对话历史\"] button').length===1");
+ await click('设置');await click('当前窗口授权');await click('读取当前窗口授权');
+ await waitFor("document.querySelectorAll('[data-permission-settings] li').length>0");
+ await click('GitHub / Local');await click('读取连接与操作记录');
+ await waitFor("document.querySelector('[data-connection-settings]').textContent.includes('Operation 摘要')");
+ await click('返回工作区');await click('Space / Context');
  const retained=await invoke({kind:'context.open',id:created.id});assert.equal(retained.resources.length,2);assert.ok(retained.context.primaryAddress);
  
  const prefs=wc.getLastWebPreferences();assert.equal(prefs.sandbox,true);assert.equal(prefs.contextIsolation,true);assert.equal(prefs.nodeIntegration,false);
@@ -146,7 +188,7 @@ try{
  }
  assert.deepEqual(await foreign.webContents.executeJavaScript("window.wexHost.space({kind:'snapshot'})"),{ok:false,error:'untrusted_sender'});
  assert.deepEqual(await foreign.webContents.executeJavaScript("window.wexHost.api({kind:'snapshot'})"),{ok:false,error:'untrusted_sender'});
- for(const method of ['ai','conversations','permissions'])assert.deepEqual(await foreign.webContents.executeJavaScript("window.wexHost."+method+"({kind:'snapshot'})"),{ok:false,error:'untrusted_sender'});
+ for(const method of ['ai','connections','conversations','permissions'])assert.deepEqual(await foreign.webContents.executeJavaScript("window.wexHost."+method+"({kind:'snapshot'})"),{ok:false,error:'untrusted_sender'});
  assert.equal(confirmations.length,promptCount);
  foreign.destroy();assert.equal(runtime.readStatus().phase,'ready');
  runtime.window.show();
@@ -159,10 +201,10 @@ try{
  assert.equal((await runtime.lifecycle.stop()).status,'stopped');
  const reopened=await startFoundations({dataRoot:root,trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false}});
  assert.equal(reopened.status,'ready');assert.equal((await reopened.stop()).status,'stopped');
- const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,fixtures:['native dialog responses','native directory selection','one permissions-store close failure'],limits:['Windows Local handle/scanner availability is reported explicitly','not an installer or manual Windows acceptance'],checks:['three-column navigation pointer and keyboard resizing, optional auxiliary width and collapse, on-demand preview, layout recovery and preserved Space draft','category creation and address form/primary selection through actual React DOM','controlled Local resource preview or explicit platform unavailability','React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
+ const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,fixtures:['local HTTP/SSE Provider','native dialog responses','native directory selection','one permissions-store close failure'],limits:['Windows Local handle/scanner availability is reported explicitly','not an installer or manual Windows acceptance'],checks:['API and AI config forms, actual local Provider generation, saved history and scoped permission UI','three-column navigation pointer and keyboard resizing, optional auxiliary width and collapse, on-demand preview, layout recovery and preserved Space draft','category creation and address form/primary selection through actual React DOM','controlled Local resource preview or explicit platform unavailability','React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
  await writeFile(resolve('desktop-acceptance',process.platform+'.json'),JSON.stringify(report,null,2));
- console.log('DESKTOP_ACCEPTANCE '+JSON.stringify(report));clearTimeout(timer);app.quit();
-}catch(error){console.error(error);clearTimeout(timer);app.exit(1);}
+ console.log('DESKTOP_ACCEPTANCE '+JSON.stringify(report));provider.closeAllConnections();provider.close();clearTimeout(timer);app.quit();
+}catch(error){provider.closeAllConnections();provider.close();console.error(error);clearTimeout(timer);app.exit(1);}
 
 }
 void verify().catch(error=>{console.error(error);app.exit(1);});

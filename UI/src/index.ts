@@ -1,7 +1,7 @@
 /** Serializable technical bridge only; business requests require separate reviewed contracts. */
 export interface DesktopStatus {phase:'starting'|'ready'|'degraded'|'failed'|'stopping'|'release-pending';diagnostics:readonly {module:string;reason:string}[]}
 export type HostReply<T>={ok:true;value:T}|{ok:false;error:string};
-export interface DesktopBridge {ai(input:DesktopAiInput):Promise<HostReply<DesktopAiReply>>;conversations(input:DesktopConversationInput):Promise<HostReply<DesktopConversationReply>>;cancelConversations():Promise<HostReply<DesktopConversationReply>>;onConversationText(listener:(event:ConversationText)=>void):()=>void;permissions(input:DesktopPermissionInput):Promise<HostReply<DesktopPermissionReply>>;api(input:DesktopApiInput):Promise<HostReply<DesktopApiReply>>;cancelApi():Promise<HostReply<{accepted:true}>>;space(input:DesktopSpaceInput):Promise<HostReply<DesktopSpaceReply>>;readStatus():Promise<HostReply<DesktopStatus>>;requestQuit():Promise<HostReply<{accepted:true}>>}
+export interface DesktopBridge {connections(input:DesktopConnectionsInput):Promise<HostReply<DesktopConnectionsReply>>;ai(input:DesktopAiInput):Promise<HostReply<DesktopAiReply>>;conversations(input:DesktopConversationInput):Promise<HostReply<DesktopConversationReply>>;cancelConversations():Promise<HostReply<DesktopConversationReply>>;onConversationText(listener:(event:ConversationText)=>void):()=>void;permissions(input:DesktopPermissionInput):Promise<HostReply<DesktopPermissionReply>>;api(input:DesktopApiInput):Promise<HostReply<DesktopApiReply>>;cancelApi():Promise<HostReply<{accepted:true}>>;space(input:DesktopSpaceInput):Promise<HostReply<DesktopSpaceReply>>;readStatus():Promise<HostReply<DesktopStatus>>;requestQuit():Promise<HostReply<{accepted:true}>>}
 
 export interface SpaceName {id:string;revision:number;name:string}
 export interface SpaceItem extends SpaceName {description:string;categoryId:string|null;directory?:string|null}
@@ -65,3 +65,7 @@ export interface ConversationText {conversationId:string;generationId:string;tex
 export type DesktopPermissionInput={kind:'snapshot'}|{kind:'revoke';id:string;expectedRevision:number};
 export type DesktopPermissionReply={status:'ok';revision:number;entries:{id:string;resource:string;action:string;target:string;context:string|null}[]}|
  {status:'committed';revision:number}|{status:'unknown';intent:string}|{status:'rejected'|'unavailable';reason:string}|{status:'cancelled'};
+
+export type DesktopConnectionsInput={kind:'snapshot'}|{kind:'toggle';id:string;expectedRevision:number;enabled:boolean};
+export type DesktopConnectionsReply={status:'ok';revision:number;connections:{id:string;adapter:string;endpoint:string;enabled:boolean;hasCredential:boolean}[];operations:{id:string;phase:string;attempts:number;connectionId:string|null;adapter:string|null}[];localFiles:boolean;localDirectories:boolean}|
+ {status:'committed';revision:number}|{status:'rejected'|'unavailable'|'conflict'|'unknown';reason:string}|{status:'cancelled'};

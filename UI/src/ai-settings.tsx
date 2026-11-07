@@ -24,12 +24,12 @@ export function AiSettings({bridge}:{bridge:DesktopBridge}){
   if(!r.ok||r.value.status!=='committed')throw Error(r.ok?r.value.status:r.error);
   setMessage('配置已保存');setSelected(undefined);await refresh();
  });}}>
- <label>类型<select disabled={busy||!!selected} value={kind} onChange={e=>setKind(e.target.value as AiConfiguration['kind'])}><option value="role">角色</option><option value="position">岗位</option><option value="agent">Agent</option></select></label>
- <label>名称<input required maxLength={256} disabled={busy} value={name} onChange={e=>setName(e.target.value)}/></label>
- {kind!=='agent'?<label>{kind==='role'?'角色提示词':'岗位职责'}<textarea required maxLength={kind==='role'?32000:8000} disabled={busy} value={text} onChange={e=>setText(e.target.value)}/></label>:<>
- <label>角色<select required disabled={busy} value={roleId} onChange={e=>setRoleId(e.target.value)}><option value="">请选择</option>{entries.filter(v=>v.kind==='role').map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label>
- <label>岗位<select required disabled={busy} value={positionId} onChange={e=>setPositionId(e.target.value)}><option value="">请选择</option>{entries.filter(v=>v.kind==='position').map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label>
+ <label>类型<select name="ai-kind" disabled={busy||!!selected} value={kind} onChange={e=>setKind(e.target.value as AiConfiguration['kind'])}><option value="role">角色</option><option value="position">岗位</option><option value="agent">Agent</option></select></label>
+ <label>名称<input name="ai-name" required maxLength={256} disabled={busy} value={name} onChange={e=>setName(e.target.value)}/></label>
+ {kind!=='agent'?<label>{kind==='role'?'角色提示词':'岗位职责'}<textarea name="ai-text" required maxLength={kind==='role'?32000:8000} disabled={busy} value={text} onChange={e=>setText(e.target.value)}/></label>:<>
+ <label>角色<select name="ai-role" required disabled={busy} value={roleId} onChange={e=>setRoleId(e.target.value)}><option value="">请选择</option>{entries.filter(v=>v.kind==='role').map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label>
+ <label>岗位<select name="ai-position" required disabled={busy} value={positionId} onChange={e=>setPositionId(e.target.value)}><option value="">请选择</option>{entries.filter(v=>v.kind==='position').map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label>
  <button type="button" disabled={busy} onClick={()=>void run(readModels)}>读取可选模型</button>
- <label>模型<select required disabled={busy} value={modelId} onChange={e=>{setModelId(e.target.value);setConnectionId(models.find(m=>m.id===e.target.value)?.connectionId??'');}}><option value="">请选择</option>{models.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></label></>}
+ <label>模型<select name="ai-model" required disabled={busy} value={modelId} onChange={e=>{setModelId(e.target.value);setConnectionId(models.find(m=>m.id===e.target.value)?.connectionId??'');}}><option value="">请选择</option>{models.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></label></>}
  <button type="submit" disabled={busy}>保存 AI 配置</button></form></div>;
 }

@@ -1,6 +1,7 @@
 'use strict';
 const {contextBridge,ipcRenderer}=require('electron');
 contextBridge.exposeInMainWorld('wexHost',Object.freeze({
+ connections:input=>ipcRenderer.invoke('wex:desktop:connections',input),
  ai:input=>ipcRenderer.invoke('wex:desktop:ai',input),
  conversations:input=>ipcRenderer.invoke('wex:desktop:conversations',input),
  cancelConversations:()=>ipcRenderer.invoke('wex:desktop:conversation-cancel',{}),
