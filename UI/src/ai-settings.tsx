@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import type {DesktopBridge,AiEntry,AiConfiguration} from './index.js';
 export function AiSettings({bridge}:{bridge:DesktopBridge}){
  const [entries,setEntries]=useState<AiEntry[]>([]),[selected,setSelected]=useState<AiEntry>();
@@ -15,6 +15,7 @@ export function AiSettings({bridge}:{bridge:DesktopBridge}){
   for(const connection of c.value.connections){const m=await bridge.api({kind:'models',connectionId:connection.id});if(!m.ok||m.value.status!=='ok'||m.value.view!=='models')throw Error('模型不可用');rows.push(...m.value.models.map(v=>({id:v.id,connectionId:v.connectionId,name:connection.name+' / '+v.name})));}
   setModels(rows);
  }
+ useEffect(()=>bridge.onAccessChanged(()=>{setEntries([]);setModels([]);setSelected(undefined);setName('');setText('');setRoleId('');setPositionId('');setConnectionId('');setModelId('');setMessage('授权已变更，请重新读取配置。');}),[bridge]);
  return <div data-ai-settings><h3>Agent 与角色</h3><p>岗位、角色、Agent 独立保存；选择不增加权限。</p><button disabled={busy} onClick={()=>void run(refresh)}>读取 AI 配置</button><p role="status">{message}</p>
  <ul>{entries.map(e=><li key={e.kind+e.id}><button disabled={busy} onClick={()=>choose(e)}>{e.name}</button> · {e.kind}<small>{e.id} / 修订 {e.revision}</small></li>)}</ul>
  <button disabled={busy} onClick={()=>{setSelected(undefined);setName('');setText('');}}>新建配置</button>

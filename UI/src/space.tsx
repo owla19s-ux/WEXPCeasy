@@ -1,4 +1,4 @@
-import {useRef,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import type {ReactNode} from 'react';
 import {ContextAddresses} from './space-addresses.js';
 import type {DesktopSpaceInput,DesktopSpaceReply,DesktopBridge} from './index.js';
@@ -12,6 +12,7 @@ export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sectio
  const [data,setData]=useState<Snapshot>(),[detail,setDetail]=useState<Detail>(),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const [categoryFilter,setCategoryFilter]=useState(''),[categoryId,setCategoryId]=useState('');
  const [spaceId,setSpaceId]=useState(''),[groupId,setGroupId]=useState(''),[mode,setMode]=useState('space.create'),[name,setName]=useState(''),[description,setDescription]=useState('');
+ useEffect(()=>bridge.onAccessChanged(()=>{openSequence.current++;selectedContext.current=null;setResourcePreview(undefined);setDetail(undefined);setData(undefined);setName('');setDescription('');setSpaceId('');setGroupId('');setCategoryId('');setCategoryFilter('');setMessage('授权已变更，请重新打开工作区。');}),[bridge]);
  async function call(input:DesktopSpaceInput){
   const reply=await bridge.space(input);if(!reply.ok)throw Error('桌面请求被拒绝');
   const result=reply.value;

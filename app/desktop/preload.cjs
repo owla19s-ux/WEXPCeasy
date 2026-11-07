@@ -1,6 +1,11 @@
 'use strict';
 const {contextBridge,ipcRenderer}=require('electron');
 contextBridge.exposeInMainWorld('wexHost',Object.freeze({
+ onAccessChanged:listener=>{
+  if(typeof listener!=='function')throw Error('invalid_listener');
+  const receive=()=>listener();ipcRenderer.on('wex:desktop:access-changed',receive);
+  return ()=>ipcRenderer.removeListener('wex:desktop:access-changed',receive);
+ },
  connections:input=>ipcRenderer.invoke('wex:desktop:connections',input),
  ai:input=>ipcRenderer.invoke('wex:desktop:ai',input),
  conversations:input=>ipcRenderer.invoke('wex:desktop:conversations',input),

@@ -7,6 +7,7 @@ export function ConversationPanel({bridge}:{bridge:DesktopBridge}){
  const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[stream,setStream]=useState('');
  const currentId=useRef<string|undefined>(undefined),sequence=useRef(0);
  useEffect(()=>bridge.onConversationText(event=>{if(event.conversationId===currentId.current)setStream(s=>s+event.text);}),[bridge]);
+ useEffect(()=>bridge.onAccessChanged(()=>{sequence.current++;currentId.current=undefined;setCurrent(undefined);setConversations([]);setAgents([]);setStream('');setMessage('授权已变更，请重新读取对话；未发送输入已保留。');}),[bridge]);
  async function call(input:DesktopConversationInput){
   const r=await bridge.conversations(input);if(!r.ok)throw Error(r.error);
   if(r.value.status!=='ok'&&r.value.status!=='committed')throw Error(r.value.status==='unknown'?'结果未知，请核对原 Operation，勿重复发送。':r.value.status);

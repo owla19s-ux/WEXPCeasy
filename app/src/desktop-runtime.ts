@@ -87,7 +87,7 @@ export async function runDesktop(options:{url:string;preload:string;start:(polic
  ipcMain.handle('wex:desktop:permissions',async(event,payload)=>{
   const check=businessSource(event,{});if(!check.ok)return check;
   if(phase!=='ready'&&phase!=='degraded')return {ok:false,error:'host_unavailable'};
-  try{return {ok:true,value:await authority.settings(payload,nativeConfirm)};}catch{return {ok:false,error:'permission_settings_unavailable'};}
+  try{const value=await authority.settings(payload,nativeConfirm);if(value.status==='committed'&&!contents.isDestroyed())contents.send('wex:desktop:access-changed');return {ok:true,value};}catch{return {ok:false,error:'permission_settings_unavailable'};}
  });
  ipcMain.handle('wex:desktop:connections',async(event,payload)=>{
   const check=businessSource(event,{});if(!check.ok)return check;

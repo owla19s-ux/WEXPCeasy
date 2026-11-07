@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import type {DesktopBridge,DesktopApiInput,ApiConnectionView,ApiModelView,ApiCommonParameters} from './index.js';
 export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  const [connections,setConnections]=useState<ApiConnectionView[]>([]),[models,setModels]=useState<ApiModelView[]>([]);
@@ -18,6 +18,7 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  async function listModels(id:string){const r=await call({kind:'models',connectionId:id});if(r.status==='ok'&&r.view==='models')setModels(r.models);}
  async function run(work:()=>Promise<void>){if(busy)return;setBusy(true);setMessage('');try{await work();}catch(e){setConnections([]);setModels([]);setMessage(e instanceof Error?e.message:'操作不可用');}finally{setBusy(false);}}
  function choose(c:ApiConnectionView){setSelected(c);setName(c.name);setProvider(c.provider);setEndpoint(c.endpoint);setModels([]);setModel(undefined);}
+ useEffect(()=>bridge.onAccessChanged(()=>{setConnections([]);setModels([]);setSelected(undefined);setModel(undefined);setName('');setProvider('Custom');setEndpoint('https://api.openai.com/v1');setModelName('');setModelId('');setTemperature('');setMessage('授权已变更，请重新读取配置。');}),[bridge]);
  const params=():ApiCommonParameters=>({temperature:temperature.trim()?{mode:'value',value:Number(temperature)}:{mode:'provider-default'}});
  return <div data-api-settings><h3>API 与模型</h3><p>配置保存在 API 模块。凭证仅在独立安全窗口中录入；测试会发送真实请求。</p>
  <button disabled={busy} onClick={()=>void run(refresh)}>读取 API 配置</button>

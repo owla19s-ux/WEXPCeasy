@@ -43,7 +43,7 @@ try{
  const wc=runtime.window.webContents;
  const facts=await wc.executeJavaScript(`(async()=>({node:typeof require,process:typeof process,bridge:Object.keys(window.wexHost).sort(),reply:await window.wexHost.readStatus(),title:document.title,text:document.body.innerText}))()`);
  assert.equal(facts.node,'undefined');assert.equal(facts.process,'undefined');
- assert.deepEqual(facts.bridge,['ai','api','cancelApi','cancelConversations','connections','conversations','onConversationText','permissions','readStatus','requestQuit','space']);assert.equal(facts.reply.ok,true);
+ assert.deepEqual(facts.bridge,['ai','api','cancelApi','cancelConversations','connections','conversations','onAccessChanged','onConversationText','permissions','readStatus','requestQuit','space']);assert.equal(facts.reply.ok,true);
  assert.equal(facts.reply.value.phase,'ready');assert.equal(facts.title,'WEXPCeasy');assert.match(facts.text,/WEXPCeasy/);
 // Exercise the actual React form through DOM events; only native platform interactions are fixtures.
  const click=async text=>wc.executeJavaScript(`(()=>{const b=[...document.querySelectorAll('button')].find(x=>(x.textContent.trim()===${JSON.stringify(text)}||x.getAttribute('aria-label')===${JSON.stringify(text)}));if(!b)throw Error('button_missing');b.click();return true;})()`);
@@ -172,6 +172,14 @@ try{
  await click('读取对话历史');await waitFor("document.querySelectorAll('nav[aria-label=\"普通对话历史\"] button').length===1");
  await click('设置');await click('当前窗口授权');await click('读取当前窗口授权');
  await waitFor("document.querySelectorAll('[data-permission-settings] li').length>0");
+ const permissionSnapshot=await wc.executeJavaScript("window.wexHost.permissions({kind:'snapshot'})");
+ assert.equal(permissionSnapshot.ok,true);
+ const historyGrant=permissionSnapshot.value.entries.find(e=>e.resource==='conversations'&&e.action==='read');
+ assert.ok(historyGrant);
+ const revoked=await wc.executeJavaScript("window.wexHost.permissions("+JSON.stringify({kind:'revoke',id:historyGrant.id,expectedRevision:permissionSnapshot.value.revision})+")");
+ assert.equal(revoked.value.status,'committed');
+ await waitFor("document.querySelectorAll('[data-conversations] article').length===0");
+ await waitFor("document.querySelectorAll('[aria-label=\"资源预览\"] pre').length===0");
  await click('GitHub / Local');await click('读取连接与操作记录');
  await waitFor("document.querySelector('[data-connection-settings]').textContent.includes('Operation 摘要')");
  await click('返回工作区');await click('Space / Context');
