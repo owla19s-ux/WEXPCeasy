@@ -1,0 +1,36 @@
+name: AI configuration acceptance
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'AI/**'
+      - 'app/src/foundations.ts'
+      - 'app/tests/ai-list-host.test.mjs'
+      - 'permissions/src/**'
+      - 'shared/src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ai-configurations-acceptance.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ai-configurations:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Real SQLite configuration and permission recovery
+        run: node --test AI/tests/*.test.mjs app/tests/ai-list-host.test.mjs
+      - run: npm run check:boundaries
