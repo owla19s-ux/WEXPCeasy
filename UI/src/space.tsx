@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useRef,useState} from 'react';
 import type {ReactNode} from 'react';
 import {ContextAddresses} from './space-addresses.js';
 import type {DesktopSpaceInput,DesktopSpaceReply,DesktopBridge} from './index.js';
@@ -6,6 +6,7 @@ type Snapshot=Extract<DesktopSpaceReply,{view:'snapshot'}>;
 type Detail=Extract<DesktopSpaceReply,{view:'context'}>;
 export interface SpaceSections {contextId:string|null;toolbar:ReactNode;categories:ReactNode;structure:ReactNode;content:ReactNode;summary:ReactNode}
 export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sections:SpaceSections)=>ReactNode}){
+ const openSequence=useRef(0);
  const [data,setData]=useState<Snapshot>(),[detail,setDetail]=useState<Detail>(),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const [categoryFilter,setCategoryFilter]=useState(''),[categoryId,setCategoryId]=useState('');
  const [spaceId,setSpaceId]=useState(''),[groupId,setGroupId]=useState(''),[mode,setMode]=useState('space.create'),[name,setName]=useState(''),[description,setDescription]=useState('');
@@ -21,7 +22,7 @@ export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sectio
   const result=await call({kind:'snapshot'});if(result?.status==='ok'&&result.view==='snapshot'){setData(result);if(!result.complete)setMessage('部分 Context 不可用，已保留登记信息。');}
  }
  async function run(work:()=>Promise<void>){if(busy)return;setBusy(true);setMessage('');try{await work();}catch(error){setDetail(undefined);setData(undefined);setMessage(error instanceof Error?error.message:'操作失败');}finally{setBusy(false);}}
- async function open(id:string){const result=await call({kind:'context.open',id});if(result?.status==='ok'&&result.view==='context'){setDetail(result);setName(result.context.name);setDescription(result.context.description);setMode('context.edit');}}
+ async function open(id:string){const sequence=++openSequence.current;const result=await call({kind:'context.open',id});if(sequence!==openSequence.current)return;if(result?.status==='ok'&&result.view==='context'){setDetail(result);setName(result.context.name);setDescription(result.context.description);setMode('context.edit');}}
  async function submit(){
   let input:DesktopSpaceInput;
   if(mode==='category.create')input={kind:'category.create',name};
