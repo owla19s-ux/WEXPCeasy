@@ -19,14 +19,12 @@
 第六批：[最新准备度/证据及限制](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md)。原生Core+Loader实验、WEX外部DSH连接和Windows实机证据分别验收；预留平台不因局部实验通过进入正式施工。
 
 
-## 上级契约与文档入口
+## 直接依赖
 
-- **上级业务/职责研究（历史）：** [AI/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/AI/CONTRACT-archive.md)
-- **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [外部 Agent 生态](../../docs/A0-产品构想与研究/方案与研究/既有研究/AGENT-ECOSYSTEM-2026-10-31.md)
-- [研究决策](../../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
+- [AI 模块](../README.md)：Agent 配置和角色能力归属。
+- [API 连接器](../../connections/api/README.md)：模型及连接元数据的公开消费入口。
 
-本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
+历史生态研究不作为本子目录日常施工索引。
 
 ## G6：配置修订与记忆边界
 
