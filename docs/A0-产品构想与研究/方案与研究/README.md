@@ -9,3 +9,8 @@
 [A0 总入口](../README.md)
 
 - [模块局部性候选](架构研究历史/MODULE-LOCALITY-DESIGN-V0.1.md)、[旧运行时选型](架构研究历史/RUNTIME-OPTIONS-V0.1.md)、[边界候选研究](架构研究历史/BOUNDARY-DECISION-NOTES-V0.1.md)：不自动指挥本版施工。
+
+## 更早的审查和架构研究归档
+
+- [历史契约与模块方法论](架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)、[Provider 边界推演](架构研究历史/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)、[候选动态扩展接入](架构研究历史/RUNTIME-EXTENSION-CONTRACT-V0.1.md)、[2026-10 研究共识](架构研究历史/RESEARCH-DECISIONS-2026-10-30.md)。
+- [2026-10～11 审查报告目录](审查历史/APP-FOUNDATIONS-GAP-AUDIT-2026-10-31.md)：包括早期应用基础缺口、架构压力、文档一致性、DSH、基础能力、216 项语义及视图审查。全部是历史证据，不能替代 A2 当前状态。
