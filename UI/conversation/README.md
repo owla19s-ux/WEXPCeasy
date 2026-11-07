@@ -11,14 +11,12 @@
 修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
 
 
-## 上级契约与文档入口
+## 直接依赖
 
-- **现行 UI 入口：** [UI/README.md](../../UI/README.md)
-- **上级契约：** [conversations/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/conversations/CONTRACT-archive.md)
-- **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [全局契约地图](../../docs/A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)
+- [UI 模块](../README.md)：现行页面装配与交互边界。
+- [Conversations 模块](../../conversations/README.md)：消息与会话业务事实。
 
-本目录负责页面/面板局部组织，不拥有领域业务状态、权限或验收事实；业务语义以对应 owner 契约为准。
+页面只消费业务公开能力，不以历史研究契约作为日常施工前置。
 
 ## G7：输入与附件交互
 
