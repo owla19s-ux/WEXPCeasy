@@ -2,7 +2,7 @@
 
 API 模块专属配置面板的维护位置，由 WEX 配置页挂载。仅有实际专属交互时实现。
 
-状态：2026-10-30 按用户确认建立的源码维护目录，当前只有职责说明，尚无产品实现。目录不是运行时数据路径，也不代表独立插件、进程或编译包。
+**历史（2026-10-30）**：当时本子目录只有职责说明。当前 `connections/api/src/` 已有正式 Provider/Model 领域代码；但 `UI/src/workbench.tsx` 中 API 与模型设置按钮仍禁用。不能把领域能力存在当作专属设置面板已完成，也不为该子目录预建空 UI。目录不等于运行时数据路径。
 
 [源码目录与 Windows 数据要求](../../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
 
@@ -11,8 +11,8 @@ API 模块专属配置面板的维护位置，由 WEX 配置页挂载。仅有�
 
 ## 上级契约与文档入口
 
-- **上级契约：** [connections/CONTRACT.md](../../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
-- **上级契约：** [UI/CONTRACT.md](../../../UI/CONTRACT.md)
+- **正式 owner 与历史研究**：[API 模块入口](../README.md)、[Connections 模块入口](../../README.md)；[历史连接契约](../../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
+- **现行 UI 入口**：[UI/README.md](../../../UI/README.md)；[UI/CONTRACT.md](../../../UI/CONTRACT.md) 仅作历史研究
 - **全局文档总索引：** [docs/README.md](../../../docs/README.md)
 - [提供方边界 Walkthrough](../../../docs/A0-产品构想与研究/方案与研究/架构研究历史/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
 
