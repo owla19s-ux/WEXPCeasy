@@ -4,7 +4,7 @@
 
 本目录是独立 GitHub **远端 API** 连接器，不负责 `connections/local/` 的本地 Git，也不是 [environments](../../environments/README.md) 环境管理器。现有 `src/index.ts` 已实际导入 `octokit` 与 `@modelcontextprotocol/sdk`，提供受控 Octokit 客户端工厂、MCP Stdio 读取适配及有限的 GitHub 文件读写；`app/src/foundations.ts` 已有官方模式的装配分支，`tests/official-client.test.mjs` 与 `tests/mcp-client.test.mjs` 有 SDK/模拟 MCP 进程测试。**因此官方 SDK/MCP 基础代码已经接入；但不能将其等同于完整 GitHub MCP Server 工具集、真实远端写入/分发及 GH-01～GH-12 的整体产品验收。**
 
-`CONTRACT.md` 的 GH-01～GH-12 及更广泛官方覆盖描述属于完整目标及历史研究规格，其“无产品 GitHub 代码”是历史快照。**正式施工入口**：[B3 D-06/D-06A](../../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md)；先核验许可证、官方版本、依赖与运行/分发，再按 M-01 检验连接器 owner 隔离。GitHub MCP 的协议/运行适配归本模块；App 仅负责宿主装配，不能复制 GitHub 协议、凭证或 Operation 账本。0.1.1 必需能力与长期完整官方工具覆盖分别验收。
+`CONTRACT.md` 的 GH-01～GH-12 及更广泛官方覆盖描述属于完整目标及历史研究规格，其“无产品 GitHub 代码”是历史快照。**历史验收细则**：[B3 D-06/D-06A](../../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md)；**当前版本状态入口**：[A2 0.1.1 总表](../../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)；先核验许可证、官方版本、依赖与运行/分发，再按 M-01 检验连接器 owner 隔离。GitHub MCP 的协议/运行适配归本模块；App 仅负责宿主装配，不能复制 GitHub 协议、凭证或 Operation 账本。0.1.1 必需能力与长期完整官方工具覆盖分别验收。
 
 
 > **当前代码事实（2026-11-07，`main bd72dfea`）**：`connections/github/src/index.ts` 已存在，`tests/` 下有文件、客户端访问及真实读写测试入口；最新 SHA 的 **GitHub official SDK read acceptance** 工作流成功。仅说明对应读取验收成功，不等于已验收真实写入、官方 MCP Server 完整工具集或 GH-01～GH-12 全覆盖。
