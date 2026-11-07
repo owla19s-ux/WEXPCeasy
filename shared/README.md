@@ -47,4 +47,4 @@ shared 只提供可复用的**技术机制**，不拥有 Space/Context、Agent�
 
 **当前验收状态（2026-11-07 定向源码核对）**：已确认 `shared/src/index.ts` 实际公开 Store、路径、Vault 与持久诊断，相关模块测试文件存在；本轮只读核对源码/测试，**没有复跑测试或 Windows 实机验收**。不得根据旧状态重复创建凭证库或诊断持久机制，也不能据代码存在宣布模块验收通过。
 
-历史完整研究：[shared 契约归档](../docs/research/contracts/shared/CONTRACT-archive.md)；旧 [CONTRACT](../docs/research/contracts/shared/CONTRACT-archive.md) 为兼容入口。Windows 数据要求：[目录与数据设计](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)。
+历史完整研究：[shared 契约归档](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/shared/CONTRACT-archive.md)；旧 [CONTRACT](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/shared/CONTRACT-archive.md) 为兼容入口。Windows 数据要求：[目录与数据设计](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)。
