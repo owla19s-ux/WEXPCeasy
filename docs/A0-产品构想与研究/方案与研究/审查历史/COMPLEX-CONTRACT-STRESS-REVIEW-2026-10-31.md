@@ -150,14 +150,14 @@
 
 | 模块/就近修改 | 再对冲输入 | 责任与零误判断言 | 结论/剩余 |
 |---|---|---|---|
-| [app](../../../research/contracts/app/CONTRACT-archive.md) APP01–04补充 | H05/H10/H20/H30 | APP不能拿单实例代替根写锁；睡眠/更新不重派，旧通知不授访问权 | E0责任明确；锁/安装/恢复E4，后台D |
-| [space](../../../research/contracts/space/CONTRACT-2026-10-31.md) SPC03/04补充 | H24/H26/H28 | 跨Context引用不传播许可，外部内容变化不复制本体 | E0无新owner冲突；内容限制来源需真实提供方 |
-| [AI](../../../research/contracts/AI/CONTRACT-archive.md) AIC04补充 | H22/H24/H17 | 角色复用不复用输入/session/权，责任由WF记录 | E0闭合；外部session隔离C，公共记忆不开发 |
-| [conversations](../../../research/contracts/conversations/CONTRACT-archive.md) 输入/定稿/工具补充 | H24/H26/H27/H14 | 已存摘要不默认公开；不同出口重判；普通聊天不造Task | E0差异可表达；来源持久化/策略D/C |
-| [connections](../../../research/contracts/connections/CONTRACT-archive.md) C01–05补充 | H22/H24/H25/H29/H30 | 单账本、代次消歧、当前出口准入、估算非结算、恢复查询非submit | E0无重复权限owner；真实回调/账单/插件C |
-| [workflows](../../../research/contracts/workflows/CONTRACT-archive.md) W01–07补充 | H22/H23/H17/H28/H29 | 唯一推进/占用/责任、实例固定、迭代区分、恢复先核对 | E0解释部分推进；等待/预算原子性C、owner细化B、放行unknown/验收D |
-| [permissions](../../../research/contracts/permissions/CONTRACT-archive.md) PER01/02补充 | H24/H27/H08 | 读/外发/跨域披露分判，不信“已脱敏”；预算不授权 | E0不再默认衍生内容公开；传播/降级政策D、非受控路径不保证 |
-| [shared](../../../research/contracts/shared/CONTRACT-archive.md) SH01–03补充 | H19/H21/H29/H30 | 日志非账本/审计，配置技术非生效策略，索引非可见性权威 | E0归属清楚；存储/锁/崩溃/容量C，清理和强审计D |
+| [app](../既有研究/contracts/app/CONTRACT-archive.md) APP01–04补充 | H05/H10/H20/H30 | APP不能拿单实例代替根写锁；睡眠/更新不重派，旧通知不授访问权 | E0责任明确；锁/安装/恢复E4，后台D |
+| [space](../既有研究/contracts/space/CONTRACT-2026-10-31.md) SPC03/04补充 | H24/H26/H28 | 跨Context引用不传播许可，外部内容变化不复制本体 | E0无新owner冲突；内容限制来源需真实提供方 |
+| [AI](../既有研究/contracts/AI/CONTRACT-archive.md) AIC04补充 | H22/H24/H17 | 角色复用不复用输入/session/权，责任由WF记录 | E0闭合；外部session隔离C，公共记忆不开发 |
+| [conversations](../既有研究/contracts/conversations/CONTRACT-archive.md) 输入/定稿/工具补充 | H24/H26/H27/H14 | 已存摘要不默认公开；不同出口重判；普通聊天不造Task | E0差异可表达；来源持久化/策略D/C |
+| [connections](../既有研究/contracts/connections/CONTRACT-archive.md) C01–05补充 | H22/H24/H25/H29/H30 | 单账本、代次消歧、当前出口准入、估算非结算、恢复查询非submit | E0无重复权限owner；真实回调/账单/插件C |
+| [workflows](../既有研究/contracts/workflows/CONTRACT-archive.md) W01–07补充 | H22/H23/H17/H28/H29 | 唯一推进/占用/责任、实例固定、迭代区分、恢复先核对 | E0解释部分推进；等待/预算原子性C、owner细化B、放行unknown/验收D |
+| [permissions](../既有研究/contracts/permissions/CONTRACT-archive.md) PER01/02补充 | H24/H27/H08 | 读/外发/跨域披露分判，不信“已脱敏”；预算不授权 | E0不再默认衍生内容公开；传播/降级政策D、非受控路径不保证 |
+| [shared](../既有研究/contracts/shared/CONTRACT-archive.md) SH01–03补充 | H19/H21/H29/H30 | 日志非账本/审计，配置技术非生效策略，索引非可见性权威 | E0归属清楚；存储/锁/崩溃/容量C，清理和强审计D |
 | [views](../../../../views/CONTRACT.md) 投影补充 | H07/H23/H30 | r4结果不涂r5同名节点，混合版本不假快照 | E0可呈现；多来源组合/Windows图形C |
 | [dsh](../../../../dsh/README.md) 就近边界补充 | H12/H25 | Service/原生代次归DS，出口Operation归CN，不接管外部D | E0明确；不虚建成熟CONTRACT，真实多插件第三方/E4待验 |
 | [UI](../../../../UI/CONTRACT.md) 恢复通知搜索补充 | H23/H29/H30 | 恢复核对完成前submit=0，过时通知重查，费用差异可见 | E0可评审；窄桥/隐私缓存/E4待验 |
