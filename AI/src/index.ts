@@ -11,7 +11,7 @@ export type Entry = Configuration & { id: string; revision: number };
 type Receipt = { intent: string; command: string; entry: Entry };
 type State = { version: 1; entries: Entry[]; receipts: Receipt[] };
 export type ConfigAccess = {
-  action: 'read' | 'write'; kind: Configuration['kind']; id: string;
+  action: 'read' | 'write' | 'list'; kind: Configuration['kind']; id: string;
 };
 const validId = (value: unknown): value is string =>
   typeof value === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(value);
@@ -115,6 +115,22 @@ export function createAiConfigurations(
 
 
   return Object.freeze({
+    /** Enumeration grants reveal no row by themselves. Trusted hosts must retain and recheck the
+     * original permission decision across this synchronous batch, including derived row requests. */
+    list(request: object, kind: Configuration['kind']) {
+      const scope:ConfigAccess={action:'list',kind,id:'*'};
+      if (!['role','position','agent'].includes(kind) || !allowed(request,scope)) return {status:'denied'} as const;
+      try {
+        const candidates=readConfigurationState(store).state.entries.filter(entry=>
+          entry.kind===kind && allowed(request,{action:'read',kind,id:entry.id}));
+        if (!allowed(request,scope)) return {status:'denied'} as const;
+        const entries=candidates.filter(entry=>allowed(request,{action:'read',kind,id:entry.id}))
+          .map(entry=>({...normalize(entry),id:entry.id,revision:entry.revision}));
+        if (!allowed(request,scope)) return {status:'denied'} as const;
+        return {status:'ok',entries} as const;
+      } catch { return {status:'unavailable'} as const; }
+    },
+
     read(request: object, kind: Configuration['kind'], id: string) {
       if (!validId(id) || !allowed(request, { action: 'read', kind, id })) return { status: 'denied' } as const;
       try {
