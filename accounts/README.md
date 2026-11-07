@@ -16,11 +16,10 @@
 
 - [Accounts 身份与账号边界](BOUNDARY.md)：本地可离线启动、可信 OS/安装主体由 app 提供、权限归 permissions；云账号与同步不进入首期。
 
-## 文档入口与证据边界
+## 定向入口
 
-- [文档体系总索引](../docs/README.md)
-- [全局契约地图](../docs/A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)
-- [研究决策与当前边界](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
-- [第六批准备度与待决边界](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md)
+- [账号边界说明](BOUNDARY.md)：身份与未来账号机制的预留范围。
+- [Permissions 模块](../permissions/README.md)：权限策略由其独立持有。
 
-本目录当前为预留机制或独立实验，不等于完整产品模块已获施工准入。研究/实验结果只证明其明确记录的范围；不得外推为完整 WEX 集成、Windows 实机或生产可用性。
+本模块目前只保留预留边界，不为历史研究维护全局导航。
+
