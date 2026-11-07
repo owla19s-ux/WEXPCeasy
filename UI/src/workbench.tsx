@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {SpacePanel} from './space.js';
 import {MiddleWorkspace} from './middle-workspace.js';
+import {InteractionDock} from './interaction-dock.js';
 import {columnWidths,defaultLayout,layoutKey,resizeColumns,restoreLayout} from './layout.js';
 import type {Layout} from './layout.js';
 import type {DesktopBridge,DesktopStatus} from './index.js';
@@ -35,7 +36,6 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
  useEffect(()=>{if(dragging)return;try{localStorage.setItem(layoutKey,JSON.stringify(layout));setLayoutSaved(true);}catch{setLayoutSaved(false);}},[layout,dragging]);
  const widths=columnWidths(layout,size.width),mainHeight=layout.bottomOpen?Math.max(320,size.height*(1-layout.bottomRatio)-6):size.height;
  const restore=(value:Layout)=>setLayout(value);
- const role=<div className="role-empty" aria-label="角色展示"><span aria-hidden="true">W</span><small>尚未添加角色素材</small></div>;
  return <SpacePanel bridge={bridge} render={parts=><main className="workbench" data-workbench data-dragging={dragging}>
   <header className="workbench-top"><div><strong>WEX</strong><span>个人工作台</span></div><div className="top-actions"><span className={'phase '+status.phase} role="status">{label}</span><button aria-pressed={layout.bottomOpen} onClick={()=>setLayout({...layout,bottomOpen:!layout.bottomOpen})}>输出</button><button onClick={onQuit}>{status.phase==='release-pending'?'重试退出':'退出应用'}</button></div></header>
   <div className="workbench-body"><div ref={grid} className="workbench-grid" style={{gridTemplateColumns:widths.map(v=>v+'px').join(' 6px '),gridTemplateRows:layout.bottomOpen?'minmax(320px,1fr) 6px '+Math.max(100,size.height*layout.bottomRatio)+'px':'minmax(0,1fr)'}}>
@@ -57,7 +57,7 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
       <details open><summary>系统</summary><button aria-pressed={setting==='display'} onClick={()=>setSetting('display')}>显示与布局</button><button aria-pressed={setting==='voice'} onClick={()=>setSetting('voice')}>语音</button><button aria-pressed={setting==='diagnostics'} onClick={()=>setSetting('diagnostics')}>运行诊断</button></details>
      </div><div className="settings-detail">
       {setting==='display'&&<><h3>显示与布局</h3><p>拖动分隔线调整尺寸；聚焦分隔线后可用方向键调节，Shift 加快。</p>
-       <label className="check-label"><input type="checkbox" checked={layout.roleVisible} onChange={e=>setLayout({...layout,roleVisible:e.target.checked})}/>显示角色区域</label>
+       <label className="check-label"><input type="checkbox" checked={layout.roleVisible} onChange={e=>setLayout({...layout,roleVisible:e.target.checked})}/>显示窗口内虚拟形象</label>
        <label className="check-label"><input type="checkbox" checked={layout.collapsed} onChange={e=>setLayout({...layout,collapsed:e.target.checked})}/>收起第一列</label>
        <label className="check-label"><input type="checkbox" checked={layout.bottomOpen} onChange={e=>setLayout({...layout,bottomOpen:e.target.checked})}/>显示底部输出</label>
        <p>当前列宽：{widths.map(w=>Math.round(w)).join(' / ')} px</p><button onClick={()=>setLayout(defaultLayout())}>恢复默认布局</button></>}
@@ -73,8 +73,7 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
     </div>:<button className="auxiliary-toggle" aria-label="展开辅助区" title="展开辅助区" onClick={()=>setLayout({...layout,auxiliaryOpen:true})}>›</button>}
    </aside>
    {layout.bottomOpen&&<><div style={{gridColumn:'3 / -1',gridRow:2}}><Divider id="bottom" axis="y" layout={layout} value={layout.bottomRatio*100} onDelta={(delta,s)=>setLayout({...s,bottomRatio:Math.max(.12,Math.min(.5,s.bottomRatio-delta/size.height))})} onRestore={restore} onDragging={setDragging} onReset={()=>setLayout(s=>({...s,bottomRatio:defaultLayout().bottomRatio}))}/></div><section className="bottom-output" style={{gridColumn:'3 / -1',gridRow:3}}><strong>运行输出</strong><p>{label}</p>{status.diagnostics.map((d,i)=><p key={i}>{d.module}：{d.reason}</p>)}{error&&<p role="alert">{error}</p>}</section></>}
-  </div></div>
-  {layout.roleVisible&&<div className="role-floating" aria-label="独立虚拟形象位置（角色素材未配置）">{role}</div>}
+  </div><InteractionDock visible={layout.roleVisible}/></div>
   <footer className="workbench-footer"><span>{error||(layoutSaved?'业务访问需确认授权；布局自动保存。':'布局保存不可用；本次窗口内仍可调整。')}</span><span>WEXPCeasy · 0.1.1</span></footer>
  </main>}/>;
 }
