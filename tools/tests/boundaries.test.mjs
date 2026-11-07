@@ -111,3 +111,15 @@ test('renderer cannot reach concrete connector privileges through public ports',
   'connections/github/src/index.ts':'export {};'};
  assert.ok(analyze(files).errors.some(e=>e.code==='renderer_privileged'));
 });
+
+test('official GitHub dependencies are limited to the GitHub connector and exact SDK client entrypoints',()=>{
+ const names=['octokit','@modelcontextprotocol/sdk/client/index.js','@modelcontextprotocol/sdk/client/stdio.js'];
+ for(const name of names){
+  assert.deepEqual(analyze({...good,'connections/github/src/official.ts':"import '"+name+"';"}).errors,[]);
+  for(const owner of ['app','UI','connections/api','connections/local','connections']){
+   const file=owner+'/src/official.ts';
+   assert.ok(analyze({...good,[file]:"import '"+name+"';"}).errors.some(e=>e.file===file&&e.code==='unresolved_import'));
+  }
+ }
+ assert.ok(analyze({...good,'connections/github/src/official.ts':"import '@modelcontextprotocol/sdk/server/index.js';"}).errors.some(e=>e.code==='unresolved_import'));
+});
