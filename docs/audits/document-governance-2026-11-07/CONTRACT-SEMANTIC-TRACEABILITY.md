@@ -143,3 +143,12 @@
 ### 7.2 证据限制
 
 没有最新全仓构建、真实 Windows E4、完整进程/文件系统或凭证系统验收；测试文件存在与其历史报告分开记录。以上代码路径是可继续逐断言核验的具体定位，不构成自动签收。
+
+
+## 8. 第五轮范围/owner 对冲：Views 与 Workflows（2026-11-07）
+
+- **VIEW-01～07**：历史 `views/CONTRACT.md` 定义专业视图配置、对象出现/映射、布局、获准投影与撤权缓存。现行 `views/README.md` 已区分独立专业 `views` 领域（目前未找到 `views/src/index.ts`）和 `UI/src/middle-workspace.tsx` 的 0.1.1 基础标签/预览 UI。**分类：边界继承 + 专业引擎未实现 + 基础 UI 部分实现**。不能以 UI 标签已存在宣布 VIEW-01～07 已实现，也不能在 0.1.1 强制建立专业视图引擎。
+- **W01～W07、WORKFLOWS-***：历史 `docs/research/contracts/workflows/CONTRACT-archive.md` 仍写“runtime 在本域承接派发/恢复/并发协调”，但现行 `workflows/README.md` 明确**调度器为独立顶层 `scheduler/` owner**，正式自由格子、任务调度、节点运行延期 0.1.2；未找到 `workflows/src/index.ts`。**分类：部分 owner 描述已被后续设计替换 + 整域延期**。不要把历史 `workflows/runtime` 建成与 `scheduler/` 并行的第二套调度器，也不把研究草案的 W01～W07 自动作为 0.1.1 施工事项。
+- **共同约束**：Task/Verification/Acceptance 与 Connections Operation 的唯一事实边界仍有效；Views 不因呈现连线取得业务依赖写权限；已有原型不能当 Windows 正式交付证据。具体 `scheduler` 与 Workflows 接口分工仍须在 0.1.2 施工前按最新契约核对，**不能靠本文直接冻结接口**。
+
+本轮只核对文档和公开入口是否存在，未遍历这些域的所有子目录或运行测试。
