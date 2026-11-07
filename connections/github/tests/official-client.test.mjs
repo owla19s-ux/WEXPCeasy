@@ -96,3 +96,49 @@ test('official SDK unknown writes survive SQLite reopen and cannot be replayed',
   await rm(directory,{recursive:true,force:true});
  }
 });
+
+test('official SDK credential preparation has a bounded deadline',{timeout:2000},async()=>{
+ let entered=false,calls=0;
+ const factory=github.createGitHubOfficialClientFactory({timeoutMs:60,
+  resolveCredential:()=>{entered=true;return new Promise(()=>{});},
+  fetch:async()=>{calls++;return response(200,{});}});
+ await assert.rejects(factory(connection,access()),{message:'github_credential_unavailable'});
+ assert.equal(entered,true);assert.equal(calls,0);
+});
+test('official SDK pre-cancelled acquisition never resolves a credential',async()=>{
+ let resolutions=0;
+ const controller=new AbortController();controller.abort(Error('fixture-token'));
+ const factory=github.createGitHubOfficialClientFactory({resolveCredential:async()=>{resolutions++;return 'fixture-token';}});
+ await assert.rejects(factory(connection,access(),controller.signal),{message:'github_request_cancelled'});
+ assert.equal(resolutions,0);
+});
+test('file read cancellation interrupts pending credential lookup without a network call',{timeout:2000},async()=>{
+ let entered,finish,calls=0;
+ const ready=new Promise(resolve=>{entered=resolve;}),secret=new Promise(resolve=>{finish=resolve;});
+ const controller=new AbortController();
+ const factory=github.createGitHubOfficialClientFactory({resolveCredential:()=>{entered();return secret;},
+  fetch:async()=>{calls++;return response(200,{});}});
+ const pending=github.createGitHubFileReader(connection,factory).read(target,controller.signal,access());
+ await ready;controller.abort(Error('fixture-token'));
+ try{await assert.rejects(pending,{message:'github_request_cancelled'});}
+ finally{finish('fixture-token');}
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(calls,0);
+});
+test('credential completion cannot deliver a client after request cancellation',async()=>{
+ const controller=new AbortController();let calls=0;
+ const factory=github.createGitHubOfficialClientFactory({resolveCredential:async()=>{controller.abort();return 'fixture-token';},
+  fetch:async()=>{calls++;return response(200,{});}});
+ await assert.rejects(factory(connection,access(),controller.signal),{message:'github_request_cancelled'});
+ assert.equal(calls,0);
+});
+for(const [status,headers] of [[403,{'retry-after':'1','x-ratelimit-remaining':'0'}],[429,{'retry-after':'1'}]]){
+ test('official SDK does not retry rate-limited writes '+status,async()=>{
+  let calls=0;
+  const factory=github.createGitHubOfficialClientFactory({resolveCredential:async()=> 'fixture-token',
+   fetch:async()=>{calls++;return new Response(JSON.stringify({message:'fixture-token rate limited'}),{status,headers:{...headers,'content-type':'application/json'}});}});
+  const operation=github.createGitHubFileAdapter(factory).execute(connection,target,{kind:'put',message:'test',content:'x',expectedSha:null},access());
+  if(status===403)assert.deepEqual(await operation,{status:'unavailable',reason:'github_access_unavailable'});
+  else await assert.rejects(operation,{message:'github_outcome_unconfirmed'});
+  assert.equal(calls,1);
+ });
+}
