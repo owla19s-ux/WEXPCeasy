@@ -252,3 +252,18 @@
 - 下一 owner 所需最小公开端口及验收条件。
 
 **完成口径**：本文件所有 0.1.1 已确认的必要能力有可调用的产品实现、真实 UI 操作与相应验收证据，完成 Windows 打包与恢复验证。CI 单独全绿、代码目录齐全或文档更新均不等于正式交付。
+
+## 七、2026-11-07 CI 基线复验与 Windows 人工实机延期（文档治理补充）
+
+> 本节只同步最新证据和用户的**测试安排**，不修改 D-01～D-10 既定功能、owner、验收要求，也不授权新代码施工。
+
+**用户已确定：Windows 人工实机整体验收暂缓，待具备 Windows 主机后集中一次性进行。** 其范围包括实际安装/启动、真实凭证与授权、Space/Agent/API/Conversations 操作、窗口 Snap/DPI、分隔线及布局、重启/重装后数据恢复。**当前 GitHub-hosted Windows runner 的自动化测试仍可检查和修复**，不等同于人工 E4，也不因为用户暂时无电脑就忽略 CI 失败。现行 0.1.1 的交付标准仍保留 Windows 整体验收，只有执行日期后置。
+
+已实际检查 `main@b5a474b59fabb55c89ce3fc3f662d20e50335565` 对应 [Actions 总运行列表](https://github.com/owla19s-ux/WEXPCeasy/actions/runs) 和失败 Job 日志：
+
+- **D-08 UI / L029**：[Foundation #42347862263](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862263) `npm test` 共 673 项、672 过、1 失败；`UI/tests/layout.test.mjs:23` 导航栏拖动后实际宽度未按预期增加。**需修 UI v2 的尺寸换算及其断言**，不能仅改文档宣布 UI 通过。
+- **D-08/D-09 App/Electron**：[B3 #42347862252](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862252) Linux+Windows 双平台失败：`app/desktop/tests/runtime.mjs:44` 旧四列断言 `4`，新版外层布局实际为 `3`；后续旧 DOM 结构断言也需同步检视，保留真实 Electron 自动化覆盖。
+- **B1 Local/Space**：[B1 #42347862242](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862242) Linux job 通过、Windows job 失败；已解析 [JUnit 产物](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862242/artifacts/13564596537)，总计 492 个 testcases、12 failures：Local bindings 2、directories 3、Space recovery 6、Space 其他 1。含短/长路径不一致、文件能力不可用、撤权负例失败、清理 EPERM，必须归 owner 分开定性；**撤权失败先验证安全语义，不能修改预期为允许**。
+- **已成功的有限范围**：[GitHub SDK read #42347862269](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862269) 和 [Documentation audit #42347862241](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862241)；B2 的几个同 SHA workflow_run 为 skipped，不代表 B2 通过。
+
+**施工安排**：当前先解决可复现的自动化回归、继续业务 IPC/正式页面/模块验收；人工 Windows E4 条目集中保持 `DEFERRED-UNTIL-HARDWARE`，不反复拆单催测。相关详细证据和追踪编号见 [条款级追踪总账 G 节](../../audits/document-governance-2026-11-07/CLAUSE-TRACEABILITY-LEDGER.md)。
