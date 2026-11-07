@@ -106,3 +106,16 @@ test('revoked history visibility fences streaming while the admitted cancellatio
  assert.equal((await f.authority.settings({kind:'revoke',id:row.id,expectedRevision:snapshot.revision},async()=>true)).status,'committed');
  assert.equal(f.chat.cancel().status,'committed');f.release();await job;
 });
+
+test('connections settings require consent and preserve global configuration revision conflicts',async t=>{
+ const f=await fixture(t);
+ const {createDesktopConnections}=await import('../../dist/app/src/desktop-connections.js');
+ const controls=createDesktopConnections({authority:f.authority,confirm:async()=>true});controls.attach(f.host);
+ assert.equal(f.host.connections.configs.put({id:'local-test',adapter:'local',endpoint:'local:files',credentialRef:null,enabled:true},0,'fixture-local').status,'ok');
+ const snapshot=await controls.request({kind:'snapshot'});assert.equal(snapshot.status,'ok');assert.equal(snapshot.connections[0].id,'local-test');assert.equal('credentialRef'in snapshot.connections[0],false);
+ assert.equal((await controls.request({kind:'toggle',id:'local-test',expectedRevision:snapshot.revision,enabled:false})).status,'committed');
+ assert.equal((await controls.request({kind:'toggle',id:'local-test',expectedRevision:snapshot.revision,enabled:true})).status,'conflict');
+ assert.equal(f.host.connections.configs.get('local-test').enabled,false);
+ assert.equal((await controls.request({kind:'toggle',id:'local-test',expectedRevision:2,enabled:true,scope:'admin'})).status,'rejected');
+ controls.close();assert.equal((await controls.request({kind:'snapshot'})).status,'unavailable');
+});

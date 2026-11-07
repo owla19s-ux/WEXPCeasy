@@ -31,7 +31,7 @@ export function createDesktopConnections(options:{authority:DesktopAuthority;con
     const operations=host!.connections!.operations.read().operations.map(o=>({id:o.id,phase:o.phase,attempts:o.attempts,connectionId:o.connection?.connectionId??null,adapter:o.connection?.adapterId??null}));
     if(host!.permissions!.recheck(historyRequest,before).status!=='allow'||host!.permissions!.evaluate(request).status!=='allow')return {status:'rejected',reason:'authorization_changed'};
     return {status:'ok',revision:snapshot.revision,connections:snapshot.items.map(c=>({id:c.id,adapter:c.adapter,endpoint:c.endpoint,enabled:c.enabled,hasCredential:c.credentialRef!==null})),operations,
-     localFiles:!!host!.localFiles,localDirectories:!!host!.localDirectories&&process.platform==='linux'};
+     localFiles:!!host!.localFiles,localDirectories:!!host!.localDirectories&&['linux','win32'].includes(process.platform)};
    })??{status:'unavailable',reason:'operation_in_progress'};}catch{return {status:'unavailable',reason:'connections_operation_unavailable'};}
   },close(){closed=true;}
  });

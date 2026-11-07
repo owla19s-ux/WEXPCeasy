@@ -118,7 +118,7 @@ try{
  const previewFile=join(contextRoot,'preview.txt');await writeFile(previewFile,'<script>window.resourceExecuted=true</script>Selected local text');
  const linked=await invoke({kind:'address.add',contextId:created.id,name:'Selected local file',address:pathToFileURL(previewFile).href,notes:'no import',purpose:['reference','operation']});assert.equal(linked.status,'committed');
  const fileRead=await invoke({kind:'resource.read',contextId:created.id,id:linked.id,mode:'file'});
- if(process.platform==='linux')assert.equal(fileRead.status,'ok');else assert.ok(['ok','unavailable'].includes(fileRead.status));
+ assert.equal(fileRead.status,'ok');
  await wc.executeJavaScript("[...document.querySelectorAll('nav button')].find(x=>x.textContent.includes('Desktop Context')).click();true");
  await waitFor("[...document.querySelectorAll('.address-card strong')].some(x=>x.textContent==='Selected local file')");
  if(fileRead.status==='ok'){
@@ -175,7 +175,9 @@ try{
  await click('GitHub / Local');await click('读取连接与操作记录');
  await waitFor("document.querySelector('[data-connection-settings]').textContent.includes('Operation 摘要')");
  await click('返回工作区');await click('Space / Context');
- const retained=await invoke({kind:'context.open',id:created.id});assert.equal(retained.resources.length,2);assert.ok(retained.context.primaryAddress);
+ const directory=await invoke({kind:'address.add',contextId:created.id,name:'Selected directory',address:pathToFileURL(contextRoot).href,purpose:'reference'});assert.equal(directory.status,'committed');
+ const listed=await invoke({kind:'resource.read',contextId:created.id,id:directory.id,mode:'directory'});assert.equal(listed.status,'ok');assert.equal(listed.view,'directory');assert.ok(listed.entries.some(e=>e.name==='preview.txt'));
+ const retained=await invoke({kind:'context.open',id:created.id});assert.equal(retained.resources.length,3);assert.ok(retained.context.primaryAddress);
  
  const prefs=wc.getLastWebPreferences();assert.equal(prefs.sandbox,true);assert.equal(prefs.contextIsolation,true);assert.equal(prefs.nodeIntegration,false);
  assert.equal((await lstat(join(root,'.wex-write-lock'))).isDirectory(),true);
@@ -202,7 +204,7 @@ try{
  assert.equal((await runtime.lifecycle.stop()).status,'stopped');
  const reopened=await startFoundations({dataRoot:root,trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false}});
  assert.equal(reopened.status,'ready');assert.equal((await reopened.stop()).status,'stopped');
- const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,fixtures:['local HTTP/SSE Provider','native dialog responses','native directory selection','one permissions-store close failure'],limits:['Windows Local handle/scanner availability is reported explicitly','not an installer or manual Windows acceptance'],checks:['API and AI config forms, actual local Provider generation, saved history and scoped permission UI','three-column navigation pointer and keyboard resizing, optional auxiliary width and collapse, on-demand preview, layout recovery and preserved Space draft','category creation and address form/primary selection through actual React DOM','controlled Local resource preview or explicit platform unavailability','React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
+ const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,fixtures:['local HTTP/SSE Provider','native dialog responses','native directory selection','one permissions-store close failure'],limits:['Windows Local native handle/scanner tested; requires Windows PowerShell with Add-Type available','not an installer or manual Windows acceptance'],checks:['API and AI config forms, actual local Provider generation, saved history and scoped permission UI','three-column navigation pointer and keyboard resizing, optional auxiliary width and collapse, on-demand preview, layout recovery and preserved Space draft','category creation and address form/primary selection through actual React DOM','controlled Local resource preview and pinned native directory enumeration','React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
  await writeFile(resolve('desktop-acceptance',process.platform+'.json'),JSON.stringify(report,null,2));
  console.log('DESKTOP_ACCEPTANCE '+JSON.stringify(report));provider.closeAllConnections();provider.close();clearTimeout(timer);app.quit();
 }catch(error){provider.closeAllConnections();provider.close();console.error(error);clearTimeout(timer);app.exit(1);}

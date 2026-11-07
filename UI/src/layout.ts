@@ -45,7 +45,10 @@ export function resizeColumns(state:Layout,width:number,index:number,delta:numbe
  if((index===0&&state.collapsed)||(index===1&&!state.auxiliaryOpen))return state;
  const values=columnWidths(state,width),minima=[state.collapsed?navMin:112,mainMin,state.auxiliaryOpen?auxMin:auxClosed];
  const left=values[index]!,right=values[index+1]!;
- const change=clamp(delta,minima[index]!-left,right-minima[index+1]!);
+ if(left<minima[index]!||right<minima[index+1]!)return state;
+ const totalWidth=values.reduce((a,b)=>a+b,0);
+ const maxChange=index===0&&!state.auxiliaryOpen?Math.min(right-minima[1]!,totalWidth*(100-state.columns[2]-1e-6)/100-left):right-minima[index+1]!;
+ const change=clamp(delta,minima[index]!-left,maxChange);
  if(!Number.isFinite(change)||change===0)return state;
  values[index]=left+change;values[index+1]=right-change;
  if(index===0&&!state.auxiliaryOpen){

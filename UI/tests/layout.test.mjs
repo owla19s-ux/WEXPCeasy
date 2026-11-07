@@ -68,3 +68,11 @@ test('navigation pointer deltas round-trip across viewport sizes and reverse exa
   assert.equal(next.columns[2],before.columns[2]);
  }
 });
+
+test('extreme navigation drag retains valid persisted preferences and narrow layouts do not overwrite them',async()=>{
+ const {defaultLayout,resizeColumns,restoreLayout}=await layout();
+ const initial=defaultLayout(),extreme=resizeColumns(initial,10000,0,1e6);
+ assert.ok(extreme.columns.every(v=>v>0));assert.equal(extreme.columns[2],initial.columns[2]);
+ assert.deepEqual(restoreLayout(JSON.stringify(extreme)),extreme);
+ assert.equal(resizeColumns(initial,420,0,32),initial);
+});
