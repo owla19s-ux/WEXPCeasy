@@ -10,14 +10,11 @@
 状态：目录说明，尚无实现；具体搜索服务尚未确定。
 
 
-## 上级契约与文档入口
+## 直接依赖
 
-- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
-- **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [全局契约地图](../../docs/A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)
-- [复杂业务契约压力审查](../../docs/A0-产品构想与研究/方案与研究/审查历史/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
+- [Connections 模块](../README.md)：公共连接配置、受控操作、回执与能力边界。
 
-本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
+Search/Fetch 仍属于候选，不由研究文档链接自动取得施工准入。
 
 ## G5：外部搜索与内部检索分离
 
