@@ -50,11 +50,16 @@ const startup=policy=>startFoundations({dataRoot:root,expectedRootId:id,trust:{c
  openStore(path,namespace){const db=openSqliteStore(path,namespace);return {...db,close(){if(failClose&&namespace==='permissions'){failClose=false;throw Error('injected-close');}db.close();}};},...policy});
 const timer=setTimeout(()=>{console.error('desktop_runtime_timeout');app.exit(1);},75000);
 try{
- const runtime=await runDesktop({url:pathToFileURL(resolve('desktop-dist/index.html')).href,preload:resolve('desktop-dist/preload.cjs'),start:startup,spaceRootId:id,spacePlatform:{confirm:async summary=>{confirmations.push(summary);return nativeAllowed;},chooseDirectory:async()=>contextRoot},show:process.platform==='linux'});
+ const runtime=await runDesktop({url:pathToFileURL(resolve('desktop-dist/index.html')).href,preload:resolve('desktop-dist/preload.cjs'),start:startup,spaceRootId:id,spacePlatform:{confirm:async summary=>{confirmations.push(summary);return nativeAllowed;},chooseDirectory:async()=>contextRoot},show:true});
  const host=await runtime.lifecycle.start();
  assert.equal(host.status,'ready');for(const name of ['space','api','ai','conversations','connections','localFiles','localDirectories','permissions'])assert.ok(host[name],name);
  assert.deepEqual(host.permissions.evaluate({}),{status:'indeterminate',reason:'trusted_facts_missing'});
  const wc=runtime.window.webContents;
+ const capture=async suffix=>{
+  runtime.window.show();
+  await wc.executeJavaScript("new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve(true))))");
+  await writeFile(resolve('desktop-acceptance',process.platform+suffix+'.png'),(await wc.capturePage()).toPNG());
+ };
  const facts=await wc.executeJavaScript(`(async()=>({node:typeof require,process:typeof process,bridge:Object.keys(window.wexHost).sort(),reply:await window.wexHost.readStatus(),title:document.title,text:document.body.innerText}))()`);
  assert.equal(facts.node,'undefined');assert.equal(facts.process,'undefined');
  assert.deepEqual(facts.bridge,['ai','api','cancelApi','cancelConversations','connections','conversations','onAccessChanged','onConversationText','permissions','readStatus','requestQuit','space']);assert.equal(facts.reply.ok,true);
@@ -201,7 +206,7 @@ try{
  await click('停止本轮等待');heldResponse?.end();providerMode='normal';
  await waitFor("document.querySelector('[data-conversations]').textContent.includes('轮次：cancelled')");
  await waitFor("!document.querySelector('form[aria-label=\"普通对话输入\"] textarea').disabled");
- await writeFile(resolve('desktop-acceptance',process.platform+'-conversation.png'),(await wc.capturePage()).toPNG());
+ await capture('-conversation');
  await click('读取对话历史');await waitFor("document.querySelectorAll('nav[aria-label=\"普通对话历史\"] button').length===1");
  await click('设置');await click('当前窗口授权');await click('读取当前窗口授权');
  await waitFor("document.querySelectorAll('[data-permission-settings] li').length>0");
@@ -245,7 +250,7 @@ try{
  const writesAfterUnknown=githubCalls.filter(c=>c.method==='PUT').length;
  assert.equal(await wc.executeJavaScript("!!document.querySelector('textarea[name=\"github-content\"]')"),false);
  await click('读取连接与操作记录');assert.equal(githubCalls.filter(c=>c.method==='PUT').length,writesAfterUnknown);
- await writeFile(resolve('desktop-acceptance',process.platform+'-connectors.png'),(await wc.capturePage()).toPNG());
+ await capture('-connectors');
  await click('解除 GitHub Token 并停用');await waitFor("document.querySelector('[data-connection-settings]').textContent.includes('无凭证引用')");
 
  // Reload the actual desktop UI, then recover persisted configuration/history without replaying either network action.
@@ -264,7 +269,7 @@ try{
  await wc.executeJavaScript("document.querySelector('nav[aria-label=\"普通对话历史\"] button').click();true");
  await waitFor("document.querySelectorAll('[data-conversations] article').length===5");
  assert.equal(providerCalls.length,networkBeforeReload.provider);assert.equal(githubCalls.length,networkBeforeReload.github);
- await writeFile(resolve('desktop-acceptance',process.platform+'-recovery.png'),(await wc.capturePage()).toPNG());
+ await capture('-recovery');
  await click('设置');
  await click('返回工作区');await click('Space / Context');
  const directory=await invoke({kind:'address.add',contextId:created.id,name:'Selected directory',address:pathToFileURL(contextRoot).href,purpose:'reference'});assert.equal(directory.status,'committed');
@@ -288,7 +293,7 @@ try{
  foreign.destroy();assert.equal(runtime.readStatus().phase,'ready');
  runtime.window.show();
  await wc.executeJavaScript("new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve(true))))");
- await writeFile(resolve('desktop-acceptance',process.platform+'.png'),(await wc.capturePage()).toPNG());
+ await capture('');
  // A close failure must leave the process and root lease alive, then permit retry.
  const quitReply=await wc.executeJavaScript('window.wexHost.requestQuit()');assert.deepEqual(quitReply,{ok:true,value:{accepted:true}});
  await new Promise((res,rej)=>{const end=Date.now()+8000;const poll=()=>runtime.readStatus().phase==='release-pending'?res():Date.now()>end?rej(Error('release phase timeout')):setTimeout(poll,20);poll();});
