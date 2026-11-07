@@ -31,15 +31,12 @@
 - [Runtime/调度施工与验收规格](ACCEPTANCE.md)（R01～R11，R-B1～R-B4）；这是待实施规格，不代表生产调度器已运行。
 - DSH 原生插件宿主研究暂缓，不是本域施工前置；连接器协议由 connections 负责。
 
-## 上级契约与文档入口
+## 直接依赖
 
-- **上级业务/职责研究（历史）：** [workflows/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/workflows/CONTRACT-archive.md)
-- **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [模块局部性设计](../../docs/A0-产品构想与研究/方案与研究/架构研究历史/MODULE-LOCALITY-DESIGN-V0.1.md)
-- [历史第六批关键机制实验](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)
-- [历史集中决策与待决项](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/DECISIONS.md)
+- [Workflows 模块](../README.md)：工作流定义与业务边界。
+- [Scheduler 模块](../../scheduler/README.md)：现行独立调度器规划入口，不能由历史 runtime 自动继承其职责。
 
-本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
+此目录为历史研究/兼容说明，不建立第二套运行调度事实源。
 
 ## G1/G4：Task 检查点与跨对话恢复
 
