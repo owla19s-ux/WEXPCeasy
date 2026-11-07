@@ -23,19 +23,24 @@ BrandingText "WEXPCeasy"
 
 Function ValidateInstallDirectory
  GetFullPathName $INSTDIR "$INSTDIR"
+ StrCpy $R9 "drive_root"
  ${GetRoot} "$INSTDIR" $R0
  StrCmp $INSTDIR $R0 invalid
+ StrCpy $R9 "other_installation"
  ReadRegStr $R0 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\WEXPCeasy" "InstallLocation"
  StrCmp $R0 "" registry_ok
  StrCmp $R0 $INSTDIR registry_ok invalid
  registry_ok:
+ StrCpy $R9 "reparse_installation"
  System::Call 'kernel32::GetFileAttributesW(w "$INSTDIR") i .r0'
  IntCmp $0 -1 folder_ok
  IntOp $1 $0 & 0x400
  IntCmp $1 0 +2
  Goto invalid
  folder_ok:
+ StrCpy $R9 "data_directory"
  IfFileExists "$INSTDIR\.wex-root.json" invalid
+ StrCpy $R9 "nonempty_unrecognized_directory"
  FindFirst $R0 $R1 "$INSTDIR\*"
  scan:
  StrCmp $R1 "" empty
@@ -62,6 +67,9 @@ Function ValidateInstallDirectory
  Call VerifyApplicationStopped
  Return
  invalid:
+ FileOpen $R8 "$TEMP\WEXPCeasy-install.log" a
+ FileWrite $R8 "$R9|$INSTDIR|attributes=$0|reparse=$1$\r$\n"
+ FileClose $R8
  IfSilent +2
  MessageBox MB_OK|MB_ICONSTOP "请选择空的程序安装目录，或已有的 WEXPCeasy 安装目录。不可安装到数据目录、磁盘根目录或重解析目录；更换安装位置前请先卸载旧程序。"
  SetErrorLevel 2

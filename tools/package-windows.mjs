@@ -29,7 +29,7 @@ const install=files.map(path=>' SetOutPath "$INSTDIR'+(rel(dirname(path))?'\\'+e
 const remove=[...files.map(path=>' Delete "$INSTDIR\\'+escape(rel(path))+'"'),...dirs.sort((a,b)=>b.length-a.length).map(path=>' RMDir "$INSTDIR\\'+escape(rel(path))+'"')].join('\n');
 const verify=[payload,...dirs,...files].map(path=>{
  const suffix=path===payload?'':'\\'+escape(rel(path));
- return " System::Call 'kernel32::GetFileAttributesW(w \"$INSTDIR"+suffix+"\") i .r0'\n IntCmp $0 -1 +5\n IntOp $1 $0 & 0x400\n IntCmp $1 0 +3\n SetErrorLevel 2\n Abort";
+ return " System::Call 'kernel32::GetFileAttributesW(w \"$INSTDIR"+suffix+"\") i .r0'\n IntCmp $0 -1 +5\n IntOp $1 $0 & 0x400\n IntCmp $1 0 +3\n SetErrorLevel 4\n Abort";
 }).join('\n');
 const installer=join(output,'WEXPCeasy-'+version+'-Setup.exe');
 let script=await readFile('app/installer/windows.nsi','utf8');

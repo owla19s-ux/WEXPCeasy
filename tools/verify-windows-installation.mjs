@@ -20,7 +20,7 @@ const parent=await mkdtemp(join(tmpdir(),'wex-install-')),install=join(parent,'å
 let active;
 const timeout=async(predicate,label,ms=60000)=>{const end=Date.now()+ms;while(!await predicate()){if(Date.now()>end)throw Error(label+'_timeout');await new Promise(r=>setTimeout(r,100));}};
 const exists=async path=>{try{await lstat(path);return true;}catch{return false;}};
-async function run(exe,args,ms=120000){return new Promise((res,rej)=>{const child=spawn(exe,args,{stdio:'inherit',windowsVerbatimArguments:true}),timer=setTimeout(()=>{child.kill();rej(Error('installer_process_timeout'));},ms);child.once('error',e=>{clearTimeout(timer);rej(e);});child.once('exit',code=>{clearTimeout(timer);res(code);});});}
+async function run(exe,args,ms=120000){return new Promise((res,rej)=>{const child=spawn(exe,args,{stdio:'inherit',windowsVerbatimArguments:true,argv0:'"'+exe+'"'}),timer=setTimeout(()=>{child.kill();rej(Error('installer_process_timeout'));},ms);child.once('error',e=>{clearTimeout(timer);rej(e);});child.once('exit',code=>{clearTimeout(timer);res(code);});});}
 async function controls(root){
  const authority=createDesktopAuthority(),confirm=async()=>true;
  const api=createDesktopApi({authority,confirm,requestCredential:async()=>undefined,cancelCredential(){}});
@@ -44,7 +44,10 @@ async function startAndClose(args,whileRunning){
 try{
  await mkdir(foreign);await writeFile(join(foreign,'keep.txt'),'external documents');
  assert.notEqual(await run(installer,['/S','/D='+foreign]),0);assert.equal(await readFile(join(foreign,'keep.txt'),'utf8'),'external documents');
- assert.equal(await run(installer,['/S','/D='+install]),0);
+ console.log('WINDOWS_DELIVERY_STAGE install',install);
+ const installCode=await run(installer,['/S','/D='+install]);
+ if(installCode!==0){try{console.error('INSTALLER_DIAGNOSTIC',await readFile(join(tmpdir(),'WEXPCeasy-install.log'),'utf8'));}catch{}}
+ assert.equal(installCode,0);
  for(const file of manifest.files)assert.equal(hash(await readFile(join(install,...file.path.split('/')))),file.sha256,file.path);
  await mkdir(data);
  const root=selectDesktopRoot({args:[],installationRoot:install,choose:()=>({path:data,create:true})});assert.ok(root);
