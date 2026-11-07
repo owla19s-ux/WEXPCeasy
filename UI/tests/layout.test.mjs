@@ -5,7 +5,7 @@ const layout=()=>import('../../dist/UI/src/layout.js');
 test('shared workspace defaults to one full view with collapsed auxiliary area',async()=>{
  const {defaultLayout,columnWidths}=await layout();
  const s=defaultLayout(),w=columnWidths(s,1440);
- assert.equal(s.version,2);assert.equal(s.auxiliaryOpen,false);assert.deepEqual(s.panels,[]);
+ assert.equal(s.version,2);assert.equal(s.auxiliaryOpen,false);assert.equal('panels'in s,false);
  assert.equal(w.length,3);assert.ok(w[1]>w[0]);assert.equal(w[2],36);
  assert.ok(Math.abs(w.reduce((a,b)=>a+b,0)-1428)<.01);
 });
@@ -35,14 +35,14 @@ test('old version one layout migrates without re-enabling obsolete permanent pan
  panels:[{id:'panel-1',kind:'context',weight:25,collapsed:false}],expanded:null};
  const result=restoreLayout(JSON.stringify(old));
  assert.equal(result.version,2);assert.ok(result.columns[1]>result.columns[0]);
- assert.equal(result.auxiliaryOpen,false);assert.deepEqual(result.panels,[]);
+ assert.equal(result.auxiliaryOpen,false);assert.equal('panels'in result,false);
  for(const v of ['null','invalid','{}','{"version":999}','{"version":2,"columns":[0,1,99]}'])
   assert.deepEqual(restoreLayout(v),defaultLayout());
 });
 
 test('layout round-trip strips unknown properties and preserves optional auxiliary panel safely',async()=>{
  const {defaultLayout,restoreLayout,columnWidths}=await layout();
- const s={...defaultLayout(),auxiliaryOpen:true,panels:[{id:'panel-1',kind:'diagnostics',weight:100,collapsed:false}]};
+ const s={...defaultLayout(),auxiliaryOpen:true};
  const restored=restoreLayout(JSON.stringify({...s,secret:'do not persist'}));
  assert.deepEqual(restored,s);assert.equal('secret'in restored,false);
  const columns=columnWidths(restored,1920);assert.ok(columns[2]>=220);
