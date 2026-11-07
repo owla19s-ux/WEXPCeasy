@@ -10,6 +10,6 @@ server.setRequestHandler(CallToolRequestSchema,async(request)=>{
  const a=request.params.arguments;
  const uri='repo://'+a.owner+'/'+a.repo+'/sha/'+a.sha+'/contents/'+(mode==='uri'?'other.txt':a.path);
  if(mode==='error')return {isError:true,content:[{type:'text',text:process.env.GITHUB_PERSONAL_ACCESS_TOKEN}]};
- return {content:[{type:'resource',resource:{uri,mimeType:'text/plain',text:'hello'}}]};
+ return {content:[{type:'text',text:'successfully downloaded text file (SHA: b6fc4c620b67d95f953a5c1c1230aaab5db5a1b0)'},{type:'resource',resource:{uri,mimeType:'text/plain',text:'hello'}}]};
 });
 await server.connect(new StdioServerTransport());
