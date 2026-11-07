@@ -63,3 +63,36 @@ test('SDK read is cancelled before transport and connection endpoint cannot be r
  await assert.rejects(client.rest.repos.getContent({...file,request:{signal:controller.signal}}));
  assert.equal(calls,0);
 });
+
+test('official SDK unknown writes survive SQLite reopen and cannot be replayed',async()=>{
+ const {mkdtemp,rm}=await import('node:fs/promises');
+ const {tmpdir}=await import('node:os');const {join}=await import('node:path');
+ const {openSqliteStore}=await import('../../../dist/shared/src/index.js');
+ const {createConnectionService}=await import('../../../dist/connections/src/index.js');
+ const directory=await mkdtemp(join(tmpdir(),'wex-sdk-receipt-'));
+ const request={},scope={subject:'user',entry:'test',conversation:null,context:null,resource:'github',action:'write',target,relationship:'test',relationshipGeneration:1};
+ const permission={evaluate:r=>r===request?{status:'allow',revision:1,generation:1,scope}:{status:'deny',reason:'unknown'},
+  recheck(r){return this.evaluate(r);}};
+ let calls=0,configs,operations,service;
+ const factory=github.createGitHubOfficialClientFactory({resolveCredential:async()=> 'fixture-token',
+  fetch:async()=>{calls++;return response(500,{message:'uncertain fixture-token'});}});
+ const payload={kind:'put',message:'test',content:'hello',expectedSha:null};
+ const open=()=>{configs=openSqliteStore(join(directory,'config.sqlite'),'configs');
+  operations=openSqliteStore(join(directory,'operation.sqlite'),'operations');
+  service=createConnectionService(permission,configs,operations,[github.createGitHubFileAdapter(factory)]);};
+ try{
+  open();assert.equal(service.configs.put(connection,0,'config-create').status,'ok');
+  assert.deepEqual(await service.dispatch('github',request,'write-1','gh',1,target,'write',payload),
+   {status:'unknown',reason:'external_outcome_unconfirmed',operationId:'write-1'});
+  const receipt=service.operations.get('write-1');assert.equal(receipt.phase,'unknown');assert.equal(calls,1);
+  assert.ok(!JSON.stringify(receipt).includes('fixture-token'));
+  await service.stop();configs.close();operations.close();open();
+  assert.deepEqual(service.operations.get('write-1'),receipt);
+  assert.deepEqual(await service.dispatch('github',request,'write-1','gh',1,target,'write',payload),
+   {status:'blocked',reason:'already_recorded_no_automatic_retry',operationId:'write-1'});
+  assert.equal(calls,1);assert.deepEqual(service.operations.get('write-1'),receipt);
+ }finally{
+  if(service)await service.stop();configs?.close();operations?.close();
+  await rm(directory,{recursive:true,force:true});
+ }
+});
