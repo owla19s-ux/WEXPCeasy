@@ -47,3 +47,11 @@ test('layout round-trip strips unknown properties and preserves optional auxilia
  assert.deepEqual(restored,s);assert.equal('secret'in restored,false);
  const columns=columnWidths(restored,1920);assert.ok(columns[2]>=220);
 });
+
+test('navigation resize retains hidden auxiliary user-width preference',async()=>{
+ const {defaultLayout,resizeColumns}=await layout();
+ const before=defaultLayout(),third=before.columns[2];
+ const changed=resizeColumns(before,1440,0,40);
+ assert.equal(changed.columns[2],third);
+ assert.equal(changed.auxiliaryOpen,false);
+});
