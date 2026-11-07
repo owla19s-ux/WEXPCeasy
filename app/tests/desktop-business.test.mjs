@@ -119,3 +119,47 @@ test('connections settings require consent and preserve global configuration rev
  assert.equal((await controls.request({kind:'toggle',id:'local-test',expectedRevision:2,enabled:true,scope:'admin'})).status,'rejected');
  controls.close();assert.equal((await controls.request({kind:'snapshot'})).status,'unavailable');
 });
+
+test('desktop GitHub config, isolated credential, official SDK read/write, conflicts and unknown receipts',async t=>{
+ const {createDesktopConnections}=await import('../../dist/app/src/desktop-connections.js');
+ const root=await mkdtemp(join(tmpdir(),'wex-desktop-github-'));
+ await writeFile(join(root,'.wex-root.json'),JSON.stringify({format:1,id:'github-desktop'}));
+ const authority=createDesktopAuthority();let approved=true,secret='fixture-token',mode='ok',writes=0;
+ const calls=[],sha='a'.repeat(40),next='b'.repeat(40),commit='c'.repeat(40);
+ const confirm=async()=>approved;
+ const controls=createDesktopConnections({authority,confirm,requestCredential:async()=>secret,cancelCredential(){}});
+ const host=await startFoundations({dataRoot:root,...authority.policy,credentials:{cipher:{
+  available:()=>true,seal:s=>'fixture:'+Buffer.from(s).toString('base64'),unseal:s=>Buffer.from(s.slice(8),'base64').toString()
+ }},githubOfficial:{fetch:async(url,init)=>{
+  calls.push({url:String(url),method:init?.method??'GET',authorization:new Headers(init?.headers).get('authorization')});
+  if(init?.method==='PUT'){
+   writes++;if(mode==='unknown')throw Error('fixture transport disconnected');
+   const body=JSON.parse(init.body);assert.equal(body.sha,sha);assert.equal(Buffer.from(body.content,'base64').toString(),'edited');
+   if(mode==='conflict')return new Response(JSON.stringify({message:'conflict'}),{status:409,headers:{'content-type':'application/json'}});
+   return new Response(JSON.stringify({content:{path:'README.md',sha:next},commit:{sha:commit}}),{status:200,headers:{'content-type':'application/json'}});
+  }
+  return new Response(JSON.stringify({type:'file',path:'README.md',sha,encoding:'base64',content:Buffer.from('original').toString('base64'),size:8}),{status:200,headers:{'content-type':'application/json'}});
+ }}});
+ controls.attach(host);
+ t.after(async()=>{controls.close();await host.stop();await rm(root,{recursive:true,force:true});});
+ let snap=await controls.request({kind:'snapshot'});assert.equal(snap.status,'ok');
+ const created=await controls.request({kind:'github.create',expectedRevision:snap.revision});assert.equal(created.status,'committed');
+ snap=await controls.request({kind:'snapshot'});const id=snap.connections[0].id;
+ assert.equal((await controls.request({kind:'credential.set',id,expectedRevision:snap.revision,secret:'injected'})).status,'rejected');
+ assert.equal((await controls.request({kind:'credential.set',id,expectedRevision:snap.revision})).status,'committed');
+ snap=await controls.request({kind:'snapshot'});assert.equal(snap.connections[0].hasCredential,true);assert.equal(JSON.stringify(snap).includes(secret),false);
+ const file={owner:'example',repo:'project',ref:'main',path:'README.md'};
+ const read=await controls.request({kind:'github.read',id,expectedRevision:snap.revision,file});assert.equal(read.status,'file');assert.equal(read.content,'original');assert.equal(read.sha,sha);
+ assert.equal(calls[0].authorization,'token '+secret);
+ const input={kind:'github.write',id,expectedRevision:snap.revision,file,expectedSha:sha,content:'edited',message:'Edit from desktop'};
+ approved=false;assert.equal((await controls.request(input)).status,'cancelled');assert.equal(writes,0);approved=true;
+ let result=await controls.request(input);assert.equal(result.status,'written');assert.equal(result.sha,next);assert.equal(result.commitSha,commit);
+ mode='conflict';result=await controls.request(input);assert.equal(result.status,'rejected');assert.equal(result.reason,'github_version_or_validation_conflict');
+ mode='unknown';result=await controls.request(input);assert.equal(result.status,'unknown');const before=writes;
+ const history=await controls.request({kind:'snapshot'});assert.ok(history.operations.some(o=>o.id===result.operationId&&o.phase==='unknown'));assert.equal(writes,before);
+ assert.equal((await controls.request({...input,file:{...file,path:'../unsafe'}})).status,'rejected');assert.equal(writes,before);
+ assert.equal((await controls.request({...input,expectedRevision:0})).status,'rejected');
+ assert.equal((await controls.request({kind:'credential.revoke',id,expectedRevision:snap.revision})).status,'committed');
+ snap=await controls.request({kind:'snapshot'});assert.equal(snap.connections[0].enabled,false);assert.equal(snap.connections[0].hasCredential,false);
+ assert.notEqual((await controls.request({kind:'github.read',id,expectedRevision:snap.revision,file})).status,'file');
+});
