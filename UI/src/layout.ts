@@ -73,7 +73,7 @@ export function resizePanels(state:Layout,height:number,index:number,delta:numbe
  if(index<0||index>=state.panels.length-1||!Number.isFinite(delta)||state.panels[index]!.collapsed||state.panels[index+1]!.collapsed)return state;
  const sizes=panelHeights(state,height),change=clamp(delta,112-sizes[index]!,sizes[index+1]!-112);
  if(!Number.isFinite(change)||change===0)return state;
- sizes[index]+=change;sizes[index+1]-=change;
+ sizes[index]=sizes[index]!+change;sizes[index+1]=sizes[index+1]!-change;
  const total=sizes.reduce((sum,h,i)=>sum+(state.panels[i]!.collapsed?0:h),0);
  return {...state,panels:state.panels.map((p,i)=>({...p,weight:p.collapsed?p.weight:sizes[i]!/Math.max(1,total)*100}))};
 }
