@@ -5,6 +5,7 @@ import {renderToStaticMarkup} from 'react-dom/server';
 const component=()=>import('../../dist/UI/src/middle-workspace.js');
 const parts=(id)=>({
  contextId:id,
+ resourcePreview:null,dismissResourcePreview:()=>{},
  toolbar:React.createElement('span',null,'Toolbar from Space'),
  categories:React.createElement('span',null,'Categories from Space'),
  structure:React.createElement('div',null,'Actual Context tree'),
@@ -31,4 +32,13 @@ test('restored per-Context view can show the already available summary in a sepa
   assert.match(html,/Real Context summary/);
   assert.match(html,/middle-preview-body/);
  }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
+});
+
+test('an authorized resource read opens the shared preview without a second permanent column',async()=>{
+ const {MiddleWorkspace}=await component();
+ const props={...parts('ctx-file'),resourcePreview:React.createElement('pre',null,'Authorized file contents')};
+ const html=renderToStaticMarkup(React.createElement(MiddleWorkspace,{parts:props}));
+ assert.match(html,/Authorized file contents/);
+ assert.match(html,/资源预览/);
+ assert.match(html,/preview-compact/);
 });
