@@ -10,7 +10,7 @@
 |---|---|---|
 | `connections/src/` | 正式源码和测试 | 连接配置、受控派发/读取、Operation 账本 |
 | `connections/api/` | 正式源码和测试 | Provider/Model/流式；不直接执行工具提议 |
-| `connections/github/` | 基础文件读写适配及测试 | 官方 MCP Server/Octokit 尚未完整接入，GH-01～12 分项验收 |
+| `connections/github/` | 基础文件读写适配、真实 Octokit/MCP SDK 导入、受控 MCP 读取与宿主装配、独立测试 | 官方全部工具覆盖、远端真实写入、运行/分发及 GH-01～12 分项验收仍未完成；不可再称官方基础组件完全未接入 |
 | `connections/local/` | 文件/目录适配及测试 | 非完整 Shell、Git 或环境安装器 |
 | `connections/dsh/` | 独立实验，未产品化 | 外部 Agent，0.1.2 |
 | `connections/search/` | 仅说明文档 | 外部搜索/抓取，未实现且无 0.1.1 扩版授权 |
