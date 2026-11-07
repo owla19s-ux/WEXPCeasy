@@ -365,6 +365,6 @@ L1/L2 含义见 §5.1。S16 只在替身有效窗口与可恢复持久化替身�
 
 **产品政策仍待决**：Space/Group/Context 破坏性删除、类别重名规则、跨目录物理迁移、有效配置覆盖优先级和未确认的引用基数。工程负责 ID 生成、带版本的内部格式、单库事务与恢复实现；不得据此改变产品政策。类别重名请求先返回明确的不支持/待决，不静默合并；其他稳定能力继续。
 
-**机制补全依据**：[Space 组织与目录共识](../docs/architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)、[第六批技术/产品决策边界](../docs/batch6/DECISIONS.md)、[shared 公开入口](../shared/src/index.ts)、[Store 实现](../shared/src/storage.ts)、[permissions 公开入口](../permissions/src/index.ts)。代码只证明当前接口及限制，不表示新方案已验证。
+**机制补全依据**：[Space 组织与目录共识](../docs/A0-产品构想与研究/历史参考/旧UI设计/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)、[第六批技术/产品决策边界](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/DECISIONS.md)、[shared 公开入口](../shared/src/index.ts)、[Store 实现](../shared/src/storage.ts)、[permissions 公开入口](../permissions/src/index.ts)。代码只证明当前接口及限制，不表示新方案已验证。
 
-历史详细依据：[Space 契约归档](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/space/CONTRACT-2026-10-31.md)；[Windows 数据目录要求](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)。研究材料只用于核对，不取代本 README 的施工范围。
+历史详细依据：[Space 契约归档](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/space/CONTRACT-2026-10-31.md)；[Windows 数据目录要求](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)。研究材料只用于核对，不取代本 README 的施工范围。

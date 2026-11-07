@@ -56,4 +56,4 @@
 
 AI/roles 保存角色、模型/连接引用、职责和配置修订；不保存凭证秘密、Task 检查点、Operation 状态或 Conversation 历史。原生 API 工具往返由 Conversations 协调，外部 Agent 循环由外部客户端负责。新对话可以重新采用获准角色配置，但不继承旧模型隐藏上下文或旧授权。
 
-见[基础能力落地映射](../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+见[基础能力落地映射](../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。

@@ -66,7 +66,7 @@
 
 可先做发现/预览、可选草案建议和规则版本引用；实际实例化逐owner保存证据，创建已提交ACK丢失只查原关联，不重建/删除/启动。跨域部分成功/升级覆盖政策C/D未关，完整专业对象/发布平台暂缓；不冻全部行业schema。
 
-本域独立输入/输出、取消/失败/超时/unknown及双方替身样例沿用上文；下一批先真实本域测试，再真实提供/消费与装配，不用实验替代。[全域准备度与独立入口](../../docs/batch6/READINESS.md)、[局部证据与未验证条件](../../docs/batch6/EXPERIMENTS.md)、[集中待决](../../docs/batch6/DECISIONS.md)。
+本域独立输入/输出、取消/失败/超时/unknown及双方替身样例沿用上文；下一批先真实本域测试，再真实提供/消费与装配，不用实验替代。[全域准备度与独立入口](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md)、[局部证据与未验证条件](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)、[集中待决](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/DECISIONS.md)。
 
 
 ## 文档关联与施工入口
@@ -84,8 +84,8 @@
 - **审查报告**：
 - [视图与证据链审计](../../docs/A0-产品构想与研究/方案与研究/审查历史/VIEWS-AND-EVIDENCE-AUDIT-2026-10-31.md)
 - [复杂业务契约压力审查](../../docs/A0-产品构想与研究/方案与研究/审查历史/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
-- **准备度与批次结论**：[本域施工准备度](../../docs/batch6/READINESS.md) · [F01–F09 契约收敛](../../docs/batch6/CONVERGENCE.md) · [集中决策与待决项](../../docs/batch6/DECISIONS.md)
-- **实验与验证证据**：[第六批实验总表](../../docs/batch6/EXPERIMENTS.md) · [可复现实验入口](../../experiments/contract-readiness-spike/README.md)
+- **准备度与批次结论**：[本域施工准备度](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md) · [F01–F09 契约收敛](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/CONVERGENCE.md) · [集中决策与待决项](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/DECISIONS.md)
+- **实验与验证证据**：[第六批实验总表](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md) · [可复现实验入口](../../experiments/contract-readiness-spike/README.md)
 
 维护规则：模块职责/业务行为修改在本域 README/CONTRACT；跨模块架构或政策变更更新对应全局文档；每次实验只更新证据，不改写未批准的决策。施工批次结束后，先回写模块契约，再更新本节关联；不得把批次历史报告当作模块当前状态的替代品。
 
