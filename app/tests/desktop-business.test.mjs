@@ -73,3 +73,36 @@ test('permissions UI projects only this session and revocation invalidates admit
  assert.notEqual(f.host.permissions.evaluate(request).status,'allow');
  assert.equal((await f.authority.settings({kind:'grant',scope:{}},async()=>true)).status,'rejected');
 });
+
+test('desktop configuration and conversation history restore under a fresh window identity without replaying network work',async t=>{
+ const f=await fixture(t);await configured(f);
+ const created=await f.chat.request({kind:'create'});
+ await f.chat.request({kind:'send',id:created.id,expectedRevision:1,agentId:'agent',text:'persist this'});
+ const before=f.calls.length;
+ const oldSnapshot=await f.authority.settings({kind:'snapshot'},async()=>true);
+ const oldRequest=f.authority.bind({resource:oldSnapshot.entries[0].resource,action:oldSnapshot.entries[0].action,target:oldSnapshot.entries[0].target,context:oldSnapshot.entries[0].context});
+ f.chat.close();f.ai.close();f.api.close();assert.equal((await f.host.stop()).status,'stopped');
+ const {createDesktopAi}=await import('../../dist/app/src/desktop-ai.js');
+ const {createDesktopConversations}=await import('../../dist/app/src/desktop-conversations.js');
+ const authority=createDesktopAuthority(),confirm=async()=>true;
+ const api=createDesktopApi({authority,confirm,requestCredential:async()=>undefined,cancelCredential(){}});
+ const ai=createDesktopAi({authority,confirm}),chat=createDesktopConversations({authority,confirm});
+ const host=await startFoundations({dataRoot:f.root,...authority.policy,api:{deriveRequest:api.derive},ai:{bindRead:ai.bindRead},conversations:true});api.attach(host);ai.attach(host);chat.attach(host);
+ try{
+  assert.notEqual(host.permissions.evaluate(oldRequest).status,'allow');
+  assert.equal((await ai.request({kind:'snapshot'})).entries.length,3);
+  const history=await chat.request({kind:'snapshot'});assert.equal(history.conversations.length,1);
+  assert.equal(history.conversations[0].messages[1].segments[0].text,'hello world');
+  assert.equal(f.calls.length,before);
+ }finally{chat.close();ai.close();api.close();await host.stop();}
+});
+test('revoked history visibility fences streaming while the admitted cancellation remains available',async t=>{
+ const f=await fixture(t);await configured(f);
+ const created=await f.chat.request({kind:'create'}),waiting=f.wait();
+ const job=f.chat.request({kind:'send',id:created.id,expectedRevision:1,agentId:'agent',text:'hold'});
+ await waiting;
+ const snapshot=await f.authority.settings({kind:'snapshot'},async()=>true);
+ const row=snapshot.entries.find(e=>e.resource==='conversations'&&e.action==='read'&&e.target==='conversation:'+created.id);
+ assert.equal((await f.authority.settings({kind:'revoke',id:row.id,expectedRevision:snapshot.revision},async()=>true)).status,'committed');
+ assert.equal(f.chat.cancel().status,'committed');f.release();await job;
+});

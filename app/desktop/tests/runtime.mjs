@@ -102,7 +102,7 @@ try{
  const checked=await invoke({kind:'snapshot'});assert.equal(checked.spaces.length,1);assert.equal(checked.organizations[0].groupId,group.id);
  
 // Category and address controls are exercised in the actual Renderer.
- const choose=async(selector,value)=>wc.executeJavaScript(`(()=>{const field=document.querySelector(${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(field.tagName==='SELECT'?HTMLSelectElement.prototype:field.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set.call(field,${JSON.stringify(value)});field.dispatchEvent(new Event(field.tagName==='SELECT'?'change':'input',{bubbles:true}));return true;})()`);
+ const choose=async(selector,value)=>wc.executeJavaScript(`(()=>{const field=document.querySelector(${JSON.stringify(selector)});if(!field)throw Error('field_missing '+${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(field.tagName==='SELECT'?HTMLSelectElement.prototype:field.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set.call(field,${JSON.stringify(value)});field.dispatchEvent(new Event(field.tagName==='SELECT'?'change':'input',{bubbles:true}));return true;})()`);
  await choose('form select','category.create');await choose('form input','Desktop category');await new Promise(r=>setTimeout(r,25));
  await wc.executeJavaScript("document.querySelector('form').requestSubmit();true");
  await waitFor("[...document.querySelectorAll('[data-categories] button')].some(x=>x.textContent==='Desktop category')");
@@ -163,6 +163,7 @@ try{
  await click('返回工作区');await click('普通对话');await click('新建普通对话');
  await waitFor("document.querySelector('[data-conversations] small')?.textContent.includes('修订 1')");
  await click('读取可用 Agent');
+ await waitFor("document.querySelectorAll('[data-conversations] select option').length>1");
  const agent=await wc.executeJavaScript("document.querySelector('[data-conversations] select option:nth-child(2)').value");
  await choose('[data-conversations] select',agent);await choose('form[aria-label="普通对话输入"] textarea','Desktop question');
  await new Promise(r=>setTimeout(r,25));await wc.executeJavaScript("document.querySelector('form[aria-label=\"普通对话输入\"]').requestSubmit();true");

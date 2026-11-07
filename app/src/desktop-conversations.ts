@@ -23,7 +23,7 @@ function capture(raw:unknown):DesktopConversationInput|undefined{
 }
 export function createDesktopConversations(options:{authority:DesktopAuthority;confirm:(summary:string)=>Promise<boolean>;onText?:(event:ConversationText)=>void}){
  const a=options.authority;
- let host:FoundationHost|undefined,closed=false,active:{id:string;generationId:string;cancel:object}|undefined;
+ let host:FoundationHost|undefined,closed=false,active:{id:string;generationId:string;cancel:object;revision:number;cancelledRevision?:number}|undefined;
  const op=(resource:string,action:string,target:string):LocalOperation=>({resource,action,target,context:null});
  const chat=(action:string,id:string)=>op('conversations',action,'conversation:'+id);
  function grant(scope:LocalOperation){a.permit(scope);const request=a.bind(scope);if(!request)throw Error('permission_unavailable');return request;}
@@ -87,18 +87,19 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
    if(r.status==='committed')r=change(input.id,r.revision,{kind:'begin',generationId,inputMessageId:messageId});
   }
   if(r.status!=='committed')return r;
-  active={id:input.id,generationId,cancel};
+  active={id:input.id,generationId,cancel,revision:r.revision+1};
   try{
-   return await host.conversations.generation.send({conversationId:input.id,generationId,operationId:randomUUID(),replyId:randomUUID(),intent:randomUUID(),expectedRevision:r.revision,requests,systemPrompt:role.prompt,
+   const result=await host.conversations.generation.send({conversationId:input.id,generationId,operationId:randomUUID(),replyId:randomUUID(),intent:randomUUID(),expectedRevision:r.revision,requests,systemPrompt:role.prompt,
     preparation:{requestId:randomUUID(),connectionId:connection.id,connectionRevision:connection.revision,modelId:model.id,modelRevision:model.revision,context:null,parameters:{},timeoutMs:60000,stream:true},
     onText:text=>{if(!closed)options.onText?.({conversationId:input.id,generationId,text});}});
+   return active?.cancelledRevision?{status:'committed',revision:active.cancelledRevision}:result;
   }finally{active=undefined;}
  }
  function cancel():DesktopConversationReply{
   if(!active||!host?.conversations?.generation)return {status:'unavailable',reason:'no_active_generation'};
-  const r=host.conversations.service.read(a.bind(chat('read',active.id))!,active.id);
-  if(r.status!=='ok')return r;
-  return host.conversations.generation.cancel(active.cancel,active.id,active.generationId,randomUUID(),r.conversation.revision);
+  const result=host.conversations.generation.cancel(active.cancel,active.id,active.generationId,randomUUID(),active.revision);
+  if(result.status==='committed')active.cancelledRevision=result.revision;
+  return result;
  }
  return Object.freeze({attach(value:FoundationHost){if(host)throw Error('already_attached');host=value;a.attach(value);},cancel,
   async request(raw:unknown):Promise<DesktopConversationReply>{
