@@ -52,3 +52,11 @@
 .navigation-scroll [data-categories] h2,.navigation-scroll [data-categories] p{width:100%}
 .navigation-scroll [data-categories] button{width:auto;min-width:0;flex:1 1 25%;margin:0;padding:12px 4px;text-align:center;writing-mode:horizontal-tb;overflow-wrap:anywhere}
 @media (max-width:760px){.navigation-scroll [data-categories] button{flex-basis:100%}.workbench-top>div>span{display:none}.top-actions{gap:4px!important}.workbench-top{padding:0 7px}.role-floating{right:28px}}
+
+/* Desktop base stylesheet also targets all nav buttons; keep browser-style tabs compact. */
+.middle-tabs button{width:auto!important;margin:0!important;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.middle-tabs-scroll{max-height:none;overflow-y:hidden}
+.auxiliary-placeholder{display:flex;flex-direction:column;min-width:0;min-height:0;height:100%}
+.auxiliary-placeholder>p{padding:12px;margin:0}
+.workbench-divider[aria-disabled=true]{pointer-events:none}
+@media(max-width:600px){.workbench-top .phase{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.navigation-scroll{overflow-x:hidden}.middle-tabs{padding:3px}}
