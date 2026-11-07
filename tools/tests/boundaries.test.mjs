@@ -33,3 +33,63 @@ test('desktop external imports are restricted to their owning domains',()=>{
   assert.ok(analyze({...good,[file]:"import '"+name+"';"}).errors.some(e=>e.file===file));
  }
 });
+
+test('connector owners accept public ports and internal private imports',()=>{
+ const files={
+  'connections/github/src/index.ts':"import '../../src/index.js'; import './internal.js';",
+  'connections/github/src/internal.ts':'export {};',
+  'connections/src/index.ts':'export {};',
+  'app/src/main.ts':"import '../../connections/github/src/index.js';",
+ };
+ assert.deepEqual(analyze(files).errors,[]);
+});
+for(const [from,to] of [['github','api'],['api','github'],['github','local'],['local','github']]){
+ for(const statement of [
+  "import '../../"+to+"/src/private.js';",
+  "export * from '../../"+to+"/src/private.js';",
+  "type T = import('../../"+to+"/src/private.js').T;",
+  "import('../../"+to+"/src/private.js');",
+  "require('../../"+to+"/src/private.js');",
+ ]){
+  test('rejects connector private crossing '+from+' to '+to+' '+statement,()=>{
+   const files={['connections/'+from+'/src/index.ts']:statement,
+    ['connections/'+to+'/src/private.ts']:'export type T=string;'};
+   assert.ok(analyze(files).errors.some(e=>e.code==='private_import'));
+  });
+ }
+}
+test('common connections cannot depend on a concrete connector public port',()=>{
+ const files={'connections/src/index.ts':"import '../github/src/index.js';",
+  'connections/github/src/index.ts':'export {};'};
+ assert.ok(analyze(files).errors.some(e=>e.code==='reverse_connector'));
+});
+test('connector module cycle is detected even without a file cycle',()=>{
+ const files={
+  'connections/github/src/index.ts':'export {};',
+  'connections/github/src/use.ts':"import '../../api/src/index.js';",
+  'connections/api/src/index.ts':'export {};',
+  'connections/api/src/use.ts':"import '../../github/src/index.js';",
+ };
+ assert.ok(analyze(files).errors.some(e=>e.code==='module_cycle'));
+});
+test('connector aliases fail closed instead of hiding private imports',()=>{
+ const files={'connections/github/src/index.ts':"import '@api/private';"};
+ assert.ok(analyze(files).errors.some(e=>e.code==='unresolved_import'));
+});
+test('source scanner includes environments and excludes its tests',async()=>{
+ const {mkdtempSync,mkdirSync,writeFileSync,rmSync}=await import('node:fs');
+ const {tmpdir}=await import('node:os');const {join}=await import('node:path');
+ const {readProductSources}=await import('../check-boundaries.mjs');
+ const root=mkdtempSync(join(tmpdir(),'wex-boundaries-'));
+ try{
+  mkdirSync(join(root,'environments/src'),{recursive:true});
+  mkdirSync(join(root,'environments/tests'),{recursive:true});
+  writeFileSync(join(root,'environments/src/index.ts'),"import '../../app/src/index.js';");
+  writeFileSync(join(root,'environments/tests/ignored.ts'),'export {};');
+  mkdirSync(join(root,'app/src'),{recursive:true});writeFileSync(join(root,'app/src/index.ts'),'export {};');
+  const files=readProductSources(root);
+  assert.ok(files['environments/src/index.ts']);
+  assert.equal(files['environments/tests/ignored.ts'],undefined);
+  assert.ok(analyze(files).errors.some(e=>e.code==='reverse_app'));
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
