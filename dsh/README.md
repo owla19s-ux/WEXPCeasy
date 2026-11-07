@@ -46,15 +46,15 @@ node --expose-internals dsh/checks/test-loader-runtime.mjs
 
 ## 双插件体系架构基线（2026-10-30）
 
-已确定 WEX 自有插件与 DSH 原生插件**安装管理和机制职责独立**，但可复用 Cordis 的基础生命周期技术；DSH CLI 仅是 DSH 子系统可选管理依赖，非 WEX 主程序启动前置。具体跨机制接口及 Windows/Electron 解析仍待验证。详见 [双插件体系与双机制分层基线](../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)。
+已确定 WEX 自有插件与 DSH 原生插件**安装管理和机制职责独立**，但可复用 Cordis 的基础生命周期技术；DSH CLI 仅是 DSH 子系统可选管理依赖，非 WEX 主程序启动前置。具体跨机制接口及 Windows/Electron 解析仍待验证。详见 [双插件体系与双机制分层基线](../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)。
 
 ## WEX 对内置 DSH 插件宿主的阶段限定（2026-10-30）
 
-本目录的 Cordis Core + Loader 是 **DSH 原生插件专用兼容基础**，不是 WEX 自有插件或连接器的强制底层。运行不了但必须使用的 DSH 插件，按实际依赖选择增补必要 Service、外部 DSH 连接器或 WEX 功能适配。优先评估独立工作进程而非直接运行在 Electron 主进程；具体 IPC 尚未定。详见 [双机制架构基线修正](../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)。
+本目录的 Cordis Core + Loader 是 **DSH 原生插件专用兼容基础**，不是 WEX 自有插件或连接器的强制底层。运行不了但必须使用的 DSH 插件，按实际依赖选择增补必要 Service、外部 DSH 连接器或 WEX 功能适配。优先评估独立工作进程而非直接运行在 Electron 主进程；具体 IPC 尚未定。详见 [双机制架构基线修正](../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)。
 
 ## 本阶段交付目标（2026-10-30）
 
-本目录独立目标是 **DSH 插件宿主达到 Windows 真机可操作的兼容测试状态**：Core+Loader 可启动，能载入、执行、卸载真实插件并观察错误。现有 Linux 构建和 hello Bundle 通过不等于真机验收。完整插件市场、Agent 引擎和 WEX 自有动态插件机制不作为前置。独立 DSH Agent 连接器职责见 [connections/dsh/](../connections/dsh/README.md)，不应依赖本宿主运行。具体边界见 [双路线验收](../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md#八dsh-双路线验收目标2026-10-30-最新确认)。
+本目录独立目标是 **DSH 插件宿主达到 Windows 真机可操作的兼容测试状态**：Core+Loader 可启动，能载入、执行、卸载真实插件并观察错误。现有 Linux 构建和 hello Bundle 通过不等于真机验收。完整插件市场、Agent 引擎和 WEX 自有动态插件机制不作为前置。独立 DSH Agent 连接器职责见 [connections/dsh/](../connections/dsh/README.md)，不应依赖本宿主运行。具体边界见 [双路线验收](../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md#八dsh-双路线验收目标2026-10-30-最新确认)。
 
 ## 第二批：依赖缺失与职责限制
 
@@ -67,7 +67,7 @@ node --expose-internals dsh/checks/test-loader-runtime.mjs
 
 ## 第五批复杂压力审查补充（2026-10-31）
 
-依据：[第五批覆盖、冲突与再审查记录](../docs/audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
+依据：[第五批覆盖、冲突与再审查记录](../docs/A0-产品构想与研究/方案与研究/审查历史/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
 
 ### 多插件同Service、升级和外部Agent交错（F04，B/C）
 
@@ -84,9 +84,9 @@ DSH宿主唯一维护原生包/版本、Service依赖、就绪、加载/卸载�
 ## 文档入口与证据边界
 
 - [文档体系总索引](../docs/README.md)
-- [全局架构：双插件体系边界](../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)
-- [运行时扩展契约研究](../docs/architecture/RUNTIME-EXTENSION-CONTRACT-V0.1.md)
-- [DSH 能力差距审计](../docs/audits/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
+- [全局架构：双插件体系边界](../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)
+- [运行时扩展契约研究](../docs/A0-产品构想与研究/方案与研究/架构研究历史/RUNTIME-EXTENSION-CONTRACT-V0.1.md)
+- [DSH 能力差距审计](../docs/A0-产品构想与研究/方案与研究/审查历史/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
 - [第六批实验与证据](../docs/batch6/EXPERIMENTS.md)
 
 本目录当前为预留机制或独立实验，不等于完整产品模块已获施工准入。研究/实验结果只证明其明确记录的范围；不得外推为完整 WEX 集成、Windows 实机或生产可用性。
