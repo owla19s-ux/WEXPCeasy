@@ -75,6 +75,7 @@ export function createGitHubFileAdapter(client:GitHubClientFactory):ConfiguredDi
   if(!object(payload)||Object.keys(payload).sort().join(',')!=='content,expectedSha,kind,message'||
    payload['kind']!=='put'||typeof payload['message']!=='string'||!payload['message'].trim()||payload['message'].length>4096||
    typeof payload['content']!=='string'||Buffer.byteLength(payload['content'],'utf8')>limit||
+   Buffer.from(payload['content'],'utf8').toString('utf8')!==payload['content']||
    !(payload['expectedSha']===null||sha(payload['expectedSha'])))return {status:'rejected',reason:'invalid_file_update'};
   if(access&&access.check()!==true)return {status:'rejected',reason:'adapter_access_unavailable'};
   const repos=(await client(captured,access)).rest.repos;
