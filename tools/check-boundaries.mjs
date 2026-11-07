@@ -9,6 +9,12 @@ function cycles(nodes,edges){
  function visit(n){if(stack.has(n)){bad.push(n);return;}if(seen.has(n))return;seen.add(n);stack.add(n);for(const b of graph.get(n)??[])visit(b);stack.delete(n);}
  for(const n of graph.keys())visit(n);return bad;
 }
+// Concrete connectors are separate owners; the common connections port stays independent.
+function owner(file){
+ const parts=file.split('/');
+ return parts[0]==='connections'&&parts[1]!=='src'&&parts.length>2
+  ? 'connections/'+parts[1] : parts[0];
+}
 export function analyze(files){
  const errors=[],edges=[],moduleEdges=[];const names=Object.keys(files);const fail=(file,code,detail)=>errors.push({file,code,detail});
  for(const [file,text] of Object.entries(files)){
@@ -24,28 +30,29 @@ export function analyze(files){
  }walk(source);
  for(const spec of imports){
  if(!spec||!ts.isStringLiteralLike(spec)){fail(file,'unresolved_dynamic','nonliteral module');continue;}
- const name=spec.text,from=file.split('/')[0];
+ const name=spec.text,from=owner(file);
  if(from==='UI'&&(builtinModules.includes(name.replace(/^node:/,''))||name==='electron'||/credentials|storage/.test(name)))fail(file,'renderer_privileged',name);
  if(!name.startsWith('.')){const declared=(from==='app'&&name==='electron')||(from==='UI'&&['react','react-dom/client','react/jsx-runtime'].includes(name));if(!declared&&!name.startsWith('node:')&&!builtinModules.includes(name.replace(/^node:/,'')))fail(file,'unresolved_import',name);continue;}
  const path=posix.normalize(posix.join(posix.dirname(file),name));
  const target=[path,path.replace(/\.js$/,'.ts'),path.replace(/\.js$/,'.tsx'),path+'/index.ts'].find(p=>Object.hasOwn(files,p));
  if(!target){fail(file,'unresolved_import',name);continue;}
- const to=target.split('/')[0];edges.push([file,target]);
+ const to=owner(target);edges.push([file,target]);
  if(from!==to){
  moduleEdges.push([from,to]);
- if(!target.endsWith('/src/index.ts'))fail(file,'private_import',target);
+ if(target!==to+'/src/index.ts')fail(file,'private_import',target);
+ if(from==='connections'&&to.startsWith('connections/'))fail(file,'reverse_connector',target);
  if(to==='app')fail(file,'reverse_app',target);
  if(from==='shared')fail(file,'shared_business',target);
- if(from==='UI'&&['shared','permissions','connections','app'].includes(to))fail(file,'renderer_privileged',target);
+ if(from==='UI'&&(['shared','permissions','connections','app'].includes(to)||to.startsWith('connections/')))fail(file,'renderer_privileged',target);
  }
  }
  }
  if(!edges.length)fail('<graph>','empty_graph','no source dependency edges');
  for(const n of cycles(names,edges))fail(n,'file_cycle',n);
- for(const n of cycles([...new Set(names.map(f=>f.split('/')[0]))],moduleEdges))fail(n,'module_cycle',n);
+ for(const n of cycles([...new Set(names.map(owner))],moduleEdges))fail(n,'module_cycle',n);
  return {files:names.length,edges,moduleEdges,errors};
 }
-const domains=['app','shared','permissions','space','AI','conversations','connections','workflows','views','UI','plugins','accounts'];
+const domains=['app','shared','permissions','space','AI','conversations','connections','workflows','views','UI','plugins','accounts','environments'];
 export function readProductSources(root){
  const files={};
  function walk(dir){for(const e of readdirSync(resolve(root,dir),{withFileTypes:true})){
