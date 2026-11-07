@@ -160,9 +160,10 @@
 - `UI/src/middle-workspace.tsx` + `workspace-state.ts`：首视图 Context 配置、底部浏览器式标签，视图添加/改名/重排/关闭、按 Context ID 区分 UI 状态；摘要或获准文件/目录读取结果出现时提供可调整的旁侧预览，窗口窄时改上下排列；
 - `UI/src/space.tsx` + `space-addresses.tsx`：复用已有受控 `resource.read`，将原表单内的只读结果传给中间预览窗；Context 切换隔离旧响应；保持 Space owner/IPC 不变；
 - `UI/src/workbench.css`：移除旧 1006px 工作区最小宽度及部分失效辅助样式；`app/src/desktop-runtime.ts`：用于实测的顶层窗口最小尺寸调整为 `480×320`（非跨设备通过保证）。
-- `UI/tests/layout.test.mjs`、`workspace-state.test.mjs`、`middle-workspace.test.mjs`：增补动态布局、旧状态迁移、标签状态与基本渲染的测试源文件。
+- `UI/src/interaction-dock.tsx`：窗口内形象与交互栏独立组件，支持点击联动、两套位置持久化及拖动；角色媒体与业务动作尚未接线。
+- `UI/tests/layout.test.mjs`、`workspace-state.test.mjs`、`middle-workspace.test.mjs`、`interaction-dock.test.mjs`：增补布局迁移、标签状态、真实读取预览宿主及形象位置恢复的测试源文件。
 
-**未完成/不能宣称通过**：未取得本次变更的 TypeScript 构建、全仓测试、Windows Snap/高 DPI/文字放大及 Electron 真机验收回执；文件编辑器与草稿保护、更多获准视图类型、双视图、虚拟形象和独立交互栏完整联动仍未完成。当前只读资源预览不代表获准写入；早期摘要预览也不代表文件编辑。正式 D-08/D-09 在上述缺口与测试完成前不得标为通过。
+**未完成/不能宣称通过**：未取得本次变更的 TypeScript 构建、全仓测试、Windows Snap/高 DPI/文字放大及 Electron 真机验收回执；文件编辑器与草稿保护、更多获准视图类型、双视图、形象真实素材/交互栏业务接线及 Windows 桌面级悬浮仍未完成。当前只读资源预览不代表获准写入；早期摘要预览也不代表文件编辑。正式 D-08/D-09 在上述缺口与测试完成前不得标为通过。
 
 **接下来的施工步骤**：先核对最新 main 的 CI 实际构建/测试失败并修复 → 用真实 Electron 用户动作验证当前 Space/Context 与受控文件读取没有退化 → 补不同宽度与失联/撤权/请求乱序验收 → 在对应 owner 具备明确接口之后追加编辑会话，不提前创建绕过权限的前端文件写入口。
 
