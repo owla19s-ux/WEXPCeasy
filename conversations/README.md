@@ -50,9 +50,6 @@
 
 ## 文档入口
 
-- [本域契约及关联依据](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/conversations/CONTRACT-archive.md#文档关联与施工入口)
-- [WEXPC1 文档体系总索引](../docs/README.md)
-- [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
 当前施工范围与必要契约摘要以本 README 和根 README 为入口；历史契约及其关联资料只供按需追溯，不自动派工或批准候选政策。
 
