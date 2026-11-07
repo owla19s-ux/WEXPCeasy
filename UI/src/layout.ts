@@ -51,11 +51,11 @@ export function resizeColumns(state:Layout,width:number,index:number,delta:numbe
  if(index===0&&!state.auxiliaryOpen){
   // Keep the hidden auxiliary pane's user preference: shrinking the window must not overwrite it.
   const combined=state.columns[0]+state.columns[1],total=values[0]!+values[1]!;
-  return {...state,columns:[values[0]!/total*combined,values[1]!/total*combined,state.columns[2]]};
+  return {...state,columns:[values[0]!/total*combined,values[1]!/total*combined,state.columns[2]] as Layout['columns']};
  }
  if(index===1&&state.collapsed){
   const combined=100-state.columns[0],total=values[1]!+values[2]!;
-  return {...state,columns:[state.columns[0],values[1]!/total*combined,values[2]!/total*combined]};
+  return {...state,columns:[state.columns[0],values[1]!/total*combined,values[2]!/total*combined] as Layout['columns']};
  }
  const total=values.reduce((a,b)=>a+b,0);
  return {...state,columns:values.map(v=>v/total*100) as Layout['columns']};
