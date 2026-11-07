@@ -61,3 +61,23 @@
 - `docs/audits/document-governance-2026-11-04/` 原始 JSON/脚本与批次证据保持原位。
 - 模块 README/CONTRACT 的内容及代码事实深度对齐、依赖有效性与 CI/Windows 验收仍需独立证据；本次仅确认并修改明确的资料定位关系。
 - 禁止在完成全量引用与证据审查前统一删除旧兼容文件。
+
+## 后续批次：历史架构、批次正文和旧任务入口去重
+
+本次持续在 `main` 中更新源码模块文档内的**直接 Markdown 引用**，重点处理：
+
+- 正式设计（A1）：旧 `docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md`、`WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md`、`DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md` 指向 A1 正文。
+- 历史研究（A0）：旧 GLOBAL-CONTRACT-MAP、PROVIDER-BOUNDARY、RUNTIME-EXTENSION、旧 UI 编辑器设计与 FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP 指向 A0 原文。
+- 审计与证据（A0）：旧 APP-FOUNDATIONS、VIEWS-AND-EVIDENCE、COMPLEX-CONTRACT、DSH-WEXPC1 GAP 审查，及 batch6/7/8 的报告 Markdown，指向 A0 归档原文；**批次 evidence 日志、截图、JSON 仍在原路径**。
+- 历史任务（A2）：部分模块直接引用旧 B3 跳转页的链接，改为 A2 中的 `历史任务记录/B3-2026-11-07.md`，并保留当前版本状态表的优先级。
+
+实际修改涉及 app、UI 及其 conversation/settings/space 子目录、shared、permissions、connections 的 API/GitHub/Local/DSH、AI/roles、workflows、views、plugins、dsh、accounts、environments 等 README/CONTRACT。未新增文件结构、源代码、接口或产品政策。
+
+本批以 GitHub 连接器逐文件读取和提交，并对 **22 个抽样/目标模块文档**进行了**精确旧路径类型**扫描，发现的 shared README 与 accounts README 两处残留随后已修复（提交 `605d7c99`、`276d628a`）。此检查只涵盖所列路径和给定正则匹配的 Markdown 相对链接；**不等于所有模块文件、全部绝对/引用式/HTML 链接或锚点完成校验**，也不证明内部链接目标均可成功跳转。
+
+### 未收口门槛仍然保留
+
+1. 需完整枚举最新仓库树，检测所有 Markdown 链接、锚点和旧路径反向引用，而不只抽查已知模块文件。
+2. 按最新源码和测试逐个审查模块 README 的事实准确性、CONTRACT 与代码接口一致性以及依赖可用性；不得将本次字符串引用迁移称为完成该审查。
+3. `docs/audits/document-governance-2026-11-04/` 原始审计证据及原位批次 evidence 继续保留。
+4. 只有当新的权威唯一正文有效、所有现行引用已更新、旧页没有不可替代历史事实且全仓回链验证通过后，才能统一删除旧兼容文件。当前**没有执行删除**。
