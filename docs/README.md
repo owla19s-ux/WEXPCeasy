@@ -12,6 +12,7 @@
 - [维加项目总体说明](维加项目总体说明.md)：产品机制、场景、方向与明确保留项。
 - [项目概要](PROJECT.md)：简短架构入口。
 - [F01–F15 功能总表](product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)：完整需求唯一正文；[产品资料索引](product/README.md)。
+- [216 项功能反向覆盖审查（2026-11-07）](audits/document-governance-2026-11-07/FUNCTION-216-REVERSE-COVERAGE.md)：逐 ID 对照 0.1.1 范围/owner/任务与后置边界，单列 F01-007 权威冲突和当前漏项核验优先级；**审查索引不代替产品正式需求或测试结果**。
 - [0.1.1 正式计划](versions/0.1.1/PLAN.md)：三批范围与验收；四项延期能力见计划，不以历史实验扩版。
 - [D01/D02 权限决策矩阵](product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)：区分已确认政策与候选保护边界。
 
