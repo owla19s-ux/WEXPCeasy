@@ -4,7 +4,7 @@
 
 ## 审查报告
 
-- [2026-11-07 第七轮完整 Git 树与模块链接核验](document-governance-2026-11-07/SEVENTH-PASS-CURRENT-TREE-LINKS.md)：取得未截断的最新递归树（844 个 blob、406 份 Markdown），定向检查 80 份模块/入口文档普通行内相对目标；不等于全仓链接/标题锚点验收。
+- [2026-11-07 第七轮完整 Git 树与 Markdown 路径核验](document-governance-2026-11-07/SEVENTH-PASS-CURRENT-TREE-LINKS.md)：先取未截断递归树（基线 844 个 blob、406 份 Markdown），后在新增记录的 407 份 Markdown 上完成**普通行内相对链接目标存在性**分批检查；DSH 上游快照的缺失目标单列。不等于全部锚点、引用式链接、脚本反向路径或构建测试验收。
 - [2026-11-07 第六轮 CONTRACT 与子目录审查](document-governance-2026-11-07/SIXTH-PASS-CONTRACT-AND-SUBMODULE-AUDIT.md)：区分现行模块 README、兼容 CONTRACT、历史候选规格，并修复第二层源码目录资料引用；尚未完成全仓链接与测试验收。
 - [2026-11-07 第五轮源码入口核验](document-governance-2026-11-07/FIFTH-PASS-MODULE-ENTRYPOINT-RECONCILIATION.md)：公开入口存在性与历史状态区分；不得当作功能验收。
 - [2026-11-07 文档体系第二轮复审](document-governance-2026-11-07/SECOND-PASS.md)：现行权威文档逐份检查、过时状态修正、链接静态抽查及未覆盖项，**不等于全仓自动验收**。
