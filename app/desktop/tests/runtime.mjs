@@ -74,7 +74,7 @@ try{
  const choose=async(selector,value)=>wc.executeJavaScript(`(()=>{const field=document.querySelector(${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(field.tagName==='SELECT'?HTMLSelectElement.prototype:field.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set.call(field,${JSON.stringify(value)});field.dispatchEvent(new Event(field.tagName==='SELECT'?'change':'input',{bubbles:true}));return true;})()`);
  await choose('form select','category.create');await choose('form input','Desktop category');await new Promise(r=>setTimeout(r,25));
  await wc.executeJavaScript("document.querySelector('form').requestSubmit();true");
- await waitFor("[...document.querySelectorAll('select[aria-label=\"导航类别\"] option')].some(x=>x.textContent==='Desktop category')");
+ await waitFor("[...document.querySelectorAll('[data-categories] button')].some(x=>x.textContent==='Desktop category')");
  const withCategory=await invoke({kind:'snapshot'});assert.equal(withCategory.categories.length,1);
  const savedCategory=withCategory.categories[0];assert.equal((await invoke({kind:'space.edit',id:withCategory.spaces[0].id,expectedRevision:withCategory.spaces[0].revision,name:'Desktop Space',categoryId:savedCategory.id})).status,'committed');
  await click('刷新工作区');await waitFor("!document.querySelector('nav button').disabled");

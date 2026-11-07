@@ -26,8 +26,9 @@ export async function runDesktop(options:{url:string;preload:string;start:(polic
  session.defaultSession.setPermissionCheckHandler(()=>false);
  const assets=new Set([options.url,new URL('renderer.js',options.url).href,new URL('style.css',options.url).href]);
  session.defaultSession.webRequest.onBeforeRequest((details,callback)=>callback({cancel:!assets.has(details.url)}));
- window=new BrowserWindow({width:1080,height:740,minWidth:720,minHeight:480,show:options.show??true,
+ window=new BrowserWindow({width:1440,height:900,minWidth:1024,minHeight:640,show:options.show??true,
   webPreferences:{preload:options.preload,nodeIntegration:false,contextIsolation:true,sandbox:true,webviewTag:false,webSecurity:true,allowRunningInsecureContent:false}});
+ if(options.show!==false)window.maximize();
  if(options.spaceRootId)access=createDesktopSpace({rootId:options.spaceRootId,
   confirm:options.spacePlatform?.confirm??(async summary=>(await dialog.showMessageBox(window!,{type:'question',title:'WEXPCeasy 操作确认',message:summary,buttons:['取消','允许本次操作'],defaultId:0,cancelId:0})).response===1),
   chooseDirectory:options.spacePlatform?.chooseDirectory??(async()=>{const result=await dialog.showOpenDialog(window!,{title:'选择目录（Context 自身记录需已有 WEX 数据根）',properties:['openDirectory']});return result.canceled?undefined:result.filePaths[0];})

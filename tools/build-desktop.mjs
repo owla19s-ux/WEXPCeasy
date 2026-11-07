@@ -1,5 +1,5 @@
 import {build} from 'esbuild';
-import {mkdir,writeFile,copyFile} from 'node:fs/promises';
+import {mkdir,writeFile,copyFile,readFile} from 'node:fs/promises';
 await mkdir('desktop-dist',{recursive:true});
 await build({entryPoints:['UI/src/renderer.tsx'],bundle:true,platform:'browser',format:'iife',target:'chrome140',jsx:'automatic',outfile:'desktop-dist/renderer.js',minify:true,define:{'process.env.NODE_ENV':'"production"'}});
 await copyFile('app/desktop/preload.cjs','desktop-dist/preload.cjs');
@@ -15,3 +15,5 @@ await writeFile('desktop-dist/style.css',(await (await import('node:fs/promises'
 await build({entryPoints:['UI/src/credential-input.ts'],bundle:true,platform:'browser',format:'iife',target:'chrome140',outfile:'desktop-dist/credential.js',minify:true});
 await copyFile('app/desktop/credential-preload.cjs','desktop-dist/credential-preload.cjs');
 await writeFile('desktop-dist/credential.html',`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self'; frame-src 'none'; base-uri 'none'; form-action 'none'"><title>WEX · 凭证录入</title><link rel="stylesheet" href="style.css"></head><body><main><h1>保存 API 凭证</h1><p data-target="connectionName"></p><p data-target="provider"></p><p class="address-value" data-target="endpoint"></p><p>仅保存到此连接的系统加密凭证中。普通业务页面只能看到凭证引用。</p><form autocomplete="off"><label>API Key<input id="secret" type="password" required maxlength="8192" autocomplete="new-password" spellcheck="false" disabled></label><p>仅填写 Key，不包含 Bearer 前缀。</p><p role="alert"></p><button type="submit" disabled>加密保存</button><button type="button" id="cancel">取消</button></form></main><script src="credential.js"></script></body></html>`);
+
+await writeFile('desktop-dist/style.css',(await readFile('desktop-dist/style.css','utf8'))+'\n'+(await readFile('UI/src/workbench.css','utf8')));
