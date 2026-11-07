@@ -6,14 +6,14 @@ Space／Context 页面。展示组织与关联，业务调用 space，不把 Con
 
 目录是页面职责预留，不是运行时数据路径、独立插件、进程或编译包。后续如迁移组件，应同时改消费方与测试，不为满足目录名称机械搬迁。
 
-[源码目录与 Windows 数据要求](../../docs/WEXPC-SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
+[源码目录与 Windows 数据要求](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
 
 修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
 
 
 ## 上级契约与文档入口
 
-- **上级契约：** [UI/CONTRACT.md](../../UI/CONTRACT.md)
+- **现行 UI 模块入口：** [UI/README.md](../README.md)；[UI/CONTRACT.md](../CONTRACT.md) 为历史交互研究
 - **现行 Space 施工入口：** [space/README.md](../../space/README.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [Space 与工作流编辑器设计](../../docs/A0-产品构想与研究/历史参考/旧UI设计/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
