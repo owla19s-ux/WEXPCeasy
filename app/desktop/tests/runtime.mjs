@@ -45,7 +45,7 @@ try{
  const divider=await wc.executeJavaScript("(()=>{const r=document.querySelector('[data-divider=\"column-1\"]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+80)};})()");
  wc.sendInputEvent({type:'mouseMove',...divider});wc.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...divider});
  await waitFor("document.querySelector('[data-workbench]').dataset.dragging==='true'");
- wc.sendInputEvent({type:'mouseMove',x:divider.x+24,y:divider.y});
+ wc.sendInputEvent({type:'mouseMove',modifiers:['leftButtonDown'],x:divider.x+24,y:divider.y});
  await waitFor("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width>"+(columns[1]+12));
  wc.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:divider.x+24,y:divider.y});
  await waitFor("document.querySelector('[data-workbench]').dataset.dragging==='false'");
@@ -56,7 +56,7 @@ try{
  const handle=await wc.executeJavaScript("(()=>{const r=document.querySelector('[data-divider=\"panel-0\"]').getBoundingClientRect();return {x:Math.round(r.x+80),y:Math.round(r.y+r.height/2)};})()");
  wc.sendInputEvent({type:'mouseMove',...handle});wc.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...handle});
  await waitFor("document.querySelector('[data-workbench]').dataset.dragging==='true'");
- wc.sendInputEvent({type:'mouseMove',x:handle.x,y:handle.y+16});
+ wc.sendInputEvent({type:'mouseMove',modifiers:['leftButtonDown'],x:handle.x,y:handle.y+16});
  await waitFor("document.querySelector('.aux-panel').getBoundingClientRect().height>"+(panelBefore+6));
  wc.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:handle.x,y:handle.y+16});
  await waitFor("document.querySelector('[data-workbench]').dataset.dragging==='false'");
