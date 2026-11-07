@@ -122,6 +122,7 @@ Function un.onInit
  Abort
  Call un.ValidatePayloadPaths
  Call un.VerifyApplicationStopped
+ GetFullPathName $INSTDIR "$INSTDIR"
 FunctionEnd
 
 Section "Uninstall"
@@ -131,6 +132,8 @@ Section "Uninstall"
  Delete "$INSTDIR\Uninstall.exe"
  Delete "$SMPROGRAMS\WEXPCeasy.lnk"
  ReadRegStr $R0 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\WEXPCeasy" "InstallLocation"
+ IfFileExists "$R0\." 0 +2
+ GetFullPathName $R0 "$R0"
  StrCmp $R0 $INSTDIR 0 +2
  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\WEXPCeasy"
  RMDir "$INSTDIR"

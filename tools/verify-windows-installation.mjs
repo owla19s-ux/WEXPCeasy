@@ -13,6 +13,8 @@ import {createDesktopConversations} from '../dist/app/src/desktop-conversations.
 if(process.platform!=='win32')throw Error('windows_installer_verification_required');
 await mkdir('windows-delivery-acceptance',{recursive:true});
 const installer=resolve('release/windows/WEXPCeasy-0.1.1-Setup.exe'),manifest=JSON.parse(await readFile('release/windows/manifest.json','utf8'));
+const uninstallKey='HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\WEXPCeasy';
+const registered=()=>{try{execFileSync('reg.exe',['query',uninstallKey,'/v','InstallLocation','/reg:32'],{stdio:'pipe'});return true;}catch{return false;}};
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 assert.equal(hash(await readFile(installer)),manifest.installer.sha256);
 assert.equal(manifest.sourceSha,process.env.GITHUB_SHA);
@@ -29,6 +31,7 @@ async function controls(root){
  return {host,authority,api,ai,chat,async close(){chat.close();ai.close();api.close();assert.equal((await host.stop()).status,'stopped');}};
 }
 async function startAndClose(args,whileRunning){
+ console.log('WINDOWS_DELIVERY_STAGE packaged_launch');
  const exe=join(install,'WEXPCeasy.exe');active=spawn(exe,args,{stdio:'inherit'});
  let code;const ended=new Promise(resolve=>active.once('exit',v=>{code=v;resolve(v);}));
  await timeout(async()=>{if(code!==undefined)throw Error('packaged_app_exited_'+code);return exists(join(data,'.wex-write-lock'));},'data_root_lock');
@@ -47,7 +50,7 @@ try{
  console.log('WINDOWS_DELIVERY_STAGE install',install);
  const installCode=await run(installer,['/S','/D='+install]);
  if(installCode!==0){try{console.error('INSTALLER_DIAGNOSTIC',await readFile(join(tmpdir(),'WEXPCeasy-install.log'),'utf8'));}catch{}}
- assert.equal(installCode,0);
+ assert.equal(installCode,0);assert.equal(registered(),true);
  for(const file of manifest.files)assert.equal(hash(await readFile(join(install,...file.path.split('/')))),file.sha256,file.path);
  await mkdir(data);
  const root=selectDesktopRoot({args:[],installationRoot:install,choose:()=>({path:data,create:true})});assert.ok(root);
@@ -62,7 +65,7 @@ try{
  await c.close();
  await startAndClose([],async()=>{
   assert.notEqual(await run(installer,['/S','/D='+install]),0);
-  assert.notEqual(await run(join(install,'Uninstall.exe'),['/S']),0);
+  assert.notEqual(await run(join(install,'Uninstall.exe'),['/S','_?='+install]),0);
   assert.equal(await exists(join(install,'WEXPCeasy.exe')),true);
  });
  assert.equal(await run(installer,['/S','/D='+install]),0);
@@ -73,8 +76,10 @@ try{
  assert.equal((await c.chat.request({kind:'open',id:created.id})).conversation.messages[0].segments[0].text,'Recovered conversation history.');
  await c.close();
  await writeFile(join(install,'keep-unowned.txt'),'do not delete unknown files');
+ console.log('WINDOWS_DELIVERY_STAGE uninstall');
  assert.equal(await run(join(install,'Uninstall.exe'),['/S']),0);
  await timeout(async()=>!await exists(join(install,'WEXPCeasy.exe'))&&!await exists(join(install,'Uninstall.exe')),'uninstall');
+ assert.equal(registered(),false);
  for(const file of manifest.files)assert.equal(await exists(join(install,...file.path.split('/'))),false,'uninstall retained '+file.path);
  assert.equal(await readFile(join(install,'keep-unowned.txt'),'utf8'),'do not delete unknown files');
  assert.equal(await readFile(join(data,'keep-user.txt'),'utf8'),'user data outside installation');
@@ -86,6 +91,7 @@ try{
  c=await controls(root);assert.equal((await c.chat.request({kind:'open',id:created.id})).conversation.messages.length,1);await c.close();
  assert.equal(await run(join(install,'Uninstall.exe'),['/S']),0);
  await timeout(async()=>!await exists(join(install,'WEXPCeasy.exe'))&&!await exists(join(install,'Uninstall.exe')),'final_uninstall');
+ assert.equal(registered(),false);
  assert.equal(await readFile(join(data,'keep-user.txt'),'utf8'),'user data outside installation');
  const report={sourceSha:process.env.GITHUB_SHA,installerSha256:manifest.installer.sha256,platform:process.platform,fixtures:['native root-selection choice supplied by test','local API configuration only, no external Provider request'],checks:['standalone packaged Electron contains all runtime resources','installer rejects unrelated nonempty directory','Unicode installation and independent data paths','actual packaged app opens and closes through native window message','running app blocks reinstall and uninstall before files change','same-path reinstall preserves locator and real SQLite API/AI/conversation records','uninstaller preserves external data and unknown installation-directory files','fresh install reconnects old root without old system index'],limits:['unsigned CI artifact','Windows PowerShell with WinForms is required for first-start directory selection','installer failure diagnostics use Windows TEMP before a data root is selected','not manual Windows E4, Snap or multi-monitor DPI acceptance','native root picker interaction not automated']};
  await writeFile('windows-delivery-acceptance/report.json',JSON.stringify(report,null,2));console.log('WINDOWS_DELIVERY_ACCEPTANCE '+JSON.stringify(report));
