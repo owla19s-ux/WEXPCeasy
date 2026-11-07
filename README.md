@@ -6,7 +6,7 @@
 
 ## 当前施工阶段：0.1.1 模块收口与桌面 B3 接线
 
-**当前桌面施工任务入口：[B3 桌面 UI、连接器接入与 Windows 交付](docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)**；基础模块残余事项见 [B1 连续施工任务](docs/versions/0.1.1/B1-EXECUTION-TASK-2026-11-06.md)。版本边界与退出标准见 [0.1.1 正式计划](docs/versions/0.1.1/PLAN.md)。
+**当前唯一版本级施工导航：[0.1.1 功能、施工任务与模块进度总表](docs/versions/0.1.1/功能施工与进度总表.md)**。本表集中 B1/B2/B3 的 24 项任务、模块入口、当前进度、阻塞与 CI 回执。原 [正式计划](docs/versions/0.1.1/PLAN.md)、[B1 连续施工记录](docs/versions/0.1.1/B1-EXECUTION-TASK-2026-11-06.md)、[B3 详细施工细则](docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)保留为批准范围与详细证据，不与主表并行维护实时进度。**只有用户指定具体施工任务才构成当前执行授权。**
 
 **当前执行导航（2026-11-07）**：B1 各主要 owner 已有正式源码和独立测试，B1/B2/B3 的自动化测试并不替代批次签收。下一步在已实现的 Electron/React + Space UI 与部分 D-08 共享工作窗口源码上，优先核对构建和 UI 实际使用，再补可信业务 IPC、API/Agent 配置、Conversations 对话页、设置/权限、文件编辑及 Windows 安装恢复；GitHub 官方能力专项按连接器 owner 独立推进。按模块完成、逐项验收，不重复建立已有基础代码。
 
@@ -58,7 +58,7 @@
 
 - [项目说明](docs/PROJECT.md)
 - [产品功能总表](docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md)
-- [0.1.1 当前正式版本计划与 B1 连续施工流程](docs/versions/0.1.1/PLAN.md)
+- [0.1.1 统一功能施工进度主表](docs/versions/0.1.1/功能施工与进度总表.md)
 - [文档索引与历史研究](docs/README.md)
 
 **默认阅读路径只有：根 README → 当前模块 README → 实际源码与测试。** 只有遇到明确的契约争议、未决设计或证据需求时，才定向查阅其他资料。
