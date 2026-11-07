@@ -1,5 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import type {ReactNode} from 'react';
+import {LocalFileEditor} from './local-file-editor.js';
+import type {LocalDrafts} from './local-file-editor.js';
 import {ContextAddresses} from './space-addresses.js';
 import type {DesktopSpaceInput,DesktopSpaceReply,DesktopBridge} from './index.js';
 type Snapshot=Extract<DesktopSpaceReply,{view:'snapshot'}>;
@@ -7,12 +9,12 @@ type Detail=Extract<DesktopSpaceReply,{view:'context'}>;
 type ResourcePreview=Extract<DesktopSpaceReply,{view:'file'|'directory'}>;
 export interface SpaceSections {contextId:string|null;resourcePreview:ReactNode|null;dismissResourcePreview:()=>void;toolbar:ReactNode;categories:ReactNode;structure:ReactNode;content:ReactNode;summary:ReactNode}
 export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sections:SpaceSections)=>ReactNode}){
- const openSequence=useRef(0),selectedContext=useRef<string|null>(null);
+ const openSequence=useRef(0),selectedContext=useRef<string|null>(null),fileDrafts=useRef<LocalDrafts>(new Map());
  const [resourcePreview,setResourcePreview]=useState<ResourcePreview>();
  const [data,setData]=useState<Snapshot>(),[detail,setDetail]=useState<Detail>(),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const [categoryFilter,setCategoryFilter]=useState(''),[categoryId,setCategoryId]=useState('');
  const [spaceId,setSpaceId]=useState(''),[groupId,setGroupId]=useState(''),[mode,setMode]=useState('space.create'),[name,setName]=useState(''),[description,setDescription]=useState('');
- useEffect(()=>bridge.onAccessChanged(()=>{openSequence.current++;selectedContext.current=null;setResourcePreview(undefined);setDetail(undefined);setData(undefined);setName('');setDescription('');setSpaceId('');setGroupId('');setCategoryId('');setCategoryFilter('');setMessage('授权已变更，请重新打开工作区。');}),[bridge]);
+ useEffect(()=>bridge.onAccessChanged(()=>{openSequence.current++;selectedContext.current=null;fileDrafts.current.clear();setResourcePreview(undefined);setDetail(undefined);setData(undefined);setName('');setDescription('');setSpaceId('');setGroupId('');setCategoryId('');setCategoryFilter('');setMessage('授权已变更，请重新打开工作区。');}),[bridge]);
  async function call(input:DesktopSpaceInput){
   const reply=await bridge.space(input);if(!reply.ok)throw Error('桌面请求被拒绝');
   const result=reply.value;
@@ -61,7 +63,7 @@ export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sectio
  const summary=detail?<dl><dt>当前显示</dt><dd>{detail.context.name}</dd><dt>Context ID</dt><dd>{detail.context.id}</dd><dt>配置修订</dt><dd>{detail.context.revision}</dd><dt>关联地址</dt><dd>{detail.resources.length}</dd></dl>:<p>选择一个 Context 查看当前对象信息。</p>;
  const resourceView=resourcePreview?<div className="resource-read-preview">
   <small>来源：当前 Context 已获准地址 · 版本：{resourcePreview.version}</small>
-  {resourcePreview.view==='file'?<pre>{resourcePreview.content}</pre>:<>
+  {resourcePreview.view==='file'?<LocalFileEditor key={resourcePreview.contextId+':'+resourcePreview.addressId} file={resourcePreview} bridge={bridge} drafts={fileDrafts.current} onRead={value=>{if(value.contextId===selectedContext.current)setResourcePreview(value);}}/>:<>
    <ul>{resourcePreview.entries.map(entry=><li key={entry.name}>{entry.name} · {entry.kind}</li>)}</ul>
    {!resourcePreview.complete&&<p>目录结果不完整，请缩小范围。</p>}
    <p>仅展示已返回的目录名称；不会自动读取符号链接或子目录。</p>

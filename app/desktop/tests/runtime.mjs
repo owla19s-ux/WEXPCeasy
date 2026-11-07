@@ -1,7 +1,7 @@
 import {createServer} from 'node:http';
 import {app,BrowserWindow} from 'electron';
 import assert from 'node:assert/strict';
-import {mkdtemp,writeFile,lstat,rm,mkdir} from 'node:fs/promises';
+import {mkdtemp,writeFile,readFile,lstat,rm,mkdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -46,7 +46,7 @@ const startup=policy=>startFoundations({dataRoot:root,expectedRootId:id,trust:{c
   return new Response(JSON.stringify({content:{path:'README.md',sha:githubSha},commit:{sha:'c'.repeat(40)}}),{status:200,headers:{'content-type':'application/json'}});
  }
  return new Response(JSON.stringify({type:'file',path:'README.md',sha:githubSha,encoding:'base64',content:Buffer.from(githubText).toString('base64'),size:Buffer.byteLength(githubText)}),{status:200,headers:{'content-type':'application/json'}});
- }},conversations:true,ai:{bindRead:()=>undefined},localFiles:{},localDirectories:{},technicalDiagnostics:{},
+ }},conversations:true,ai:{bindRead:()=>undefined},localFiles:{coordinateWrites:true},localDirectories:{},technicalDiagnostics:{},
  openStore(path,namespace){const db=openSqliteStore(path,namespace);return {...db,close(){if(failClose&&namespace==='permissions'){failClose=false;throw Error('injected-close');}db.close();}};},...policy});
 const timer=setTimeout(()=>{console.error('desktop_runtime_timeout');app.exit(1);},75000);
 try{
@@ -150,6 +150,32 @@ try{
   await waitFor("!!document.querySelector('[aria-label=\"资源预览\"] pre')");
   assert.equal(await wc.executeJavaScript('window.resourceExecuted'),undefined);
   assert.match(await wc.executeJavaScript("document.querySelector('[aria-label=\"资源预览\"] pre').textContent"),/Selected local text/);
+  // Exercise the visible editor against a real selected file, including draft navigation and external conflicts.
+  await choose('textarea[name="local-file-content"]','Desktop local edit');
+  await click('关闭预览');
+  await wc.executeJavaScript("[...document.querySelectorAll('.address-card')].find(x=>x.textContent.includes('Selected local file')).querySelector('button').click();true");
+  await waitFor("document.querySelector('textarea[name=\"local-file-content\"]')?.value==='Desktop local edit'");
+  nativeAllowed=false;await click('保存本地文件');
+  await waitFor("document.querySelector('[data-local-editor] [role=status]').textContent.includes('保存已取消')");
+  assert.match(await readFile(previewFile,'utf8'),/Selected local text/);
+  nativeAllowed=true;await click('保存本地文件');
+  await waitFor("document.querySelector('[data-local-editor] [role=status]').textContent.includes('已保存')");
+  assert.equal(await readFile(previewFile,'utf8'),'Desktop local edit');
+  await click('重新读取文件');
+  await waitFor("document.querySelector('[data-local-editor] [role=status]').textContent.includes('已重新读取')");
+  await choose('textarea[name="local-file-content"]','Desktop merged draft');
+  await writeFile(previewFile,'External change');
+  await click('保存本地文件');
+  await waitFor("document.querySelector('[data-local-editor] [role=status]').textContent.includes('磁盘版本冲突')");
+  assert.equal(await readFile(previewFile,'utf8'),'External change');
+  assert.equal(await wc.executeJavaScript("document.querySelector('textarea[name=\"local-file-content\"]').value"),'Desktop merged draft');
+  await click('重新读取文件');
+  await waitFor("document.querySelector('[data-local-editor] pre').textContent==='External change'");
+  await click('保存本地文件');
+  await waitFor("document.querySelector('[data-local-editor] [role=status]').textContent.includes('已保存')");
+  assert.equal(await readFile(previewFile,'utf8'),'Desktop merged draft');
+  await capture('-local-editor');
+
  }
  // API settings are actual React forms, not a direct domain fixture.
  await click('设置');await click('API 与模型');
@@ -268,7 +294,7 @@ try{
  await waitFor("document.querySelectorAll('nav[aria-label=\"普通对话历史\"] button').length===1");
  await wc.executeJavaScript("document.querySelector('nav[aria-label=\"普通对话历史\"] button').click();true");
  await waitFor("document.querySelectorAll('[data-conversations] article').length===5");
- assert.equal(providerCalls.length,networkBeforeReload.provider);assert.equal(githubCalls.length,networkBeforeReload.github);
+ assert.equal(providerCalls.length,networkBeforeReload.provider);assert.equal(githubCalls.length,networkBeforeReload.github);assert.equal(await readFile(previewFile,'utf8'),'Desktop merged draft');
  await capture('-recovery');
  await click('设置');
  await click('返回工作区');await click('Space / Context');
@@ -301,7 +327,7 @@ try{
  assert.equal((await runtime.lifecycle.stop()).status,'stopped');
  const reopened=await startFoundations({dataRoot:root,trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false}});
  assert.equal(reopened.status,'ready');assert.equal((await reopened.stop()).status,'stopped');
- const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,fixtures:['official Octokit transport responses and dummy credential cipher (no real GitHub writes)','local HTTP/SSE Provider','native dialog responses','native directory selection','one permissions-store close failure'],limits:['Windows Local native handle/scanner tested; requires Windows PowerShell with Add-Type available','not an installer or manual Windows acceptance'],checks:['GitHub config, private credential form, SHA-bound read/edit/write, native decline, unknown receipt without automatic retry and credential detach','conversation edit/resend preserves history, streaming cancellation and cleared sent draft','API and AI config forms, actual local Provider generation, saved history and scoped permission UI','three-column navigation pointer and keyboard resizing, optional auxiliary width and collapse, on-demand preview, layout recovery and preserved Space draft','category creation and address form/primary selection through actual React DOM','controlled Local resource preview and pinned native directory enumeration','React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
+ const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,fixtures:['official Octokit transport responses and dummy credential cipher (no real GitHub writes)','local HTTP/SSE Provider','native dialog responses','native directory selection','one permissions-store close failure'],limits:['Windows Local native handle/scanner tested; requires Windows PowerShell with Add-Type available','not an installer or manual Windows acceptance'],checks:['Local real file editor save, draft close/reopen, native decline, external version conflict, reread/compare and explicit merged save','GitHub config, private credential form, SHA-bound read/edit/write, native decline, unknown receipt without automatic retry and credential detach','conversation edit/resend preserves history, streaming cancellation and cleared sent draft','API and AI config forms, actual local Provider generation, saved history and scoped permission UI','three-column navigation pointer and keyboard resizing, optional auxiliary width and collapse, on-demand preview, layout recovery and preserved Space draft','category creation and address form/primary selection through actual React DOM','controlled Local resource preview and pinned native directory enumeration','React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
  await writeFile(resolve('desktop-acceptance',process.platform+'.json'),JSON.stringify(report,null,2));
  console.log('DESKTOP_ACCEPTANCE '+JSON.stringify(report));provider.closeAllConnections();provider.close();clearTimeout(timer);app.quit();
 }catch(error){provider.closeAllConnections();provider.close();console.error(error);clearTimeout(timer);app.exit(1);}

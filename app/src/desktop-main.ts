@@ -18,7 +18,7 @@ try{
   void runDesktop({url:new URL('index.html',assets).href,preload:fileURLToPath(new URL('preload.cjs',assets)),spaceRootId:root.id,
    start:policy=>startFoundations({dataRoot:root.path,expectedRootId:root.id,
     trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false},
-    space:{},api:{},githubOfficial:{},conversations:true,ai:{bindRead:()=>undefined},localFiles:{},localDirectories:{},
+    space:{},api:{},githubOfficial:{},conversations:true,ai:{bindRead:()=>undefined},localFiles:{coordinateWrites:true},localDirectories:{},
     technicalDiagnostics:{},credentials:{cipher:createWindowsCredentialCipher(safeStorage)},...policy})}).catch(()=>{console.error('desktop_start_failed');app.exit(1);});
  }
 }catch(error){

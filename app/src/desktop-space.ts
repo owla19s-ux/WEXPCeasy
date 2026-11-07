@@ -8,7 +8,9 @@ import {createDesktopAuthority} from './desktop-authority.js';
 import type {DesktopAuthority} from './desktop-authority.js';
 import type {SpaceCommand,SpaceQuery,QueryResult,ProjectionScope} from '../../space/src/index.js';
 import type {DesktopSpaceInput,DesktopSpaceReply} from '../../UI/src/index.js';
+interface FileObservation {contextId:string;addressId:string;revision:number;address:string;path:string;target:string;version:string}
 const schemas:Record<string,readonly string[]>={
+ 'resource.save':['kind','contextId','id','editToken','content'],
  'resource.read':['kind','contextId','id','mode'],
  'category.create':['kind','name'],'category.edit':['kind','id','expectedRevision','name'],
  'address.add':['kind','contextId','name','address','notes','purpose'],
@@ -29,6 +31,7 @@ function capture(input:unknown):DesktopSpaceInput|undefined{
  for(const key of Object.keys(row)){
   const value=row[key];
   if(key==='expectedRevision'){if(!Number.isSafeInteger(value)||Number(value)<0)return;}
+  else if(key==='content'){if(typeof value!=='string'||Buffer.byteLength(value,'utf8')>1024*1024||Buffer.from(value,'utf8').toString('utf8')!==value)return;}
   else if(key==='mode'){if(!['file','directory'].includes(String(value)))return;}
   else if(key==='clear'){if(typeof value!=='boolean')return;}
   else if((key==='groupId'||key==='categoryId'||(key==='id'&&row.kind==='primary.select'))&&value===null){}
@@ -48,7 +51,7 @@ const key=(op:LocalOperation)=>JSON.stringify(op);
 /** Native-confirmed local UI adapter. Domain data remains in Space; no Renderer identity/grant/path API. */
 export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:string;confirm:(summary:string)=>Promise<boolean>;chooseDirectory:()=>Promise<string|undefined>}){
  const authority=options.authority??createDesktopAuthority(),policy=authority.policy;
- const pending=new Map<string,LocalOperation>();
+ const pending=new Map<string,LocalOperation>(),observations=new Map<string,FileObservation>();
  let host:FoundationHost|undefined,closed=false,busy=false,reading=false;
  const operation=(action:string,target:string,context:string|null=null):LocalOperation=>({resource:'space',action,target,context});
  const permit=authority.permit,bind=authority.bind;
@@ -98,11 +101,62 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
   if(!current||current.revision!==resource.revision||current.address!==resource.address||closed)return {status:'rejected',reason:'resource_changed'};
   const value=result.value as {version:string;content?:string;entries?:{name:string;kind:'file'|'directory'|'symlink'|'other'}[];complete?:boolean};
   if(!value||typeof value.version!=='string')return {status:'unavailable',reason:'invalid_resource_observation'};
-  if(input.mode==='file'&&typeof value.content==='string')return {status:'ok',view:'file',contextId:input.contextId,addressId:resource.id,content:value.content,version:value.version};
+  if(input.mode==='file'&&typeof value.content==='string'){
+   const editToken=randomUUID();
+   while(observations.size>=64)observations.delete(observations.keys().next().value!);
+   observations.set(editToken,{contextId:input.contextId,addressId:resource.id,revision:resource.revision,address:resource.address,path,target,version:value.version});
+   return {status:'ok',view:'file',contextId:input.contextId,addressId:resource.id,content:value.content,version:value.version,editToken};
+  }
   if(input.mode==='directory'&&Array.isArray(value.entries)&&typeof value.complete==='boolean')return {status:'ok',view:'directory',contextId:input.contextId,addressId:resource.id,entries:value.entries,complete:value.complete,version:value.version};
   return {status:'unavailable',reason:'invalid_resource_observation'};
  }
+ async function saveResource(input:Extract<DesktopSpaceInput,{kind:'resource.save'}>):Promise<DesktopSpaceReply>{
+  const observed=observations.get(input.editToken);
+  if(!observed||observed.contextId!==input.contextId||observed.addressId!==input.id)return {status:'rejected',reason:'file_observation_required'};
+  const current=await query({kind:'context',id:input.contextId},operation('context.read','context:'+input.contextId,input.contextId));
+  const resource=current.status==='ok'?(current.value as import('../../space/src/index.js').ContextView).resources.find(r=>r.id===input.id):undefined;
+  if(!resource||resource.revision!==observed.revision||resource.address!==observed.address)return {status:'rejected',reason:'resource_changed'};
+  if(!host?.connections||!host.localFiles)return {status:'unavailable',reason:'local_resource_unavailable'};
+  const confirmed=await authority.confirm(options.confirm,'保存本地文件：'+resource.name+'\n'+observed.path+
+   '\n基于读取版本：'+observed.version+'\n新内容 '+Buffer.byteLength(input.content,'utf8')+' 字节，SHA-256 '+createHash('sha256').update(input.content).digest('hex')+
+   '\n仅替换这个已读取文件；必要时登记 Local 文件连接。不创建、删除或移动文件。外部变更会拒绝保存；结果未知不自动重试。');
+  if(closed)return {status:'unavailable',reason:'session_closed'};if(!confirmed)return {status:'cancelled'};
+  const configScope:LocalOperation={resource:'connections',action:'configuration.read',target:'connection:desktop-local-files',context:null};permit(configScope);
+  const config=host.connections.configs.read();let revision=config.revision;
+  const local=config.items.find(c=>c.id==='desktop-local-files');
+  if(local&&(local.adapter!=='local'||local.endpoint!=='local:files'||local.credentialRef!==null||!local.enabled))return {status:'rejected',reason:'local_connection_unavailable'};
+  if(!local){
+   permit({...configScope,action:'configuration.write'});
+   const created=host.connections.configs.put({id:'desktop-local-files',adapter:'local',endpoint:'local:files',credentialRef:null,enabled:true},revision,randomUUID());
+   if(created.status!=='ok')return {status:'unavailable',reason:'local_configuration_'+created.status};revision=created.revision;
+  }
+  const scope:LocalOperation={resource:'local',action:'write',target:observed.target,context:input.contextId};permit(scope);
+  const request=bind(scope)!;
+  const registered=await host.localFiles.register(request,observed.target,observed.path);
+  if(registered.status!=='bound')return {status:'rejected',reason:'local_file_'+registered.status};
+  const latest=await query({kind:'context',id:input.contextId},operation('context.read','context:'+input.contextId,input.contextId));
+  const live=latest.status==='ok'?(latest.value as import('../../space/src/index.js').ContextView).resources.find(r=>r.id===input.id):undefined;
+  if(!live||live.revision!==observed.revision||live.address!==observed.address||closed)return {status:'rejected',reason:'resource_changed'};
+  const operationId=randomUUID();
+  const result=await host.connections.dispatch('local',request,operationId,'desktop-local-files',revision,observed.target,
+   createHash('sha256').update(JSON.stringify([input.contextId,input.id,observed.version,input.content])).digest('hex'),
+   {kind:'replace',expectedVersion:observed.version,content:input.content});
+  if(result.status==='unknown'){observations.delete(input.editToken);return {status:'unknown',intent:operationId};}
+  if(result.status!=='observed')return {status:'rejected',reason:result.reason,operationId};
+  const receipt=host.connections.operations.get(operationId)?.observations.find(o=>o.id==='result')?.value;
+  if(!receipt||typeof receipt!=='object'||Array.isArray(receipt))return {status:'unknown',intent:operationId};
+  if(receipt.status!=='written')return {status:'rejected',reason:typeof receipt.reason==='string'?receipt.reason:'local_write_unconfirmed',operationId};
+  observations.delete(input.editToken);
+  // A saved receipt remains authoritative, but cannot be disclosed after revocation or close.
+  if(closed||host.permissions!.evaluate(request).status!=='allow')return {status:'unknown',intent:operationId};
+  return {status:'saved',version:receipt.version as string,operationId};
+ }
  async function perform(input:DesktopSpaceInput):Promise<DesktopSpaceReply>{
+  // A save has its own exact native summary after resolving the previously observed reference.
+  if(input.kind==='resource.save'){
+   if(!await authority.confirm(options.confirm,'准备核对已读取的 Context 文件及保存目标。不会在核对前修改文件。'))return {status:'cancelled'};
+   return saveResource(input);
+  }
   const confirmed=await authority.confirm(options.confirm,input.kind==='snapshot'?'读取当前数据根已登记的 Space、Group 和 Context。仅允许本次本地读取，不授予 AI、网络或文件内容访问。':'本次操作：'+titles[input.kind]+('name'in input?' — '+input.name:'')+('id'in input?'；对象 ID：'+input.id:'')+('contextId'in input?'；Context ID：'+input.contextId:'')+('spaceId'in input?'；Space ID：'+input.spaceId:'')+('address'in input?'；地址：'+input.address:'')+('categoryId'in input?'；类别：'+(input.categoryId??'未分类'):'')+('groupId'in input?'；分组：'+(input.groupId??'不分组'):'')+'。仅操作所选对象，不授予 AI 或外部连接权限。');
   if(closed)return {status:'unavailable',reason:'session_closed'};
   if(!confirmed)return {status:'cancelled'};
@@ -158,6 +212,6 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
    if(busy)return {status:'unavailable',reason:'operation_in_progress'};
    busy=true;try{return await authority.run(()=>perform(input))??{status:'unavailable',reason:'operation_in_progress'};}catch{return {status:'unavailable',reason:'operation_unavailable'};}finally{busy=false;}
   },
-  close(){closed=true;authority.close();}
+  close(){closed=true;observations.clear();authority.close();}
  });
 }

@@ -1,3 +1,4 @@
+import {createLocalWriteCoordinator} from './local-write-coordination.js';
 import {createCredentialVault} from '../../shared/src/index.js';
 import type {CredentialCipher,CredentialBinding} from '../../shared/src/index.js';
 import {createLocalDirectoryBindings,createLocalDirectoryReader} from '../../connections/local/src/index.js';
@@ -31,7 +32,7 @@ export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'res
 export type FoundationLocalFiles=Pick<ReturnType<typeof createLocalFileBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationLocalDirectories=Pick<ReturnType<typeof createLocalDirectoryBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationCredentials=Pick<ReturnType<typeof createCredentialVault>,'put'|'revoke'|'query'>&{available():boolean};
-export interface FoundationOptions {githubOfficial?:{mcpRuntime?:Readonly<GitHubMcpRuntime>;fetch?:typeof globalThis.fetch;timeoutMs?:number};credentials?:{cipher:CredentialCipher};technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationOptions {githubOfficial?:{mcpRuntime?:Readonly<GitHubMcpRuntime>;fetch?:typeof globalThis.fetch;timeoutMs?:number};credentials?:{cipher:CredentialCipher};technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions&{coordinateWrites?:boolean};conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
 export interface FoundationHost extends Host {readonly credentials?:FoundationCredentials;readonly technicalDiagnostics?:FoundationTechnicalDiagnostics;readonly localDirectories?:FoundationLocalDirectories;readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
  for(const suffix of ['', '-journal','-wal','-shm']){
@@ -171,7 +172,9 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    const configs=await openDomainStore(probe.root,'connections-configs.sqlite','connection-configs',open);stores.add(configs);
    const operations=await openDomainStore(probe.root,'connections-operations.sqlite','connection-operations',open);stores.add(operations);
    const permission=deps['permissions'] as Pick<Permissions,'evaluate'|'recheck'>;
-   files=options.localFiles?createLocalFileBindings(permission,options.localFiles):undefined;
+   if(options.localFiles?.coordinateWrites&&options.localFiles.acquireWrite)throw Error('ambiguous_local_write_coordination');
+   const coordinator=options.localFiles?.coordinateWrites?createLocalWriteCoordinator():undefined;
+   files=options.localFiles?createLocalFileBindings(permission,coordinator?{acquireWrite:coordinator.acquire}:options.localFiles):undefined;
    directories=options.localDirectories?createLocalDirectoryBindings(permission):undefined;
    const directoryReader=directories?createLocalDirectoryReader(directories.resolve,options.localDirectories):undefined;
    if(options.githubOfficial&&options.githubFiles)throw Error('ambiguous_github_profile');
@@ -206,7 +209,10 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    if(files)localFiles=Object.freeze({register:files.register,read:createReadBoundary(permission,createLocalFileReader(files.resolve)).read});
    if(directories&&directoryReader)localDirectories=Object.freeze({register:directories.register,read:createReadBoundary(permission,directoryReader).read});
    apiLedger=createOperationLedger(operations);
-   connections=Object.freeze({configs:service.configs,operations:service.operations,dispatch:service.dispatch,read:service.read});
+   const dispatch:ConnectionClient['dispatch']=(...args)=>args[0]==='local'&&coordinator
+    ?coordinator.dispatch(args[1],args[2],()=>service.operations.read().operations.some(o=>o.connection?.adapterId==='local'&&o.phase!=='observed'),()=>service.dispatch(...args))
+    :service.dispatch(...args);
+   connections=Object.freeze({configs:service.configs,operations:service.operations,dispatch,read:service.read});
    return {value:connections,stop:async()=>{
     if((await service.stop()).status!=='stopped')throw Error('connections_still_running');
     await files?.close();await directories?.close();

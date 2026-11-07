@@ -4,6 +4,7 @@ import type {LocalHandle} from './file-capability.js';
 import {constants} from 'node:fs';
 import {isAbsolute} from 'node:path';
 import {isDeepStrictEqual} from 'node:util';
+import type {AdapterAccess} from '../../src/index.js';
 import type {PermissionReader,Decision} from '../../../permissions/src/index.js';
 import type {LockResult} from '../../../shared/src/index.js';
 import type {LocalFileResolver,LocalFileCapability} from './file-capability.js';
@@ -14,7 +15,7 @@ export interface SelectedBindingOptions {
  /** Host resource coordinator. Required for writes; aliases of one inode receive the same identity.
   * A successful lease must cover conflicting WEX writers and unknown resource occupancy.
   */
- acquireWrite?:(identity:Readonly<LocalFileIdentity>)=>Promise<LockResult>;
+ acquireWrite?:(identity:Readonly<LocalFileIdentity>,access?:AdapterAccess)=>Promise<LockResult>;
 }
 type Allow=Extract<Decision,{status:'allow'}>;
 type Binding={locator:string;path:string;identity:Readonly<LocalFileIdentity>};
@@ -73,7 +74,7 @@ export function createSelectedBindings(permission:PermissionReader,options:Selec
    if(!check()||await realpath(selected.locator)!==selected.path)throw Error('local_capability_unavailable');
    if(mode==='write'){
     if(!options.acquireWrite)throw Error('local_write_lease_unavailable');
-    const acquired=await options.acquireWrite(selected.identity);
+    const acquired=await options.acquireWrite(selected.identity,access);
     if(acquired.status!=='acquired')throw Error('local_write_lease_unavailable');
     lease=acquired;
    }
