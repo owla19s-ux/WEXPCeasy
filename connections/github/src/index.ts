@@ -189,14 +189,14 @@ export function createGitHubMcpFileReader(options:GitHubMcpOptions):ConfiguredRe
     let authorized=false;try{authorized=access?.check()===true;}catch{/* Never expose authority errors. */}
     if(combined.aborted||!authorized)throw Error('github_mcp_unavailable');
    };
-   async function credential():Promise<string|undefined>{
+   async function credential(current:Readonly<ConnectionConfig>):Promise<string|undefined>{
     ensure();
     let rejectAbort:(reason:Error)=>void=()=>{};
     const abort=()=>rejectAbort(Error('github_mcp_unavailable'));
     const aborted=new Promise<never>((_resolve,reject)=>{rejectAbort=reject;});
     combined.addEventListener('abort',abort,{once:true});
     try{
-     ensure();return await Promise.race([Promise.resolve().then(()=>resolveCredential(capture(connection),access!)),aborted]);
+     ensure();return await Promise.race([Promise.resolve().then(()=>resolveCredential(current,access!)),aborted]);
     }finally{combined.removeEventListener('abort',abort);}
    }
    try{
@@ -205,7 +205,7 @@ export function createGitHubMcpFileReader(options:GitHubMcpOptions):ConfiguredRe
     const hash=createHash('sha256');
     for await(const chunk of createReadStream(runtime.command,{signal:combined}))hash.update(chunk);
     if(hash.digest('hex')!==runtime.expectedSha256)throw Error('github_mcp_unavailable');
-    ensure();const token=await credential();ensure();
+    ensure();const token=await credential(current);ensure();
     if(typeof token!=='string'||!token||/[\u0000-\u0020\u007f]/.test(token))throw Error('github_mcp_unavailable');
     directory=await mkdtemp(join(tmpdir(),'wex-github-mcp-'));ensure();
     transport=new StdioClientTransport({
