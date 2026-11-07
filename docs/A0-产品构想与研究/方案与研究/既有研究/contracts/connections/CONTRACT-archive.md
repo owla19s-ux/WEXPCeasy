@@ -116,7 +116,7 @@ DSH headless 既有实验锁 npm `0.2.1-rc.5`、源码 `ce7073d51254c26cd63b22a6
 
 ## 第五批复杂压力审查补充（2026-10-31）
 
-依据：[第五批覆盖、冲突与再审查记录](../../../../../audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
+依据：[第五批覆盖、冲突与再审查记录](../../../审查历史/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
 
 ### C02/C05：衍生信息出口与递归边界（F03/F04）
 
@@ -172,8 +172,8 @@ DSH headless 既有实验锁 npm `0.2.1-rc.5`、源码 `ce7073d51254c26cd63b22a6
 - [研究决策与当前边界](../../../../../decisions/RESEARCH-DECISIONS-2026-10-30.md)
 - [外部 Agent 生态](../../AGENT-ECOSYSTEM-2026-10-31.md)
 - **审查报告**：
-- [DSH / WEXPC1 能力差距矩阵](../../../../../audits/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
-- [复杂业务契约压力审查](../../../../../audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
+- [DSH / WEXPC1 能力差距矩阵](../../../审查历史/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
+- [复杂业务契约压力审查](../../../审查历史/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
 - **准备度与批次结论**：[本域施工准备度](../../../../历史参考/工程研究批次/batch6/READINESS.md) · [F01–F09 契约收敛](../../../../历史参考/工程研究批次/batch6/CONVERGENCE.md) · [集中决策与待决项](../../../../历史参考/工程研究批次/batch6/DECISIONS.md)
 - **实验与验证证据**：[第六批实验总表](../../../../历史参考/工程研究批次/batch6/EXPERIMENTS.md) · [可复现实验入口](../../../../../../experiments/contract-readiness-spike/README.md)
 

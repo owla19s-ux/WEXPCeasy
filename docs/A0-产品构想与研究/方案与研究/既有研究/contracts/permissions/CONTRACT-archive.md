@@ -67,7 +67,7 @@ A：权限唯一owner、组织/职责不授权、检查与真实限制分层、�
 
 ## 第五批复杂压力审查补充（2026-10-31）
 
-依据：[第五批覆盖、冲突与再审查记录](../../../../../audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
+依据：[第五批覆盖、冲突与再审查记录](../../../审查历史/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)。以下细化均为 **B 推荐未批准、E0 静态审查**；A 仅沿用原有 owner/边界。C 实验与 D 政策不因本节入仓而关闭，未冻结接口或新增首版能力。
 
 ### PER-01/PER-02：来源、衍生内容与目标出口（F03）
 
@@ -109,7 +109,7 @@ A：权限唯一owner、组织/职责不授权、检查与真实限制分层、�
 - [研究决策与当前边界](../../../../../decisions/RESEARCH-DECISIONS-2026-10-30.md)
 - [安全与数据持续性](../../SECURITY-AND-PERSISTENCE-2026-10-31.md)
 - **审查报告**：
-- [复杂业务契约压力审查](../../../../../audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
+- [复杂业务契约压力审查](../../../审查历史/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
 - **准备度与批次结论**：[本域施工准备度](../../../../历史参考/工程研究批次/batch6/READINESS.md) · [F01–F09 契约收敛](../../../../历史参考/工程研究批次/batch6/CONVERGENCE.md) · [集中决策与待决项](../../../../历史参考/工程研究批次/batch6/DECISIONS.md)
 - **实验与验证证据**：[第六批实验总表](../../../../历史参考/工程研究批次/batch6/EXPERIMENTS.md) · [可复现实验入口](../../../../../../experiments/contract-readiness-spike/README.md)
 
