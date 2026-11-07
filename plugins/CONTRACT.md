@@ -60,7 +60,7 @@
 
 - **模块导航：** [plugins README](README.md) · [全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档总索引](../docs/README.md)
 - **产品需求：** [F01–F15 产品功能总表](../docs/A1-正式产品设计/产品功能总表.md) · [功能—模块契约映射](../docs/A1-正式产品设计/功能与模块归属映射.md)
-- **跨模块边界：** [双插件体系架构](../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md) · [app](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md) · [connections](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md) · [permissions](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md) · [shared](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/shared/CONTRACT-archive.md)
+- **跨模块边界：** [双插件体系架构](../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md) · [app](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md) · [connections](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md) · [permissions](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md) · [shared](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/shared/CONTRACT-archive.md)
 - **证据：** [DSH 原生插件宿主实验](../dsh/README.md) · [外部 DSH Agent 连接器](../connections/dsh/README.md)
 
 维护规则：本契约只维护 WEX 自有插件业务语义；DSH 原生插件机制写入 dsh 专属实验资料；外部 Agent 协议写入 connections/dsh；真实授权写入 permissions。所有候选状态与 D09/C06 门槛保持显式。
