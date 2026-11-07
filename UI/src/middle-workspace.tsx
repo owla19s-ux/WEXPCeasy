@@ -55,7 +55,7 @@ export function MiddleWorkspace({parts}:{parts:SpaceSections}){
      {renaming===tab.id?<input autoFocus aria-label="编辑视图名称" maxLength={50} value={tab.title}
       onChange={e=>setState(s=>({...s,tabs:s.tabs.map(t=>t.id===tab.id?{...t,title:e.target.value}:t)}))}
       onBlur={()=>setRenaming(null)} onKeyDown={e=>{if(e.key==='Enter'||e.key==='Escape')setRenaming(null)}}/>
-      :<button type="button" role="tab" aria-selected={state.active===tab.id} onClick={()=>change({active:tab.id})} onDoubleClick={()=>setRenaming(tab.id)}>{tab.title}</button>}
+      :<button type="button" role="tab" aria-selected={state.active===tab.id} onClick={()=>change({active:tab.id})} onDoubleClick={()=>setRenaming(tab.id)} onKeyDown={e=>{if(e.key==="F2"){e.preventDefault();setRenaming(tab.id);}}}>{tab.title}</button>}
      <button type="button" aria-label={'前移 '+tab.title} title="前移视图" disabled={i===0} onClick={()=>shift(tab.id,-1)}>‹</button>
      <button type="button" aria-label={'后移 '+tab.title} title="后移视图" disabled={i===state.tabs.length-1} onClick={()=>shift(tab.id,1)}>›</button>
      {tab.id!=='context'&&<button type="button" aria-label={'关闭 '+tab.title} onClick={()=>remove(tab.id)}>×</button>}
