@@ -18,7 +18,7 @@ export function restoreLayout(raw:string|null):Layout{
    const v=value.columns as number[];columns=[v[0]!,v[1]!+v[2]!,v[3]!];
   }else return d;
   const sum=columns.reduce((a,b)=>a+b,0);
-  columns=columns.map(x=>100*x/sum);
+  if(Math.abs(sum-100)>1e-10)columns=columns.map(x=>100*x/sum);
   if(!columns.every(valid))return d;
   const ratio=value.bottomRatio;
   return {version:2,columns:columns as Layout['columns'],collapsed:value.collapsed===true,

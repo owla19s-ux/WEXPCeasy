@@ -1,5 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import type {PointerEvent as ReactPointerEvent} from 'react';
+import {ApiSettings} from './api-settings.js';
 import {SpacePanel} from './space.js';
 import {MiddleWorkspace} from './middle-workspace.js';
 import {InteractionDock} from './interaction-dock.js';
@@ -51,11 +52,12 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
     <div hidden={settings} className="middle-surface"><MiddleWorkspace key={parts.contextId??"unselected"} parts={parts}/></div>
     <div data-settings hidden={!settings} className="settings-surface"><div className="settings-title"><h2>设置</h2><button onClick={()=>setSettings(false)}>返回工作区</button></div>
      <div className="settings-grid"><div className="settings-navigation">
-      <details><summary>连接与服务</summary><button disabled>API 与模型</button><button disabled>Agent 与角色</button><button disabled>GitHub / Local</button></details>
+      <details><summary>连接与服务</summary><button aria-pressed={setting==='api'} onClick={()=>setSetting('api')}>API 与模型</button><button disabled>Agent 与角色</button><button disabled>GitHub / Local</button></details>
       <details><summary>权限</summary><p>操作前显示实际授权确认。</p></details>
       <details><summary>验证</summary><button onClick={()=>setSetting('diagnostics')}>运行状态</button></details>
       <details open><summary>系统</summary><button aria-pressed={setting==='display'} onClick={()=>setSetting('display')}>显示与布局</button><button aria-pressed={setting==='voice'} onClick={()=>setSetting('voice')}>语音</button><button aria-pressed={setting==='diagnostics'} onClick={()=>setSetting('diagnostics')}>运行诊断</button></details>
      </div><div className="settings-detail">
+      {setting==='api'&&<ApiSettings bridge={bridge}/>}
       {setting==='display'&&<><h3>显示与布局</h3><p>拖动分隔线调整尺寸；聚焦分隔线后可用方向键调节，Shift 加快。</p>
        <label className="check-label"><input type="checkbox" checked={layout.roleVisible} onChange={e=>setLayout({...layout,roleVisible:e.target.checked})}/>显示窗口内虚拟形象</label>
        <label className="check-label"><input type="checkbox" checked={layout.collapsed} onChange={e=>setLayout({...layout,collapsed:e.target.checked})}/>收起第一列</label>
