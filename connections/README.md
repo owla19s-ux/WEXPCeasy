@@ -2,7 +2,7 @@
 
 ## 当前源码 owner 与环境管理边界（2026-11-07）
 
-当前连接系统包含公共边界 `connections/src/` 和各自独立的 API、GitHub、Local 连接器。`connections/dsh/` 为 0.1.2 延期的外部 Agent 连接器，`connections/search/` 仅是外部 Search/Fetch 候选目录。每个子连接器有独立 owner；不能因为同属顶层 `connections/` 就跨连接器导入私有实现，细粒度静态边界见 [B3 M-01](../docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)。
+当前连接系统包含公共边界 `connections/src/` 和各自独立的 API、GitHub、Local 连接器。`connections/dsh/` 为 0.1.2 延期的外部 Agent 连接器，`connections/search/` 仅是外部 Search/Fetch 候选目录。每个子连接器有独立 owner；不能因为同属顶层 `connections/` 就跨连接器导入私有实现，细粒度静态边界见 [历史 B3 M-01](../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md)。
 
 **新增独立模块**：[environments](../environments/README.md) 已按用户决定列为顶层源码维护域，**不是连接器**。环境发现、登记、版本和生命周期策略归 environments；本地文件/进程/安装器的受控 OS 操作归 Local；公共 Operation/回执仍由 Connections 维护；App 是可信入口，Space 只保存 Context 的工具/环境引用。不得形成第二套权限、Operation 或环境安装状态。
 
@@ -106,7 +106,7 @@
 
 ## 公共网络适配边界补充（2026-10-31；条件候选）
 
-因[应用基础能力审查](../docs/audits/APP-FOUNDATIONS-GAP-AUDIT-2026-10-31.md)发现代理、网络切换、离线和连接诊断没有统一的可验收行为，记录`connections/network/`为**条件性候选目录**：只有多个真实连接器出现可复用的网络/代理技术接线与测试需求时才创建，不把它提前当成新的网络子系统。各连接器仍负责自己的协议、超时、错误/重试和能力就绪；通用偏好归应用配置接线，Key归shared/credentials，授权归permissions。
+因[历史应用基础能力审查](../docs/A0-产品构想与研究/方案与研究/审查历史/APP-FOUNDATIONS-GAP-AUDIT-2026-10-31.md)发现代理、网络切换、离线和连接诊断没有统一的可验收行为，记录`connections/network/`为**条件性候选目录**：只有多个真实连接器出现可复用的网络/代理技术接线与测试需求时才创建，不把它提前当成新的网络子系统。各连接器仍负责自己的协议、超时、错误/重试和能力就绪；通用偏好归应用配置接线，Key归shared/credentials，授权归permissions。
 
 用户切换系统代理/特定Provider代理、证书错误、远端离线和宿主进程网络失联须分别报告；发现可达不等于获准调用，网络超时不等于外部动作未发生。内部领域函数调用不因存在连接墙而必须统一经过网络层。网络诊断和远端请求不得默认暴露凭证、用户Context资料或越过实际资源权限。
 
