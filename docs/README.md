@@ -25,6 +25,8 @@
 | 基础 | [Shared](../shared/README.md)、[Permissions](../permissions/README.md)、[App](../app/README.md) |
 | 扩展研究 | [WEX 插件](../plugins/README.md)、[DSH 原生兼容](../dsh/README.md)、[Accounts](../accounts/README.md) |
 
+[条款级需求—源码—测试追踪总账（2026-11-07）](audits/document-governance-2026-11-07/CLAUSE-TRACEABILITY-LEDGER.md) 按历史条款、现行 owner、版本、源码、测试和证据缺口建立 32 条定向索引；[深入语义对冲记录](audits/document-governance-2026-11-07/CONTRACT-SEMANTIC-TRACEABILITY.md) 保留对冲依据。两者均为治理资料，**不能取代模块 README 或版本计划成为施工规范，也不表示已经完成全仓 216 功能项逐条审查**。
+
 [2026-11-07 文档体系复审第二轮](audits/document-governance-2026-11-07/SECOND-PASS.md)记录当前权威入口、过时状态、文档冲突修正及本轮检查边界；[当日状态治理回执](audits/document-governance-2026-11-07/REPORT.md)记录较早的 README/0.1.1 状态纠正；[2026-11-04 模块源码与证据核对](audits/document-governance-2026-11-04/MODULE-STATUS.md)只作历史快照；[旧全模块契约索引](MODULE-CONTRACTS.md)保留历史设计和追溯，不派工。
 
 ## 架构、决策、实验与审查
