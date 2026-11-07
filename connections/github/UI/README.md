@@ -9,11 +9,10 @@ GitHub 专属配置或操作面板，由 WEX 页面挂载。
 修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
 
 
-## 上级契约与文档入口
+## 直接依赖
 
-- **正式 owner 与历史研究**：[GitHub 模块入口](../README.md)、[Connections 模块入口](../../README.md)；[历史连接契约](../../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
-- **现行 UI 入口**：[UI/README.md](../../../UI/README.md)；[UI/CONTRACT.md](../../../UI/CONTRACT.md) 仅作历史研究
-- **全局文档总索引：** [docs/README.md](../../../docs/README.md)
-- [提供方边界 Walkthrough](../../../docs/A0-产品构想与研究/方案与研究/架构研究历史/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
+- [GitHub 连接器](../README.md)：业务能力和操作结果。
+- [Connections 宿主](../../README.md)：受控派发入口。
+- [UI 模块](../../../UI/README.md)：页面挂载与窗口交互。
 
-本目录负责页面/面板局部组织，不拥有领域业务状态、权限或验收事实；业务语义以对应 owner 契约为准。
+本目录不重复维护连接器契约、历史研究或版本进度。
