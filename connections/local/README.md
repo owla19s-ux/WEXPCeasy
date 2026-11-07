@@ -17,7 +17,7 @@
 >
 > **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
 >
-> **研究迁移**：历史深度契约归档于 [docs/research/contracts/connections/local/CONTRACT-archive.md](../../docs/research/contracts/connections/local/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
+> **研究迁移**：历史深度契约归档于 [docs/research/contracts/connections/local/CONTRACT-archive.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/local/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
 
 
 本地文件、终端、Git 等能力，按实际复杂度拆分。外部文件保持原位置，按授权访问。
@@ -40,11 +40,11 @@
 
 ## 上级契约与文档入口
 
-- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/research/contracts/connections/CONTRACT-archive.md)
-- **适配器子契约：** [本地资源适配器子契约](../../docs/research/contracts/connections/local/CONTRACT-archive.md)
+- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
+- **适配器子契约：** [本地资源适配器子契约](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/local/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [源码目录与 Windows 数据布局](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
-- [安全与数据持续性](../../docs/research/SECURITY-AND-PERSISTENCE-2026-10-31.md)
+- [安全与数据持续性](../../docs/A0-产品构想与研究/方案与研究/既有研究/SECURITY-AND-PERSISTENCE-2026-10-31.md)
 
 本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
