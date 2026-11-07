@@ -16,16 +16,14 @@
 修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
 
 
-## 上级契约与文档入口
+## 直接依赖
 
-- **当前 UI 入口：** [UI/README.md](../../UI/README.md)
-- **上级契约：** [permissions/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md)
-- **上级契约：** [shared/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/shared/CONTRACT-archive.md)
-- **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [源码目录与 Windows 数据布局](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
-- [安全与数据持续性](../../docs/A0-产品构想与研究/方案与研究/既有研究/SECURITY-AND-PERSISTENCE-2026-10-31.md)
+- [UI 模块](../README.md)：当前页面装配与可信入口。
+- [Permissions 模块](../../permissions/README.md)：授权判定和审计归属。
+- [Shared 模块](../../shared/README.md)：安全凭证与技术存储机制。
+- [Windows 数据与安装路径设计](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)：仅涉及本地凭证及路径规则时使用。
 
-本目录负责页面/面板局部组织，不拥有领域业务状态、权限或验收事实；业务语义以对应 owner 契约为准。
+设置页不建立第二套权限或凭证权威。
 
 ## G6：模块配置、凭证与诊断入口
 
