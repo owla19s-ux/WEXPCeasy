@@ -3,7 +3,7 @@
 > 日期：2026-11-07  
 > 状态：2026-11-07 UI 基础交互收口 V0.6；当前确认的结构与交互以 §§1–8、§14 的多视图细化及 §15 的 Windows 适配为准；中间的历史例子若冲突，须按新基线重评，不自动扩展 0.1.1 正式施工范围。  
 > 适用：WEX PC 优先；仓库 `owla19s-ux/WEXPCeasy`。产品名称 WEX，仓库名称 WEXPCeasy。  
-> 关联：[0.1.1 正式计划](../versions/0.1.1/PLAN.md)、[B3 桌面交付任务](../versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)、[UI 入口](../../UI/README.md)、[视图体系](../../views/README.md)、[Space](../../space/README.md)、[Conversations](../../conversations/README.md)。
+> 关联：[0.1.1 正式计划](../A2-版本与工程状态/0.1.1/历史任务记录/PLAN-2026-11-02.md)、[B3 桌面交付任务](../A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md)、[UI 入口](../../UI/README.md)、[视图体系](../../views/README.md)、[Space](../../space/README.md)、[Conversations](../../conversations/README.md)。
 
 ## 0. 使用规则：空间结构与功能映射分离
 
