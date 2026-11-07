@@ -1,6 +1,6 @@
 # Pi AI 隔离兼容实验
 
-研究入口：[四份报告与决策](../../docs/research/api/README.md)。非生产 API；不修改 connections/api 契约，不使用真实Key或付费服务。
+研究入口：[四份报告与决策](../../docs/A0-产品构想与研究/方案与研究/既有研究/api/README.md)。非生产 API；不修改 connections/api 契约，不使用真实Key或付费服务。
 
 ```bash
 cd experiments/pi-ai-compat
