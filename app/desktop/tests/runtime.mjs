@@ -45,8 +45,8 @@ try{
  wc.sendInputEvent({type:'mouseMove',x:divider.x+24,y:divider.y});wc.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:divider.x+24,y:divider.y});
  await waitFor("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width>"+(columns[1]+12));
  const adjusted=await wc.executeJavaScript("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width");
- await wc.executeJavaScript("document.querySelector('[data-divider=\"column-1\"]').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));true");
- await waitFor("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width>"+(adjusted+8));
+ await wc.executeJavaScript("document.querySelector('[data-divider=\"column-1\"]').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));true");
+ await waitFor("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width<"+(adjusted-8));
  await waitFor("!!localStorage.getItem('wex.workbench.layout.v1')");
  const saved=await wc.executeJavaScript("localStorage.getItem('wex.workbench.layout.v1')");
  const loaded=new Promise(resolve=>wc.once('did-finish-load',resolve));wc.reload();await loaded;
