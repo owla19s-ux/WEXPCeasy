@@ -14,7 +14,7 @@ function Divider(p:DividerProps){
  }
  return <div role="separator" aria-label={p.axis==='x'?'调整列宽':'调整面板高度'} aria-orientation={p.axis==='x'?'vertical':'horizontal'}
   aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p.value)} aria-disabled={p.disabled??false}
-  tabIndex={p.disabled?-1:0} data-divider={p.id} className={'workbench-divider '+p.axis}
+  style={p.axis==='x'?{gridColumn:2+Number(p.id.slice(7))*2,gridRow:1}:undefined} tabIndex={p.disabled?-1:0} data-divider={p.id} className={'workbench-divider '+p.axis}
   onPointerDown={event=>{if(p.disabled||event.button!==0||drag.current)return;event.preventDefault();
    event.currentTarget.setPointerCapture(event.pointerId);drag.current={start:p.axis==='x'?event.clientX:event.clientY,initial:p.layout,pointer:event.pointerId};p.onDragging(true);}}
   onPointerMove={event=>{const d=drag.current;if(d&&d.pointer===event.pointerId)p.onDelta((p.axis==='x'?event.clientX:event.clientY)-d.start,d.initial);}}
