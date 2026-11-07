@@ -10,7 +10,7 @@
 >
 > **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
 >
-> **研究迁移**：历史深度契约归档于 [docs/research/contracts/app/CONTRACT-archive.md](../docs/research/contracts/app/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
+> **研究迁移**：历史深度契约归档于 [docs/research/contracts/app/CONTRACT-archive.md](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
 
 
 ## 当前施工速览（0.1.1 / B1-01）
@@ -18,7 +18,7 @@
 - **公开代码入口**：`app/src/index.ts`；可信模块装配、生命周期与 `startFoundations`，支持可选 connections 服务装配。
 - **运行验证**：`npm run test:app`；无窗口诊断入口 `npm run start:headless -- <已有数据根>`；跨模块验证另运行 `npm test`。
 - **部分实现/未验收**：正式 Electron/React 宿主、preload 和 Space/API 窄 IPC 已有代码及 CI；其他业务 IPC、Windows 安装包、首次数据根选择、重装恢复和 Windows E4 实机仍需验证。历史第八批隔离实验不再代表当前全部进度。
-- **施工依据**：[0.1.1 正式计划](../docs/versions/0.1.1/PLAN.md) → [本域契约](../docs/research/contracts/app/CONTRACT-archive.md) → `app/src/` 与 `app/tests/`。最新连接组合事实另见 [施工回执](CONNECTIONS-INTEGRATION-2026-11-02.md)。
+- **施工依据**：[0.1.1 正式计划](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md) → [本域契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md) → `app/src/` 与 `app/tests/`。最新连接组合事实另见 [施工回执](CONNECTIONS-INTEGRATION-2026-11-02.md)。
 
 
 **当前：基础宿主已可选装配真实 connections 服务，包含持久配置/操作与退出排空。最新范围及证据见[宿主连接组合回执](CONNECTIONS-INTEGRATION-2026-11-02.md)；第七/八批描述保留为历史依据。**
@@ -32,7 +32,7 @@
 
 ## 模块编号规则
 
-- app 宿主与运行维护细分使用 `APP-<子域>-NNN`，详见 [CONTRACT 第 7 节](../docs/research/contracts/app/CONTRACT-archive.md#7-模块独立功能编号与细化契约)。
+- app 宿主与运行维护细分使用 `APP-<子域>-NNN`，详见 [CONTRACT 第 7 节](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md#7-模块独立功能编号与细化契约)。
 - APP-01～APP-12 保留为既有能力锚点，不重排。
 - app 只负责可信宿主、装配、平台/进程生命周期和跨域作业协调；不成为全局业务状态中心。
 
@@ -56,7 +56,7 @@
 
 ## 第四批：模块业务契约设计（历史研究）
 
-[本模块契约与独立验收规格](../docs/research/contracts/app/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
+[本模块契约与独立验收规格](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 ## 基础应用能力归属补充（2026-10-31；候选目录，尚未实现）
 
@@ -69,12 +69,12 @@
 
 ### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：第六批[历史条款](../docs/research/contracts/app/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
 
-- [本域契约及关联依据](../docs/research/contracts/app/CONTRACT-archive.md#文档关联与施工入口)
+- [本域契约及关联依据](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md#文档关联与施工入口)
 - [WEX 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
@@ -111,4 +111,4 @@ App 负责把可信宿主身份/入口事实和窄能力注入模块，并协调
 
 `startFoundations({dataRoot, trust, connections:{adapters, shutdownTimeoutMs?}})` 通过 connections 公开出口装配配置绑定写派发；省略 connections 保持原路径。可信宿主得到 `host.connections` 的 configs、operations（只读）和 dispatch，不得到 Store/DB 或账本写入口。初始化失败为 degraded 且不暴露连接 client；退出先排空，再关库，未完成时保留根锁并允许再次 stop。
 
-数据库、生命周期、真实组合验证和未完成项以[本批回执](CONNECTIONS-INTEGRATION-2026-11-02.md)与[本域契约](../docs/research/contracts/app/CONTRACT-archive.md#8-可选连接服务的可信装配2026-11-02)为准；这不是 Renderer/IPC 或正式 Electron UI。
+数据库、生命周期、真实组合验证和未完成项以[本批回执](CONNECTIONS-INTEGRATION-2026-11-02.md)与[本域契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md#8-可选连接服务的可信装配2026-11-02)为准；这不是 Renderer/IPC 或正式 Electron UI。
