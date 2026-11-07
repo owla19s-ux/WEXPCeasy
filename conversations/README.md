@@ -13,7 +13,7 @@
 > **研究迁移**：历史深度契约归档于 [docs/research/contracts/conversations/CONTRACT-archive.md](../docs/research/contracts/conversations/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
 
 
-状态：已有 Conversations 领域产品代码与测试，正式用户交互及全部段落操作仍需逐项核验。模块维护 Conversation、消息、段落选择/引用、追加、修改重发的已确认部分；复杂局部分支未冻结，不以本版基础实现冒充完整分支系统。普通对话无需先创建 Space、Context、工作流或 Task。
+状态：已有 Conversations 领域产品代码与测试，正式用户交互及全部段落操作仍需逐项核验。`conversations/src/index.ts` 已有 `select`（段落选择）、`append`（消息加入）、`resend`（产生新消息/生成关联）与生成状态命令，`conversations/tests/conversations.test.mjs` 覆盖相应保存/恢复和取消测试。**这些操作不等同于历史 CV-07 的生成期间追加队列、CV-15 的采纳/拒绝、CV-05 的独立分支或 CV-16 的单序列项局部修订。** 复杂局部分支未冻结，不以本版基础实现冒充完整分支系统；这些历史能力是否属于当前版本仍需核对 0.1.1 正式计划和交互设计。普通对话无需先创建 Space、Context、工作流或 Task。本段为 2026-11-07 定向源码/测试文本审查，本轮未复跑测试。
 
 - 会话维护“本次使用哪个 Context 作为背景”的关系；Context 中显示某会话的引用是另一个组织关系，归 `space`。若产品将二者定义为同一关系，只允许一个维护方，不能双写。
 - 会话负责一轮输入、生成关联及最终消息的保存；`connections/api` 负责真实 Provider 调用、流式协议和操作回执。一次逻辑生成可关联多次外部尝试，聊天消息不冒充调用账本。
