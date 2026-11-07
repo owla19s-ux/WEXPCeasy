@@ -11,17 +11,14 @@ Space／Context 页面。展示组织与关联，业务调用 space，不把 Con
 修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
 
 
-## 上级契约与文档入口
+## 直接依赖
 
-- **现行 UI 模块入口：** [UI/README.md](../README.md)；[UI/CONTRACT.md](../CONTRACT.md) 为历史交互研究
-- **现行 Space 施工入口：** [space/README.md](../../space/README.md)
-- **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [Space 与工作流编辑器设计](../../docs/A0-产品构想与研究/历史参考/旧UI设计/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
+- [UI 模块](../README.md)：页面挂载与交互约束。
+- [Space 模块](../../space/README.md)：Context 组织、资源引用及业务权威。
 
-本目录负责页面/面板局部组织，不拥有领域业务状态、权限或验收事实；业务语义以对应 owner 契约为准。
+本目录只负责页面交互，不维护第二套业务状态。
 
 ## G1：Context 资料关联
 
 页面需区分关联外部文件/目录、导入持久副本、会话临时附件和 Task 工作产物。关联原文件不复制；导入副本必须由用户明确触发并显示来源；移除 Context 关联不删除源文件、不撤权、不停止 Task。显示的资源路径/名称不能作为稳定身份，失联和版本变化需明确提示。
 
-见[基础能力落地映射](../../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
