@@ -27,7 +27,7 @@
 - [当前研究共识](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
 - [工作流领域](../workflows/README.md)：工作流定义与业务状态，不管理所有非执行图；执行协调另见 [Scheduler](../scheduler/README.md)。
 - [Space / Context](../space/README.md)：对象所属组织及范围；视图不是新的 Context。
-- [WEX 工作流自由画布与节点工作界面设计](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)
+- [WEX 工作流自由画布与节点工作界面设计](../docs/A1-正式产品设计/架构与决策/工作流画布与节点界面设计-2026-11-01.md)
 - [WEX 编辑器交互边界](../workflows/editor/README.md)
 
 新增视图实现时，保持专业规则、图形组件和业务数据源的职责分离；所有业务修改必须经过 WEX 的受控编辑/授权边界。不能因为图形库提供 nodes/edges JSON，就将其当成 WEX 最终数据模型。
@@ -52,7 +52,7 @@
 
 覆盖样本 L08/L12。公开行为候选是视图配置/映射、按获准来源生成投影和发起领域编辑，不提供直接设置 Task 正式状态的出口。用领域投影替身验证旧版本、撤权、来源失联与同名不同语义；图形库/组件和布局算法保持可替换，不把 React Flow 类型泄漏到通用领域。
 
-契约就近、公开出口/依赖约束、分层测试和模块施工方法见[统一研究](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)。本段只给制定契约的依据，不表示公开接口已实现或所有建议已获采纳。
+契约就近、公开出口/依赖约束、分层测试和模块施工方法见[统一研究](../docs/A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)。本段只给制定契约的依据，不表示公开接口已实现或所有建议已获采纳。
 
 
 
