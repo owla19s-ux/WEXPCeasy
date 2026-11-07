@@ -32,4 +32,4 @@
 
 角色提示、模型/连接引用、职责关联及配置修订由本目录维护；不存 Key、授权、Task 检查点、Operation 或会话历史。新任务绑定当时配置修订，在途任务不因角色配置更新被静默改写。角色长期记忆/公共经验共享仍是长期研究，不在此目录预建第二套记忆账本。
 
-跨域要求见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)及[AI 上级契约](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/AI/CONTRACT-archive.md)。
+跨域要求见[基础能力落地映射](../../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)及[AI 上级契约](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/AI/CONTRACT-archive.md)。
