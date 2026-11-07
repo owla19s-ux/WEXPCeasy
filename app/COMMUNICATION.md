@@ -66,14 +66,14 @@ B：同仓以提交/构建组合锁定、就近记录语义修订，不预发每
 - C-AGENT：每固定版本分别验证submit、session/turn、流、resume/query/interrupt、cwd/backend和真实产物；headless/SDK/ACP不能合成全能接口。
 - C-RECOVERY：派发/保存前后崩溃、重复乱序结果、旧备份恢复但外部已改、资源未释放；保持unknown而不是自动重派。
 
-本批只设计/静态核对，未执行上述实验。依据：[第三批方法](../docs/WEXPC-GLOBAL-CONTRACT-MAP-V0.1.md)、[Agent](../docs/research/AGENT-ECOSYSTEM-2026-10-31.md)、[安全与持续性](../docs/research/SECURITY-AND-PERSISTENCE-2026-10-31.md)、[Windows](../docs/research/WINDOWS-LIFECYCLE-2026-10-31.md)。
+本批只设计/静态核对，未执行上述实验。依据：[第三批方法](../docs/WEXPC-GLOBAL-CONTRACT-MAP-V0.1.md)、[Agent](../docs/A0-产品构想与研究/方案与研究/既有研究/AGENT-ECOSYSTEM-2026-10-31.md)、[安全与持续性](../docs/A0-产品构想与研究/方案与研究/既有研究/SECURITY-AND-PERSISTENCE-2026-10-31.md)、[Windows](../docs/A0-产品构想与研究/方案与研究/既有研究/WINDOWS-LIFECYCLE-2026-10-31.md)。
 
 既定Electron约束来源：[Windows数据要求§9](../docs/WEXPC-SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)明确记录contextIsolation、sandbox、不开renderer nodeIntegration、受限preload和主进程校验IPC来源/参数/授权。A仅指该已确认方向；具体Windows IPC实现、窗口代次/握手与认证细节仍为B/C，不由研究报告升级为A。
 
 
 ## 6. 第五批交错通信审查补充（B/C，非协议冻结）
 
-[覆盖与冲突记录](../docs/research/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)中的F01–F09已就近补各领域。跨边界建议传递可核对的因果关联、实际入口/实例代次、来源版本与传播限制、定义/节点/迭代/attempt关联以及用量估算/观察出处；这些是各提供方的业务信息，不要求每条内部请求都套统一信封或产生Operation。
+[覆盖与冲突记录](../docs/A0-产品构想与研究/方案与研究/审查历史/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)中的F01–F09已就近补各领域。跨边界建议传递可核对的因果关联、实际入口/实例代次、来源版本与传播限制、定义/节点/迭代/attempt关联以及用量估算/观察出处；这些是各提供方的业务信息，不要求每条内部请求都套统一信封或产生Operation。
 
 运行能力闭环不因import无环就安全：CN请求WF协调、WF请求CN执行、外部回调再请求领域时，不应持数据库事务/宿主独占阻塞入口等待对方重入；具体异步交接/锁顺序/限额以隔离C实验证明。反向请求携带的角色、权限标签、已脱敏文本和因果ID都不能成为可信授权；预算许可也不能抵消PM拒绝。旧实例回执保存原归属，不路由到同名新提供者。代理切换/休眠/更新恢复先取原事实，不借桥重连自动submit。
 
