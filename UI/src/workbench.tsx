@@ -42,13 +42,13 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
    <aside data-column="navigation" className={'workbench-navigation '+(layout.collapsed?'is-collapsed':'')} style={{gridColumn:1,gridRow:'1 / -1'}}>
     <div className="navigation-top"><strong>{layout.collapsed?'W':'工作空间'}</strong><button aria-label={layout.collapsed?'展开导航':'折叠导航'} onClick={()=>setLayout({...layout,collapsed:!layout.collapsed})}>{layout.collapsed?'›':'‹'}</button></div>
     <div className="navigation-scroll"><button className="nav-primary" aria-pressed={!settings} onClick={()=>setSettings(false)}>{layout.collapsed?'◫':'Space / Context'}</button>
-     {!layout.collapsed&&<><button disabled title="对话入口尚不可用">普通对话</button >{parts.categories}{parts.structure}</>}
+     {!layout.collapsed&&<><button disabled title="对话入口尚不可用">普通对话</button>{parts.categories}{parts.structure}</>}
     </div>
     <div className="navigation-bottom"><button aria-label="设置" title="设置" aria-pressed={settings} onClick={()=>setSettings(true)}>{layout.collapsed?'⚙':'设置'}</button></div>
    </aside>
    {[0,1].map(i=><Divider key={i} id={'column-'+i} axis="x" layout={layout} value={widths[i]!/(widths[i]!+widths[i+1]!)*100} disabled={(layout.collapsed&&i===0)||(i===1&&!layout.auxiliaryOpen)} onDelta={(delta,s)=>setLayout(resizeColumns(s,size.width,i,delta))} onRestore={restore} onDragging={setDragging}/>)}
    <section data-column="main" className="workbench-main" style={{gridColumn:3,gridRow:1}}>
-    <div hidden={settings} className="middle-surface"><MiddleWorkspace parts={parts}/></div>
+    <div hidden={settings} className="middle-surface"><MiddleWorkspace key={parts.contextId??"unselected"} parts={parts}/></div>
     <div data-settings hidden={!settings} className="settings-surface"><div className="settings-title"><h2>设置</h2><button onClick={()=>setSettings(false)}>返回工作区</button></div>
      <div className="settings-grid"><div className="settings-navigation">
       <details><summary>连接与服务</summary><button disabled>API 与模型</button><button disabled>Agent 与角色</button><button disabled>GitHub / Local</button></details>
