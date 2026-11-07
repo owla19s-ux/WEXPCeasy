@@ -68,7 +68,7 @@ export type DesktopPermissionReply={status:'ok';revision:number;entries:{id:stri
 
 export interface DesktopGitHubFile {owner:string;repo:string;ref:string;path:string}
 export type DesktopConnectionsInput={kind:'snapshot'}|{kind:'toggle';id:string;expectedRevision:number;enabled:boolean}|
- {kind:'github.create';expectedRevision:number}|{kind:'credential.set'|'credential.revoke';id:string;expectedRevision:number}|
+ {kind:'github.create';expectedRevision:number}|{kind:'credential.set';id:string;expectedRevision:number}|{kind:'credential.revoke';id:string;expectedRevision:number}|
  {kind:'github.read';id:string;expectedRevision:number;file:DesktopGitHubFile}|
  {kind:'github.write';id:string;expectedRevision:number;file:DesktopGitHubFile;expectedSha:string;content:string;message:string};
 export type DesktopConnectionsReply={status:'ok';revision:number;connections:{id:string;adapter:string;endpoint:string;enabled:boolean;hasCredential:boolean}[];operations:{id:string;phase:string;attempts:number;connectionId:string|null;adapter:string|null}[];localFiles:boolean;localDirectories:boolean;credentialBackend?:boolean}|

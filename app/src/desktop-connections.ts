@@ -20,7 +20,7 @@ function capture(raw:unknown):DesktopConnectionsInput|undefined{
  }
  if(raw.kind==='toggle'&&typeof raw.enabled!=='boolean')return;
  if(raw.kind==='github.read'||raw.kind==='github.write'){
-  if(!object(raw.file)||Reflect.ownKeys(raw.file).length!==4||!['owner','repo','ref','path'].every(k=>Object.hasOwn(raw.file,k)))return;
+  const file=raw.file;if(!object(file)||Reflect.ownKeys(file).length!==4||!['owner','repo','ref','path'].every(k=>Object.hasOwn(file,k)))return;
   try{githubFileTarget(raw.file as unknown as import('../../connections/github/src/index.js').GitHubFile);}catch{return;}
  }
  if(raw.kind==='github.write'&&(
