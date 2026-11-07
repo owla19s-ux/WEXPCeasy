@@ -104,8 +104,12 @@ export function createDesktopApi(options:{authority:DesktopAuthority;confirm:(su
    }
    if(!host.credentials.available())return {status:'unavailable',reason:'credential_backend_unavailable'};
    if(new URL(current.endpoint).protocol!=='https:')return {status:'rejected',reason:'credential_requires_https'};
+   const management=op('connection.edit','connection:'+current.id);authority.permit(management);
+   const managementRequest=authority.bind(management)!,managementDecision=host.permissions!.evaluate(managementRequest);
+   if(managementDecision.status!=='allow')return {status:'rejected',reason:'permission_unavailable'};
    const secret=await options.requestCredential({connectionName:current.name,provider:current.provider,endpoint:current.endpoint});
    if(closed)return {status:'unavailable',reason:'host_closed'};if(secret===undefined)return {status:'cancelled'};
+   if(host.permissions!.recheck(managementRequest,managementDecision).status!=='allow')return {status:'rejected',reason:'authorization_changed'};
    const id=randomUUID(),scope=op('credential.write','credential:'+id,'credentials');authority.permit(scope);
    const stored=host.credentials.put(authority.bind(scope)!,{id,intent:randomUUID(),expectedRevision:0,binding:{connectionId:current.id,endpoint:current.endpoint,provider:current.provider},secret});
    if(stored.status==='unknown')return stored;

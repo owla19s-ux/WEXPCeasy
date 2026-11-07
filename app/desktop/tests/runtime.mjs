@@ -234,7 +234,7 @@ try{
  await choose('textarea[name="github-content"]','Desktop GitHub edited');await choose('input[name="github-message"]','Desktop file edit');
  nativeAllowed=false;await click('确认提交 GitHub 修改');await waitFor("document.querySelector('[data-connection-settings] [role=status]').textContent.includes('cancelled')");
  assert.equal(githubCalls.filter(c=>c.method==='PUT').length,0);nativeAllowed=true;
- // Cancellation clears the editor; explicitly read again before attempting a new write.
+ // Cancellation preserves the edit without issuing another confirmation; explicitly read again for this test.
  await click('读取 GitHub 文件');await waitFor("!!document.querySelector('textarea[name=\"github-content\"]')");
  await choose('textarea[name="github-content"]','Desktop GitHub edited');
  await click('确认提交 GitHub 修改');await waitFor("document.querySelector('[data-connection-settings] [role=status]').textContent.includes('已提交')");
@@ -247,6 +247,25 @@ try{
  await click('读取连接与操作记录');assert.equal(githubCalls.filter(c=>c.method==='PUT').length,writesAfterUnknown);
  await writeFile(resolve('desktop-acceptance',process.platform+'-connectors.png'),(await wc.capturePage()).toPNG());
  await click('解除 GitHub Token 并停用');await waitFor("document.querySelector('[data-connection-settings]').textContent.includes('无凭证引用')");
+
+ // Reload the actual desktop UI, then recover persisted configuration/history without replaying either network action.
+ const networkBeforeReload={provider:providerCalls.length,github:githubCalls.length};
+ const reloaded=new Promise(res=>wc.once('did-finish-load',res));wc.reload();await reloaded;
+ await waitFor("!!document.querySelector('[data-workbench]')");
+ await click('设置');await click('API 与模型');await click('读取 API 配置');
+ await waitFor("[...document.querySelectorAll('[data-api-settings] li button')].some(b=>b.textContent==='Desktop Provider')");
+ await click('Agent 与角色');await click('读取 AI 配置');
+ await waitFor("[...document.querySelectorAll('[data-ai-settings] li button')].some(b=>b.textContent==='Desktop Agent')");
+ await click('GitHub / Local');await click('读取连接与操作记录');
+ await waitFor("document.querySelector('[data-connection-settings]').textContent.includes('unknown')");
+ assert.equal(await wc.executeJavaScript("document.querySelector('[data-connection-settings]').textContent.includes('无凭证引用')"),true);
+ await click('返回工作区');await click('普通对话');await click('读取对话历史');
+ await waitFor("document.querySelectorAll('nav[aria-label=\"普通对话历史\"] button').length===1");
+ await wc.executeJavaScript("document.querySelector('nav[aria-label=\"普通对话历史\"] button').click();true");
+ await waitFor("document.querySelectorAll('[data-conversations] article').length===5");
+ assert.equal(providerCalls.length,networkBeforeReload.provider);assert.equal(githubCalls.length,networkBeforeReload.github);
+ await writeFile(resolve('desktop-acceptance',process.platform+'-recovery.png'),(await wc.capturePage()).toPNG());
+ await click('设置');
  await click('返回工作区');await click('Space / Context');
  const directory=await invoke({kind:'address.add',contextId:created.id,name:'Selected directory',address:pathToFileURL(contextRoot).href,purpose:'reference'});assert.equal(directory.status,'committed');
  const listed=await invoke({kind:'resource.read',contextId:created.id,id:directory.id,mode:'directory'});assert.equal(listed.status,'ok');assert.equal(listed.view,'directory');assert.ok(listed.entries.some(e=>e.name==='preview.txt'));

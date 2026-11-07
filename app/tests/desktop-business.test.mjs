@@ -126,8 +126,9 @@ test('desktop GitHub config, isolated credential, official SDK read/write, confl
  await writeFile(join(root,'.wex-root.json'),JSON.stringify({format:1,id:'github-desktop'}));
  const authority=createDesktopAuthority();let approved=true,secret='fixture-token',mode='ok',writes=0;
  const calls=[],sha='a'.repeat(40),next='b'.repeat(40),commit='c'.repeat(40);
+ let credentialWait;
  const confirm=async()=>approved;
- const controls=createDesktopConnections({authority,confirm,requestCredential:async()=>secret,cancelCredential(){}});
+ const controls=createDesktopConnections({authority,confirm,requestCredential:async()=>credentialWait?await credentialWait:secret,cancelCredential(){}});
  const host=await startFoundations({dataRoot:root,...authority.policy,credentials:{cipher:{
   available:()=>true,seal:s=>'fixture:'+Buffer.from(s).toString('base64'),unseal:s=>Buffer.from(s.slice(8),'base64').toString()
  }},githubOfficial:{fetch:async(url,init)=>{
@@ -159,6 +160,15 @@ test('desktop GitHub config, isolated credential, official SDK read/write, confl
  const history=await controls.request({kind:'snapshot'});assert.ok(history.operations.some(o=>o.id===result.operationId&&o.phase==='unknown'));assert.equal(writes,before);
  assert.equal((await controls.request({...input,file:{...file,path:'../unsafe'}})).status,'rejected');assert.equal(writes,before);
  assert.equal((await controls.request({...input,expectedRevision:0})).status,'rejected');
+
+ // Revocation while the secure modal is open must prevent the late secret from regranting configuration access.
+ let releaseSecret;credentialWait=new Promise(resolve=>releaseSecret=resolve);
+ const replacing=controls.request({kind:'credential.set',id,expectedRevision:snap.revision});
+ await new Promise(resolve=>setImmediate(resolve));
+ const grants=await authority.settings({kind:'snapshot'},confirm);
+ const grant=grants.entries.find(e=>e.resource==='connections'&&e.action==='configuration.write'&&e.target==='connection:'+id);assert.ok(grant);
+ assert.equal((await authority.settings({kind:'revoke',id:grant.id,expectedRevision:grants.revision},confirm)).status,'committed');
+ releaseSecret('late-fixture-token');assert.equal((await replacing).status,'rejected');credentialWait=undefined;
  assert.equal((await controls.request({kind:'credential.revoke',id,expectedRevision:snap.revision})).status,'committed');
  snap=await controls.request({kind:'snapshot'});assert.equal(snap.connections[0].enabled,false);assert.equal(snap.connections[0].hasCredential,false);
  assert.notEqual((await controls.request({kind:'github.read',id,expectedRevision:snap.revision,file})).status,'file');

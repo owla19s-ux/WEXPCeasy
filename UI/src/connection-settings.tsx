@@ -59,6 +59,7 @@ export function ConnectionSettings({bridge}:{bridge:DesktopBridge}){
  <label>提交说明<input name="github-message" disabled={busy} value={commitMessage} onChange={e=>setCommitMessage(e.target.value)} /></label>
  <button disabled={busy||!commitMessage.trim()||content===loaded.content} onClick={()=>void run(async n=>{
   const r=await call({kind:'github.write',id:connection.id,expectedRevision:data.revision,file:loaded.file,expectedSha:loaded.sha,content,message:commitMessage});report(r,n);
+  if(r.status==='cancelled')return;
   if(epoch.current===n){clearFile();if(r.status==='written')setMessage('已提交 '+r.commitSha+' · Operation '+r.operationId+'。重新读取可继续编辑。');await refresh(n);}
  })}>确认提交 GitHub 修改</button></>}
  <p>仅修改已读取的 UTF-8 文件。冲突或结果未知时重新读取并核对原 Operation；不会自动重发。</p></section>}
