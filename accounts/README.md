@@ -8,9 +8,7 @@
 
 边界：`accounts/` 负责主体身份及账号生命周期；`permissions/` 负责主体在具体操作、Context、模块上的授权；`connections/` 负责接入第三方服务，API Key 等秘密由安全凭证机制保管。外部 DSH 或模型平台账号不能直接等同于 WEX 本地账号。
 
-
 第六批：[最新准备度/证据及限制](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md)。原生Core+Loader实验、WEX外部DSH连接和Windows实机证据分别验收；预留平台不因局部实验通过进入正式施工。
-
 
 ## 身份边界预留
 
