@@ -1,6 +1,6 @@
 # Space / Context｜0.1.1 模块施工规范
 
-> **2026-11-07 权威冲突对冲：** 全量 216 项反向审查已确认 F01-007 旧“多处放置”与现行 Space 范围不一致。下面涉及 `Placement` 的旧表格、SPC-02、S03 是**历史设计与长期候选验收样例**，不是本次 0.1.1 必须补齐的数据结构/接口；**冻结旧多处放置施工**，不引入 Placement 产品实体。当前确认的 Context 稳定 ID、Space/Group 基础组织、资源引用解除不删本体原则仍然生效。长期多入口关系需另获用户确认；详见 [216 项反向覆盖审查](../docs/audits/document-governance-2026-11-07/FUNCTION-216-REVERSE-COVERAGE.md)。
+> **2026-11-07 权威冲突对冲：** 全量 216 项反向审查已确认 F01-007 旧“多处放置”与现行 Space 范围不一致。下面涉及 `Placement` 的旧表格、SPC-02、S03 是**历史设计与长期候选验收样例**，不是本次 0.1.1 必须补齐的数据结构/接口；**冻结旧多处放置施工**，不引入 Placement 产品实体。当前确认的 Context 稳定 ID、Space/Group 基础组织、资源引用解除不删本体原则仍然生效。长期多入口关系需另获用户确认；详见 [216 项反向覆盖审查](../docs/A2-版本与工程状态/0.1.1/证据/216项功能反向覆盖-2026-11-07.md)。
 
 
 > **2026-11-06 最新代码状态更新（证据快照 `c7f1c827`，不是正式完整验收）**：已存在 `space/src/index.ts`、`model.ts`、`service.ts`、`storage.ts`、`recovery.ts` 及 `space/tests/` 下正式测试。根 `package.json` 已包含 `test:space`，`npm test` 已包含 Space 测试；App/Permissions 也有 Space 组合测试。此前注明“没有 src/tests、未接入构建”的描述是 2026-11-04 及更早的**历史开工快照**，不得再用作待实现判断。当前进入 B1-02 专项收尾：逐项对照 §3 与 §5，核实稳定能力、真实持久化/恢复、外域 owner 缺失时的受控行为及剩余阻塞；只修真实缺口，不重新建立 Space 模块。对应提交的 Foundation verification 成功，但尚无本次独立 S01～S20 完整验收回执或 Windows 实机证据。
@@ -21,17 +21,17 @@
 
 | 编号 | 归属与含义 | 正文位置 |
 |---|---|---|
-| `F01-001`～`F01-012` | 产品功能域 F01（Space 与上下文组织）的全局条目；编号稳定，不因模块目录或 UI 调整而重排 | [产品功能总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) §3 |
+| `F01-001`～`F01-012` | 产品功能域 F01（Space 与上下文组织）的全局条目；编号稳定，不因模块目录或 UI 调整而重排 | [产品功能总表](../docs/A1-正式产品设计/产品功能总表.md) §3 |
 | `SPACE-RESOURCE-001`～`007`、`SPACE-TOOL-001`～`003` | 本模块细分功能编号，格式 `SPACE-<子域>-NNN`，由 space owner 维护；不占用、不重排其他模块编号 | 本文 §3 表格；需求条目在同总表「F01 模块细分能力」 |
-| `SPC-01`～`SPC-07` | 历史研究契约编号，只作施工门槛摘要与追溯，不是 0.1.1 新增功能或已批准扩展 | 本文 §3.3；[归档研究契约](../docs/research/contracts/space/CONTRACT-2026-10-31.md) |
+| `SPC-01`～`SPC-07` | 历史研究契约编号，只作施工门槛摘要与追溯，不是 0.1.1 新增功能或已批准扩展 | 本文 §3.3；[归档研究契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/space/CONTRACT-2026-10-31.md) |
 | `S01`～`S20` | 本文独立验收断言编号，不是产品功能编号，也不进入产品总表 | 本文 §5 |
 
 编号存在或写进表格都不表示已实现或已验收；状态以最新 main 源码与测试为准。本文统一使用 `SPACE-RESOURCE-*` / `SPACE-TOOL-*` 全称，避免与其他模块同名子域混淆。
 
 ### 0.2 文档入口与三类资料边界
 
-- **当前规范（施工与验收依据）**：本文、[根 README](../README.md)（工作/普通对话模式、提交与回执要求）、[AGENTS](../AGENTS.md)、[0.1.1 施工表](../docs/versions/0.1.1/PLAN.md)（Space 对应 B1-02）、[文档总索引](../docs/README.md)、[文档权威与维护规则](../docs/DOCUMENT-AUTHORITY-AND-MAINTENANCE-2026-11-02.md)。
-- **产品需求基线**：[F01–F15 功能总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 是 F01 条目与 `SPACE-*` 细分编号的单一正文；本文不复制整套需求表。
+- **当前规范（施工与验收依据）**：本文、[根 README](../README.md)（工作/普通对话模式、提交与回执要求）、[AGENTS](../AGENTS.md)、[0.1.1 施工表](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)（Space 对应 B1-02）、[文档总索引](../docs/README.md)、[文档权威与维护规则](../docs/DOCUMENT-AUTHORITY-AND-MAINTENANCE-2026-11-02.md)。
+- **产品需求基线**：[F01–F15 功能总表](../docs/A1-正式产品设计/产品功能总表.md) 是 F01 条目与 `SPACE-*` 细分编号的单一正文；本文不复制整套需求表。
 - **研究、历史与旧参考（只用于追溯，不构成派工）**：§3.3 引用的 SPACE 研究契约归档、`docs/batch6`～`docs/batch8` 批次记录、`docs/audits` 审查、`docs/architecture` 历史设计、[旧资料](../旧资料/README.md)。这些材料按其原始环境与证据等级解释；与本文冲突时以本文当前范围为准，代码事实以最新 main 源码与测试为准。
 
 开工顺序固定为：核对最新 main → 按 §4 接线（tsconfig、`test:space`、模块边界检查）→ 只按 §3 的稳定范围施工并留下 §5 证据。
@@ -134,7 +134,7 @@ Context 是按需组合的工作环境，不是某个本地文件夹的别名。
 | SPACE-TOOL-002 局部配置 | 候选/部分施工 | 保存 Context 专属工具参数和安全凭证引用及修订 | 不改全局 Connection；不存明文 Key；覆盖规则未决则不覆盖 |
 | SPACE-TOOL-003 候选解析 | 必做 | 返回已选、停用、失联、配置冲突的 Context 工具状态 | 不代表 AI 资格、工作流许可或 permissions 最终授权 |
 
-完整产品需求状态仍以 [F01 总表](../docs/product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 为准。上表的 B/C/D 候选不因写入本文件就自动成为 0.1.1 强制交付；0.1.1 先完成稳定的 Context、Space、Group、目录登记、关系、资源/工具基础开关和持久化恢复。正式调度器、自由格子工作流、DSH 连接器与插件系统延期到 0.1.2。
+完整产品需求状态仍以 [F01 总表](../docs/A1-正式产品设计/产品功能总表.md) 为准。上表的 B/C/D 候选不因写入本文件就自动成为 0.1.1 强制交付；0.1.1 先完成稳定的 Context、Space、Group、目录登记、关系、资源/工具基础开关和持久化恢复。正式调度器、自由格子工作流、DSH 连接器与插件系统延期到 0.1.2。
 
 
 ### 3.1 API、角色与 Agent 的显式引用操作（沿用 §2 Association）
@@ -339,7 +339,7 @@ S19 本期只验“实际删除始终阻塞”与预检质量，不要求实现�
 
 ### 5.2 SPC 研究门槛到断言的索引
 
-§3.3 的 SPC-01～07 是研究契约门槛，不是新增功能编号。下表只把已有门槛映射到本文断言，避免读者在两处拼接；完整研究条款见[归档契约](../docs/research/contracts/space/CONTRACT-2026-10-31.md)，研究材料不扩大 §3 范围。
+§3.3 的 SPC-01～07 是研究契约门槛，不是新增功能编号。下表只把已有门槛映射到本文断言，避免读者在两处拼接；完整研究条款见[归档契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/space/CONTRACT-2026-10-31.md)，研究材料不扩大 §3 范围。
 
 | SPC | 覆盖的本文功能 | 主要断言 | 层级要求 |
 |---|---|---|---|
@@ -367,4 +367,4 @@ L1/L2 含义见 §5.1。S16 只在替身有效窗口与可恢复持久化替身�
 
 **机制补全依据**：[Space 组织与目录共识](../docs/architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)、[第六批技术/产品决策边界](../docs/batch6/DECISIONS.md)、[shared 公开入口](../shared/src/index.ts)、[Store 实现](../shared/src/storage.ts)、[permissions 公开入口](../permissions/src/index.ts)。代码只证明当前接口及限制，不表示新方案已验证。
 
-历史详细依据：[Space 契约归档](../docs/research/contracts/space/CONTRACT-2026-10-31.md)；[Windows 数据目录要求](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)。研究材料只用于核对，不取代本 README 的施工范围。
+历史详细依据：[Space 契约归档](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/space/CONTRACT-2026-10-31.md)；[Windows 数据目录要求](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)。研究材料只用于核对，不取代本 README 的施工范围。
