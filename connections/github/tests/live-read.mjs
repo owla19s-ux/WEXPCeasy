@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {readFile} from 'node:fs/promises';
-import {join} from 'node:path';
+import {execFileSync} from 'node:child_process';
 import {openSqliteStore} from '../../../dist/shared/src/index.js';
 import {createPermissions} from '../../../dist/permissions/src/index.js';
 import {createConnectionService} from '../../../dist/connections/src/index.js';
@@ -35,7 +34,8 @@ export async function verifyGitHubRead({github,readAdapter,provider='octokit',ow
   manage('grant');
   const result=await service.read('github',request,'github',1,target);
   assert.equal(result.status,'ok');assert.equal(clientAcquisitions,1);
-  const bytes=await readFile(join(workspacePath,file.path));
+  // Compare the exact committed blob; Windows checkout may convert LF to CRLF.
+  const bytes=execFileSync('git',['show',ref+':'+file.path],{cwd:workspacePath,maxBuffer:2*1024*1024});
   const expectedSha=createHash('sha1').update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex');
   assert.equal(result.value.content,bytes.toString('utf8'));assert.equal(result.value.sha,expectedSha);
   assert.equal(result.value.ref,ref);assert.equal(result.value.owner,owner);assert.equal(result.value.repo,repo);
