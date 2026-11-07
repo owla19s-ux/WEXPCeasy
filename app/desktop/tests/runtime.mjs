@@ -20,21 +20,35 @@ app.setPath('userData',join(root,'electron-user'));
 app.setPath('sessionData',join(root,'electron-session'));
 const contextRoot=join(root,'selected-context');await mkdir(contextRoot);await writeFile(join(contextRoot,'.wex-root.json'),JSON.stringify({format:1,id:randomUUID()}));
 let nativeAllowed=true;const confirmations=[];
-const providerCalls=[];
+const providerCalls=[];let heldResponse,providerMode='normal';
+const githubCalls=[];let githubText='Desktop GitHub original',githubSha='a'.repeat(40),githubMode='ok';
 const provider=createServer(async(req,res)=>{
  const chunks=[];for await(const chunk of req)chunks.push(chunk);
  const input=JSON.parse(Buffer.concat(chunks).toString());providerCalls.push(input);
  res.writeHead(200,{'content-type':'text/event-stream'});
  const frame=(content,finish_reason=null)=>'data: '+JSON.stringify({choices:[{index:0,delta:content?{content}:{},finish_reason}]})+'\n\n';
+ if(providerMode==='wait'){res.write(frame('Waiting chunk'));heldResponse=res;return;}
  res.end(frame('Desktop reply')+frame(undefined,'stop')+'data: [DONE]\n\n');
 });
 await new Promise(resolve=>provider.listen(0,'127.0.0.1',resolve));
 const providerEndpoint='http://127.0.0.1:'+provider.address().port+'/v1';
 let failClose=true;
 const startup=policy=>startFoundations({dataRoot:root,expectedRootId:id,trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false},
- space:{},api:{},conversations:true,ai:{bindRead:()=>undefined},localFiles:{},localDirectories:{},technicalDiagnostics:{},
+ space:{},api:{},credentials:{cipher:{
+ available:()=>true,seal:value=>'fixture:'+Buffer.from(value).toString('base64'),unseal:value=>Buffer.from(value.slice(8),'base64').toString()
+ }},githubOfficial:{fetch:async(url,init)=>{
+ githubCalls.push({url:String(url),method:init?.method??'GET'});
+ if(init?.method==='PUT'){
+  if(githubMode==='conflict')return new Response(JSON.stringify({message:'conflict'}),{status:409,headers:{'content-type':'application/json'}});
+  if(githubMode==='unknown')throw Error('fixture disconnected');
+  const input=JSON.parse(init.body);assert.equal(input.sha,githubSha);
+  githubText=Buffer.from(input.content,'base64').toString();githubSha='b'.repeat(40);
+  return new Response(JSON.stringify({content:{path:'README.md',sha:githubSha},commit:{sha:'c'.repeat(40)}}),{status:200,headers:{'content-type':'application/json'}});
+ }
+ return new Response(JSON.stringify({type:'file',path:'README.md',sha:githubSha,encoding:'base64',content:Buffer.from(githubText).toString('base64'),size:Buffer.byteLength(githubText)}),{status:200,headers:{'content-type':'application/json'}});
+ }},conversations:true,ai:{bindRead:()=>undefined},localFiles:{},localDirectories:{},technicalDiagnostics:{},
  openStore(path,namespace){const db=openSqliteStore(path,namespace);return {...db,close(){if(failClose&&namespace==='permissions'){failClose=false;throw Error('injected-close');}db.close();}};},...policy});
-const timer=setTimeout(()=>{console.error('desktop_runtime_timeout');app.exit(1);},45000);
+const timer=setTimeout(()=>{console.error('desktop_runtime_timeout');app.exit(1);},75000);
 try{
  const runtime=await runDesktop({url:pathToFileURL(resolve('desktop-dist/index.html')).href,preload:resolve('desktop-dist/preload.cjs'),start:startup,spaceRootId:id,spacePlatform:{confirm:async summary=>{confirmations.push(summary);return nativeAllowed;},chooseDirectory:async()=>contextRoot},show:process.platform==='linux'});
  const host=await runtime.lifecycle.start();
@@ -174,6 +188,20 @@ try{
  await new Promise(r=>setTimeout(r,25));await wc.executeJavaScript("document.querySelector('form[aria-label=\"普通对话输入\"]').requestSubmit();true");
  await waitFor("[...document.querySelectorAll('[data-conversations] article p')].some(p=>p.textContent==='Desktop reply')");
  assert.ok(providerCalls.some(c=>c.messages.some(m=>m.content==='Desktop question')));
+
+ // Complete the user round trip: sent text clears, editing retains history, streaming can be cancelled.
+ await waitFor("document.querySelector('form[aria-label=\"普通对话输入\"] textarea').value===''");
+ await click('编辑并重发');await choose('form[aria-label="普通对话输入"] textarea','Desktop corrected');
+ await new Promise(r=>setTimeout(r,25));await wc.executeJavaScript("document.querySelector('form[aria-label=\"普通对话输入\"]').requestSubmit();true");
+ await waitFor("document.querySelectorAll('[data-conversations] article').length===4");
+ assert.equal(await wc.executeJavaScript("[...document.querySelectorAll('[data-conversations] article small')].some(e=>e.textContent.includes('修改重发自'))"),true);
+ providerMode='wait';await choose('form[aria-label="普通对话输入"] textarea','Desktop cancel');
+ await new Promise(r=>setTimeout(r,25));await wc.executeJavaScript("document.querySelector('form[aria-label=\"普通对话输入\"]').requestSubmit();true");
+ await waitFor("!!document.querySelector('[aria-label=\"生成中\"]')");
+ await click('停止本轮等待');heldResponse?.end();providerMode='normal';
+ await waitFor("document.querySelector('[data-conversations]').textContent.includes('轮次：cancelled')");
+ await waitFor("!document.querySelector('form[aria-label=\"普通对话输入\"] textarea').disabled");
+ await writeFile(resolve('desktop-acceptance',process.platform+'-conversation.png'),(await wc.capturePage()).toPNG());
  await click('读取对话历史');await waitFor("document.querySelectorAll('nav[aria-label=\"普通对话历史\"] button').length===1");
  await click('设置');await click('当前窗口授权');await click('读取当前窗口授权');
  await waitFor("document.querySelectorAll('[data-permission-settings] li').length>0");
@@ -181,12 +209,44 @@ try{
  assert.equal(permissionSnapshot.ok,true);
  const historyGrant=permissionSnapshot.value.entries.find(e=>e.resource==='conversations'&&e.action==='read');
  assert.ok(historyGrant);
- const revoked=await wc.executeJavaScript("window.wexHost.permissions("+JSON.stringify({kind:'revoke',id:historyGrant.id,expectedRevision:permissionSnapshot.value.revision})+")");
- assert.equal(revoked.value.status,'committed');
+ await wc.executeJavaScript("[...document.querySelectorAll('[data-permission-settings] li')].find(li=>li.querySelector('strong').textContent==='conversations / read').querySelector('button').click();true");
+ await waitFor("document.querySelector('[data-permission-settings] [role=status]').textContent.includes('已撤销')");
  await waitFor("document.querySelectorAll('[data-conversations] article').length===0");
  await waitFor("document.querySelectorAll('[aria-label=\"资源预览\"] pre').length===0");
  await click('GitHub / Local');await click('读取连接与操作记录');
  await waitFor("document.querySelector('[data-connection-settings]').textContent.includes('Operation 摘要')");
+
+ // The complete connector form uses the real credential modal and official Octokit, with a trusted transport fixture.
+ await click('登记 GitHub 连接');
+ await waitFor("[...document.querySelectorAll('[data-connection-settings] button')].some(b=>b.textContent==='安全录入 GitHub Token')");
+ await click('安全录入 GitHub Token');
+ let secretWindow;
+ await new Promise((res,rej)=>{const end=Date.now()+10000;const poll=async()=>{
+  secretWindow=BrowserWindow.getAllWindows().find(w=>w!==runtime.window);
+  try{if(secretWindow&&await secretWindow.webContents.executeJavaScript("!!document.querySelector('input[type=password]:not(:disabled)')"))return res();}catch{}
+  if(Date.now()>end)return rej(Error('github credential dialog timeout'));setTimeout(poll,25);
+ };void poll();});
+ await secretWindow.webContents.executeJavaScript("document.querySelector('input[type=password]').value='fixture-github-token';document.querySelector('form').requestSubmit();true").catch(error=>{if(!secretWindow.isDestroyed()||!String(error).includes('Render frame was disposed'))throw error;});
+ await waitFor("document.querySelector('[data-connection-settings]').textContent.includes('已引用凭证')");
+ assert.equal(await wc.executeJavaScript("document.body.textContent.includes('fixture-github-token')"),false);
+ await click('操作 GitHub 文件');await choose('input[name="github-owner"]','example');await choose('input[name="github-repo"]','project');await choose('input[name="github-path"]','README.md');
+ await click('读取 GitHub 文件');await waitFor("document.querySelector('textarea[name=\"github-content\"]')?.value==='Desktop GitHub original'");
+ await choose('textarea[name="github-content"]','Desktop GitHub edited');await choose('input[name="github-message"]','Desktop file edit');
+ nativeAllowed=false;await click('确认提交 GitHub 修改');await waitFor("document.querySelector('[data-connection-settings] [role=status]').textContent.includes('cancelled')");
+ assert.equal(githubCalls.filter(c=>c.method==='PUT').length,0);nativeAllowed=true;
+ // Cancellation clears the editor; explicitly read again before attempting a new write.
+ await click('读取 GitHub 文件');await waitFor("!!document.querySelector('textarea[name=\"github-content\"]')");
+ await choose('textarea[name="github-content"]','Desktop GitHub edited');
+ await click('确认提交 GitHub 修改');await waitFor("document.querySelector('[data-connection-settings] [role=status]').textContent.includes('已提交')");
+ assert.equal(githubText,'Desktop GitHub edited');assert.equal(githubCalls.filter(c=>c.method==='PUT').length,1);
+ await click('读取 GitHub 文件');await waitFor("document.querySelector('textarea[name=\"github-content\"]')?.value==='Desktop GitHub edited'");
+ githubMode='unknown';await choose('textarea[name="github-content"]','uncertain edit');
+ await click('确认提交 GitHub 修改');await waitFor("document.querySelector('[data-connection-settings] [role=status]').textContent.includes('unknown')");
+ const writesAfterUnknown=githubCalls.filter(c=>c.method==='PUT').length;
+ assert.equal(await wc.executeJavaScript("!!document.querySelector('textarea[name=\"github-content\"]')"),false);
+ await click('读取连接与操作记录');assert.equal(githubCalls.filter(c=>c.method==='PUT').length,writesAfterUnknown);
+ await writeFile(resolve('desktop-acceptance',process.platform+'-connectors.png'),(await wc.capturePage()).toPNG());
+ await click('解除 GitHub Token 并停用');await waitFor("document.querySelector('[data-connection-settings]').textContent.includes('无凭证引用')");
  await click('返回工作区');await click('Space / Context');
  const directory=await invoke({kind:'address.add',contextId:created.id,name:'Selected directory',address:pathToFileURL(contextRoot).href,purpose:'reference'});assert.equal(directory.status,'committed');
  const listed=await invoke({kind:'resource.read',contextId:created.id,id:directory.id,mode:'directory'});assert.equal(listed.status,'ok');assert.equal(listed.view,'directory');assert.ok(listed.entries.some(e=>e.name==='preview.txt'));
@@ -217,7 +277,7 @@ try{
  assert.equal((await runtime.lifecycle.stop()).status,'stopped');
  const reopened=await startFoundations({dataRoot:root,trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false}});
  assert.equal(reopened.status,'ready');assert.equal((await reopened.stop()).status,'stopped');
- const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,fixtures:['local HTTP/SSE Provider','native dialog responses','native directory selection','one permissions-store close failure'],limits:['Windows Local native handle/scanner tested; requires Windows PowerShell with Add-Type available','not an installer or manual Windows acceptance'],checks:['API and AI config forms, actual local Provider generation, saved history and scoped permission UI','three-column navigation pointer and keyboard resizing, optional auxiliary width and collapse, on-demand preview, layout recovery and preserved Space draft','category creation and address form/primary selection through actual React DOM','controlled Local resource preview and pinned native directory enumeration','React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
+ const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,fixtures:['official Octokit transport responses and dummy credential cipher (no real GitHub writes)','local HTTP/SSE Provider','native dialog responses','native directory selection','one permissions-store close failure'],limits:['Windows Local native handle/scanner tested; requires Windows PowerShell with Add-Type available','not an installer or manual Windows acceptance'],checks:['GitHub config, private credential form, SHA-bound read/edit/write, native decline, unknown receipt without automatic retry and credential detach','conversation edit/resend preserves history, streaming cancellation and cleared sent draft','API and AI config forms, actual local Provider generation, saved history and scoped permission UI','three-column navigation pointer and keyboard resizing, optional auxiliary width and collapse, on-demand preview, layout recovery and preserved Space draft','category creation and address form/primary selection through actual React DOM','controlled Local resource preview and pinned native directory enumeration','React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
  await writeFile(resolve('desktop-acceptance',process.platform+'.json'),JSON.stringify(report,null,2));
  console.log('DESKTOP_ACCEPTANCE '+JSON.stringify(report));provider.closeAllConnections();provider.close();clearTimeout(timer);app.quit();
 }catch(error){provider.closeAllConnections();provider.close();console.error(error);clearTimeout(timer);app.exit(1);}

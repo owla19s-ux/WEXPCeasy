@@ -14,7 +14,7 @@ export function ConversationPanel({bridge}:{bridge:DesktopBridge}){
   return r.value;
  }
  async function run(work:()=>Promise<void>){if(busy)return;setBusy(true);setMessage('');try{await work();}catch(e){setCurrent(undefined);setConversations([]);setStream('');setMessage(e instanceof Error?e.message:'对话不可用');}finally{setBusy(false);}}
- async function open(id:string){const n=++sequence.current;currentId.current=id;setCurrent(undefined);setStream('');setReplaces(undefined);const r=await call({kind:'open',id});if(n===sequence.current&&r.status==='ok'&&'conversation'in r){setCurrent(r.conversation);setText(drafts[id]??'');}}
+ async function open(id:string,restoredText?:string){const n=++sequence.current;currentId.current=id;setCurrent(undefined);setStream('');setReplaces(undefined);const r=await call({kind:'open',id});if(n===sequence.current&&r.status==='ok'&&'conversation'in r){setCurrent(r.conversation);setText(restoredText??drafts[id]??'');}}
  const key=current?.id??currentId.current??'new';
  return <div data-conversations><h2>普通对话</h2><p role="status">{message}</p>
  <div className="actions"><button disabled={busy} onClick={()=>void run(async()=>{const r=await call({kind:'snapshot'});if(r.status==='ok'&&'conversations'in r)setConversations(r.conversations);})}>读取对话历史</button>
@@ -29,7 +29,7 @@ export function ConversationPanel({bridge}:{bridge:DesktopBridge}){
  {stream&&<article aria-label="生成中"><strong>生成中（未定稿）</strong><p style={{whiteSpace:'pre-wrap'}}>{stream}</p></article>}</div></>}
  <form aria-label="普通对话输入" onSubmit={e=>{e.preventDefault();if(!current)return;const id=current.id,input=text,n=sequence.current;setStream('');void run(async()=>{
   await call({kind:replaces?'resend':'send',id,expectedRevision:current.revision,agentId,text:input,...(replaces?{replaces}:{})});
-  if(n===sequence.current){setDrafts(d=>({...d,[id]:''}));setText('');setReplaces(undefined);await open(id);}
+  if(n===sequence.current){setDrafts(d=>({...d,[id]:''}));setText('');setReplaces(undefined);await open(id,'');}
  });}}>
  {replaces&&<p>正在修改历史输入。<button type="button" onClick={()=>setReplaces(undefined)}>返回普通发送</button></p>}
  <label>输入<textarea required maxLength={32000} disabled={busy} value={text} onChange={e=>{setText(e.target.value);setDrafts(d=>({...d,[key]:e.target.value}));}}/></label>

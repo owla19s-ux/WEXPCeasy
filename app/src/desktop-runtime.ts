@@ -43,7 +43,7 @@ export async function runDesktop(options:{url:string;preload:string;start:(polic
  const nativeConfirm=options.spacePlatform?.confirm??(async(summary:string)=>(await dialog.showMessageBox(window!,{type:'question',title:'WEXPCeasy 操作确认',message:summary,buttons:['取消','允许本次操作'],defaultId:0,cancelId:0})).response===1);
  credential=createCredentialPrompt({parent:window,pageUrl:new URL('credential.html',options.url).href,preload:fileURLToPath(new URL('credential-preload.cjs',options.url)),show:options.show??true});
  api=createDesktopApi({authority,confirm:nativeConfirm,requestCredential:target=>credential!.request(target),cancelCredential:()=>credential?.cancel()});
- connections=createDesktopConnections({authority,confirm:nativeConfirm});
+ connections=createDesktopConnections({authority,confirm:nativeConfirm,requestCredential:target=>credential!.request(target),cancelCredential:()=>credential?.cancel()});
  ai=createDesktopAi({authority,confirm:nativeConfirm});
  conversations=createDesktopConversations({authority,confirm:nativeConfirm,onText:event=>{if(!window!.isDestroyed())window!.webContents.send('wex:desktop:conversation-text',event);}});
  if(options.spaceRootId)access=createDesktopSpace({authority,rootId:options.spaceRootId,
