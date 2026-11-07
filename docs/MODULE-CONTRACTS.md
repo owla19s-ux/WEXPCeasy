@@ -2,7 +2,7 @@
 
 # 第四批：模块业务契约与施工准备索引
 
-**文档入口：** [文档体系总索引](README.md) · [架构文档](architecture/README.md) · [决策记录](decisions/README.md) · [研究资料](research/README.md) · [审查报告](audits/README.md)
+**文档入口：** [文档体系总索引](README.md) · [架构文档](A1-正式产品设计/README.md) · [决策记录](decisions/README.md) · [研究资料](A0-产品构想与研究/README.md) · [审查报告](audits/README.md)
 
 
 2026-10-31，上海时间。设计基线 `a62996af9863e60b15e4513389c7654719907920`；本轮只设计文档，不做产品代码、迁移、依赖安装、正式IPC/schema或Actions。链路用于需求提取与组合验收，施工单位始终是模块。
@@ -26,7 +26,7 @@
 
 ## 1. 依据与决定等级
 
-已核对最新main根README与所有现有主要域/子域README、[研究摘要](decisions/RESEARCH-DECISIONS-2026-10-30.md)、[模块化方法与L01–L12](architecture/GLOBAL-CONTRACT-MAP-V0.1.md)、[专项研究索引](research/README.md)、DSH/Cordis加载及原生Bundle报告、headless/boundary源码、ReactFlow模型/验证报告；旧WEXPC `faf11f31d44e4fc4788e766074b8db6b83ab4a1b` [产品基线](https://github.com/owla19s-ux/wexpc/blob/faf11f31d44e4fc4788e766074b8db6b83ab4a1b/docs/PC-PRODUCT-AND-TECH-BASELINE.md)仅继承仍有效的需求/权限/重装规则，不继承Rust/Tauri实现。基线根AGENTS.md不存在；协作依据是用户本批任务、既有README/第三批建议和已确认main协作原则，不虚构AGENTS授权。
+已核对最新main根README与所有现有主要域/子域README、[研究摘要](decisions/RESEARCH-DECISIONS-2026-10-30.md)、[模块化方法与L01–L12](architecture/GLOBAL-CONTRACT-MAP-V0.1.md)、[专项研究索引](A0-产品构想与研究/README.md)、DSH/Cordis加载及原生Bundle报告、headless/boundary源码、ReactFlow模型/验证报告；旧WEXPC `faf11f31d44e4fc4788e766074b8db6b83ab4a1b` [产品基线](https://github.com/owla19s-ux/wexpc/blob/faf11f31d44e4fc4788e766074b8db6b83ab4a1b/docs/PC-PRODUCT-AND-TECH-BASELINE.md)仅继承仍有效的需求/权限/重装规则，不继承Rust/Tauri实现。基线根AGENTS.md不存在；协作依据是用户本批任务、既有README/第三批建议和已确认main协作原则，不虚构AGENTS授权。
 
 | 等级 | 可以据此做什么 | 不可以据此做什么 |
 |---|---|---|
