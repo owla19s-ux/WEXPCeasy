@@ -53,14 +53,14 @@ export type DesktopApiReply=
 export type AiConfiguration={kind:'role';name:string;prompt:string}|{kind:'position';name:string;responsibility:string}|{kind:'agent';name:string;roleId:string;positionId:string;model:{connectionId:string;modelId:string}};
 export type AiEntry=AiConfiguration&{id:string;revision:number};
 export type DesktopAiInput={kind:'snapshot'}|{kind:'save';id:string;expectedRevision:number;value:AiConfiguration};
-export type DesktopAiReply={status:'ok';entries:AiEntry[]}|{status:'committed';revision:number}|{status:'cancelled'|'unavailable'|'denied'|'invalid'|'reference_unavailable'|'revision_conflict'|'intent_conflict'|'unknown'|'not_committed'|'conflict'|'rejected'|'not_found'|'failed_no_commit';reason?:string;intent?:string};
+export type DesktopAiReply={status:'ok';entries:AiEntry[]}|{status:'committed';revision:number}|{status:'invalid_request'|'storage_unavailable'|'cancelled'|'unavailable'|'denied'|'invalid'|'reference_unavailable'|'revision_conflict'|'intent_conflict'|'unknown'|'not_committed'|'conflict'|'rejected'|'not_found'|'failed_no_commit';reason?:string;intent?:string};
 export interface ConversationView {id:string;revision:number;messages:{id:string;role:'user'|'assistant';segments:{id:string;text:string}[];replaces?:string}[];generations:{id:string;inputMessageId:string;status:string;operationId?:string}[];selections?:{messageId:string;segmentIds:string[]}[]}
 export type DesktopConversationInput={kind:'snapshot'}|{kind:'create'}|{kind:'open';id:string}|
  {kind:'send'|'resend';id:string;expectedRevision:number;agentId:string;text:string;replaces?:string}|
  {kind:'select';id:string;expectedRevision:number;messageId:string;segmentIds:string[]}|
  {kind:'recover';id:string;generationId:string};
 export type DesktopConversationReply={status:'ok';conversation:ConversationView}|{status:'ok';conversations:ConversationView[]}|
- {status:'committed';id?:string;revision:number}|{status:'cancelled'|'unavailable'|'denied'|'invalid'|'reference_unavailable'|'revision_conflict'|'intent_conflict'|'unknown'|'not_committed'|'conflict'|'rejected'|'not_found'|'failed_no_commit'|'invalid_transition'|'already_dispatched';reason?:string;operationId?:string};
+ {status:'committed';id?:string;revision:number}|{status:'invalid_request'|'storage_unavailable'|'cancelled'|'unavailable'|'denied'|'invalid'|'reference_unavailable'|'revision_conflict'|'intent_conflict'|'unknown'|'not_committed'|'conflict'|'rejected'|'not_found'|'failed_no_commit'|'invalid_transition'|'already_dispatched';reason?:string;operationId?:string};
 export interface ConversationText {conversationId:string;generationId:string;text:string}
 export type DesktopPermissionInput={kind:'snapshot'}|{kind:'revoke';id:string;expectedRevision:number};
 export type DesktopPermissionReply={status:'ok';revision:number;entries:{id:string;resource:string;action:string;target:string;context:string|null}[]}|

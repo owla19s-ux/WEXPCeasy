@@ -44,7 +44,7 @@ export function MiddleWorkspace({parts}:{parts:SpaceSections}){
     onPointerMove={e=>{const d=drag.current;if(!d||d.pointer!==e.pointerId||width<=0)return;change({previewPercent:Math.max(25,Math.min(70,d.percent-(e.clientX-d.x)/width*100))});}}
     onPointerUp={e=>finish(e,false)} onPointerCancel={e=>finish(e,true)} onLostPointerCapture={e=>finish(e,true)}
     onKeyDown={e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();change({previewPercent:Math.max(25,Math.min(70,state.previewPercent+(e.key==='ArrowLeft'?2:-2)*(e.shiftKey?5:1)))})}}}/>}
-   {previewVisible&&<aside className={'middle-preview '+(sidebar?'preview-compact':'')} style={split?{width:state.previewPercent+'%'}:undefined} aria-label="Context 摘要预览">
+   {previewVisible&&<aside className={'middle-preview '+(sidebar?'preview-compact':'')} style={split?{width:state.previewPercent+'%'}:undefined} aria-label={parts.resourcePreview!==null?"资源预览":"Context 摘要预览"}>
     <div className="middle-view-title"><strong>{parts.resourcePreview!==null?"资源预览":"Context 摘要"}</strong><button type="button" aria-label="关闭预览" onClick={closePreview}>×</button></div>
     <div className="middle-preview-body">{parts.resourcePreview??parts.summary}</div>
    </aside>}
