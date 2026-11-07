@@ -36,3 +36,36 @@
 - 对相对链接以外的跨文件引用（code span、引用式链接、脚本/CI 读取的固定路径）做反向引用检查。
 - 在允许执行完整工作树的环境运行 `node tools/check-docs.mjs --json --strict` 及对应回归测试；独立审查其脚本检测范围，不能仅看退出码。
 - 本批没有删除旧兼容文件；只有最终审计和全链路回链通过后才进入第三阶段删除。
+
+## 5. 同轮续查：扩展到当前完整 Markdown 集合
+
+此前第 2 节的“80 份模块/入口文档”是**阶段性第一批**。进一步以新增审计索引后 `main@046dab2a774e9bf6849bbf2da04a2c962e21a113` 的 GitHub 未截断递归树为目录基线，逐批通过 GitHub 连接器读取全部 **407 份 Markdown**，按同一种**简化普通行内相对链接目标存在性**算法扫描：
+
+| 本轮批次 | 文档数 | 核对结果 |
+| --- | ---: | --- |
+| 模块、仓库入口、DSH 自有研究、需求对冲目录 | 80 | 未发现有效目标路径缺失；`dsh/NATIVE-PLUGIN-COMPATIBILITY-2026-10-30.md` 链向 `dsh/checks/fixtures-native-bundle/`，经目录树确认存在 |
+| A1 正式设计 | 10 | 未发现有效目标路径缺失 |
+| A2 版本工程状态 | 8 | 未发现有效目标路径缺失 |
+| `docs/` 根目录核心导航与旧入口 | 17 | 未发现有效目标路径缺失 |
+| `docs/audits/` 审计 Markdown | 24 | 未发现新的有效目标路径缺失；本报告内代码格式示例 `[标签](相对路径#片段)` 在**简单正则**下会被误提取为真实链接，属文档代码示例，非断链 |
+| A0 产品构想与研究 | 126 | WEX 自有历史正文未发现新的有效目标路径缺失；外部 DSH 来源快照中的部分上游文件未收录，详见下文 |
+| 其它旧 `docs/architecture`、`product`、`planning`、`research`、`batch6-8`、`versions` 等 Markdown | 81 | 未发现有效目标路径缺失 |
+| `references/`、`experiments/`、`旧资料/`、`dsh/upstream/` | 61 | WEX 自有实验/旧资料未发现新的目标缺失；`dsh/upstream/vendor/` 部分上游相对路径未收录 |
+| **合计** | **407** | **完成指定语法下的目标路径存在性核验，不等于完整 Markdown/锚点/反向引用/外部 URL 验收** |
+
+### 上游快照缺失分类（保留原始来源，禁止静默改写）
+
+1. `docs/A0-产品构想与研究/历史参考/外部项目/dsh/source-snapshot/docs/architecture.md` 指向 `references/dsh/source-snapshot/` 中未收录的架构、Cordis 教程、子系统、Bundle/App、验证脚本等上游文件。
+2. 同组 `cordis-README.md`、`cordis-primer.md`、`scope-README.md` 指向未收录的 `references/dsh/docs/` 或 `references/dsh/source-snapshot/` 文件。
+3. `dsh/upstream/vendor/README.md`、`vendor/cordis/README.md`、`vendor/schemastery/README.md` 指向未收录的上游 `dsh/upstream/docs/`、vendor 升级计划和 Cordis 教程。
+
+这些是**外部原始资料的仓库快照不完整**，不是本轮改动造成的现行 WEX 模块断链；没有补造上游文件、改写历史原始来源、或为了“0 错误”删除链接。历史批次报告已有类似不完整快照记载；确切缺失数需依完整 Markdown 解析器和固定 SHA 另行统计。
+
+### 本轮检查的严格边界
+
+- **已确认**：GitHub 递归树未截断；上述 407 份文件均成功逐文件读取；对匹配 `[标签](目标)` 的普通行内链接，解析相对目录并与真实文件或目录树比对。对非上游快照的文件未发现有效相对目标缺失。
+- **未确认**：标题 slug/锚点全部有效、引用式定义链接/HTML href/复杂括号/裸路径完全有效、大小写或 URL 编码的严格解析、跳转页的语义独立性、外部 URL 可达性、所有脚本/CI 中的旧路径字符串是否失效、所有源码引用反向归零。
+- **未执行**：项目自带 `node tools/check-docs.mjs --json --strict`、相关回归测试与任何构建、Windows 实机测试。此次在连接器上进行的读取和比对是**专项静态审计**，不应登记为项目脚本或 CI 通过。
+- **删除门槛不变**：即便普通行内链接的 WEX 自有目标存在，也不能证明旧兼容路径已无人引用；第三阶段统一删除必须先完成完整回链检查及历史证据保护。
+
+本节为本轮同一治理工作的延伸检查，覆盖范围及结论优先于前文当时“剩余 326 份尚未核验”的阶段性表述；其余严格检查缺口仍保留。
