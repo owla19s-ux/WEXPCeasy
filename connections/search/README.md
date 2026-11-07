@@ -12,10 +12,10 @@
 
 ## 上级契约与文档入口
 
-- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/research/contracts/connections/CONTRACT-archive.md)
+- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [全局契约地图](../../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
-- [复杂业务契约压力审查](../../docs/audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
+- [全局契约地图](../../docs/A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)
+- [复杂业务契约压力审查](../../docs/A0-产品构想与研究/方案与研究/审查历史/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
 
 本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
@@ -23,4 +23,4 @@
 
 本目录只提供互联网 Search/Fetch 适配器、外部来源和抓取限制，不负责搜索 WEX 自身的 Space、Context、Conversation、Task、Artifact 或 Operation。内部检索由各业务 owner 提供获准查询，UI 聚合。外部命中不等于可信事实或授权；打开、读取、摘要和外发仍按当前来源及权限规则处理。
 
-见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+见[基础能力落地映射](../../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
