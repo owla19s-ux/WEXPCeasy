@@ -52,7 +52,9 @@ test('MCP authority exceptions cannot escape as credential-bearing errors',async
  await assert.rejects(reader().read(connection,target,new AbortController().signal,access(()=>{throw Error('fixture-token');})),
   {message:'github_mcp_unavailable'});
 });
-test('MCP timeout also bounds a stalled trusted credential resolver',{timeout:3000},async()=>{
- await assert.rejects(reader('ok',{timeoutMs:50,resolveCredential:()=>new Promise(()=>{})}).read(connection,target,new AbortController().signal,access()),
+test('MCP timeout also bounds a stalled trusted credential resolver',{timeout:5000},async()=>{
+ let entered=false;
+ await assert.rejects(reader('ok',{timeoutMs:1000,resolveCredential:()=>{entered=true;return new Promise(()=>{});}}).read(connection,target,new AbortController().signal,access()),
   {message:'github_mcp_unavailable'});
+ assert.equal(entered,true);
 });
