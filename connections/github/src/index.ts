@@ -221,9 +221,10 @@ export function createGitHubMcpFileReader(options:GitHubMcpOptions):ConfiguredRe
     const result=await client.callTool({name:'get_file_contents',arguments:{
      owner:file.owner,repo:file.repo,path:file.path,sha:file.ref,
     }},undefined,requestOptions);ensure();
-    if(result.isError||result.content.length!==2)throw Error('github_mcp_unavailable');
-    const resourceBlock=result.content.find(block=>block.type==='resource');
-    const message=result.content.find(block=>block.type==='text');
+    if(result.isError||!Array.isArray(result.content)||result.content.length!==2)throw Error('github_mcp_unavailable');
+    const blocks:unknown[]=result.content;
+    const resourceBlock=blocks.find((block):block is Record<string,unknown>=>object(block)&&block['type']==='resource');
+    const message=blocks.find((block):block is Record<string,unknown>=>object(block)&&block['type']==='text');
     if(!resourceBlock||resourceBlock.type!=='resource'||!object(resourceBlock.resource)||
      typeof resourceBlock.resource['text']!=='string'||!message||message.type!=='text')
      throw Error('github_mcp_unavailable');
@@ -241,8 +242,12 @@ export function createGitHubMcpFileReader(options:GitHubMcpOptions):ConfiguredRe
     ensure();return {...file,sha:blobSha,content:text,size:bytes.length};
    }catch{throw Error('github_mcp_unavailable');}
    finally{
-    try{if(client)await client.close();else if(transport)await transport.close();}
-    finally{if(directory)await rm(directory,{recursive:true,force:true});}
+    let cleanupFailed=false;
+    try{if(client)await client.close();}catch{cleanupFailed=true;}
+    try{if(transport)await transport.close();}catch{cleanupFailed=true;}
+    try{if(directory)await rm(directory,{recursive:true,force:true});}catch{cleanupFailed=true;}
+    if(cleanupFailed)throw Error('github_mcp_unavailable');
+    ensure();
    }
   },
  });
