@@ -20,11 +20,18 @@ jobs:
       - name: Test documentation auditor
         run: node --test tools/check-docs.test.mjs
       - name: Audit links and exact duplicates
+        id: audit-links
+        continue-on-error: true
         run: node tools/check-docs.mjs --json --strict > docs-audit-report.json
       - name: Print summary and issues
+        if: always() && steps.audit-links.outcome != 'skipped'
         run: |
           node -e "const r=require('./docs-audit-report.json'); console.log(JSON.stringify({markdownFiles:r.markdownFiles,checkedLocalLinks:r.checkedLocalLinks,legacyRedirectPages:r.legacyRedirectPages,issueCount:r.issueCount,ownedIssueCount:r.ownedIssueCount,externalSnapshotIssueCount:r.externalSnapshotIssueCount},null,2)); console.log(JSON.stringify(r.issues,null,2))"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: docs-audit-report
           path: docs-audit-report.json
+      - name: Fail when repository documentation has issues
+        if: steps.audit-links.outcome == 'failure'
+        run: exit 1

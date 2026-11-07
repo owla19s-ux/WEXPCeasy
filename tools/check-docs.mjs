@@ -18,7 +18,7 @@ function walk(dir) {
 }
 walk(root);
 const issues=[]; const hashes=new Map(); let links=0;let redirects=0;
-const externalRoots=['references/','dsh/upstream/'];
+const externalRoots=['references/','dsh/upstream/','docs/A0-产品构想与研究/历史参考/外部项目/dsh/source-snapshot/'];
 const scopeOf=(file)=>externalRoots.some(prefix=>file.startsWith(prefix))?'external-snapshot':'wex-owned';
 for (const file of files) {
   const rel=path.relative(root,file).replaceAll(path.sep,'/');
