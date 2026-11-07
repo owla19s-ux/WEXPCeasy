@@ -1,16 +1,16 @@
 import {opendir} from 'node:fs/promises';
-import type {FileHandle} from 'node:fs/promises';
+import type {LocalHandle} from './file-capability.js';
 import {createHash} from 'node:crypto';
 import type {PermissionReader} from '../../../permissions/src/index.js';
 import type {Json} from '../../../shared/src/index.js';
 import type {AdapterAccess,ReadAdapter} from '../../src/index.js';
 import {createSelectedBindings} from './selection-bindings.js';
 import {validateLocalDirectoryTarget} from './target.js';
-export interface LocalDirectoryCapability {handle:FileHandle;check():boolean;release():Promise<void>;retain(cleanup:()=>Promise<void>):void}
+export interface LocalDirectoryCapability {handle:LocalHandle;check():boolean;release():Promise<void>;retain(cleanup:()=>Promise<void>):void}
 export type LocalDirectoryResolver=(target:string,access?:AdapterAccess)=>Promise<LocalDirectoryCapability>;
 export interface LocalDirectoryEntry {name:string;kind:'file'|'directory'|'symlink'|'other'}
 export interface LocalDirectoryCursor {read():Promise<LocalDirectoryEntry|null>;close():Promise<void>}
-export interface LocalDirectoryScanner {open(handle:FileHandle):Promise<LocalDirectoryCursor>}
+export interface LocalDirectoryScanner {open(handle:LocalHandle):Promise<LocalDirectoryCursor>}
 export interface LocalDirectoryReadOptions {maxEntries?:number;scanner?:LocalDirectoryScanner}
 export function createLocalDirectoryBindings(permission:PermissionReader){
  const selected=createSelectedBindings(permission,{kind:'directory',validateTarget:validateLocalDirectoryTarget});
@@ -22,6 +22,7 @@ export function createLocalDirectoryBindings(permission:PermissionReader){
  return Object.freeze({register:selected.register,resolve,close:selected.close});
 }
 const pinnedScanner:LocalDirectoryScanner={async open(handle){
+ if(process.platform==='win32'&&handle.readDirectory)return {read:()=>handle.readDirectory!(),async close(){}};
  // Linux descriptor aliases pin the selected directory. Other platforms require a validated native scanner.
  if(process.platform!=='linux')throw Error('directory_scanner_unavailable');
  const dir=await opendir('/proc/self/fd/'+handle.fd);

@@ -1,5 +1,6 @@
 import {open,realpath,stat} from 'node:fs/promises';
-import type {FileHandle} from 'node:fs/promises';
+import {openWindowsSelection} from './windows-handle.js';
+import type {LocalHandle} from './file-capability.js';
 import {constants} from 'node:fs';
 import {isAbsolute} from 'node:path';
 import {isDeepStrictEqual} from 'node:util';
@@ -59,7 +60,7 @@ export function createSelectedBindings(permission:PermissionReader,options:Selec
   if(closing||quarantined||!access||access.check()!==true||(mode!=='read'&&mode!=='write')||(options.kind==='directory'&&mode!=='read'))throw Error('local_capability_unavailable');
   const decision=authorize(access.request,target,mode);if(!decision)throw Error('local_capability_unavailable');
   const selected=files.get(target);if(!selected)throw Error('local_capability_unavailable');
-  let handle:FileHandle|undefined,lease:Extract<LockResult,{status:'acquired'}>|undefined,released=false,cleanupPromise:Promise<void>|undefined;
+  let handle:LocalHandle|undefined,lease:Extract<LockResult,{status:'acquired'}>|undefined,released=false,cleanupPromise:Promise<void>|undefined;
   active++;const retained=new Set<()=>Promise<void>>();
   const check=()=>!released&&files.get(target)===selected&&access.check()===true&&current(access.request,decision);
   const cleanup=():Promise<void>=>{
@@ -76,10 +77,14 @@ export function createSelectedBindings(permission:PermissionReader,options:Selec
     if(acquired.status!=='acquired')throw Error('local_write_lease_unavailable');
     lease=acquired;
    }
-   if(!check()||typeof constants.O_NOFOLLOW!=='number')throw Error('local_capability_unavailable');
-   const directoryFlag=options.kind==='directory'?constants.O_DIRECTORY:0;
-   if(typeof directoryFlag!=='number')throw Error('local_capability_unavailable');
-   handle=await open(selected.path,(mode==='write'?constants.O_RDWR:constants.O_RDONLY)|constants.O_NOFOLLOW|directoryFlag);
+   if(!check())throw Error('local_capability_unavailable');
+   if(process.platform==='win32')handle=await openWindowsSelection(selected.path,options.kind,mode);
+   else{
+    if(typeof constants.O_NOFOLLOW!=='number')throw Error('local_capability_unavailable');
+    const directoryFlag=options.kind==='directory'?constants.O_DIRECTORY:0;
+    if(typeof directoryFlag!=='number')throw Error('local_capability_unavailable');
+    handle=await open(selected.path,(mode==='write'?constants.O_RDWR:constants.O_RDONLY)|constants.O_NOFOLLOW|directoryFlag);
+   }
    const info=await handle.stat({bigint:true});
    if(!matches(info)||!isDeepStrictEqual(identity(info),selected.identity)||
     await realpath(selected.locator)!==selected.path||!check())throw Error('local_capability_unavailable');

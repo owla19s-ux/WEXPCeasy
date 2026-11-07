@@ -1,4 +1,4 @@
-import type {FileHandle} from 'node:fs/promises';
+import type {LocalHandle} from './file-capability.js';
 import {createHash} from 'node:crypto';
 import type {ConnectionConfig,ConfiguredDispatchAdapter,ReadAdapter,AdapterAccess} from '../../src/index.js';
 import type {Json} from '../../../shared/src/index.js';
@@ -11,7 +11,7 @@ export {createLocalFileBindings} from './bindings.js';
 export type {LocalFileBindingOptions,LocalFileIdentity} from './bindings.js';
 const limit=1024*1024;
 const digest=(bytes:Uint8Array|string)=>createHash('sha256').update(bytes).digest('hex');
-async function snapshot(handle:FileHandle):Promise<{bytes:Buffer;version:string}> {
+async function snapshot(handle:LocalHandle):Promise<{bytes:Buffer;version:string}> {
  const before=await handle.stat({bigint:true});
  if(!before.isFile()||before.size<0n||before.size>BigInt(limit))throw Error('unsupported_local_file');
  const bytes=Buffer.alloc(Number(before.size));let offset=0;
