@@ -139,3 +139,21 @@ test('desktop Local save binds the observed file version, persists one Operation
  assert.equal((await f.access.request({kind:'address.edit',contextId:context.id,id:address.id,expectedRevision:1,name:'Retargeted',address:pathToFileURL(join(f.context,'other.txt')).href,purpose:['operation']})).status,'committed');
  saved=await f.access.request({...input,editToken:latest.editToken,content:'wrong target'});assert.equal(saved.status,'rejected');assert.equal(await readFile(path,'utf8'),'external edit');
 });
+
+test('saved Local content and Operation survive a fresh host while old window observation tokens expire',async t=>{
+ const f=await fixture(t),path=join(f.context,'restart.txt');await writeFile(path,'before restart');
+ const context=await f.access.request({kind:'context.create',name:'Restart editor'});
+ const address=await f.access.request({kind:'address.add',contextId:context.id,name:'File',address:pathToFileURL(path).href,purpose:['operation']});
+ const read=await f.access.request({kind:'resource.read',contextId:context.id,id:address.id,mode:'file'});
+ const saved=await f.access.request({kind:'resource.save',contextId:context.id,id:address.id,editToken:read.editToken,content:'saved before restart'});assert.equal(saved.status,'saved');
+ f.access.close();assert.equal((await f.host.stop()).status,'stopped');
+ const access=createDesktopSpace({rootId:'public-root',confirm:async()=>true,chooseDirectory:async()=>undefined});
+ const host=await startFoundations({dataRoot:f.root,...access.policy,space:{deriveRequest:access.derive},localFiles:{coordinateWrites:true}});access.attach(host);
+ try{
+  assert.equal(host.connections.operations.get(saved.operationId).phase,'observed');
+  assert.equal((await access.request({kind:'resource.save',contextId:context.id,id:address.id,editToken:read.editToken,content:'old window'})).status,'rejected');
+  const observed=await access.request({kind:'resource.read',contextId:context.id,id:address.id,mode:'file'});assert.equal(observed.content,'saved before restart');
+  assert.equal((await access.request({kind:'resource.save',contextId:context.id,id:address.id,editToken:observed.editToken,content:'saved after restart'})).status,'saved');
+  assert.equal(await readFile(path,'utf8'),'saved after restart');
+ }finally{access.close();await host.stop();}
+});
