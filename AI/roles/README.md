@@ -21,9 +21,9 @@
 
 ## 上级契约与文档入口
 
-- **上级业务/职责研究（历史）：** [AI/CONTRACT.md](../../docs/research/contracts/AI/CONTRACT-archive.md)
+- **上级业务/职责研究（历史）：** [AI/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/AI/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [外部 Agent 生态](../../docs/research/AGENT-ECOSYSTEM-2026-10-31.md)
+- [外部 Agent 生态](../../docs/A0-产品构想与研究/方案与研究/既有研究/AGENT-ECOSYSTEM-2026-10-31.md)
 - [研究决策](../../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
 
 本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
@@ -32,4 +32,4 @@
 
 角色提示、模型/连接引用、职责关联及配置修订由本目录维护；不存 Key、授权、Task 检查点、Operation 或会话历史。新任务绑定当时配置修订，在途任务不因角色配置更新被静默改写。角色长期记忆/公共经验共享仍是长期研究，不在此目录预建第二套记忆账本。
 
-跨域要求见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)及[AI 上级契约](../../docs/research/contracts/AI/CONTRACT-archive.md)。
+跨域要求见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)及[AI 上级契约](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/AI/CONTRACT-archive.md)。
