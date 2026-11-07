@@ -36,3 +36,25 @@ GitHub 仓库内容搜索关键词：
 - `docs/A0-...` 的 DSH 不完整上游快照及 `dsh/upstream/vendor/` 的缺失引用保留原样，不为制造“零断链”伪造上游正文。
 - **未运行**本地 `node tools/check-docs.mjs --json --strict`、源码边界检查、自动化测试或 Windows 实机验收；未删除历史兼容路径。
 - 下一阶段应优先建立全仓代码字符串/Markdown 复杂引用反向矩阵、自动化锚点核验，以及按文件制定旧兼容页删除资格清单，再由可执行完整工作树的环境跑严格校验。
+
+## 6. GitHub Actions 实际核验：Documentation audit **失败**，不再作为待运行推测
+
+在第九轮完成文档修改后，直接读取 GitHub `/actions/runs` 当前运行集合，并检查 `Documentation audit` 于 **`main@7a8d4ed4ea82fce4566f6028c0848279355c8e7a`** 的运行 `42368589119`：
+
+- 运行详情：[Documentation audit #42368589119](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42368589119)。
+- job `audit` 中 `node --test tools/check-docs.test.mjs` **4/4 测试通过**；下一步 `node tools/check-docs.mjs --json --strict > docs-audit-report.json` **退出码 1，工作流失败**。
+- 因 `.github/workflows/docs-audit.yml` 逐步执行且 shell 在失败时中止，`Print summary and issues` 和 artifact 上传步骤均是 **skipped**。故此日志**不能直接给出本次全部 owned issues 清单**，不能声称只剩某一个问题。
+- 读取同一时间多次近期运行可见此检查持续失败，而非单个最新提交偶发。
+
+**一个可复核的严格检查冲突：**
+
+1. `tools/check-docs.mjs` 的 `scopeOf` 将且仅将路径以 `references/`、`dsh/upstream/` 开头的文件视为 `external-snapshot`；其余（包括 `docs/A0-产品构想与研究/历史参考/外部项目/dsh/source-snapshot/`）标成 `wex-owned`。
+2. 上述 A0 内的 `docs/architecture.md`、`cordis-README.md`、`cordis-primer.md`、`scope-README.md` 已直接读取到指向未完整收录的 `references/dsh/source-snapshot/`、`references/dsh/docs/` 的 Markdown 链接。第七轮完整 Git tree 证实其中多个目标不存在。
+3. 由当前检查器的代码路径可推得：这些**归档上游快照内的缺失链接被算成 owned broken-local-link**，足以触发严格检查失败。**这是已确认的至少一个失败来源，不等于完整失败清单已定位。** 另外仍需核对重复文档等其它 owned issues。
+
+**处理边界与后续修复任务：**
+
+- 不得为通过严格检查而静默修改、补造或删除上游源码快照及原始引用。
+- 后续若获授权调整检查工具/CI，应将 A0 的外部来源快照精确分类为 `external-snapshot`（不能粗暴忽略整个 A0），并保持它们在报告中可见但不误当 WEX 业务文档失效。
+- 改善 `.github/workflows/docs-audit.yml` 的失败回执：让报告在 strict 非零退出后仍能打印及上传，最后保留正确失败退出码；否则无法逐项核对其它真正 WEX 自有断链与重复文件。**这些修改属于工具与工作流代码，本轮文档专项未授权，故仅登记缺口，不擅自修改。**
+- 工具修复后必须在同一 SHA 重跑实际 Actions，并核对 `docs-audit-report.json` 的 `ownedIssueCount`、各 issue 明细及新引入的误分类，不得把单个测试 4/4 当全仓 strict 验收通过。
