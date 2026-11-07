@@ -1,7 +1,7 @@
 import {spawnSync} from 'node:child_process';
 import {join} from 'node:path';
 import type {RootChoice} from './desktop-root.js';
-const script=String.raw`
+export const desktopRootPickerScript=String.raw`
 $ErrorActionPreference='Stop'
 [Console]::OutputEncoding=New-Object Text.UTF8Encoding($false)
 Add-Type -AssemblyName System.Windows.Forms
@@ -23,7 +23,7 @@ if($create -and [Windows.Forms.MessageBox]::Show('确认在所选空目录中初
 export function chooseDesktopRoot(reason:'first-run'|'recovery'):RootChoice|undefined{
  if(process.platform!=='win32')throw Error('data_root_argument_required');
  const executable=join(process.env['SystemRoot']??'C:\\Windows','System32','WindowsPowerShell','v1.0','powershell.exe');
- const result=spawnSync(executable,['-NoLogo','-NoProfile','-NonInteractive','-STA','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{input:reason+'\n',encoding:'utf8',windowsHide:true,maxBuffer:65536});
+ const result=spawnSync(executable,['-NoLogo','-NoProfile','-NonInteractive','-STA','-EncodedCommand',Buffer.from(desktopRootPickerScript,'utf16le').toString('base64')],{input:reason+'\n',encoding:'utf8',windowsHide:true,maxBuffer:65536});
  if(result.status===2)return;
  if(result.error||result.status!==0)throw Error('native_root_picker_unavailable');
  const value:unknown=JSON.parse(result.stdout.trim());

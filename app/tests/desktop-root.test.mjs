@@ -55,3 +55,11 @@ test('symlink markers and cache locations are refused before desktop caches can 
  assert.throws(()=>h.f.desktopCachePaths({path:h.data,id:'root'}));
  assert.deepEqual(await readdir(outside),['marker']);
 });
+
+test('Windows native root picker script parses and its folder dialog can be constructed before Electron ready',{skip:process.platform!=='win32'},async()=>{
+ const {spawnSync}=await import('node:child_process');
+ const {desktopRootPickerScript}=await import('../../dist/app/src/desktop-root-picker.js');
+ const code="$ErrorActionPreference='Stop';$source=[Console]::In.ReadToEnd();$tokens=$null;$errors=$null;[void][Management.Automation.Language.Parser]::ParseInput($source,[ref]$tokens,[ref]$errors);if($errors.Count){throw 'picker_script_parse_failed'};Add-Type -AssemblyName System.Windows.Forms;$picker=New-Object Windows.Forms.FolderBrowserDialog;$picker.ShowNewFolderButton=$true;$picker.Dispose()";
+ const result=spawnSync(join(process.env.SystemRoot,'System32/WindowsPowerShell/v1.0/powershell.exe'),['-NoProfile','-NonInteractive','-STA','-EncodedCommand',Buffer.from(code,'utf16le').toString('base64')],{input:desktopRootPickerScript,encoding:'utf8',windowsHide:true,timeout:20000});
+ assert.equal(result.status,0,result.stderr);
+});

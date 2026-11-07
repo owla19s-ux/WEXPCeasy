@@ -78,7 +78,7 @@ try{
  await writeFile(join(install,'keep-unowned.txt'),'do not delete unknown files');
  console.log('WINDOWS_DELIVERY_STAGE uninstall');
  assert.equal(await run(join(install,'Uninstall.exe'),['/S']),0);
- await timeout(async()=>!await exists(join(install,'WEXPCeasy.exe'))&&!await exists(join(install,'Uninstall.exe')),'uninstall');
+ await timeout(async()=>!await exists(join(install,'WEXPCeasy.exe'))&&!await exists(join(install,'Uninstall.exe'))&&!registered(),'uninstall');
  assert.equal(registered(),false);
  for(const file of manifest.files)assert.equal(await exists(join(install,...file.path.split('/'))),false,'uninstall retained '+file.path);
  assert.equal(await readFile(join(install,'keep-unowned.txt'),'utf8'),'do not delete unknown files');
@@ -90,7 +90,7 @@ try{
  await startAndClose([]);
  c=await controls(root);assert.equal((await c.chat.request({kind:'open',id:created.id})).conversation.messages.length,1);await c.close();
  assert.equal(await run(join(install,'Uninstall.exe'),['/S']),0);
- await timeout(async()=>!await exists(join(install,'WEXPCeasy.exe'))&&!await exists(join(install,'Uninstall.exe')),'final_uninstall');
+ await timeout(async()=>!await exists(join(install,'WEXPCeasy.exe'))&&!await exists(join(install,'Uninstall.exe'))&&!registered(),'final_uninstall');
  assert.equal(registered(),false);
  assert.equal(await readFile(join(data,'keep-user.txt'),'utf8'),'user data outside installation');
  const report={sourceSha:process.env.GITHUB_SHA,installerSha256:manifest.installer.sha256,platform:process.platform,fixtures:['native root-selection choice supplied by test','local API configuration only, no external Provider request'],checks:['standalone packaged Electron contains all runtime resources','installer rejects unrelated nonempty directory','Unicode installation and independent data paths','actual packaged app opens and closes through native window message','running app blocks reinstall and uninstall before files change','same-path reinstall preserves locator and real SQLite API/AI/conversation records','uninstaller preserves external data and unknown installation-directory files','fresh install reconnects old root without old system index'],limits:['unsigned CI artifact','Windows PowerShell with WinForms is required for first-start directory selection','installer failure diagnostics use Windows TEMP before a data root is selected','not manual Windows E4, Snap or multi-monitor DPI acceptance','native root picker interaction not automated']};
