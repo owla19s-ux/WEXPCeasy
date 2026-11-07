@@ -146,6 +146,7 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
   const receipt=host.connections.operations.get(operationId)?.observations.find(o=>o.id==='result')?.value;
   if(!receipt||typeof receipt!=='object'||Array.isArray(receipt))return {status:'unknown',intent:operationId};
   if(receipt.status!=='written')return {status:'rejected',reason:typeof receipt.reason==='string'?receipt.reason:'local_write_unconfirmed',operationId};
+  if(typeof receipt.version!=='string'||!/^[a-f0-9]{64}$/.test(receipt.version))return {status:'unknown',intent:operationId};
   observations.delete(input.editToken);
   // A saved receipt remains authoritative, but cannot be disclosed after revocation or close.
   if(closed||host.permissions!.evaluate(request).status!=='allow')return {status:'unknown',intent:operationId};

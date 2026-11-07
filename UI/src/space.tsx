@@ -20,7 +20,7 @@ export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sectio
   const result=reply.value;
   if(result.status==='cancelled'){setMessage('操作已取消');return;}
   if(result.status==='unknown'){setMessage('结果未确认，请刷新核对；不要重复提交。');return;}
-  if(result.status!=='ok'&&result.status!=='committed')throw Error('操作未完成：'+result.reason);
+  if(result.status!=='ok'&&result.status!=='committed'&&result.status!=='saved')throw Error('操作未完成：'+result.reason);
   return result;
  }
  async function refresh(){
