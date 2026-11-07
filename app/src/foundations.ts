@@ -311,19 +311,31 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
   try{
   if(inspectAiConfigurationStore(store).status!=='ready')throw Error('ai_storage_unavailable');
   const apiClient=deps['api'] as FoundationApiClient|undefined;
-  const client=createAiConfigurations(store,(request,access)=>{
+  const configurations=createAiConfigurations(store,(request,access)=>{
    const decision=permission.evaluate(request);
    if(decision.status!=='allow'||decision.scope.resource!=='AI')return false;
    const target=access.kind+':'+access.id;
    const action=access.kind+'.'+access.action;
    if(decision.scope.action===action&&decision.scope.target===target)return true;
-   if(access.action==='read'&&decision.scope.action==='agent.write'&&access.kind!=='agent'){
+   if(access.action==='read'&&((decision.scope.action==='agent.write'&&access.kind!=='agent')||
+    (decision.scope.action===access.kind+'.list'&&decision.scope.target===access.kind+':*'))){
     return scopedRead(request,{resource:'AI',action,target,context:decision.scope.context})!==undefined;
    }
    return false;
   },apiClient?verifyModelWithApi(apiClient,(parent,id)=>scopedRead(parent,{
    resource:'connections/api',action:'model.read',target:'model:'+id,context:null
   })):undefined);
+  const client=Object.freeze({...configurations,
+   list(request:object,kind:Parameters<typeof configurations.list>[1]){
+    if(!['role','position','agent'].includes(kind))return {status:'denied' as const};
+    const before=permission.evaluate(request);
+    if(before.status!=='allow'||before.scope.resource!=='AI'||before.scope.action!==kind+'.list'||
+     before.scope.target!==kind+':*')return {status:'denied' as const};
+    const result=configurations.list(request,kind);
+    // The public recheck fences every row against the same authorization revision and identity.
+    return permission.recheck(request,before).status==='allow'?result:{status:'denied' as const};
+   }
+  });
   ai=client;
   return {value:client,stop:async()=>{await closeStores(stores);ai=undefined;}};
   }catch(error){
