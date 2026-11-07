@@ -23,6 +23,6 @@ Python使用标准库；F01/F05故障用SIGKILL，F08使用Linux advisory flock�
 | `test_F07_*` | F07/H03/H26–28 | 真文件哈希/mtime伪同/移动/删除/同名，Requirement/Verification版本适用性；不是原子文件快照或自动Acceptance |
 | `test_F08_*` | F08/H05/H30 | Linux真实flock、强杀、同/异根、并发写及integrity_check；不验证NTFS/ACL/跨主机 |
 | `dsh/checks/test-readiness-lifecycle.mjs` | F04/H12/H25 | 固定真实Cordis Service/Loader，双依赖、卸载、在途旧引用、新代次；不是完整DSH或WEX真实连接 |
-| Windows检查表 | F09/H16/H19–21/H30 | [未执行条件](../../docs/batch6/EXPERIMENTS.md)，没有Windows实机或产品EXE |
+| Windows检查表 | F09/H16/H19–21/H30 | [未执行条件](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)，没有Windows实机或产品EXE |
 
-[实际结果及失败记录](../../docs/batch6/EXPERIMENTS.md)。通过局部断言不等于对应完整H样本通过。来源sidecar是可信夹具，不是防篡改证明；outbox提交与远端发送之间仍需真实接线验证。锁仅约束合作写入者，不防同用户外部工具绕过。产物检查后再次变化的窗口未关闭。
+[实际结果及失败记录](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)。通过局部断言不等于对应完整H样本通过。来源sidecar是可信夹具，不是防篡改证明；outbox提交与远端发送之间仍需真实接线验证。锁仅约束合作写入者，不防同用户外部工具绕过。产物检查后再次变化的窗口未关闭。
