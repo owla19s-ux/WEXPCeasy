@@ -105,7 +105,7 @@ PRD-D01非对话入口授权；D02自动/询问/拦截；D03 Acceptance；D04关
 
 ## 8. 2026-11-01 Owner与C/D状态回写
 
-F10-001/003/004/005的唯一owner为shared技术基础；F10-006/007/008为app作业协调；F10-009为views获准检索聚合；F10-010为space知识资料记录/关联；F10-011～016归AI（F10-014除外，等待PRD-D13）。F15-011唯一owner收敛为app，实际删除由各数据owner执行。详细边界见[基线收敛记录](../../../product/REQUIREMENT-BASELINE-RECONCILIATION-2026-11-01.md)。
+F10-001/003/004/005的唯一owner为shared技术基础；F10-006/007/008为app作业协调；F10-009为views获准检索聚合；F10-010为space知识资料记录/关联；F10-011～016归AI（F10-014除外，等待PRD-D13）。F15-011唯一owner收敛为app，实际删除由各数据owner执行。详细边界见[基线收敛记录](REQUIREMENT-BASELINE-RECONCILIATION-2026-11-01.md)。
 
 C01～C12不是整体绿灯：C01/02/03/05/06/08/10仅部分证据；C11新增SQLite原子扣次机制实验但未接permissions；C12新增同库事务正向/分库竞态负向实验但未接Space；C07新增顺序备份混代负向对照但无正向一致性快照方案；C04/09仍未关闭。实验脚本与结果见experiments/product-baseline-c-probes/。D01～D13均未由施工者代决。完整产品需求基线尚待用户确认；本文件仍不是版本表。
 

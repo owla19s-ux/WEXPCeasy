@@ -1,7 +1,7 @@
 # WEX 产品需求对冲与遗漏审查记录
 
 - 日期：2026-11-01
-- 依据：[基础功能总表](../../../A1-正式产品设计/产品功能总表.md)、[交互/UI 边界表](../../../product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、当前 main 模块 README/CONTRACT、G1–G7、H01–H30 和旧 WEXPC 产品基线。
+- 依据：[基础功能总表](../../../A1-正式产品设计/产品功能总表.md)、[交互/UI 边界表](../既有研究/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md)、当前 main 模块 README/CONTRACT、G1–G7、H01–H30 和旧 WEXPC 产品基线。
 - 状态：首轮跨域审查记录；不是所有候选需求的批准书，不改变当前版本范围。
 - 目标：确认功能域归属、找出遗漏和重复、明确未决风险，并建立下一轮对冲入口。
 
@@ -422,7 +422,7 @@ PRD-D01、PRD-D05、PRD-D06、PRD-D11 分别与模块契约已有的 permissions
 
 ## 2026-11-01：D编号与Owner收敛补充
 
-产品级决策现扩展为PRD-D01～D13。历史batch6的模块级D02指删除/回收站，产品级PRD-D02指工作流/对话双模式执行控制与高风险确认，两者不得混用；删除/回收站统一追踪为PRD-D12。F10-014公共策略/经验库另列PRD-D13。唯一owner建议与实验状态见[完整产品需求基线收敛记录](../../../product/REQUIREMENT-BASELINE-RECONCILIATION-2026-11-01.md)。
+产品级决策现扩展为PRD-D01～D13。历史batch6的模块级D02指删除/回收站，产品级PRD-D02指工作流/对话双模式执行控制与高风险确认，两者不得混用；删除/回收站统一追踪为PRD-D12。F10-014公共策略/经验库另列PRD-D13。唯一owner建议与实验状态见[完整产品需求基线收敛记录](REQUIREMENT-BASELINE-RECONCILIATION-2026-11-01.md)。
 
 
 ## 11. 2026-11-01 用户对PRD-D01～D13的决策

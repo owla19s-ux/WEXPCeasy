@@ -234,7 +234,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 | software-development mode | SD-01～SD-07 | 软件开发Project、Requirement、Architecture、资源映射、Task追溯、基准/决策 |
 | views | VIEW-01～VIEW-07 | 视图定义、出现映射、关系投影、布局、多视图刷新、规模降级、稳定锚点 |
 
-Owner收敛和B/C/D处理状态见[完整产品需求基线收敛记录](product/REQUIREMENT-BASELINE-RECONCILIATION-2026-11-01.md)。该记录不是0.1.1版本表。
+Owner收敛和B/C/D处理状态见[完整产品需求基线收敛记录](A0-产品构想与研究/方案与研究/需求审查历史/REQUIREMENT-BASELINE-RECONCILIATION-2026-11-01.md)。该记录不是0.1.1版本表。
 
 
 ## D01/D02 权限判定矩阵入口（2026-11-01）
