@@ -24,7 +24,7 @@
 
 状态：受控 Local 文件/目录能力已有正式源码及测试；Windows 原生选择/路径/权限的端到端验收和高风险本地工具能力应按 0.1.1 已确认范围另行判断。
 
-[源码目录与 Windows 数据要求](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
+[源码目录与 Windows 数据要求](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
 
 修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
 
@@ -43,7 +43,7 @@
 - **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
 - **适配器子契约：** [本地资源适配器子契约](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/local/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [源码目录与 Windows 数据布局](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
+- [源码目录与 Windows 数据布局](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
 - [安全与数据持续性](../../docs/A0-产品构想与研究/方案与研究/既有研究/SECURITY-AND-PERSISTENCE-2026-10-31.md)
 
 本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
@@ -52,4 +52,4 @@
 
 本地连接器负责真实文件/目录的定位、获准读取、元数据/版本观察及明确写入副作用；路径不是永久身份，访问时必须重新核对真实目标。用户选择文件/拖入/粘贴由 UI/App 收集意图，实际文件读取经本目录受控能力；Renderer 不直接读任意路径。外部关联、导入持久副本、会话临时附件和 Task 产物必须区分；本地连接器不自行决定把文件加入 Context。
 
-每次真实副作用通过 Connections 宿主边界形成 Operation；文件写入结果 unknown 时先核对实际版本，不盲重写。见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+每次真实副作用通过 Connections 宿主边界形成 Operation；文件写入结果 unknown 时先核对实际版本，不盲重写。见[基础能力落地映射](../../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
