@@ -121,7 +121,7 @@
 
 ## 6. G1–G7 基础能力与跨对话持续工作补充
 
-[基础能力落地映射与跨对话持续工作规格](../../../planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)是本计划的跨批次验收补充，不是新增七个施工批次，也不改变既有批次顺序和 owner。
+[基础能力落地映射与跨对话持续工作规格](FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)是本计划的跨批次验收补充，不是新增七个施工批次，也不改变既有批次顺序和 owner。
 
 执行时必须遵循：
 

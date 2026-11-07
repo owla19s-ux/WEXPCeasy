@@ -103,7 +103,7 @@ A：权限唯一owner、组织/职责不授权、检查与真实限制分层、�
 
 - **模块导航**：[全模块契约索引](../../../../../MODULE-CONTRACTS.md) · [文档体系总索引](../../../../../README.md)
 - **全局架构**：
-- [全局契约地图](../../../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
+- [全局契约地图](../../../架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)
 - **决策与研究**：
 - [边界决策记录](../../../../../decisions/BOUNDARY-DECISION-NOTES-V0.1.md)
 - [研究决策与当前边界](../../../../../decisions/RESEARCH-DECISIONS-2026-10-30.md)
@@ -134,7 +134,7 @@ A：权限唯一owner、组织/职责不授权、检查与真实限制分层、�
 
 ## G3 非对话入口与基础能力授权补充（2026-10-31）
 
-本节对应基础能力 G3；跨域入口和状态矩阵见[基础能力落地映射](../../../../../planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+本节对应基础能力 G3；跨域入口和状态矩阵见[基础能力落地映射](../../../../历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
 
 当前产品实现对 Conversation 入口有真实允许路径，但对非对话入口仍返回 `entry_policy_unresolved`。该状态是明确的安全阻断，不是待绕过的临时错误。Task、本地直接操作、受控回调和外部 Agent 连接不能伪造 Conversation ID，也不能把创建 Task 时的对话授权直接继承为执行授权。
 

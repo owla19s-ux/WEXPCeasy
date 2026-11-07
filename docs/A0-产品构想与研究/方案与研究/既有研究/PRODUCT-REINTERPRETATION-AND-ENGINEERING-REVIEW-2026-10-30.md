@@ -107,7 +107,7 @@ Windows 启动 WEX → 配置公共 API/本地工具/GitHub → 创建开发 Con
 4. 只针对会改变模块边界的风险开展受限验证，包括基本调度循环、权限和可靠回执、真实运行时加载；
 5. 依据已确定的 React Flow 技术选型，先从 0.1.1/0.1.2 规划中**扣除重复的自研画布内容**，仅评估 WEX 专属编辑/运行交互缺口；正式版本排期如需变更，**由用户确认**后再更新主仓基线。
 
-**已经收敛**：React Flow（`@xyflow/react`）为免费开源画布技术首选，归 `workflows/editor/`，不另做连接器；基本画布拖拽/连线/缩放不再按独立自研项目规划。技术选择不等于集成验证通过。详见 [Space 与工作流编辑器设计](../../../architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)。
+**已经收敛**：React Flow（`@xyflow/react`）为免费开源画布技术首选，归 `workflows/editor/`，不另做连接器；基本画布拖拽/连线/缩放不再按独立自研项目规划。技术选择不等于集成验证通过。详见 [Space 与工作流编辑器设计](../../历史参考/旧UI设计/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)。
 
 **仍需讨论**：基本工作流最小编辑粒度；人和 AI 修改运行中流程的生效规则；共享数据中需求/架构/代码引用的可编辑与证据边界；插件运行时实现机制与具体版本；当前 Rust/Tauri/React 的维护目录到编译/打包结构映射。**这些尚不能冻结函数签名、文件布局、持久化表和协议。**
 
@@ -126,7 +126,7 @@ Windows 启动 WEX → 配置公共 API/本地工具/GitHub → 创建开发 Con
 
 - [WEXPC 正式产品与技术基线](https://github.com/owla19s-ux/wexpc/blob/main/docs/PC-PRODUCT-AND-TECH-BASELINE.md)
 - [WEXPC 0.1.1 施工计划](https://github.com/owla19s-ux/wexpc/blob/main/docs/WEXPC-0.1.1-IMPLEMENTATION-PLAN.md)
-- [WEXPC1 候选功能目录设计](../../../architecture/MODULE-LOCALITY-DESIGN-V0.1.md)
-- [WEXPC1 全局契约地图](../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
+- [WEXPC1 候选功能目录设计](../架构研究历史/MODULE-LOCALITY-DESIGN-V0.1.md)
+- [WEXPC1 全局契约地图](../架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)
 
 > **结论**：WEX 的功能方向并没有整体失效；主要偏差是把产品需求解释为多套独立系统、让实现契约先于职责落地、让代码结构与 AI 施工偏离完整用户链路。下一阶段应**给架构减负，而不是删掉真实使用能力或重新发明一套更庞大的架构**。

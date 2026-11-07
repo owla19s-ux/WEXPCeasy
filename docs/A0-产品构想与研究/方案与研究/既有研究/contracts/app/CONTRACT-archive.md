@@ -115,7 +115,7 @@ APP-02/03的部分模块装配、释放重试和Electron Linux隔离实验已有
 
 - **模块导航**：[app README](../../../../../../app/README.md) · [全模块契约索引](../../../../../MODULE-CONTRACTS.md) · [文档总索引](../../../../../README.md)
 - **产品需求**：[F01–F15 产品功能总表](../../../../../A1-正式产品设计/产品功能总表.md) · [功能—模块契约映射](../../../../../A1-正式产品设计/功能与模块归属映射.md)
-- **跨模块依据**：[Windows 安装与数据目录设计](../../../../../architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md) · [permissions 契约](../../../../../../permissions/CONTRACT.md) · [shared 契约](../../../../../../shared/CONTRACT.md) · [connections 契约](../../../../../../connections/CONTRACT.md)
+- **跨模块依据**：[Windows 安装与数据目录设计](../../../../../A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md) · [permissions 契约](../../../../../../permissions/CONTRACT.md) · [shared 契约](../../../../../../shared/CONTRACT.md) · [connections 契约](../../../../../../connections/CONTRACT.md)
 - **产品待决**：PRD-D04 后台策略、PRD-D05 数据保留、PRD-D07 自动更新、PRD-C06/C07 Windows/备份恢复实验。
 
 维护规则：宿主/安装/进程/装配/协调语义写回本契约；领域数据格式、Task/Operation/权限/凭证秘密由相应 owner 维护；Windows 实测只更新证据，不自动关闭用户待决政策。

@@ -164,7 +164,7 @@ DSH headless 既有实验锁 npm `0.2.1-rc.5`、源码 `ce7073d51254c26cd63b22a6
 
 - **模块导航**：[全模块契约索引](../../../../../MODULE-CONTRACTS.md) · [文档体系总索引](../../../../../README.md)
 - **全局架构**：
-- [全局契约地图](../../../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
+- [全局契约地图](../../../架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)
 - [提供方边界 Walkthrough](../../../架构研究历史/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
 - [运行时扩展契约](../../../架构研究历史/RUNTIME-EXTENSION-CONTRACT-V0.1.md)
 - [双插件体系边界](../../../../../A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)
@@ -181,7 +181,7 @@ DSH headless 既有实验锁 npm `0.2.1-rc.5`、源码 `ce7073d51254c26cd63b22a6
 
 ## G1/G2/G4/G5/G6 与跨对话持续工作补充（2026-10-31）
 
-本节将基础资源访问、API 工具往返、操作反馈、外部搜索和连接配置要求映射到本域；完整跨模块责任与验收见[基础能力落地映射](../../../../../planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+本节将基础资源访问、API 工具往返、操作反馈、外部搜索和连接配置要求映射到本域；完整跨模块责任与验收见[基础能力落地映射](../../../../历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
 
 **G1：资源访问与来源观察。** 连接器负责真实资源定位、访问、元数据/内容读取、版本或可用性观察及明确副作用。资源引用不是路径字符串：至少需要可追溯到来源 owner/适配器和目标身份，并在使用时重新解析/检查。外部关联不等于导入副本；附件引用不等于长期 Context 资料；Task 产物由 Workflows/对应资源 owner 维护。连接器不拥有 Space 组合关系或全局资源目录。
 
