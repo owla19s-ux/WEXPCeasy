@@ -25,13 +25,13 @@
 | 基础 | [Shared](../shared/README.md)、[Permissions](../permissions/README.md)、[App](../app/README.md) |
 | 扩展研究 | [WEX 插件](../plugins/README.md)、[DSH 原生兼容](../dsh/README.md)、[Accounts](../accounts/README.md) |
 
-[2026-11-07 当前状态治理回执](audits/document-governance-2026-11-07/REPORT.md)记录最新 README/0.1.1 状态纠正及未验收事项；[2026-11-04 模块源码与证据核对](audits/document-governance-2026-11-04/MODULE-STATUS.md)只作历史快照；[旧全模块契约索引](MODULE-CONTRACTS.md)保留历史设计和追溯，不派工。
+[2026-11-07 文档体系复审第二轮](audits/document-governance-2026-11-07/SECOND-PASS.md)记录当前权威入口、过时状态、文档冲突修正及本轮检查边界；[当日状态治理回执](audits/document-governance-2026-11-07/REPORT.md)记录较早的 README/0.1.1 状态纠正；[2026-11-04 模块源码与证据核对](audits/document-governance-2026-11-04/MODULE-STATUS.md)只作历史快照；[旧全模块契约索引](MODULE-CONTRACTS.md)保留历史设计和追溯，不派工。
 
 ## 架构、决策、实验与审查
 
 - [架构](architecture/README.md)、[决策](decisions/README.md)：按日期、批准状态和新旧适用性阅读。
 - [研究](research/README.md)、[API / Pi AI 独立验证](research/api/README.md)、[历史 CONTRACT](research/contracts/)：实验与研究依据。
-- [审查报告](audits/README.md)、[本轮治理回执](audits/document-governance-2026-11-04/REPORT.md)：审查范围与未覆盖项分别记录。
+- [审查报告](audits/README.md)、[最新复审记录](audits/document-governance-2026-11-07/SECOND-PASS.md)、[11-04 完整治理回执](audits/document-governance-2026-11-04/REPORT.md)：审查范围与未覆盖项分别记录。
 - [Electron / React 隔离实验](../experiments/electron-host-spike/README.md)、[工作流交互原型](../workflows/editor/prototype/README.md)：不等于正式产品或 Windows 实机验收。
 
 ## 历史与外部资料
