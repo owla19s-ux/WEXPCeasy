@@ -19,7 +19,7 @@ export interface GitHubOfficialClient {
   createOrUpdateFileContents?:(input:{owner:string;repo:string;branch:string;path:string;message:string;content:string;sha?:string})=>Promise<{data:unknown}>;
  }};
 }
-export type GitHubClientFactory=(connection:Readonly<ConnectionConfig>,access?:AdapterAccess)=>GitHubOfficialClient|Promise<GitHubOfficialClient>;
+export type GitHubClientFactory=(connection:Readonly<ConnectionConfig>,access?:AdapterAccess,signal?:AbortSignal)=>GitHubOfficialClient|Promise<GitHubOfficialClient>;
 const limit=1024*1024;
 const object=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype;
 const sha=(value:unknown):value is string=>typeof value==='string'&&/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/.test(value);
@@ -52,7 +52,7 @@ export function createGitHubFileReader(connection:Readonly<ConnectionConfig>,cli
  return Object.freeze({id:'github',async read(target:string,signal:AbortSignal,access?:AdapterAccess):Promise<Json>{
   const file=parse(target);if(signal.aborted)throw Error('cancelled');
   if(access&&access.check()!==true)throw Error('adapter_access_unavailable');
-  const repos=(await client(captured,access)).rest.repos;
+  const repos=(await client(captured,access,signal)).rest.repos;
   if(signal.aborted||(access&&access.check()!==true))throw Error('adapter_access_unavailable');
   if(!repos.getContent)throw Error('github_read_unsupported');
   const {data}=await repos.getContent({...file,request:{signal}});
@@ -116,12 +116,31 @@ export function createGitHubOfficialClientFactory(options:GitHubOfficialClientOp
  const timeoutMs=options.timeoutMs??15000;
  if(typeof resolveCredential!=='function'||typeof transport!=='function'||!Number.isSafeInteger(timeoutMs)||timeoutMs<1||timeoutMs>60000)
   throw Error('invalid_github_client_options');
- return async(connection,access)=>{
+ return async(connection,access,cancellation)=>{
+  const expiresAt=performance.now()+timeoutMs;
   const current=capture(connection);
+  const cancelled=()=>{if(cancellation?.aborted)throw Error('github_request_cancelled');};
+  cancelled();
   const check=()=>{try{return access?.check()===true;}catch{return false;}};
   if(!access||!check()||!current.credentialRef)throw Error('github_access_unavailable');
   let secret:string|undefined;
-  try{secret=await resolveCredential(current,access);}catch{throw Error('github_credential_unavailable');}
+  const deadline=new AbortController();
+  const timer=setTimeout(()=>deadline.abort(),Math.max(1,Math.ceil(expiresAt-performance.now())));
+  const preparation=cancellation?AbortSignal.any([deadline.signal,cancellation]):deadline.signal;
+  let rejectAbort:(error:Error)=>void=()=>{};
+  const aborted=new Promise<never>((_resolve,reject)=>{rejectAbort=reject;});
+  const abort=()=>rejectAbort(Error('github_credential_unavailable'));
+  preparation.addEventListener('abort',abort,{once:true});
+  try{
+   if(preparation.aborted||performance.now()>=expiresAt)throw Error('github_credential_unavailable');
+   secret=await Promise.race([Promise.resolve().then(()=>{
+    if(preparation.aborted)throw Error('github_credential_unavailable');
+    return resolveCredential(current,access);
+   }),aborted]);
+  }catch{
+   cancelled();throw Error('github_credential_unavailable');
+  }finally{clearTimeout(timer);preparation.removeEventListener('abort',abort);}
+  cancelled();
   if(!check())throw Error('github_access_unavailable');
   if(typeof secret!=='string'||!secret||/[\u0000-\u0020\u007f]/.test(secret))throw Error('github_credential_unavailable');
   const sdk=new Octokit({
@@ -130,18 +149,24 @@ export function createGitHubOfficialClientFactory(options:GitHubOfficialClientOp
    log:{debug(){},info(){},warn(){},error(){}},
    request:{fetch:async(url:Parameters<typeof globalThis.fetch>[0],init?:Parameters<typeof globalThis.fetch>[1])=>{
     if(!check())throw Error('github_access_unavailable');
-    const signal=init?.signal?AbortSignal.any([init.signal,AbortSignal.timeout(timeoutMs)]):AbortSignal.timeout(timeoutMs);
+    cancelled();
+    const remaining=expiresAt-performance.now();
+    if(remaining<=0)throw Error('github_request_cancelled');
+    const signal=AbortSignal.any([AbortSignal.timeout(Math.ceil(remaining)),...(init?.signal?[init.signal]:[]),...(cancellation?[cancellation]:[])]);
     if(signal.aborted)throw Error('github_request_cancelled');
     return transport(url,{...init,signal,redirect:'error'});
    }},
   });
   async function invoke(call:()=>Promise<{data:unknown}>):Promise<{data:unknown}>{
+   cancelled();
    if(!check())throw Error('github_access_unavailable');
    try{
     const result=await call();
+    cancelled();
     if(!check())throw Error('github_access_unavailable');
     return {data:result.data};
    }catch(error){
+    cancelled();
     if(!check())throw Error('github_access_unavailable');
     const status=error&&typeof error==='object'&&'status'in error?error.status:undefined;
     throw Object.assign(Error('github_request_unavailable'),
