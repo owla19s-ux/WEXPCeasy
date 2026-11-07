@@ -86,3 +86,28 @@
 ### 5.4 下一阶段条款
 
 沿用同一方法定向核对 `connections` 公共派发与 `connections/api`、`connections/github`、`connections/local` 的历史条款、正式出口和测试，尤其注意 GitHub 官方组件尚未完整集成、环境管理独立 owner，以及 Operation 结果未知不得自动重派。未审其他 CONTRACT 不标为已收敛。
+
+
+## 6. 第三轮深入对冲：Connections 公共边界与 GitHub 官方组件（2026-11-07）
+
+> 依据当前 `connections/src/`、`connections/github/src/index.ts`、`app/src/foundations.ts` 和既有测试源文件。仍是静态源代码与测试内容审查，没有本轮最新 CI 或 Windows 运行证据。
+
+| 条款与来源 | 当前源码及测试追踪 | 结论和 Codex 边界 |
+| --- | --- | --- |
+| 历史 Connections `CONTRACT-archive.md` C01：连接配置、能力发现，不因启用获得授权 | `connections/src/index.ts` 已公开 `createConnectionConfigs`、`createConfiguredReadBoundary`、`createConfiguredDispatchBoundary`；`connections/src/configured-dispatch.ts` 受配置绑定 | **保留所有权与配置限制，基础能力存在**；不可把历史“无产品连接协议”视为新建要求 |
+| C02：记录意图、单次派发、禁止未知副作用自动重试 | `connections/src/operations.ts` 的 `prepared/dispatched/observed/unknown`，`connections/src/dispatch.ts` 包含 `already_recorded_no_automatic_retry`，异常观察进入 unknown；相关测试：`connections/tests/operations.test.mjs`、`dispatch.test.mjs`、`durable-dispatch.test.mjs` | **继承并有真实源码/测试文件**；只证明提供方存在，不自动宣称所有连接器真实外部效果已验收 |
+| C03/C04：查询、停止、恢复不可伪造远端状态 | Operation ledger 可回读观察，测试有持久化/异常样例；未审到全部远端 stop/continue 的统一真实实现 | **部分实现/证据不足**；不能把本地取消等同于 GitHub 远端撤销 |
+| C05：外部反向调用必须独立认证并按最低权限提供能力 | 核查公共公开出口没有充分证明通用外部回调身份认证及真实 IPC/Windows 边界 | **待验证/不可自动开放** |
+| GitHub 官方 SDK：历史 `connections/github/CONTRACT.md` 完整目标 GH-01～GH-12 | `connections/github/src/index.ts:1-9,110-188` 已真正导入 `Octokit`、`@modelcontextprotocol/sdk`，提供 `createGitHubOfficialClientFactory`；`app/src/foundations.ts:5-6,177-204` 装配官方客户端；`connections/github/tests/official-client.test.mjs` 测试禁自动写重试、Key隔离、授权复核、SQLite 重启后 unknown 不重派 | **部分实现，必须纠正“尚未接入官方组件”的旧结论**。有真实 SDK 代码 ≠ 覆盖 GitHub 官方全部能力或完成真实外部写入验收 |
+| GitHub 官方 MCP：原方案选官方 MCP Server，Octokit 补缺口 | `connections/github/src/index.ts:188-298` 的 `createGitHubMcpFileReader` 使用 SDK + Stdio、受信运行命令与 SHA-256 固定校验；`connections/github/tests/mcp-client.test.mjs` 通过模拟 MCP 服务进程测试初始化、读取、取消、超时、撤权、哈希校验与秘密隔离 | **实际已有受限 MCP 读取适配**；不要重新发明 MCP 客户端或宣称全部 MCP 工具集已装配；真实官方 server 运行/分发需另验 |
+| Local 与 environments 边界 | `connections/local/src/index.ts` 已有受控文件/目录读取、文件更新适配；`connections/local/README.md` 与 `environments/README.md` 明确不同 owner | **保留**：环境生命周期不并入 Local；Shell/安装器与完整本地 Git 不因现存文件功能自动纳入首版 |
+
+### 6.1 本轮纠正与任务状态
+
+**DOC-G01（高）：** `connections/github/README.md` 顶部仍称“SDK/MCP 尚未完整产品化”，这句话若限定“**完整能力/交付**”仍然成立；但不能缩写成“官方组件尚未接入”。已有官方 `Octokit`、MCP SDK、受控读取及 App 装配源码，后续先做能力覆盖与交付缺口审计，绝不重复集成基础客户端。
+
+**DOC-G02（高）：** GitHub GH-01～GH-12 是**长期完整目标/条目索引**，不是全部已实现，也不是全部 0.1.1 必做；必须按 B3 D-06/D-06A 与正式版本计划分别划分已实现、已测试、需真实远端、需 Windows 分发、延期。
+
+**DOC-C01（中）：** 保持 Operation 单一账本，严禁具体连接器另建正式尝试账本；外部写入发生后失败、超时或连接断开需要核对原 Operation，不能把 REST/MCP 超时当确定未写入。
+
+**限制：** 尚未执行 `npm test`、`npm run test:github`（实际命令需按 package.json 核验）或 Actions 全部运行集合的 SHA 检查；没有验证 GitHub 实例的真实读写权限、官方 MCP Server 二进制分发和 Windows 实机运行。代码存在不等于业务验收。
