@@ -4,9 +4,11 @@ import {ContextAddresses} from './space-addresses.js';
 import type {DesktopSpaceInput,DesktopSpaceReply,DesktopBridge} from './index.js';
 type Snapshot=Extract<DesktopSpaceReply,{view:'snapshot'}>;
 type Detail=Extract<DesktopSpaceReply,{view:'context'}>;
-export interface SpaceSections {contextId:string|null;toolbar:ReactNode;categories:ReactNode;structure:ReactNode;content:ReactNode;summary:ReactNode}
+type ResourcePreview=Extract<DesktopSpaceReply,{view:'file'|'directory'}>;
+export interface SpaceSections {contextId:string|null;resourcePreview:ReactNode|null;dismissResourcePreview:()=>void;toolbar:ReactNode;categories:ReactNode;structure:ReactNode;content:ReactNode;summary:ReactNode}
 export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sections:SpaceSections)=>ReactNode}){
- const openSequence=useRef(0);
+ const openSequence=useRef(0),selectedContext=useRef<string|null>(null);
+ const [resourcePreview,setResourcePreview]=useState<ResourcePreview>();
  const [data,setData]=useState<Snapshot>(),[detail,setDetail]=useState<Detail>(),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const [categoryFilter,setCategoryFilter]=useState(''),[categoryId,setCategoryId]=useState('');
  const [spaceId,setSpaceId]=useState(''),[groupId,setGroupId]=useState(''),[mode,setMode]=useState('space.create'),[name,setName]=useState(''),[description,setDescription]=useState('');
@@ -22,7 +24,7 @@ export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sectio
   const result=await call({kind:'snapshot'});if(result?.status==='ok'&&result.view==='snapshot'){setData(result);if(!result.complete)setMessage('部分 Context 不可用，已保留登记信息。');}
  }
  async function run(work:()=>Promise<void>){if(busy)return;setBusy(true);setMessage('');try{await work();}catch(error){setDetail(undefined);setData(undefined);setMessage(error instanceof Error?error.message:'操作失败');}finally{setBusy(false);}}
- async function open(id:string){const sequence=++openSequence.current;const result=await call({kind:'context.open',id});if(sequence!==openSequence.current)return;if(result?.status==='ok'&&result.view==='context'){setDetail(result);setName(result.context.name);setDescription(result.context.description);setMode('context.edit');}}
+ async function open(id:string){const sequence=++openSequence.current;selectedContext.current=id;setResourcePreview(undefined);const result=await call({kind:'context.open',id});if(sequence!==openSequence.current)return;if(result?.status==='ok'&&result.view==='context'){setDetail(result);setName(result.context.name);setDescription(result.context.description);setMode('context.edit');}}
  async function submit(){
   let input:DesktopSpaceInput;
   if(mode==='category.create')input={kind:'category.create',name};
@@ -50,13 +52,21 @@ export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sectio
  {['category.edit','space.create','space.edit'].includes(mode)&&<label>{mode==='category.edit'?'选择类别':'Space 类别'}<select aria-label="表单类别" disabled={busy} value={categoryId} onChange={event=>{setCategoryId(event.target.value);if(mode==='category.edit')setName(data.categories.find(c=>c.id===event.target.value)?.name??'');}}><option value="">未分类</option>{data.categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
  <label>名称<input required maxLength={4096} disabled={busy} value={name} onChange={event=>setName(event.target.value)}/></label><label>说明<textarea maxLength={4096} disabled={busy} value={description} onChange={event=>setDescription(event.target.value)}/></label><button disabled={busy} type="submit">{busy?'处理中…':'保存'}</button></form>
  {selectedSpace&&<div><h3>Space 工作目录</h3><p>{selectedSpace.directory??'未关联'}</p><button disabled={busy} onClick={()=>void run(async()=>{const result=await call({kind:'space.directory',id:selectedSpace.id,expectedRevision:selectedSpace.revision});if(result?.status==='committed')await refresh();})}>选择关联目录</button>{selectedSpace.directory&&<button disabled={busy} onClick={()=>void run(async()=>{const result=await call({kind:'space.directory',id:selectedSpace.id,expectedRevision:selectedSpace.revision,clear:true});if(result?.status==='committed')await refresh();})}>解除目录关联</button>}</div>}
- {detail&&<article><h3>{detail.context.name}</h3><p>{detail.context.description}</p><ContextAddresses key={detail.context.id} detail={detail} busy={busy} run={run} call={call} reload={()=>open(detail.context.id)}/>
+ {detail&&<article><h3>{detail.context.name}</h3><p>{detail.context.description}</p><ContextAddresses key={detail.context.id} detail={detail} busy={busy} run={run} call={call} reload={()=>open(detail.context.id)} onPreview={value=>{if(!value||value.contextId===selectedContext.current)setResourcePreview(value);}}/>
  <small>Context ID：{detail.context.id}</small><p>记录目录：{detail.location}</p><p>当前 Space：{data.spaces.find(x=>x.id===detail.organization.spaceId)?.name??'未分配'}</p>
  <label>目标 Space<select id="context-space" disabled={busy||detail.organization.spaceId!==null} value={detail.organization.spaceId??spaceId} onChange={event=>setSpaceId(event.target.value)}><option value="">选择 Space</option>{data.spaces.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
  <label>目标分组<select id="context-group" disabled={busy} value={groupId} onChange={event=>setGroupId(event.target.value)}><option value="">不分组</option>{data.groups.filter(g=>g.spaceId===(detail.organization.spaceId??spaceId)).map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
  <button disabled={busy||!(detail.organization.spaceId??spaceId)} onClick={()=>void run(async()=>{const result=await call({kind:'context.group',contextId:detail.context.id,spaceId:detail.organization.spaceId??spaceId,groupId:groupId||null,expectedRevision:detail.organization.revision});if(result?.status==='committed'){await refresh();await open(detail.context.id);}})}>移动到所选分组</button></article>}</div>:<div className="workspace-empty"><h2>连接你的工作空间</h2><p>打开工作区，继续管理 Space、Context 和关联资源。</p></div>;
  const summary=detail?<dl><dt>当前显示</dt><dd>{detail.context.name}</dd><dt>Context ID</dt><dd>{detail.context.id}</dd><dt>配置修订</dt><dd>{detail.context.revision}</dd><dt>关联地址</dt><dd>{detail.resources.length}</dd></dl>:<p>选择一个 Context 查看当前对象信息。</p>;
- const sections:SpaceSections={contextId:detail?.context.id??null,toolbar,categories,structure,content,summary};
+ const resourceView=resourcePreview?<div className="resource-read-preview">
+  <small>来源：当前 Context 已获准地址 · 版本：{resourcePreview.version}</small>
+  {resourcePreview.view==='file'?<pre>{resourcePreview.content}</pre>:<>
+   <ul>{resourcePreview.entries.map(entry=><li key={entry.name}>{entry.name} · {entry.kind}</li>)}</ul>
+   {!resourcePreview.complete&&<p>目录结果不完整，请缩小范围。</p>}
+   <p>仅展示已返回的目录名称；不会自动读取符号链接或子目录。</p>
+  </>}
+ </div>:null;
+ const sections:SpaceSections={contextId:detail?.context.id??null,resourcePreview:resourceView,dismissResourcePreview:()=>setResourcePreview(undefined),toolbar,categories,structure,content,summary};
  if(render)return <>{render(sections)}</>;
  return <section className="workspace">{toolbar}{categories}<div className="workspace-grid">{structure}{content}</div></section>;
 }
