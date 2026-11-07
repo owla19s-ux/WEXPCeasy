@@ -2,7 +2,9 @@
 
 Space／Context 页面。展示组织与关联，业务调用 space，不把 Context 做成固定软件项目。
 
-状态：2026-10-30 按用户确认建立的源码维护目录，当前只有职责说明，尚无产品实现。目录不是运行时数据路径，也不代表独立插件、进程或编译包。
+> **2026-11-07 当前事实**：本子目录目前只有说明，不是产品组件的真实存放位置；**但 Space/Context UI 已在 `UI/src/space.tsx`、`UI/src/space-addresses.tsx` 有正式代码和测试基础**，且接入了中间工作窗口的受控读取结果。不得把“此子目录无 src”误认为整个 Space UI 不存在，也不得平行创建第二套 Space 表单。Windows 实机与完整交互仍未验收。
+
+目录是页面职责预留，不是运行时数据路径、独立插件、进程或编译包。后续如迁移组件，应同时改消费方与测试，不为满足目录名称机械搬迁。
 
 [源码目录与 Windows 数据要求](../../docs/WEXPC-SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
 
@@ -12,7 +14,7 @@ Space／Context 页面。展示组织与关联，业务调用 space，不把 Con
 ## 上级契约与文档入口
 
 - **上级契约：** [UI/CONTRACT.md](../../UI/CONTRACT.md)
-- **上级契约：** [space/CONTRACT.md](../../space/README.md)
+- **现行 Space 施工入口：** [space/README.md](../../space/README.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [Space 与工作流编辑器设计](../../docs/architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
 
