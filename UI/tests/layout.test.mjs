@@ -25,7 +25,7 @@ test('resizing navigation preserves total usable width and does not activate aux
  const before=defaultLayout(),old=columnWidths(before,1440);
  const changed=resizeColumns(before,1440,0,42),current=columnWidths(changed,1440);
  assert.equal(changed.auxiliaryOpen,false);
- assert.ok(current[0]>old[0]);assert.ok(Math.abs(current.reduce((a,b)=>a+b,0)-old.reduce((a,b)=>a+b,0))<.01);
+ assert.ok(Math.abs(current[0]-old[0]-42)<.01);assert.ok(Math.abs(current.reduce((a,b)=>a+b,0)-old.reduce((a,b)=>a+b,0))<.01);
  assert.deepEqual(resizeColumns(changed,1440,1,60),changed);
 });
 
@@ -54,4 +54,17 @@ test('navigation resize retains hidden auxiliary user-width preference',async()=
  const changed=resizeColumns(before,1440,0,40);
  assert.equal(changed.columns[2],third);
  assert.equal(changed.auxiliaryOpen,false);
+});
+
+test('navigation pointer deltas round-trip across viewport sizes and reverse exactly',async()=>{
+ const {defaultLayout,columnWidths,resizeColumns,restoreLayout}=await layout();
+ for(const width of [800,1440,1920]){
+  const before=defaultLayout(),old=columnWidths(before,width);
+  const next=resizeColumns(before,width,0,24);
+  assert.ok(Math.abs(columnWidths(next,width)[0]-old[0]-24)<.01);
+  assert.deepEqual(restoreLayout(JSON.stringify(next)),next);
+  const back=resizeColumns(next,width,0,-24);
+  assert.ok(Math.abs(columnWidths(back,width)[0]-old[0])<.01);
+  assert.equal(next.columns[2],before.columns[2]);
+ }
 });
