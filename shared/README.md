@@ -15,9 +15,9 @@ shared 只提供可复用的**技术机制**，不拥有 Space/Context、Agent�
 | 命名空间 Store / CAS 与修订检查 | `shared/src/index.ts`，`npm run test:shared`；历史实现记录 | 真实代码 API、并发冲突、异常恢复、重启与隔离 |
 | 数据根和受限路径定位 | 同上；历史实现记录 | Windows 路径别名、权限拒绝、跨盘与 ACL 实测 |
 | 合作目录锁 | 同上；历史实现记录 | 跨进程、异常退出、残留锁及 Windows 实测 |
-| 诊断 sink | 同上；历史实现记录 | 脱敏、输出限额、错误降级、真实宿主接线 |
-| 凭证与安全存储 | 历史设计 | Windows 平台凭证、访问边界和恢复待验收 |
-| 备份/恢复、日志轮转、配置迁移 | 历史候选/规划 | 不能宣称已实现；须按版本范围与 owner 分工确认 |
+| 技术诊断与有限持久记录 | `shared/src/diagnostics.ts`、`persisted-diagnostics.ts` 与 `shared/tests/persisted-diagnostics.test.mjs`；App 存在装配入口 | 已有字段白名单与 SQLite 持久回读等测试；完整日志轮转、运行环境接线及 Windows 真实权限仍需验证 |
+| 凭证引用与受控 Vault | `shared/src/credentials.ts`、`shared/tests/credentials.test.mjs`；App 的 `desktop-credentials.ts` 与测试提供 Windows safeStorage 适配 | 真实 Windows OS 账号/安装代次、ACL、凭证失效与重装恢复尚未完整验收；不得认为凭证可解密就已获授权 |
+| 完整备份/恢复、日志轮转、配置迁移 | 目前仍属需要独立验收的较完整能力，不由基本持久诊断自动满足 | 按版本范围与 App/各业务 owner 分工确认；不得拿单库重启回读冒充全域恢复 |
 
 ## 公开契约的最低语义
 
@@ -45,6 +45,6 @@ shared 只提供可复用的**技术机制**，不拥有 Space/Context、Agent�
 
 先核查最新 `main` 的 `shared/src/`、`shared/tests/`、`package.json` 与 CI，再核对以上行为是否已有测试。**只修真实缺陷或已批准范围内的缺口**；不为满足目录规划而创建空子目录，不代替 permissions 实现授权，不代替业务模块保存状态。提交回执列 SHA、修改文件、执行命令、测试结果及 Windows 未验证项。
 
-**当前验收状态**：本轮仅重写文档，未复跑测试、未核验最新实现；不能据此判定模块通过或需要重写。
+**当前验收状态（2026-11-07 定向源码核对）**：已确认 `shared/src/index.ts` 实际公开 Store、路径、Vault 与持久诊断，相关模块测试文件存在；本轮只读核对源码/测试，**没有复跑测试或 Windows 实机验收**。不得根据旧状态重复创建凭证库或诊断持久机制，也不能据代码存在宣布模块验收通过。
 
 历史完整研究：[shared 契约归档](../docs/research/contracts/shared/CONTRACT-archive.md)；旧 [CONTRACT](../docs/research/contracts/shared/CONTRACT-archive.md) 为兼容入口。Windows 数据要求：[目录与数据设计](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)。
