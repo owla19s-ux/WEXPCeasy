@@ -20,7 +20,7 @@ const parent=await mkdtemp(join(tmpdir(),'wex-install-')),install=join(parent,'å
 let active;
 const timeout=async(predicate,label,ms=60000)=>{const end=Date.now()+ms;while(!await predicate()){if(Date.now()>end)throw Error(label+'_timeout');await new Promise(r=>setTimeout(r,100));}};
 const exists=async path=>{try{await lstat(path);return true;}catch{return false;}};
-async function run(exe,args,ms=120000){return new Promise((res,rej)=>{const child=spawn(exe,args,{stdio:'inherit'}),timer=setTimeout(()=>{child.kill();rej(Error('installer_process_timeout'));},ms);child.once('error',e=>{clearTimeout(timer);rej(e);});child.once('exit',code=>{clearTimeout(timer);res(code);});});}
+async function run(exe,args,ms=120000){return new Promise((res,rej)=>{const child=spawn(exe,args,{stdio:'inherit',windowsVerbatimArguments:true}),timer=setTimeout(()=>{child.kill();rej(Error('installer_process_timeout'));},ms);child.once('error',e=>{clearTimeout(timer);rej(e);});child.once('exit',code=>{clearTimeout(timer);res(code);});});}
 async function controls(root){
  const authority=createDesktopAuthority(),confirm=async()=>true;
  const api=createDesktopApi({authority,confirm,requestCredential:async()=>undefined,cancelCredential(){}});
@@ -28,10 +28,14 @@ async function controls(root){
  const host=await startFoundations({dataRoot:root.path,expectedRootId:root.id,...authority.policy,api:{deriveRequest:api.derive},ai:{bindRead:ai.bindRead},conversations:true});assert.equal(host.status,'ready');api.attach(host);ai.attach(host);chat.attach(host);
  return {host,authority,api,ai,chat,async close(){chat.close();ai.close();api.close();assert.equal((await host.stop()).status,'stopped');}};
 }
-async function startAndClose(args){
+async function startAndClose(args,whileRunning){
  const exe=join(install,'WEXPCeasy.exe');active=spawn(exe,args,{stdio:'inherit'});
  let code;const ended=new Promise(resolve=>active.once('exit',v=>{code=v;resolve(v);}));
  await timeout(async()=>{if(code!==undefined)throw Error('packaged_app_exited_'+code);return exists(join(data,'.wex-write-lock'));},'data_root_lock');
+ const query="$p=Get-Process -Id "+active.pid+"; if($p.MainWindowHandle -eq 0){exit 2}";
+ const powershell=join(process.env.SystemRoot,'System32/WindowsPowerShell/v1.0/powershell.exe');
+ await timeout(async()=>{try{execFileSync(powershell,['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(query,'utf16le').toString('base64')],{stdio:'pipe',windowsHide:true});return true;}catch{return false;}},'native_window_ready');
+ if(whileRunning)await whileRunning();
  const script="$ErrorActionPreference='Stop'; $p=Get-Process -Id "+active.pid+"; if($p.MainWindowHandle -eq 0){exit 2}; Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class WexClose { [DllImport(\"user32.dll\",SetLastError=true)] public static extern bool PostMessage(IntPtr h,uint m,IntPtr w,IntPtr l); }'; if(-not [WexClose]::PostMessage($p.MainWindowHandle,0x10,[IntPtr]::Zero,[IntPtr]::Zero)){exit 3}";
  await timeout(async()=>{try{execFileSync(join(process.env.SystemRoot,'System32/WindowsPowerShell/v1.0/powershell.exe'),['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{stdio:'pipe',windowsHide:true});return true;}catch{return false;}},'native_window');
  await Promise.race([ended,new Promise((_,reject)=>{const t=setTimeout(()=>reject(Error('packaged_close_timeout')),30000);t.unref();})]);
@@ -53,7 +57,11 @@ try{
   assert.equal(c.host.conversations.service.change(c.authority.bind(scope),{conversationId:created.id,intent:'seed-input',expectedRevision:1,change:{kind:'append',messageId:'saved-message',segments:[{id:'text',text:'Recovered conversation history.'}]}}).status,'committed');
  });
  await c.close();
- await startAndClose([]);
+ await startAndClose([],async()=>{
+  assert.notEqual(await run(installer,['/S','/D='+install]),0);
+  assert.notEqual(await run(join(install,'Uninstall.exe'),['/S']),0);
+  assert.equal(await exists(join(install,'WEXPCeasy.exe')),true);
+ });
  assert.equal(await run(installer,['/S','/D='+install]),0);
  await startAndClose([]);
  c=await controls(root);

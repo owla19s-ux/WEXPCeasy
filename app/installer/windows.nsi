@@ -54,10 +54,12 @@ Function ValidateInstallDirectory
  recognized:
  FindClose $R0
  Call ValidatePayloadPaths
+ Call VerifyApplicationStopped
  Return
  empty:
  FindClose $R0
  Call ValidatePayloadPaths
+ Call VerifyApplicationStopped
  Return
  invalid:
  IfSilent +2
@@ -69,6 +71,14 @@ FunctionEnd
 Function ValidatePayloadPaths
 @@VERIFY_PATHS@@
  Return
+FunctionEnd
+
+Function VerifyApplicationStopped
+@@VERIFY_STOPPED@@
+FunctionEnd
+
+Function un.VerifyApplicationStopped
+@@VERIFY_STOPPED@@
 FunctionEnd
 
 Function un.ValidatePayloadPaths
@@ -96,6 +106,7 @@ Function un.onInit
  SetErrorLevel 2
  Abort
  Call un.ValidatePayloadPaths
+ Call un.VerifyApplicationStopped
 FunctionEnd
 
 Section "Uninstall"

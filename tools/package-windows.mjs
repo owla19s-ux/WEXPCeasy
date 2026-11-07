@@ -33,7 +33,8 @@ const verify=[payload,...dirs,...files].map(path=>{
 }).join('\n');
 const installer=join(output,'WEXPCeasy-'+version+'-Setup.exe');
 let script=await readFile('app/installer/windows.nsi','utf8');
-script=script.replaceAll('@@OUTPUT@@',escape(installer)).replaceAll('@@VERIFY_PATHS@@',verify).replaceAll('@@INSTALL_FILES@@',install).replaceAll('@@REMOVE_FILES@@',remove);
+const stopped=" IfFileExists \"$INSTDIR\\WEXPCeasy.exe\" 0 stopped\n System::Call 'kernel32::CreateFileW(w \"$INSTDIR\\WEXPCeasy.exe\", i 0x40000000, i 0, p 0, i 3, i 0, p 0) p .r0'\n IntCmp $0 -1 running\n System::Call 'kernel32::CloseHandle(p r0)'\n Goto stopped\n running:\n IfSilent +2\n MessageBox MB_OK|MB_ICONSTOP \"请先退出 WEXPCeasy，再安装、重装或卸载。\"\n SetErrorLevel 3\n Abort\n stopped:\n Return";
+script=script.replaceAll('@@VERIFY_STOPPED@@',stopped).replaceAll('@@OUTPUT@@',escape(installer)).replaceAll('@@VERIFY_PATHS@@',verify).replaceAll('@@INSTALL_FILES@@',install).replaceAll('@@REMOVE_FILES@@',remove);
 if(script.includes('@@'))throw Error('unrendered_installer_template');
 const scriptPath=join(output,'installer.nsi');await writeFile(scriptPath,script);
 const compiler=process.env.WEX_MAKENSIS??'C:\\Program Files (x86)\\NSIS\\makensis.exe';

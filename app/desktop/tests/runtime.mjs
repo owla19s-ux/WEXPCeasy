@@ -46,7 +46,12 @@ try{
  assert.deepEqual(facts.bridge,['ai','api','cancelApi','cancelConversations','connections','conversations','onAccessChanged','onConversationText','permissions','readStatus','requestQuit','space']);assert.equal(facts.reply.ok,true);
  assert.equal(facts.reply.value.phase,'ready');assert.equal(facts.title,'WEXPCeasy');assert.match(facts.text,/WEXPCeasy/);
 // Exercise the actual React form through DOM events; only native platform interactions are fixtures.
- const click=async text=>wc.executeJavaScript(`(()=>{const b=[...document.querySelectorAll('button')].find(x=>(x.textContent.trim()===${JSON.stringify(text)}||x.getAttribute('aria-label')===${JSON.stringify(text)}));if(!b)throw Error('button_missing');b.click();return true;})()`);
+ const buttonExpression=text=>"[...document.querySelectorAll('button')].find(x=>(x.textContent.trim()==="+JSON.stringify(text)+"||x.getAttribute('aria-label')==="+JSON.stringify(text)+"))";
+ const click=async text=>{
+  const button=buttonExpression(text);
+  await waitFor("(()=>{const b="+button+";return !!b&&!b.disabled;})()");
+  return wc.executeJavaScript("(()=>{const b="+button+";const d=b.closest('details');if(d&&!d.open)d.querySelector('summary').click();b.click();return true;})()");
+ };
  const waitFor=async expression=>{const end=Date.now()+10000;while(!await wc.executeJavaScript(expression)){if(Date.now()>end){console.error('RENDERER_WAIT',expression,await wc.executeJavaScript("({dragging:document.querySelector('[data-workbench]')?.dataset.dragging,layout:localStorage.getItem('wex.workbench.layout.v2')})"));throw Error('renderer_wait_timeout');}await new Promise(r=>setTimeout(r,25));}};
  await waitFor("!!document.querySelector('[data-workbench]')");
  await wc.executeJavaScript("document.querySelector('[aria-label=\"折叠导航\"]').click();true");
