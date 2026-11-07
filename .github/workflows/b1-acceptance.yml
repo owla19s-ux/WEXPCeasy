@@ -27,7 +27,7 @@ jobs:
           node --input-type=module -e "import {writeFileSync} from 'node:fs'; writeFileSync('b1-evidence.json',JSON.stringify({sha:process.env.GITHUB_SHA,runtime:process.version,platform:process.platform,scope:'B1 owner suites and public contracts: process exit, SQLite recovery and fresh authorization',overallAcceptance:'not_asserted_by_workflow',limitations:['Trusted identity and Provider observations are fixtures','No authenticated GitHub service call','No paid Provider call','No manual Windows acceptance or installer validation','No B2 complete chain validation']},null,2));"
       - name: Independently verify backend owners and public contracts
         run: >-
-          node --test --test-reporter=junit --test-reporter-destination=b1-acceptance.xml
+          node --test --test-timeout=30000 --test-reporter=junit --test-reporter-destination=b1-acceptance.xml
           shared/tests/*.test.mjs permissions/tests/*.test.mjs space/tests/*.test.mjs
           connections/api/tests/*.test.mjs AI/tests/*.test.mjs conversations/tests/*.test.mjs
           connections/tests/*.test.mjs connections/github/tests/*.test.mjs connections/local/tests/*.test.mjs
