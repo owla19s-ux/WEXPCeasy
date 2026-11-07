@@ -60,7 +60,8 @@ test('permission revocation while inspecting an existing Context blocks registry
  const h=await fixture(t),first=await h.open();await h.create(first);await first.close();const r=await h.open({lock:{async acquire(root){const lease=await directoryLock.acquire(root);if(root.path===resolve(h.a))h.revoke();return lease;}}});const before=hash(join(h.root,'wex-space.sqlite'));const result=await attach(h,r);assert.equal(result.status,'rejected');assert.equal(result.reason,'fixture_denied');assert.equal(hash(join(h.root,'wex-space.sqlite')),before);
 });
 test('real local-entry refusal also applies to attach, without disclosing the Context identity',async t=>{
- const h=await fixture(t),s=await h.open();await h.create(s);await s.close();const db=openSqliteStore(join(h.dir,'permissions.sqlite'),'permissions');t.after(()=>db.close());
+ let db;t.after(()=>db?.close());
+ const h=await fixture(t),s=await h.open();await h.create(s);await s.close();db=openSqliteStore(join(h.dir,'permissions.sqlite'),'permissions');
  const scope={subject:'user',entry:'local',conversation:'none',context:null,resource:'space',action:'context.attach',target:resolve(h.a),relationship:'direct',relationshipGeneration:1};const permission=createPermissions(db,{current:()=>({...scope,kind:'local',moduleEnabled:true,globalEnabled:true,conversationEnabled:true,sourceAllowed:true}),canManage:()=>true,canReadHistory:()=>true});
  const r=await h.open({permission});const result=await attach(h,r);assert.equal(result.status,'rejected');assert.equal(result.reason,'entry_policy_unresolved');assert.equal('id'in result,false);
 });

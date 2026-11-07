@@ -53,7 +53,8 @@ test('permission denial, wrong target, cancellation and revoked replay disclose 
  const ac=new AbortController();ac.abort();assert.equal((await s.execute(h.req(cmd),cmd,ac.signal)).reason,'cancelled');assert.equal((await h.query(s,c.id)).value.name,'工程');
 });
 test('real permissions blocks local entry; Space never disguises it as conversation',async t=>{
- const h=await fixture(t);const db=openSqliteStore(join(h.dir,'permission.sqlite'),'permissions');t.after(()=>db.close());
+ let db;t.after(()=>db?.close());
+ const h=await fixture(t);db=openSqliteStore(join(h.dir,'permission.sqlite'),'permissions');
  const scope={subject:'user',entry:'local',conversation:'none',context:null,resource:'space',action:'context.create',target:resolve(h.a),relationship:'direct',relationshipGeneration:1};
  const real=createPermissions(db,{current:()=>({...scope,kind:'local',moduleEnabled:true,globalEnabled:true,conversationEnabled:true,sourceAllowed:true}),canManage:()=>true,canReadHistory:()=>true});
  const s=await h.open({permission:real});const result=await h.create(s);assert.equal(result.status,'rejected');assert.equal(result.reason,'entry_policy_unresolved');assert.equal(existsSync(join(h.a,'wex-context.sqlite')),false);
