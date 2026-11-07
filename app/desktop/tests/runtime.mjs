@@ -35,7 +35,7 @@ try{
  assert.deepEqual(facts.bridge,['readStatus','requestQuit','space']);assert.equal(facts.reply.ok,true);
  assert.equal(facts.reply.value.phase,'ready');assert.equal(facts.title,'WEXPCeasy');assert.match(facts.text,/WEXPCeasy/);
 // Exercise the actual React form through DOM events; only native platform interactions are fixtures.
- const click=async text=>wc.executeJavaScript(`(()=>{const b=[...document.querySelectorAll('button')].find(x=>x.textContent.trim()===${JSON.stringify(text)});if(!b)throw Error('button_missing');b.click();return true;})()`);
+ const click=async text=>wc.executeJavaScript(`(()=>{const b=[...document.querySelectorAll('button')].find(x=>(x.textContent.trim()===${JSON.stringify(text)}||x.getAttribute('aria-label')===${JSON.stringify(text)}));if(!b)throw Error('button_missing');b.click();return true;})()`);
  const waitFor=async expression=>{const end=Date.now()+10000;while(!await wc.executeJavaScript(expression)){if(Date.now()>end)throw Error('renderer_wait_timeout');await new Promise(r=>setTimeout(r,25));}};
  await waitFor("!!document.querySelector('[data-workbench]')");
  await wc.executeJavaScript("document.querySelector('[aria-label=\"折叠导航\"]').click();true");
@@ -60,7 +60,7 @@ try{
  await waitFor("document.querySelectorAll('.aux-panel:not([hidden])').length===3");
  await wc.executeJavaScript("document.querySelector('[aria-label=\"展开导航\"]').click();true");
  await waitFor("!!document.querySelector('[aria-label=\"折叠导航\"]')");
- await waitFor("!!localStorage.getItem('wex.workbench.layout.v1')");
+ await waitFor("JSON.parse(localStorage.getItem('wex.workbench.layout.v1')||'{}').collapsed===false");
  const saved=await wc.executeJavaScript("localStorage.getItem('wex.workbench.layout.v1')");
  const loaded=new Promise(resolve=>wc.once('did-finish-load',resolve));wc.reload();await loaded;
  await waitFor("!!document.querySelector('[data-workbench]')");
