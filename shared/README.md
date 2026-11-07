@@ -2,7 +2,7 @@
 
 > **代码事实核对（2026-11-04，基线 `1048b6a`）**：产品源码 4 文件、测试 5 文件，公开入口 `shared/src/index.ts`。本轮根测试覆盖 shared、permissions、app、connections 及边界工具；不代表完整本版验收。 开工须重新核对最新 main。
 
-> **施工入口说明（2026-11-07）**：本页仅负责 shared 独立维护与验收；当前跨模块施工任务从 [根 README](../README.md) 与 [0.1.1 B3 任务](../docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md) 定向进入。过去“当前模块是 Space”的说法为历史状态，不是现在的统一调度。工作模式不得修改施工文档。
+> **施工入口说明（2026-11-07）**：本页仅负责 shared 独立维护与验收；当前跨模块施工任务从 [根 README](../README.md) 与 [0.1.1 B3 任务](../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md) 定向进入。过去“当前模块是 Space”的说法为历史状态，不是现在的统一调度。工作模式不得修改施工文档。
 >
 > **实现状态（文档证据，待实时核查）**：已有 `shared/src/index.ts`、`shared/tests/` 和 `npm run test:shared` 入口；此前记录 SQLite 命名空间 Store/CAS、数据根检查、受限路径定位、合作目录锁、诊断 sink 已实现。本文更新没有重新执行测试或 Windows 实机验证。
 
