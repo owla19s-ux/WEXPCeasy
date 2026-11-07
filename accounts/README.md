@@ -19,7 +19,7 @@
 ## 文档入口与证据边界
 
 - [文档体系总索引](../docs/README.md)
-- [全局契约地图](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
+- [全局契约地图](../docs/A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)
 - [研究决策与当前边界](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
 - [第六批准备度与待决边界](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md)
 
