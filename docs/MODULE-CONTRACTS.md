@@ -239,7 +239,7 @@ Owner收敛和B/C/D处理状态见[完整产品需求基线收敛记录](product
 
 ## D01/D02 权限判定矩阵入口（2026-11-01）
 
-[产品级权限判定矩阵](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)是permissions及AI、space、workflows、conversations、connections共同遵循的业务规则候选。它不冻结实现接口；具体B候选须经用户确认后才能升级为A。当前代码与矩阵的差距见矩阵§9.1。
+[产品级权限判定矩阵](A1-正式产品设计/权限决策矩阵.md)是permissions及AI、space、workflows、conversations、connections共同遵循的业务规则候选。它不冻结实现接口；具体B候选须经用户确认后才能升级为A。当前代码与矩阵的差距见矩阵§9.1。
 
 
 D01/D02当前决策：IV级在用户明确授权范围内允许全部风险等级操作；工作流每次启动由用户确认本次完整节点权限方案一次；主AI与秘书AI共享同一个对话等级且须用户主动设置。Shell、插件信任、WEX自身权限策略和凭证的专门边界仍为待确认B项。代码实现状态以模块源码和测试为准，不因产品决策文档更新而视为已实现。
