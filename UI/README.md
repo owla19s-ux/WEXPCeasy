@@ -45,7 +45,7 @@
 - [PC 基础 UI 布局与交互设计 V0.6](../docs/A1-正式产品设计/PC基础UI布局与交互设计.md)：空间、视图、预览、虚拟形象/交互栏与 Windows 窗口适配。
 - [UI 功能映射与设计收口 V0.4](../docs/A1-正式产品设计/0.1.1-UI功能映射.md)：用户入口与真实 owner/IPC、权限、结果及恢复关系。
 
-执行范围、顺序与实机证据以 [B3 D-08/D-09](../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md) 为准。本 `CONTRACT.md` 保留历史交互研究和旧接口候选，**不再另行维护一套当前施工规范**；现行 UI 职责以本 README 为入口，设计和版本验收分别看上面的定向文档。
+历史 B3 D-08/D-09 的详细验收案例见 [A2 历史任务记录](../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md)；当前批准范围及真实工程状态以 [A2 0.1.1 总表](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md) 为准，施工步骤不被历史任务书锁死。本 `CONTRACT.md` 保留历史交互研究和旧接口候选，**不再另行维护一套当前施工规范**；现行 UI 职责以本 README 为入口，设计和版本验收分别看上面的定向文档。
 
 ## 已确定的 UI 边界
 
@@ -67,11 +67,11 @@
 
 ---
 
-> **当前代码事实（2026-11-07，`main bd72dfea`）**：正式 `UI/src/index.ts` 定义受限桌面桥、`UI/src/renderer.tsx` 运行 React，`UI/src/space.tsx` 与 `space-addresses.tsx` 提供 Space/Context 操作页面。Renderer 当前主要挂载宿主状态及 SpacePanel；Agent、Conversations、设置页、多视图未有完整正式页面接线验收。历史 2026-11-04 的无产品 UI 判断已失效。
+> **当前代码事实（2026-11-07，`main bd72dfea`）**：正式 `UI/src/index.ts` 定义受限桌面桥、`UI/src/renderer.tsx` 运行 React，`UI/src/space.tsx` 与 `space-addresses.tsx` 提供 Space/Context 操作页面。本句属于 `bd72dfea` 时点的历史界面快照。最新已读取的 `renderer.tsx` 挂载 `Workbench`，后者组合 `SpacePanel`、`MiddleWorkspace`、`InteractionDock`，并包含基础设置面板、布局保存/调整与只读资源预览入口；普通对话按钮、API/Agent/GitHub/Local 设置按钮仍禁用，不能宣称完整业务页面接线或 Windows 实机验收。历史 2026-11-04 的无产品 UI 判断已失效。
 
 WEX 内置界面。主入口已经采用 React/TypeScript，负责导航、加载页面和挂载模块面板；模块业务由各自 owner 维护，UI 仅调用受限宿主桥。不得把旧研究中的“语言未定”作为当前开工事实。
 
-状态：已具备正式 UI 入口、Space 页面及基础测试/桌面验证；仍为 **B3 部分实现**，不是完成的 Windows 交付。当前功能到 UI 的映射和 PC 设置页设计以 `UI/CONTRACT.md` 与 0.1.1 B3 任务书为准。
+状态：已具备正式 UI 入口、Space 页面及基础测试/桌面验证；仍为 **B3 部分实现**，不是完成的 Windows 交付。当前功能到 UI 的映射和 PC 布局设计以 [A1 UI 功能映射](../docs/A1-正式产品设计/0.1.1-UI功能映射.md)、[A1 PC 基础 UI 设计](../docs/A1-正式产品设计/PC基础UI布局与交互设计.md) 为准，版本状态以 [A2 0.1.1 总表](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md) 为准。`UI/CONTRACT.md` 与 B3 历史任务仅作研究及验收依据追溯，不再另设当前设计权威。
 
 [源码目录与 Windows 数据要求](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
 
