@@ -91,7 +91,7 @@
 
 `app/src/main.ts` 是可执行无窗口诊断入口：`npm run start:headless -- <已有根目录>`。根需预先由可信维护者创建 `.wex-root.json`，例如 `{"format":1,"id":"chosen-root"}`；本批没有安装/选根向导，不在缺根时生成替代数据。CLI不授予任何权限，退出只释放宿主资源，不创建/取消Task。
 
-该入口验证基础装配，不是Electron应用或完整WEX闭环。没有Electron窗口、preload/IPC、React UI、后台常驻、开机启动或窗口关闭策略；未对这些未来接口建空实现。Electron/Windows接线及E4仍未验证，不冻结打包器/平台协议。D04与全部D01–D07未代裁。
+**历史第七批（2026-10-31）时点说明：**当时无窗口诊断入口只验证基础装配，尚没有正式 Electron 窗口、preload/IPC 或 React UI。**此结论不能用于描述最新 main：**现已存在 `app/src/desktop-main.ts`、桌面 IPC/Preload 及 `UI/src/renderer.tsx`、`workbench.tsx`；但首次选根向导、安装包、完整业务 IPC、后台行为政策和 Windows E4 仍须单独核验。D04 与全部 D01–D07 未因早期测试自动裁决。
 
 测试：`npm run test:app`。提供方生命周期测试使用故障模块；消费方同一权限reader向量对照真实与替身；集成真实根/锁/SQLite/permissions，覆盖撤销持久化、缺模块/存储、链接逃逸和不确定释放。
 
