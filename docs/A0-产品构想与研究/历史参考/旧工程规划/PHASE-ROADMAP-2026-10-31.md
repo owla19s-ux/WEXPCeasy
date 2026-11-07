@@ -2,7 +2,7 @@
 
 # WEX 阶段路线图（面向首版可用目标）
 
-> **历史规划快照说明（2026-11-02）：** 本文事实依据截止 2026-10-31 的旧 main；后续第八批 Electron/React 隔离实验、功能注释、Pi AI 验证和执行优先级已发生变化。请先读 [根 README](../../../../README.md)、[最新优先级](EXECUTION-MODULE-PRIORITY-2026-11-01.md) 和 [文档审查](../../../audits/DOCUMENT-SYSTEM-CONSISTENCY-AUDIT-2026-11-02.md)，不要把本文旧状态作为当前代码事实或自动派工依据。
+> **历史规划快照说明（2026-11-02）：** 本文事实依据截止 2026-10-31 的旧 main；后续第八批 Electron/React 隔离实验、功能注释、Pi AI 验证和执行优先级已发生变化。请先读 [根 README](../../../../README.md)、[最新优先级](EXECUTION-MODULE-PRIORITY-2026-11-01.md) 和 [文档审查](../../方案与研究/审查历史/DOCUMENT-SYSTEM-CONSISTENCY-AUDIT-2026-11-02.md)，不要把本文旧状态作为当前代码事实或自动派工依据。
 
 - 日期：2026-10-31
 - 规划基线：`main` `4e78382670875628e2675f43c71afa78fabfbcec`
@@ -128,4 +128,4 @@
 - 不触发 GitHub Actions；本地或可用云端环境验证。若环境缺失，记录阻塞和可复现命令，不伪造通过。
 - 施工批次不设日历承诺。按依赖和验收推进，不以估算日期替代证据。
 
-下一步施工入口见 [施工计划](CONSTRUCTION-PLAN-2026-10-31.md) 和 [第八批任务书](../../../batch8/PLAN.md)。
+下一步施工入口见 [施工计划](CONSTRUCTION-PLAN-2026-10-31.md) 和 [第八批任务书](../工程研究批次/batch8/PLAN.md)。

@@ -4,7 +4,7 @@
 
 ## 1. 依据与审查范围
 
-已核对根README（根及子目录无AGENTS.md）、[第四批索引](../../../MODULE-CONTRACTS.md)、[全局契约地图](../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)、10份主要域契约及workflows/modes契约、[通信边界](../../../../app/COMMUNICATION.md)、[基础能力遗漏](APP-FOUNDATIONS-GAP-AUDIT-2026-10-31.md)、[Windows目录/安装要求](../../../architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)、[双插件边界](../../../architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)、dsh/README及原生Bundle/构建报告、DSH headless/boundary测试与probe结果、ReactFlow模型和验证记录。第四批文档仍保留自身历史基线；本节新增记录不把历史实验提升为本批实测。
+已核对根README（根及子目录无AGENTS.md）、[第四批索引](../../../MODULE-CONTRACTS.md)、[全局契约地图](../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)、10份主要域契约及workflows/modes契约、[通信边界](../../../../app/COMMUNICATION.md)、[基础能力遗漏](APP-FOUNDATIONS-GAP-AUDIT-2026-10-31.md)、[Windows目录/安装要求](../../../architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)、[双插件边界](../../../A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)、dsh/README及原生Bundle/构建报告、DSH headless/boundary测试与probe结果、ReactFlow模型和验证记录。第四批文档仍保留自身历史基线；本节新增记录不把历史实验提升为本批实测。
 
 方法：先给33条现有样本逐项分类/去重，再按A–H八方向找缺失机制；用正常操作与交错时序定位提供/消费差异，按owner补契约，最后重新逐条对冲。没有读取产品源码后运行完整WEX的证据，因为仓库当前没有完整桌面应用。未使用外部新研究结论扩大产品范围。
 
