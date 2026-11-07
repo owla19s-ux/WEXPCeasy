@@ -16,8 +16,12 @@ export function createReadBoundary(permission:PermissionReader,adapter:ReadAdapt
   }});
   try{
    const value=await adapter.read(target,signal,access);
-   if(signal.aborted||permission.recheck(request,current).status!=='allow')return {status:'denied',reason:'revoked_or_cancelled'};
+   if(signal.aborted)return {status:'cancelled',reason:'aborted'};
+   if(permission.recheck(request,current).status!=='allow')return {status:'denied',reason:'revoked_or_cancelled'};
    return {status:'ok',value};
-  }catch{return {status:'unavailable',reason:'adapter_failed'};}finally{active=false;}
+  }catch{
+   if(signal.aborted)return {status:'cancelled',reason:'aborted'};
+   return {status:'unavailable',reason:'adapter_failed'};
+  }finally{active=false;}
  }};
 }
