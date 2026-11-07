@@ -84,13 +84,13 @@ UI只通过可信窄桥提交意图/查询获准状态，页面暂停/卸载不�
 
 - **模块导航**：[全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档体系总索引](../docs/README.md)
 - **全局架构**：
-- [全局契约地图](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
-- [源码目录与 Windows 数据布局](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
+- [全局契约地图](../docs/A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)
+- [源码目录与 Windows 数据布局](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
 - [Space 与工作流编辑器设计](../docs/architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
 - **决策与研究**：
 - [研究决策与当前边界](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
 - **审查报告**：
-- [桌面应用基础能力审计](../docs/audits/APP-FOUNDATIONS-GAP-AUDIT-2026-10-31.md)
+- [桌面应用基础能力审计](../docs/A0-产品构想与研究/方案与研究/审查历史/APP-FOUNDATIONS-GAP-AUDIT-2026-10-31.md)
 - [视图与证据链审计](../docs/audits/VIEWS-AND-EVIDENCE-AUDIT-2026-10-31.md)
 - **准备度与批次结论**：[本域施工准备度](../docs/batch6/READINESS.md) · [F01–F09 契约收敛](../docs/batch6/CONVERGENCE.md) · [集中决策与待决项](../docs/batch6/DECISIONS.md)
 - **实验与验证证据**：[第六批实验总表](../docs/batch6/EXPERIMENTS.md) · [可复现实验入口](../experiments/contract-readiness-spike/README.md)
@@ -104,7 +104,7 @@ UI只通过可信窄桥提交意图/查询获准状态，页面暂停/卸载不�
 
 ## G5/G7 与跨对话工作接续交互补充（2026-10-31）
 
-本节对应基础能力 G5/G7；领域事实和完整组合验收见[基础能力落地映射](../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+本节对应基础能力 G5/G7；领域事实和完整组合验收见[基础能力落地映射](../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
 
 **G7：输入与附件交互。** 对话输入除文本外，首期交互候选包括系统文件选择、拖入、粘贴、附件预览/移除及来源/可用性提示。文件访问必须经 App/Connections 的窄宿主能力；Renderer 不直接获得 Node、任意路径读写、数据库或凭证。UI 负责收集用户明确意图并显示引用/导入选择，不自行复制文件或决定长期归属。临时附件、关联原文件、导入持久副本分别显示，不默认为同一行为。具体格式、大小限制、剪贴板权限和传输协议需实测，不在此冻结。
 
