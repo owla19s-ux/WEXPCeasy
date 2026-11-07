@@ -51,15 +51,13 @@ DSH Session、内部 Agent 状态和自身权限由独立 DSH 持有；本适配
 第六批：[最新准备度/证据及限制](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)。原生Core+Loader实验、WEX外部DSH连接和Windows实机证据分别验收；预留平台不因局部实验通过进入正式施工。
 
 
-## 上级契约与文档入口
+## 直接依赖
 
-- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
-- **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [双插件体系边界](../../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)
-- [外部 Agent 生态](../../docs/A0-产品构想与研究/方案与研究/既有研究/AGENT-ECOSYSTEM-2026-10-31.md)
-- [DSH 能力差距审计](../../docs/A0-产品构想与研究/方案与研究/审查历史/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
+- [Connections 模块](../README.md)：外部 Agent 接入应遵守公共连接与操作边界。
+- [DSH 机制研究模块](../../dsh/README.md)：区分独立插件兼容宿主与外部 Agent 连接器。
+- [DSH 双路线设计依据](../../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)：只在核对双路线职责时定向读取。
 
-本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
+本连接器在 0.1.1 不施工，历史实验清单不作为依赖索引。
 
 ## G4：外部会话接续边界
 
