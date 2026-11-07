@@ -14,7 +14,7 @@
 
 **核对快照（2026-11-07，`main bd72dfea`）**：`space/`、`connections/api/`、`AI/`、`conversations/`、`connections/github/`、`connections/local/` 均存在产品 `src/` 与独立测试；正式 `app/src/desktop-*.ts`、`UI/src/renderer.tsx`、`UI/src/space.tsx` 已存在。该 SHA 上 B1、B2、B3 桌面宿主、Foundation、GitHub read 和文档审计工作流成功；但当前 Renderer 主入口只挂载宿主状态与 SpacePanel，不能据此认定完整对话/设置 UI 或 Windows 安装交付已完成。**本段是带 SHA 的历史证据快照，不是当前 HEAD。**
 
-**2026-11-07 后续变更提示（待正式验证）**：D-08 已提交 `UI/src/middle-workspace.tsx`、`workspace-state.ts`、`interaction-dock.tsx` 及旧布局替换，`UI/src/space-addresses.tsx` 的授权读取结果已转为按需侧预览；`workbench.tsx`、`layout.ts` 结构已有变化。详见 [UI 模块入口](UI/README.md) 和 [B3 D-08A.2 回执](docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)。**没有本批完整 TypeScript/Windows 实机通过证据，不得把历史“仅 SpacePanel”的描述当成当前界面结构，也不得宣布 D-08 已完成。**
+**2026-11-07 后续变更提示（待正式验证）**：D-08 已提交 `UI/src/middle-workspace.tsx`、`workspace-state.ts`、`interaction-dock.tsx` 及旧布局替换，`UI/src/space-addresses.tsx` 的授权读取结果已转为按需侧预览；`workbench.tsx`、`layout.ts` 结构已有变化。详见 [UI 模块入口](UI/README.md) 和 [历史 B3 D-08A.2 回执](docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md)。**没有本批完整 TypeScript/Windows 实机通过证据，不得把历史“仅 SpacePanel”的描述当成当前界面结构，也不得宣布 D-08 已完成。**
 
 ## 开工前检查
 
