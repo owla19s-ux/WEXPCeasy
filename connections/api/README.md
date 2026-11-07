@@ -27,7 +27,7 @@
 - **适配器子契约：** [Provider适配器子契约](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/api/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [提供方边界 Walkthrough](../../docs/A0-产品构想与研究/方案与研究/架构研究历史/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
-- [外部 Agent 生态与 Provider 观察](../../docs/research/AGENT-ECOSYSTEM-2026-10-31.md)
+- [外部 Agent 生态与 Provider 观察](../../docs/A0-产品构想与研究/方案与研究/既有研究/AGENT-ECOSYSTEM-2026-10-31.md)
 
 本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
