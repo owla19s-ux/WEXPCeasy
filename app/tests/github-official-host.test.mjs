@@ -95,7 +95,7 @@ test('official GitHub host retains its root while an admitted SDK read drains du
  assert.equal(h.save().status,'committed');assert.equal(h.host.connections.configs.put(h.config(),0,'config').status,'ok');
  const pending=h.host.connections.read('github',h.request('github','read',target),'gh',1,target);
  try{
-  await started;assert.equal((await h.host.stop()).status,'incomplete');
+  await Promise.race([started,pending.then(()=>{throw Error('SDK read did not start');})]);assert.equal((await h.host.stop()).status,'incomplete');
   const contender=await startFoundations(h.options);assert.equal(contender.status,'failed');await contender.stop();
  }finally{finish();}
  assert.notEqual((await pending).status,'ok');assert.equal((await h.host.stop()).status,'stopped');
