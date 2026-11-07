@@ -2,8 +2,8 @@ import {createCredentialVault} from '../../shared/src/index.js';
 import type {CredentialCipher,CredentialBinding} from '../../shared/src/index.js';
 import {createLocalDirectoryBindings,createLocalDirectoryReader} from '../../connections/local/src/index.js';
 import type {LocalDirectoryReadOptions} from '../../connections/local/src/index.js';
-import {createGitHubFileAdapter,createGitHubConfiguredFileReader} from '../../connections/github/src/index.js';
-import type {GitHubClientFactory} from '../../connections/github/src/index.js';
+import {createGitHubFileAdapter,createGitHubConfiguredFileReader,createGitHubOfficialClientFactory,createGitHubMcpFileReader,githubCredentialTarget} from '../../connections/github/src/index.js';
+import type {GitHubClientFactory,GitHubMcpRuntime,GitHubOfficialClientOptions} from '../../connections/github/src/index.js';
 import {createLocalFileBindings,createLocalFileReader,createLocalFileAdapter} from '../../connections/local/src/index.js';
 import type {LocalFileBindingOptions} from '../../connections/local/src/index.js';
 import {createReadBoundary} from '../../connections/src/index.js';
@@ -31,7 +31,7 @@ export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'res
 export type FoundationLocalFiles=Pick<ReturnType<typeof createLocalFileBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationLocalDirectories=Pick<ReturnType<typeof createLocalDirectoryBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationCredentials=Pick<ReturnType<typeof createCredentialVault>,'put'|'revoke'|'query'>&{available():boolean};
-export interface FoundationOptions {credentials?:{cipher:CredentialCipher};technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationOptions {githubOfficial?:{mcpRuntime?:Readonly<GitHubMcpRuntime>;fetch?:typeof globalThis.fetch;timeoutMs?:number};credentials?:{cipher:CredentialCipher};technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions;conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
 export interface FoundationHost extends Host {readonly credentials?:FoundationCredentials;readonly technicalDiagnostics?:FoundationTechnicalDiagnostics;readonly localDirectories?:FoundationLocalDirectories;readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
  for(const suffix of ['', '-journal','-wal','-shm']){
@@ -163,7 +163,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    return {value:service,stop:async()=>{await service.close();await closeStores(stores);space=undefined;}};
   }catch(error){try{await closeStores(stores);}catch{for(const db of stores)spaceOrphans.add(db);}throw error;}
  }}]:[]),
- ...((options.connections||options.api||options.localFiles||options.githubFiles||options.localDirectories)?[{id:'connections',requires:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
+ ...((options.connections||options.api||options.localFiles||options.githubFiles||options.githubOfficial||options.localDirectories)?[{id:'connections',requires:options.githubOfficial?['permissions','credentials']:['permissions'],async start(deps:Readonly<Record<string,unknown>>){
   const stores=new Set<ManagedStore>();
   let files:ReturnType<typeof createLocalFileBindings>|undefined;
   let directories:ReturnType<typeof createLocalDirectoryBindings>|undefined;
@@ -174,8 +174,34 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    files=options.localFiles?createLocalFileBindings(permission,options.localFiles):undefined;
    directories=options.localDirectories?createLocalDirectoryBindings(permission):undefined;
    const directoryReader=directories?createLocalDirectoryReader(directories.resolve,options.localDirectories):undefined;
-   const adapters=[...(options.connections?.adapters??[]),...(files?[createLocalFileAdapter(files.resolve)]:[]),...(options.githubFiles?[createGitHubFileAdapter(options.githubFiles.client)]:[])];
-   const readAdapters=[...(options.connections?.readAdapters??[]),...(options.githubFiles?[createGitHubConfiguredFileReader(options.githubFiles.client)]:[])];
+   if(options.githubOfficial&&options.githubFiles)throw Error('ambiguous_github_profile');
+   const resolveCredential:GitHubOfficialClientOptions['resolveCredential']=async(connection,access)=>{
+    if(stopping||!credentialVault||!access.check())return;
+    const decision=permission.evaluate(access.request);
+    if(decision.status!=='allow'||decision.scope.resource!=='github'||!['read','write'].includes(decision.scope.action))return;
+    // Inspect the owning service's public configuration rather than trusting connector-supplied metadata.
+    const live=service.configs.get(connection.id);
+    if(!live||!live.enabled||live.adapter!==connection.adapter||live.endpoint!==connection.endpoint||
+     live.credentialRef!==connection.credentialRef)return;
+    const target=githubCredentialTarget(live);if(!target||!access.check())return;
+    credentialUses.set(access.request,{decision,reference:target.reference,binding:target.binding});
+    try{
+     const value=credentialVault.resolve(access.request,target.reference,target.binding);
+     return value.status==='ok'&&!stopping&&access.check()&&permission.recheck(access.request,decision).status==='allow'
+      ?value.secret:undefined;
+    }finally{credentialUses.delete(access.request);}
+   };
+   const official=options.githubOfficial?createGitHubOfficialClientFactory({
+    resolveCredential,...(options.githubOfficial.fetch?{fetch:options.githubOfficial.fetch}:{}),
+    ...(options.githubOfficial.timeoutMs!==undefined?{timeoutMs:options.githubOfficial.timeoutMs}:{}),
+   }):undefined;
+   const githubClient=official??options.githubFiles?.client;
+   const githubReader=options.githubOfficial?.mcpRuntime?createGitHubMcpFileReader({
+    runtime:options.githubOfficial.mcpRuntime,resolveCredential,
+    ...(options.githubOfficial.timeoutMs!==undefined?{timeoutMs:options.githubOfficial.timeoutMs}:{}),
+   }):githubClient?createGitHubConfiguredFileReader(githubClient):undefined;
+   const adapters=[...(options.connections?.adapters??[]),...(files?[createLocalFileAdapter(files.resolve)]:[]),...(githubClient?[createGitHubFileAdapter(githubClient)]:[])];
+   const readAdapters=[...(options.connections?.readAdapters??[]),...(githubReader?[githubReader]:[])];
    const service=createConnectionService(permission,configs,operations,adapters,{...(options.connections??{}),readAdapters});
    if(files)localFiles=Object.freeze({register:files.register,read:createReadBoundary(permission,createLocalFileReader(files.resolve)).read});
    if(directories&&directoryReader)localDirectories=Object.freeze({register:directories.register,read:createReadBoundary(permission,directoryReader).read});
