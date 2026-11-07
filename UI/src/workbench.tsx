@@ -1,9 +1,9 @@
-import {Fragment,useEffect,useRef,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {SpacePanel} from './space.js';
 import {MiddleWorkspace} from './middle-workspace.js';
-import {columnWidths,defaultLayout,layoutKey,panelHeights,resizeColumns,resizePanels,restoreLayout} from './layout.js';
-import type {Layout,PanelKind} from './layout.js';
+import {columnWidths,defaultLayout,layoutKey,resizeColumns,restoreLayout} from './layout.js';
+import type {Layout} from './layout.js';
 import type {DesktopBridge,DesktopStatus} from './index.js';
 type DividerProps={id:string;axis:'x'|'y';layout:Layout;value:number;disabled?:boolean;onDelta:(delta:number,initial:Layout)=>void;onRestore:(initial:Layout)=>void;onDragging:(value:boolean)=>void};
 function Divider(p:DividerProps){
@@ -23,9 +23,8 @@ function Divider(p:DividerProps){
   onKeyDown={event=>{if(p.disabled)return;const keys=p.axis==='x'?['ArrowLeft','ArrowRight']:['ArrowUp','ArrowDown'];
    if(keys.includes(event.key)){event.preventDefault();p.onDelta((event.key===keys[0]?-1:1)*(event.shiftKey?40:16),p.layout);}}}/>;
 }
-const panelNames:Record<PanelKind,string>={context:'对象信息',diagnostics:'运行状态',conversation:'对话'};
 export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:DesktopBridge;status:DesktopStatus;label:string;error:string;onRefresh:()=>void;onQuit:()=>void}){
- const [layout,setLayout]=useState<Layout>(()=>{try{return restoreLayout(localStorage.getItem(layoutKey));}catch{return defaultLayout();}});
+ const [layout,setLayout]=useState<Layout>(()=>{try{return restoreLayout(localStorage.getItem(layoutKey)??localStorage.getItem('wex.workbench.layout.v1'));}catch{return defaultLayout();}});
  const [layoutSaved,setLayoutSaved]=useState(true);
  const [dragging,setDragging]=useState(false),[settings,setSettings]=useState(false),[setting,setSetting]=useState('display');
  const grid=useRef<HTMLDivElement>(null);
@@ -35,11 +34,7 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
  });observer.observe(element);return()=>observer.disconnect();},[]);
  useEffect(()=>{if(dragging)return;try{localStorage.setItem(layoutKey,JSON.stringify(layout));setLayoutSaved(true);}catch{setLayoutSaved(false);}},[layout,dragging]);
  const widths=columnWidths(layout,size.width),mainHeight=layout.bottomOpen?Math.max(320,size.height*(1-layout.bottomRatio)-6):size.height;
- const stackHeight=Math.max(112,mainHeight-40),heights=panelHeights(layout,stackHeight);
- const rows=layout.panels.flatMap((p,i)=>i===layout.panels.length-1?[heights[i]+'px']:[heights[i]+'px','6px']).join(' ');
  const restore=(value:Layout)=>setLayout(value);
- function addPanel(){setLayout(s=>{if(s.panels.length>=6)return s;let n=1;while(s.panels.some(p=>p.id==='panel-'+n))n++;
-  return {...s,expanded:null,panels:[...s.panels,{id:'panel-'+n,kind:'context',weight:25,collapsed:false}]};});}
  const role=<div className="role-empty" aria-label="角色展示"><span aria-hidden="true">W</span><small>尚未添加角色素材</small></div>;
  return <SpacePanel bridge={bridge} render={parts=><main className="workbench" data-workbench data-dragging={dragging}>
   <header className="workbench-top"><div><strong>WEX</strong><span>个人工作台</span></div><div className="top-actions"><span className={'phase '+status.phase} role="status">{label}</span><button aria-pressed={layout.bottomOpen} onClick={()=>setLayout({...layout,bottomOpen:!layout.bottomOpen})}>输出</button><button onClick={onQuit}>{status.phase==='release-pending'?'重试退出':'退出应用'}</button></div></header>
@@ -47,7 +42,7 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
    <aside data-column="navigation" className={'workbench-navigation '+(layout.collapsed?'is-collapsed':'')} style={{gridColumn:1,gridRow:'1 / -1'}}>
     <div className="navigation-top"><strong>{layout.collapsed?'W':'工作空间'}</strong><button aria-label={layout.collapsed?'展开导航':'折叠导航'} onClick={()=>setLayout({...layout,collapsed:!layout.collapsed})}>{layout.collapsed?'›':'‹'}</button></div>
     <div className="navigation-scroll"><button className="nav-primary" aria-pressed={!settings} onClick={()=>setSettings(false)}>{layout.collapsed?'◫':'Space / Context'}</button>
-     {!layout.collapsed&&<><button disabled title="对话入口尚不可用">普通对话</button>{parts.categories}</>}
+     {!layout.collapsed&&<><button disabled title="对话入口尚不可用">普通对话</button >{parts.categories}{parts.structure}</>}
     </div>
     <div className="navigation-bottom"><button aria-label="设置" title="设置" aria-pressed={settings} onClick={()=>setSettings(true)}>{layout.collapsed?'⚙':'设置'}</button></div>
    </aside>
@@ -72,23 +67,10 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
     </div>
    </section>
    <aside data-column="auxiliary" className="workbench-auxiliary" style={{gridColumn:5,gridRow:1}}>
-    {layout.auxiliaryOpen?<><div className="auxiliary-heading"><button aria-label="收起辅助区" onClick={()=>setLayout({...layout,auxiliaryOpen:false})}>‹</button><h2>辅助视图</h2><button aria-label="添加辅助面板" disabled={layout.panels.length>=6} onClick={addPanel}>＋</button></div>
-    <div className="auxiliary-stack" style={{gridTemplateRows:layout.expanded||!layout.panels.length?'minmax(0,1fr)':rows}}>
-     {!layout.panels.length&&<div className="empty-panel"><p>未打开辅助面板</p><button onClick={addPanel}>添加面板</button></div>}
-     {layout.panels.map((p,i)=><Fragment key={p.id}><section className="aux-panel" hidden={layout.expanded!==null&&layout.expanded!==p.id}>
-      <div className="panel-heading"><button aria-label={p.collapsed?'展开面板':'折叠面板'} onClick={()=>setLayout({...layout,expanded:null,panels:layout.panels.map(x=>x.id===p.id?{...x,collapsed:!x.collapsed}:x)})}>{p.collapsed?'▸':'▾'}</button>
-       <select aria-label="辅助面板内容" value={p.kind} onChange={e=>setLayout({...layout,panels:layout.panels.map(x=>x.id===p.id?{...x,kind:e.target.value as PanelKind}:x)})}>{Object.entries(panelNames).map(([value,name])=><option key={value} value={value}>{name}</option>)}</select>
-       <button aria-label="上移面板" disabled={!i} onClick={()=>{const panels=[...layout.panels];[panels[i-1],panels[i]]=[panels[i]!,panels[i-1]!];setLayout({...layout,panels});}}>↑</button>
-       <button aria-label="下移面板" disabled={i===layout.panels.length-1} onClick={()=>{const panels=[...layout.panels];[panels[i],panels[i+1]]=[panels[i+1]!,panels[i]!];setLayout({...layout,panels});}}>↓</button>
-       <button aria-label={layout.expanded===p.id?'还原面板':'占满辅助列'} onClick={()=>setLayout({...layout,expanded:layout.expanded===p.id?null:p.id,panels:layout.panels.map(x=>x.id===p.id?{...x,collapsed:false}:x)})}>{layout.expanded===p.id?'↙':'↗'}</button>
-       <button aria-label="移除辅助面板" onClick={()=>setLayout({...layout,expanded:null,panels:layout.panels.filter(x=>x.id!==p.id)})}>×</button>
-      </div><div className="panel-body" hidden={p.collapsed}>
-       {p.kind==='context'?parts.summary:p.kind==='diagnostics'?<><p className="phase">{label}</p>{status.diagnostics.length?<ul>{status.diagnostics.map((d,j)=><li key={j}>{d.module}：{d.reason}</li>)}</ul>:<p>当前没有模块故障记录。</p>}<small>此处显示宿主运行状态。</small></>:<div className="conversation-unavailable"><h3>对话</h3><p>对话功能当前不可用。</p><p>语音模型未配置。</p></div>}
-      </div></section>
-      {i<layout.panels.length-1&&<div hidden={layout.expanded!==null}><Divider id={'panel-'+i} axis="y" layout={layout} value={heights[i]!/(heights[i]!+heights[i+1]!)*100} disabled={p.collapsed||layout.panels[i+1]!.collapsed} onDelta={(delta,s)=>setLayout(resizePanels(s,stackHeight,i,delta))} onRestore={restore} onDragging={setDragging}/></div>}
-     </Fragment>)}
-    </div>
-    </>:<button className="auxiliary-toggle" aria-label="展开辅助区" title="展开辅助区" onClick={()=>setLayout({...layout,auxiliaryOpen:true})}>›</button>}
+    {layout.auxiliaryOpen?<div className="auxiliary-placeholder">
+     <div className="auxiliary-heading"><button aria-label="收起辅助区" onClick={()=>setLayout({...layout,auxiliaryOpen:false})}>‹</button><h2>辅助区域</h2></div>
+     <p>辅助视图功能尚未接入。此区域目前只验证展开、收起及布局。</p>
+    </div>:<button className="auxiliary-toggle" aria-label="展开辅助区" title="展开辅助区" onClick={()=>setLayout({...layout,auxiliaryOpen:true})}>›</button>}
    </aside>
    {layout.bottomOpen&&<><div style={{gridColumn:'3 / -1',gridRow:2}}><Divider id="bottom" axis="y" layout={layout} value={layout.bottomRatio*100} onDelta={(delta,s)=>setLayout({...s,bottomRatio:Math.max(.12,Math.min(.5,s.bottomRatio-delta/size.height))})} onRestore={restore} onDragging={setDragging}/></div><section className="bottom-output" style={{gridColumn:'3 / -1',gridRow:3}}><strong>运行输出</strong><p>{label}</p>{status.diagnostics.map((d,i)=><p key={i}>{d.module}：{d.reason}</p>)}{error&&<p role="alert">{error}</p>}</section></>}
   </div></div>
