@@ -18,14 +18,13 @@
 第六批历史资料：[当时实验与限制](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)。原生Core+Loader实验、WEX外部DSH连接和Windows实机证据分别验收；预留平台不因局部实验通过进入正式施工。
 
 
-## 上级契约与文档入口
+## 直接依赖
 
-- **上级业务/职责研究（历史）：** [shared/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/shared/CONTRACT-archive.md)
-- **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [安全与数据持续性](../../docs/A0-产品构想与研究/方案与研究/既有研究/SECURITY-AND-PERSISTENCE-2026-10-31.md)
-- [Windows 生命周期](../../docs/A0-产品构想与研究/方案与研究/既有研究/WINDOWS-LIFECYCLE-2026-10-31.md)
+- [Shared 模块](../README.md)：Vault 与安全存储技术机制。
+- [App 模块](../../app/README.md)：可信 Windows 凭证适配入口。
+- [Windows 数据规则](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)：涉及安装主体/数据根时按需核对。
 
-本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
+本子目录不维护历史研究索引。
 
 ## G6：凭证引用的最小闭环
 
