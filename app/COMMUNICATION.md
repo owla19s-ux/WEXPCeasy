@@ -66,9 +66,9 @@ B：同仓以提交/构建组合锁定、就近记录语义修订，不预发每
 - C-AGENT：每固定版本分别验证submit、session/turn、流、resume/query/interrupt、cwd/backend和真实产物；headless/SDK/ACP不能合成全能接口。
 - C-RECOVERY：派发/保存前后崩溃、重复乱序结果、旧备份恢复但外部已改、资源未释放；保持unknown而不是自动重派。
 
-本批只设计/静态核对，未执行上述实验。依据：[第三批方法](../docs/WEXPC-GLOBAL-CONTRACT-MAP-V0.1.md)、[Agent](../docs/A0-产品构想与研究/方案与研究/既有研究/AGENT-ECOSYSTEM-2026-10-31.md)、[安全与持续性](../docs/A0-产品构想与研究/方案与研究/既有研究/SECURITY-AND-PERSISTENCE-2026-10-31.md)、[Windows](../docs/A0-产品构想与研究/方案与研究/既有研究/WINDOWS-LIFECYCLE-2026-10-31.md)。
+本批只设计/静态核对，未执行上述实验。依据：[第三批方法](../docs/A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)、[Agent](../docs/A0-产品构想与研究/方案与研究/既有研究/AGENT-ECOSYSTEM-2026-10-31.md)、[安全与持续性](../docs/A0-产品构想与研究/方案与研究/既有研究/SECURITY-AND-PERSISTENCE-2026-10-31.md)、[Windows](../docs/A0-产品构想与研究/方案与研究/既有研究/WINDOWS-LIFECYCLE-2026-10-31.md)。
 
-既定Electron约束来源：[Windows数据要求§9](../docs/WEXPC-SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)明确记录contextIsolation、sandbox、不开renderer nodeIntegration、受限preload和主进程校验IPC来源/参数/授权。A仅指该已确认方向；具体Windows IPC实现、窗口代次/握手与认证细节仍为B/C，不由研究报告升级为A。
+既定Electron约束来源：[Windows数据要求§9](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)明确记录contextIsolation、sandbox、不开renderer nodeIntegration、受限preload和主进程校验IPC来源/参数/授权。A仅指该已确认方向；具体Windows IPC实现、窗口代次/握手与认证细节仍为B/C，不由研究报告升级为A。
 
 
 ## 6. 第五批交错通信审查补充（B/C，非协议冻结）

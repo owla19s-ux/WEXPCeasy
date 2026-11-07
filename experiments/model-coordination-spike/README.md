@@ -1,7 +1,7 @@
 # 模型调用协调：一次性行为试点
 
 日期：2026-10-29。状态：实验，不是产品实现或正式 SDK。
-对应：[源码边界建议](../../docs/WEXPC-BOUNDARY-DECISION-NOTES-V0.1.md)。
+对应：[源码边界建议](../../docs/A0-产品构想与研究/方案与研究/架构研究历史/BOUNDARY-DECISION-NOTES-V0.1.md)。
 
 ## 问题和范围
 
