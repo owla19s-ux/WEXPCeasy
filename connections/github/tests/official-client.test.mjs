@@ -155,3 +155,24 @@ test('public read boundary reports cancelled while SDK credentials are pending',
  const pending=boundary.read({},target,controller.signal);await ready;controller.abort(Error('fixture-token'));
  assert.deepEqual(await pending,{status:'cancelled',reason:'aborted'});assert.equal(calls,0);
 });
+
+for(const content of ['before\ud800after','before\udc00after']){
+ test('file update rejects unpaired UTF-16 before credential lookup '+JSON.stringify(content),async()=>{
+  let resolutions=0,calls=0;
+  const factory=github.createGitHubOfficialClientFactory({resolveCredential:async()=>{resolutions++;return 'fixture-token';},
+   fetch:async()=>{calls++;return response(200,{content:{path:file.path,sha:'a'.repeat(40)},commit:{sha:'b'.repeat(40)}});}});
+  const result=await github.createGitHubFileAdapter(factory).execute(connection,target,
+   {kind:'put',message:'test',content,expectedSha:null},access());
+  assert.deepEqual(result,{status:'rejected',reason:'invalid_file_update'});
+  assert.equal(resolutions,0);assert.equal(calls,0);
+ });
+}
+test('file update preserves valid supplementary Unicode and does not normalize text',async()=>{
+ const content='e\u0301 中文 😀 𐐀',calls=[];
+ const factory=github.createGitHubOfficialClientFactory({resolveCredential:async()=> 'fixture-token',
+  fetch:async(_url,init)=>{calls.push(JSON.parse(init.body));return response(200,{content:{path:file.path,sha:'a'.repeat(40)},commit:{sha:'b'.repeat(40)}});}});
+ const result=await github.createGitHubFileAdapter(factory).execute(connection,target,
+  {kind:'put',message:'test',content,expectedSha:null},access());
+ assert.equal(result.status,'written');assert.equal(calls.length,1);
+ assert.equal(Buffer.from(calls[0].content,'base64').toString('utf8'),content);
+});
