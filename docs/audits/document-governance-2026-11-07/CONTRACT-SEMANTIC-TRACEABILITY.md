@@ -47,3 +47,42 @@
 ### 验证限制
 
 本次使用 GitHub 连接器定向读取文档和源码，**未克隆完整工作树、未执行测试、未验证完整相对链接/锚点，也未完成全部契约逐条对冲**。本报告仅建立可继续核验的证据与冲突清单，不能作为 0.1.1 模块签收。
+
+
+## 5. 第二轮深入对冲：Permissions 与 Space（2026-11-07）
+
+> 本节核对当前 main 的正式源文件及测试**文本**，并读取已有执行回执；**本轮未实际执行测试**。它纠正上文 CT-01/CT-04 的粗粒度描述，以本节较新核对为准。避免把未复跑的历史绿灯写作本次验收。
+
+### 5.1 Permissions 条款级对冲
+
+| 追踪 ID / 历史条款 | 产品决策及现行要求 | 最新源码与直接测试证据 | 对冲结论 |
+| --- | --- | --- | --- |
+| PER-01 / PERMISSIONS-EVALUATION-001：每次按可信主体、入口、目标与动作判断 | 精确判定，不默认允许；来源不明拒绝/不可判定 | `permissions/src/service.ts:2-18,43-63` 的 `Scope/Facts` 和 `evaluate`；`permissions/tests/local.test.mjs` 对跨主体、窗口、Context、目标、动作及代次隔离有测试 | **继承 / 基础实现有源码与测试**；实际 Windows 身份绑定仍待核 |
+| PERMISSIONS-ENTRY-001 / G3：入口独立，非对话不冒用 Conversation | 对话、本地 UI、Task、回调分开策略；用户已批准独立入口与默认拒绝 | `service.ts:50-56`：`local` 接受 `conversation:null`，但必须由可信宿主给出 `entryEnabled:true` 且存在精确 Grant；`conversation` 需要非空 Conversation；`task`、`callback` 仍 `entry_policy_unresolved`。测试：`permissions/tests/local.test.mjs`，集成 `permissions/tests/local-space.test.mjs`、`app/tests/context-groups.test.mjs` | **部分实现 / 纠正现行文档事实**：不再说“所有非对话入口均拒绝”；本地入口仅受控实现，Task/Callback 仍阻断 |
+| PER-02 / PERMISSIONS-GRANT-001：精确许可与审批 | 不允许 AI 自批或自然语言伪授权 | `service.ts:64-82` `trust.canManage` 前后核验、CAS/意图结果；`permissions/tests/local.test.mjs` 的独立 Grant/窗口测试 | **基础授权写入实现；交互式待批/审批策略仍未证明**，不能把 grant 等价为完整审批流程 |
+| PER-03 / PERMISSIONS-REVOCATION-001 / RECHECK-001：撤权与执行前复核 | 撤权不能复活过去许可，不宣称已停止外部动作 | `service.ts:84-90` 的 `recheck`，`local.test.mjs` 的撤权/重新授权旧决定失效测试；`space/src/service.ts:35-38,46-59` 使用复核 | **继承 / 基础实现有测试**；副作用边界与撤权竞态尚未被本轮证明 |
+| PER-04 / HISTORY-001：历史与可见查询 | 旧 Grant 是审计事实，不是当前有效授权；普通可见性应按许可限定 | `service.ts:91-96` `history` 仅在 `TrustPort.canReadHistory` 允许时返回完整记录 | **部分实现**：可信管理历史入口存在，普通用户按范围投影、分页、最小披露未证 |
+| D01 / D02 四级对话、工作流启动一次确认、AI 资格链 | `docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md` 标为 A 已确认（特殊信任边界为 B） | `Facts` 仅含基础开关/来源和局部 `entryEnabled`；`service.ts` 未提供对话四级/工作流节点许可计算；模块 README 自认未落地 | **规则已确认 / 仍未完整实现**：不得用现有基础 Grant 冒充四级/节点策略，也不得把 B 特殊边界升 A |
+
+**纠错依据**：`permissions/evidence/2026-11-05/local-entry.json` 报告已有 `npm run test:permissions` 14/14、`npm test` 223/223 及类型检查通过；此为 **2026-11-05 历史回执**，并明确真正 app/OS/IPC 身份接入未完成、模块未签收。本轮只读验证了其对应源文件和测试文件确实存在，未复跑这些命令。现行 `permissions/README.md` 中“非对话入口仍返回 entry_policy_unresolved”的笼统描述已落后于本地受控入口实现，需定点纠正。
+
+### 5.2 Space 条款级对冲
+
+| 追踪 ID / 历史条款 | 当前要求 | 最新源码与测试证据 | 对冲结论 |
+| --- | --- | --- | --- |
+| SPC-01 独立 Context 身份与组织本体 | Context ID 稳定，目录和组织变动不隐式搬正文 | `space/src/model.ts:3-8,24-25,56-58`；`space/tests/space.test.mjs` 的进程重启、目录保持测试 | **继承 / 正式实现可定位**；测试本轮未复跑 |
+| SPC-02 多处 Placement | 用户确认 **Placement 非产品层级**；保留“解除关系不删本体”的基本边界，是否支持多处引用须另判 | `model.ts:24,41,56` 每个 Registry `Registration` 仅有可选单个 `organization`；`service.ts:72-80` 更新该组织对象，跨 Space 返回 `cross_space_move_unconfirmed`；`space/tests/space.test.mjs` 明确把 `placement.add` 断言为 `unsupported_command` | **历史多 Placement 行为并未成为当前公共命令**；不能向 Codex 派工“实现 SPC-02 所有多处放置”，但也不能仅凭当前单位置代码擅自裁决长期多位置能力 |
+| Context 分组移动（后续新增） | 分类/Space/Group/Context 组织操作应保留身份，不搬资源；Context 不是目录别名 | `service.ts:72-80,211-215,239-247` 单组织记录、乐观修订、独立读取；`space/tests/context-groups.test.mjs` 含分组移动、重启恢复、旧修订、丢 ACK、离线目录和损坏拒绝；`app/tests/context-groups.test.mjs` 含真实 App/Permissions/Space/SQLite 组合（宿主身份为测试夹具） | **已实现相应有限范围并有独立测试文件**；Windows/真实 UI 与跨 Space 策略未验收 |
+| SPC-03/06 ResourceReferences 与主地址 | 主地址为选择，不等于目录/权限；附加地址含名称、地址、备注，可未验证 | `model.ts:6-8,30-49` 的 `primaryAddress` 与 `address.add/edit/remove`、`primary.select`；`space/tests/space.test.mjs` 的主仓/操作/产出/参考四条独立地址测试 | **继承 + 后续细化已实现基础功能**；不推断任意真实远端资源操作已完成 |
+| SPC-03 Tool/Association 不授权 | 工具资格、Context 开启、实际执行授权分离 | `model.ts:9-21,30-49` 的独立目标/关系与工具结构；`space/src/service.ts` 的权限/owner 检查；`space/tests/space.test.mjs` 的 Role/API 引用隔离测试 | **继承 / 基础关系实现**；工具真正执行属于其他 owner，不能据此宣称链路闭环 |
+
+### 5.3 新增确认的问题与分级
+
+- **DOC-P01（高）**：`permissions/README.md` 的“所有非对话入口阻断”表述落后于 `2026-11-05` 本地入口实现；**修正文档事实**，同时保留 Task/Callback 未开放、Windows IPC 未验收的明确限制。
+- **DOC-S01（高，产品裁决边界）**：旧 SPC-02 多处 Placement 与当前单组织接口不是同一能力。历史行为不能自动派工；如要多 Space 引用需明确用户语义、唯一性、关系生命周期、迁移与测试，不借文档治理改源码。
+- **DOC-T01（中）**：`space/tests/space.test.mjs` 存在“real permissions blocks local entry”的测试名称，但其测试夹具传入 `conversation:'none'` 且没有 `entryEnabled`，断言的是**不符合新本地入口规则的旧式请求被阻断**；不得把该单测解读为“所有合法 local 入口不能授权”。`permissions/tests/local.test.mjs` 已覆盖合规 local 正例。
+- **DOC-E01（一般）**：已读取历史通过回执和具体测试文件，但未获得本轮执行环境的最新结果；本审查不更新模块签收状态。
+
+### 5.4 下一阶段条款
+
+沿用同一方法定向核对 `connections` 公共派发与 `connections/api`、`connections/github`、`connections/local` 的历史条款、正式出口和测试，尤其注意 GitHub 官方组件尚未完整集成、环境管理独立 owner，以及 Operation 结果未知不得自动重派。未审其他 CONTRACT 不标为已收敛。
