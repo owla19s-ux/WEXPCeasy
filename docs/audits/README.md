@@ -4,7 +4,7 @@
 
 ## 审查报告
 
-- [2026-11-07 第九轮现行模块标题锚点与兼容路径消费审查](document-governance-2026-11-07/NINTH-PASS-ANCHOR-SLUG-AND-LIVE-REDIRECTS.md)：定向核对 36 份模块/入口文档中的 23 个相对章节链接，排查旧路径搜索命中，并修复两处仍绕行兼容页的现行导航；不代表全仓脚本/CI 反向引用或完整锚点验证。
+- [2026-11-07 第九轮锚点、旧路径消费与真实 CI 失败诊断](document-governance-2026-11-07/NINTH-PASS-ANCHOR-SLUG-AND-LIVE-REDIRECTS.md)：核对 36 份模块/入口文档中的 23 个相对章节链接、修复两处绕行兼容页的现行导航；**Documentation audit 在 `7a8d4ed4` 失败**，确认 A0 归档的外部 DSH 快照未被现行检查器正确分类，仍待完整问题清单和同 SHA 严格复验。
 - [2026-11-07 第八轮锚点与旧路径反向引用专项](document-governance-2026-11-07/EIGHTH-PASS-ANCHORS-AND-REVERSE-REFERENCES.md)：现行入口关键标题定向核对、旧兼容路径搜索结果分类、末级 UI 文档修复和 `workflows/grid` owner 冲突记录；未执行全量锚点/代码字符串检查。
 - [2026-11-07 第七轮完整 Git 树与 Markdown 路径核验](document-governance-2026-11-07/SEVENTH-PASS-CURRENT-TREE-LINKS.md)：先取未截断递归树（基线 844 个 blob、406 份 Markdown），后在新增记录的 407 份 Markdown 上完成**普通行内相对链接目标存在性**分批检查；DSH 上游快照的缺失目标单列。不等于全部锚点、引用式链接、脚本反向路径或构建测试验收。
 - [2026-11-07 第六轮 CONTRACT 与子目录审查](document-governance-2026-11-07/SIXTH-PASS-CONTRACT-AND-SUBMODULE-AUDIT.md)：区分现行模块 README、兼容 CONTRACT、历史候选规格，并修复第二层源码目录资料引用；尚未完成全仓链接与测试验收。
