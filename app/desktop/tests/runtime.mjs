@@ -36,7 +36,7 @@ try{
  assert.equal(facts.reply.value.phase,'ready');assert.equal(facts.title,'WEXPCeasy');assert.match(facts.text,/WEXPCeasy/);
 // Exercise the actual React form through DOM events; only native platform interactions are fixtures.
  const click=async text=>wc.executeJavaScript(`(()=>{const b=[...document.querySelectorAll('button')].find(x=>(x.textContent.trim()===${JSON.stringify(text)}||x.getAttribute('aria-label')===${JSON.stringify(text)}));if(!b)throw Error('button_missing');b.click();return true;})()`);
- const waitFor=async expression=>{const end=Date.now()+10000;while(!await wc.executeJavaScript(expression)){if(Date.now()>end)throw Error('renderer_wait_timeout');await new Promise(r=>setTimeout(r,25));}};
+ const waitFor=async expression=>{const end=Date.now()+10000;while(!await wc.executeJavaScript(expression)){if(Date.now()>end){console.error('RENDERER_WAIT',expression,await wc.executeJavaScript("({dragging:document.querySelector('[data-workbench]')?.dataset.dragging,layout:localStorage.getItem('wex.workbench.layout.v1')})"));throw Error('renderer_wait_timeout');}await new Promise(r=>setTimeout(r,25));}};
  await waitFor("!!document.querySelector('[data-workbench]')");
  await wc.executeJavaScript("document.querySelector('[aria-label=\"折叠导航\"]').click();true");
  await waitFor("document.querySelector('[data-column=\"navigation\"]').getBoundingClientRect().width===56");
@@ -44,16 +44,22 @@ try{
  assert.equal(columns.length,4);assert.ok(columns[2]>=360);
  const divider=await wc.executeJavaScript("(()=>{const r=document.querySelector('[data-divider=\"column-1\"]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+80)};})()");
  wc.sendInputEvent({type:'mouseMove',...divider});wc.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...divider});
- wc.sendInputEvent({type:'mouseMove',x:divider.x+24,y:divider.y});wc.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:divider.x+24,y:divider.y});
+ await waitFor("document.querySelector('[data-workbench]').dataset.dragging==='true'");
+ wc.sendInputEvent({type:'mouseMove',x:divider.x+24,y:divider.y});
  await waitFor("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width>"+(columns[1]+12));
+ wc.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:divider.x+24,y:divider.y});
+ await waitFor("document.querySelector('[data-workbench]').dataset.dragging==='false'");
  const adjusted=await wc.executeJavaScript("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width");
  await wc.executeJavaScript("document.querySelector('[data-divider=\"column-1\"]').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));true");
  await waitFor("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width<"+(adjusted-8));
  const panelBefore=await wc.executeJavaScript("document.querySelector('.aux-panel').getBoundingClientRect().height");
  const handle=await wc.executeJavaScript("(()=>{const r=document.querySelector('[data-divider=\"panel-0\"]').getBoundingClientRect();return {x:Math.round(r.x+80),y:Math.round(r.y+r.height/2)};})()");
  wc.sendInputEvent({type:'mouseMove',...handle});wc.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...handle});
- wc.sendInputEvent({type:'mouseMove',x:handle.x,y:handle.y+16});wc.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:handle.x,y:handle.y+16});
+ await waitFor("document.querySelector('[data-workbench]').dataset.dragging==='true'");
+ wc.sendInputEvent({type:'mouseMove',x:handle.x,y:handle.y+16});
  await waitFor("document.querySelector('.aux-panel').getBoundingClientRect().height>"+(panelBefore+6));
+ wc.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:handle.x,y:handle.y+16});
+ await waitFor("document.querySelector('[data-workbench]').dataset.dragging==='false'");
  await wc.executeJavaScript("[...document.querySelectorAll('[aria-label=\"占满辅助列\"]')].at(-1).click();true");
  await waitFor("document.querySelectorAll('.aux-panel:not([hidden])').length===1");
  await wc.executeJavaScript("document.querySelector('[aria-label=\"还原面板\"]').click();true");
