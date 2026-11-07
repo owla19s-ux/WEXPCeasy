@@ -2,7 +2,7 @@
 
 > **代码事实核对（2026-11-04，基线 `1048b6a`）**：产品源码 4 文件、测试 5 文件，公开入口 `shared/src/index.ts`。本轮根测试覆盖 shared、permissions、app、connections 及边界工具；不代表完整本版验收。 开工须重新核对最新 main。
 
-> **施工入口说明（2026-11-07）**：本页仅负责 shared 独立维护与验收；当前跨模块施工任务从 [根 README](../README.md) 与 [0.1.1 B3 任务](../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md) 定向进入。过去“当前模块是 Space”的说法为历史状态，不是现在的统一调度。工作模式不得修改施工文档。
+> **施工入口说明（2026-11-07）**：本页仅负责 shared 独立维护与验收；当前授权施工从 [根 README](../README.md) 与 [A2 0.1.1 当前功能状态](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md) 定向进入；[B3 任务](../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md)只提供历史细化验收证据，不规定所有任务的固定施工顺序。过去“当前模块是 Space”的说法为历史状态，不是现在的统一调度。工作模式不得修改施工文档。
 >
 > **实现状态（文档证据，待实时核查）**：已有 `shared/src/index.ts`、`shared/tests/` 和 `npm run test:shared` 入口；此前记录 SQLite 命名空间 Store/CAS、数据根检查、受限路径定位、合作目录锁、诊断 sink 已实现。本文更新没有重新执行测试或 Windows 实机验证。
 
@@ -47,4 +47,4 @@ shared 只提供可复用的**技术机制**，不拥有 Space/Context、Agent�
 
 **当前验收状态（2026-11-07 定向源码核对）**：已确认 `shared/src/index.ts` 实际公开 Store、路径、Vault 与持久诊断，相关模块测试文件存在；本轮只读核对源码/测试，**没有复跑测试或 Windows 实机验收**。不得根据旧状态重复创建凭证库或诊断持久机制，也不能据代码存在宣布模块验收通过。
 
-历史完整研究：[shared 契约归档](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/shared/CONTRACT-archive.md)；旧 [CONTRACT](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/shared/CONTRACT-archive.md) 为兼容入口。Windows 数据要求：[目录与数据设计](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)。
+历史完整研究：[shared 契约归档](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/shared/CONTRACT-archive.md)；源码目录中的 [CONTRACT.md](CONTRACT.md) 仅保留历史入口兼容，不与本 README 并行维护现行接口。Windows 数据要求：[目录与数据设计](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)。
