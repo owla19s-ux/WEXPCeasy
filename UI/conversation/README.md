@@ -2,7 +2,9 @@
 
 对话页面。页面自身的弹窗、按钮和局部交互就近维护，简单时放一个页面文件；业务调用 conversations。
 
-状态：2026-10-30 按用户确认建立的源码维护目录，当前只有职责说明，尚无产品实现。目录不是运行时数据路径，也不代表独立插件、进程或编译包。
+> **2026-11-07 状态校正**：该子目录目前仍只有职责说明、尚无正式对话页面产品源码；但 **`conversations/src/` 与 `conversations/tests/` 已有领域代码和测试**。不得把“此 UI 子目录未实现”理解成整个 Conversations 模块没有产品实现。本版正式页面仍需按 B3 D-05 接线和验收，不能把领域测试等同可用对话 UI。
+
+这是 UI 页面职责预留位置，不是运行时数据路径、独立插件、进程或编译包。
 
 [源码目录与 Windows 数据要求](../../docs/WEXPC-SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
 
@@ -11,7 +13,7 @@
 
 ## 上级契约与文档入口
 
-- **上级契约：** [UI/CONTRACT.md](../../UI/CONTRACT.md)
+- **现行 UI 入口：** [UI/README.md](../../UI/README.md)
 - **上级契约：** [conversations/CONTRACT.md](../../docs/research/contracts/conversations/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [全局契约地图](../../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
