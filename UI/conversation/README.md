@@ -14,7 +14,7 @@
 ## 上级契约与文档入口
 
 - **现行 UI 入口：** [UI/README.md](../../UI/README.md)
-- **上级契约：** [conversations/CONTRACT.md](../../docs/research/contracts/conversations/CONTRACT-archive.md)
+- **上级契约：** [conversations/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/conversations/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [全局契约地图](../../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
 
