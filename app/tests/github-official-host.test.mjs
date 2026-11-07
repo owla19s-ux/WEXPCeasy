@@ -35,7 +35,13 @@ async function setup(t,githubOfficial,extra={}){
   return host.credentials.put(request('credentials','credential.write','credential:key-a'),{id:'key-a',intent:'save-'+(++n),expectedRevision,binding,secret});
  }
  const config=(revision=1,id='gh')=>({id,adapter:'github',endpoint:'https://api.github.com',credentialRef:githubCredentialRef({id:'key-a',revision}),enabled:true});
- return {root,options,counts,request,save,config,get host(){return host;},
+ return {root,options,counts,request,save,config,
+  revoke(resource,action,permissionTarget){
+   const r=request(resource,action,permissionTarget),f=facts.get(r);
+   const scope={subject:f.subject,entry:f.entry,conversation:f.conversation,context:f.context,resource:f.resource,action:f.action,target:f.target,relationship:f.relationship,relationshipGeneration:f.relationshipGeneration};
+   const change={intent:'revoke-'+(++n),expectedRevision:host.permissions.history(history).revision,scope};approved.add(change);
+   assert.equal(host.permissions.revoke(change).status,'committed');
+  },get host(){return host;},
   async reopen(){assert.equal((await host.stop()).status,'stopped');host=await startFoundations(options);assert.equal(host.status,'ready');return host;}};
 }
 test('official GitHub host requires credential custody and never falls back to unbound credentials',async t=>{
@@ -94,4 +100,24 @@ test('official GitHub host retains its root while an admitted SDK read drains du
  }finally{finish();}
  assert.notEqual((await pending).status,'ok');assert.equal((await h.host.stop()).status,'stopped');
  await h.reopen();
+});
+
+test('vault rechecks real GitHub permission revocation after unsealing and after restart',async t=>{
+ let calls=0;const h=await setup(t,{fetch:async()=>{calls++;return body();}});
+ assert.equal(h.save().status,'committed');assert.equal(h.host.connections.configs.put(h.config(),0,'config').status,'ok');
+ const r=h.request('github','read',target),unseal=h.options.credentials.cipher.unseal;
+ h.options.credentials.cipher.unseal=value=>{const secret=unseal(value);h.revoke('github','read',target);return secret;};
+ assert.notEqual((await h.host.connections.read('github',r,'gh',1,target)).status,'ok');assert.equal(calls,0);
+ assert.equal(h.counts.unseal,1);await h.reopen();
+ assert.equal((await h.host.connections.read('github',r,'gh',1,target)).status,'denied');assert.equal(calls,0);
+});
+test('host never falls back from an invalid selected MCP runtime to SDK or unseals a credential',async t=>{
+ let calls=0;const h=await setup(t,{mcpRuntime:{command:process.execPath,expectedSha256:'0'.repeat(64)},fetch:async()=>{calls++;return body();}});
+ assert.equal(h.save().status,'committed');assert.equal(h.host.connections.configs.put(h.config(),0,'config').status,'ok');
+ assert.notEqual((await h.host.connections.read('github',h.request('github','read',target),'gh',1,target)).status,'ok');
+ assert.equal(calls,0);assert.equal(h.counts.unseal,0);
+});
+test('host rejects ambiguous legacy and official GitHub assembly instead of choosing a client',async t=>{
+ const h=await setup(t,{}, {githubFiles:{client:async()=>{throw Error('must not resolve');}}});
+ assert.equal(h.host.status,'degraded');assert.equal(h.host.connections,undefined);assert.equal(h.counts.unseal,0);
 });
