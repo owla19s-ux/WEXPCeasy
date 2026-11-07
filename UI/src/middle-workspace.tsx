@@ -6,10 +6,11 @@ type View={id:ViewId;title:string};
 const defaults:View[]=[{id:'context',title:'Context 配置'}];
 type State={tabs:View[];active:ViewId;preview:boolean;previewPercent:number};
 const key='wex.middle-workspace.v1';
+const storageKey=(contextId:string|null)=>key+':'+(contextId??'unselected');
 const fallback=():State=>({tabs:defaults,active:'context',preview:false,previewPercent:48});
-function restore():State{
+function restore(contextId:string|null):State{
  try{
-  const v=JSON.parse(localStorage.getItem(key)||'null') as State;
+  const v=JSON.parse(localStorage.getItem(storageKey(contextId))||'null') as State;
   if(!v||!Array.isArray(v.tabs)||v.tabs.length<1||v.tabs.length>2)return fallback();
   const allowed=new Set<ViewId>(['context','structure']),ids=new Set<ViewId>();
   const tabs:View[]=[];
@@ -24,12 +25,12 @@ function restore():State{
 }
 /** View tabs belong to the UI. Actual Context, resource and edit state remain with their owning modules. */
 export function MiddleWorkspace({parts}:{parts:SpaceSections}){
- const [state,setState]=useState<State>(restore);
+ const [state,setState]=useState<State>(()=>restore(parts.contextId));
  const [renaming,setRenaming]=useState<ViewId|null>(null);
  const [width,setWidth]=useState(0);
  const host=useRef<HTMLDivElement>(null);
  const drag=useRef<{x:number;percent:number;pointer:number}|null>(null);
- useEffect(()=>{try{localStorage.setItem(key,JSON.stringify(state));}catch{/* Layout is best-effort; business data never lives here. */}},[state]);
+ useEffect(()=>{try{localStorage.setItem(storageKey(parts.contextId),JSON.stringify(state));}catch{/* Layout is best-effort; business data never lives here. */}},[state,parts.contextId]);
  useEffect(()=>{if(!host.current)return;const observer=new ResizeObserver(entries=>setWidth(entries[0]?.contentRect.width??0));observer.observe(host.current);return()=>observer.disconnect();},[]);
  const active=state.tabs.find(t=>t.id===state.active)!;
  const split=state.preview&&width>=620;
