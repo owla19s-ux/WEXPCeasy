@@ -111,3 +111,35 @@
 **DOC-C01（中）：** 保持 Operation 单一账本，严禁具体连接器另建正式尝试账本；外部写入发生后失败、超时或连接断开需要核对原 Operation，不能把 REST/MCP 超时当确定未写入。
 
 **限制：** 尚未执行 `npm test`、`npm run test:github`（实际命令需按 package.json 核验）或 Actions 全部运行集合的 SHA 检查；没有验证 GitHub 实例的真实读写权限、官方 MCP Server 二进制分发和 Windows 实机运行。代码存在不等于业务验收。
+
+
+## 7. 第四轮条款对冲：App / Shared / AI / Conversations（2026-11-07）
+
+> 核验本轮开始时 main `a824ceba2d3b...`。本节直接读取现行 README、四份历史 CONTRACT、正式代码的公开出口及关键测试文本；**未运行本轮测试或 Windows 实机**。以下「有测试」指测试源码可定位，不代表当前 SHA 已通过。
+
+| 历史条款 | 当前设计/owner 边界 | 最新产品源码与测试定位 | 分类及派工限制 |
+| --- | --- | --- | --- |
+| APP-01 数据根/安装接入 | App 决定可信启动与用户数据根；Shared 仅验证根和路径，不得在失盘时静默建空业务数据 | `app/src/desktop-main.ts` 已有 Electron 启动、根选择及凭证适配入口，`app/src/foundations.ts` 已有真实模块装配；`app/README.md` 明示 Windows 安装、首次选根、重装恢复仍待验收 | **继承/部分实现**：不要因历史“仅 headless”重新建桌面启动入口；也不能据现有 `desktop-main` 宣称安装完整 |
+| APP-02 可信装配/窄 IPC | 宿主提供可信事实，不复制 Space、AI、Conversation、Operation 或 Permissions 权威 | `app/src/index.ts` 导出 `assemble` 与 `startFoundations`，`app/src/foundations.ts` 公开注入 Permissions、Shared、Space、Connections、API、AI、Conversations；已有 `desktop-*.ts` 正式入口 | **继承/部分实现**：基础宿主已有，Windows 真身份/IPC/来源绑定还须以具体调用和测试逐项核对 |
+| APP 生命周期/恢复 | 关闭窗口不等于停止工作；不同 Owner 的在途状态分开恢复 | `app/src/foundations.ts` 装配、生命周期与停机；`app/README.md` 列有连接排空证据，仍未宣称完整 Windows 恢复/安装 | **继承/部分实现**：不得把关闭进程当 Task/Operation 已完成；不能凭最小停机测试推导外部 Agent 终止 |
+| SH-01/02 数据根、SQLite/CAS/Intent | Shared 管技术持久化，不管理领域业务语义 | `shared/src/index.ts` 导出 `inspectRoot`、`directoryLock`、`openSqliteStore`；`shared/src/storage.ts` 存在 `Store.read/commit/query`、快照/期望修订/意图；领域消费于 `app/src/foundations.ts` | **继承/基础实现存在**：跨库原子、Windows ACL/进程竞态不因此成立 |
+| SH-04/05 凭证引用与系统后端 | 业务只保存凭证引用；真实秘密不进入普通配置和日志，授权另由 Permissions | `shared/src/credentials.ts` 有 `createCredentialVault`、Cipher/Binding/Access；`app/src/desktop-credentials.ts` 有 `createWindowsCredentialCipher` 并调用受限 `safeStorage` 抽象；测试 `shared/tests/credentials.test.mjs`、`app/tests/desktop-credentials.test.mjs`、`app/desktop/tests/credential-storage.mjs` | **原“未实现”状态已替换为部分实现**：已有源码与测试，不可重复造 Vault；实际 Windows 系统身份/凭证恢复与卸载重装仍未验收 |
+| SH-06 技术诊断 | 技术日志不替代业务账本，不泄漏秘密 | `shared/src/persisted-diagnostics.ts` 导出 `createPersistedDiagnostics`；`shared/tests/persisted-diagnostics.test.mjs` 测试 SQLite 重启回读、字段白名单、容量失败保留、提交 unknown 与损坏拒绝；`app/src/foundations.ts` 装配 | **部分实现且测试存在**：旧“仅受限 sink、无持久技术诊断”不能用于现行施工。完整日志轮转/Windows 目录/脱敏实测仍待验 |
+| SH-03 备份与恢复 | 技术原语不决定领域对象和跨模块恢复政策 | Shared 当前公开出口未见完整全域备份/恢复流程；`shared/README.md` 仍列为规划 | **未确认完整实现/待证**：已有 SQLite 重启和领域恢复不等于全量备份恢复 |
+| AIC-01/02 Agent/角色/职责 | Role、Position、Agent、Model 引用与权限分离 | `AI/src/index.ts:6-10` 的 `Configuration` 明确 `role`、`position`、`agent` 三类；`createAiConfigurations`、`verifyModelWithApi`；`AI/tests/config.test.mjs` 验证修订、模型引用与拒绝 | **继承/基础配置实现**；角色配置不是自主 Agent Runtime，亦非授予权限 |
+| AIC-03/04 运行实例/Session 映射 | 配置引用与实际执行 Session/外部代理是不同对象 | 当前 AI 公开入口主要为配置与模型引用验证；`AI/README.md` 将自主引擎及外部 Session 生命周期留待后续 | **部分实现/长期能力未证**：不得让 Codex 在 0.1.1 因历史条款补全自主循环或 DSH Session |
+| AIC-05～09 派生记忆、共享、用户偏好 | D10/保留策略未批准，前期不建立长期记忆平台 | `AI/src/index.ts` 所读公开配置类型未定义长期记忆实体；`AI/README.md` 明示当前不冻结记忆模型 | **延期/待裁决**：旧契约完整需求是历史追溯，不是当下施工授权 |
+| CV-01/02/03 会话、消息、序列项 | 独立 Conversation 不依赖 Task/Context，消息属于本域 | `conversations/src/index.ts:5-25` 的 `Message/Segment/Generation/Conversation` 和 `createConversations`；`conversations/tests/conversations.test.mjs` 验证消息、重启恢复及损坏拒绝 | **继承/基础实现**；正式 UI 交互另验 |
+| CV-04/06/07/08/09/12 段落选择、重发、生成、工具往返 | 区分原消息、修订/重发、逻辑生成和 Operation；未知副作用不可盲重试 | `conversations/src/index.ts:18-26` 目前有 `select`、`append`、`resend`、`begin`、`finish`、`dispatch`、`cancel/fail/unknown`；`createConversationGeneration`；`conversations/tests/conversations.test.mjs` 包括取消与迟到回执情形 | **部分实现**：现有 `append` 是消息加入/保存命令，不能自动认定支持历史 CV-07「生成期间独立追加队列」；`select` 不等于 CV-15 采纳/拒绝；流式对接和正式页面另验 |
+| CV-05/15/16 分支、采纳、序列项局部补充 | 独立分支与主线采纳不同于消息选中；复杂交互不应借普通消息操作冒充 | 当前 `ConversationChange` 没有显式 `branch`、`accept/reject` 或单序列项修订命令；`conversations/README.md` 也未宣称完整分支实现 | **仍属缺口/待版本核对**：不凭历史 CV 编号自动扩 0.1.1；也不据源码缺少同名命令断言用户需求已废止 |
+
+### 7.1 高优先级的施工误判
+
+- **DOC-SH01（高，事实过时）**：`shared/README.md` “凭证与安全存储：历史设计”“SH-06 仅 sink”的旧阶段描述需要改成**已有 Vault、Windows 安全存储适配和持久诊断源码/测试，真实 Windows 安全与运行恢复仍未验收**；不可复制创建另一套凭证库/诊断账本。
+- **DOC-AI01（中）**：历史 AI 契约的 AIC-05～09 不足以授权 0.1.1 建记忆平台；`AI/src/index.ts` 的角色/岗位/Agent 配置已经实现对应基本对象。
+- **DOC-CV01（高，功能等价风险）**：消息段落 `select` 与「明确采纳/拒绝」不同；当前 `append` 不自动证明“生成中追加下一轮输入队列”，`resend` 不证明历史分支/局部修订齐备。验收需要按业务行为查而不是按方法名计数。
+- **DOC-APP01（高，安全）**：App 已有正式 Electron/React 宿主和业务装配，但不能借宿主存在而放行尚缺可信身份确认的 IPC/Task/回调；继续引用 Permissions 受限 local 入口政策和严格操作授权。
+
+### 7.2 证据限制
+
+没有最新全仓构建、真实 Windows E4、完整进程/文件系统或凭证系统验收；测试文件存在与其历史报告分开记录。以上代码路径是可继续逐断言核验的具体定位，不构成自动签收。
