@@ -78,7 +78,7 @@ DSH宿主唯一维护原生包/版本、Service依赖、就绪、加载/卸载�
 重新加载不自动重试失败Operation；卸载失败/残留进程保留证据，app协调宿主释放，workflows决定工作后续。不能为补一个缺Service未经论证引入完整Agent引擎。断言：P1/P2共享S，P1卸载不移除仍需的S；S不兼容升级不能继续发布旧就绪描述；旧P1回调不注册为新P1身份；外部Agent断连不影响原生宿主被错误重启。真实Core+Loader依赖生命周期已有局部Linux证据，但该多插件升级/回执组合仍E0，需固定真实第三方包与Windows补证。
 
 
-第六批：[最新准备度/证据及限制](../docs/batch6/EXPERIMENTS.md)。原生Core+Loader实验、WEX外部DSH连接和Windows实机证据分别验收；预留平台不因局部实验通过进入正式施工。
+第六批：[最新准备度/证据及限制](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)。原生Core+Loader实验、WEX外部DSH连接和Windows实机证据分别验收；预留平台不因局部实验通过进入正式施工。
 
 
 ## 文档入口与证据边界
@@ -87,6 +87,6 @@ DSH宿主唯一维护原生包/版本、Service依赖、就绪、加载/卸载�
 - [全局架构：双插件体系边界](../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)
 - [运行时扩展契约研究](../docs/A0-产品构想与研究/方案与研究/架构研究历史/RUNTIME-EXTENSION-CONTRACT-V0.1.md)
 - [DSH 能力差距审计](../docs/A0-产品构想与研究/方案与研究/审查历史/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
-- [第六批实验与证据](../docs/batch6/EXPERIMENTS.md)
+- [第六批实验与证据](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)
 
 本目录当前为预留机制或独立实验，不等于完整产品模块已获施工准入。研究/实验结果只证明其明确记录的范围；不得外推为完整 WEX 集成、Windows 实机或生产可用性。
