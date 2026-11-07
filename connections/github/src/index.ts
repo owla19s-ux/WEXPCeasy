@@ -121,7 +121,7 @@ export function createGitHubOfficialClientFactory(options:GitHubOfficialClientOp
    auth:secret,baseUrl:'https://api.github.com',
    retry:{enabled:false},throttle:{enabled:false},
    log:{debug(){},info(){},warn(){},error(){}},
-   request:{fetch:async(url,init)=>{
+   request:{fetch:async(url:Parameters<typeof globalThis.fetch>[0],init?:Parameters<typeof globalThis.fetch>[1])=>{
     if(!check())throw Error('github_access_unavailable');
     const signal=init?.signal?AbortSignal.any([init.signal,AbortSignal.timeout(timeoutMs)]):AbortSignal.timeout(timeoutMs);
     if(signal.aborted)throw Error('github_request_cancelled');
