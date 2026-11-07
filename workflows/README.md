@@ -10,12 +10,12 @@
 >
 > **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
 >
-> **研究迁移**：历史深度契约归档于 [docs/research/contracts/workflows/CONTRACT-archive.md](../docs/research/contracts/workflows/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
+> **研究迁移**：历史深度契约归档于 [docs/research/contracts/workflows/CONTRACT-archive.md](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/workflows/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
 
 
 **状态（2026-11-01）**：workflows 维护工作流业务数据；运行调度方向已更新为独立顶层 scheduler；现有 React Flow 仅为历史交互实验；模块细分使用 WORKFLOWS-* 编号，模式和软件开发子域保留 MODE-*、SD-*。当前画布方向调整为自研轻量自由画布，设计见 [当前工作流画布架构](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)。本域尚无正式工作流调度产品代码。
 
-> **版本边界（2026-11-02）**：正式自由格子工作流、任务调度器和节点运行属于 **0.1.2**；本目录在 0.1.1 仅作为长期架构/契约参考，不是当前施工派工。见 [0.1.1 计划](../docs/versions/0.1.1/PLAN.md)。历史准备度和实验不改变版本边界。
+> **版本边界（2026-11-02）**：正式自由格子工作流、任务调度器和节点运行属于 **0.1.2**；本目录在 0.1.1 仅作为长期架构/契约参考，不是当前施工派工。见 [0.1.1 计划](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)。历史准备度和实验不改变版本边界。
 
 ## 职责
 
@@ -27,7 +27,7 @@
 
 ## 模块编号规则
 
-- 核心工作流业务能力：`WORKFLOWS-<子域>-NNN`，详细清单见 [CONTRACT 第 6 节](../docs/research/contracts/workflows/CONTRACT-archive.md#6-模块独立功能编号与细化契约)。
+- 核心工作流业务能力：`WORKFLOWS-<子域>-NNN`，详细清单见 [CONTRACT 第 6 节](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/workflows/CONTRACT-archive.md#6-模块独立功能编号与细化契约)。
 - 自由格子交互：`WORKFLOWS-EDITOR-NNN`，由本目录承接交互意图，不拥有布局数据或工作流业务状态。
 - 专业模式继续使用 `MODE-01～06`；软件开发专业对象继续使用 `SD-01～07`。
 - W01～W07 是既有业务契约章节锚点，不作为新增细分功能编号。
@@ -67,17 +67,17 @@
 
 ## 第四批：模块业务契约设计（历史研究）
 
-[本模块契约与独立验收规格](../docs/research/contracts/workflows/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
+[本模块契约与独立验收规格](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/workflows/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 
 ### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：第六批[历史条款](../docs/research/contracts/workflows/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/workflows/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
 
-- [本域契约及关联依据](../docs/research/contracts/workflows/CONTRACT-archive.md#文档关联与施工入口)
+- [本域契约及关联依据](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/workflows/CONTRACT-archive.md#文档关联与施工入口)
 - [当前工作流自由画布设计](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)
 - [工作流画布方向决策](../docs/decisions/WORKFLOW-CANVAS-DIRECTION-2026-11-01.md)
 - [WEXPC1 文档体系总索引](../docs/README.md)
