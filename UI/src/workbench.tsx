@@ -5,7 +5,7 @@ import {MiddleWorkspace} from './middle-workspace.js';
 import {columnWidths,defaultLayout,layoutKey,resizeColumns,restoreLayout} from './layout.js';
 import type {Layout} from './layout.js';
 import type {DesktopBridge,DesktopStatus} from './index.js';
-type DividerProps={id:string;axis:'x'|'y';layout:Layout;value:number;disabled?:boolean;onDelta:(delta:number,initial:Layout)=>void;onRestore:(initial:Layout)=>void;onDragging:(value:boolean)=>void};
+type DividerProps={id:string;axis:'x'|'y';layout:Layout;value:number;disabled?:boolean;onDelta:(delta:number,initial:Layout)=>void;onRestore:(initial:Layout)=>void;onDragging:(value:boolean)=>void;onReset?:()=>void};
 function Divider(p:DividerProps){
  const drag=useRef<{start:number;initial:Layout;pointer:number}|null>(null);
  function finish(event:ReactPointerEvent<HTMLDivElement>,cancel:boolean){
@@ -15,7 +15,7 @@ function Divider(p:DividerProps){
  }
  return <div role="separator" aria-label={p.axis==='x'?'调整列宽':'调整面板高度'} aria-orientation={p.axis==='x'?'vertical':'horizontal'}
   aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p.value)} aria-disabled={p.disabled??false}
-  style={p.axis==='x'?{gridColumn:2+Number(p.id.slice(7))*2,gridRow:1}:undefined} tabIndex={p.disabled?-1:0} data-divider={p.id} className={'workbench-divider '+p.axis}
+  style={p.axis==='x'?{gridColumn:2+Number(p.id.slice(7))*2,gridRow:1}:undefined} tabIndex={p.disabled?-1:0} data-divider={p.id} className={'workbench-divider '+p.axis} onDoubleClick={()=>p.onReset?.()}
   onPointerDown={event=>{if(p.disabled||event.button!==0||drag.current)return;event.preventDefault();
    event.currentTarget.setPointerCapture(event.pointerId);drag.current={start:p.axis==='x'?event.clientX:event.clientY,initial:p.layout,pointer:event.pointerId};p.onDragging(true);}}
   onPointerMove={event=>{const d=drag.current;if(d&&d.pointer===event.pointerId)p.onDelta((p.axis==='x'?event.clientX:event.clientY)-d.start,d.initial);}}
@@ -46,7 +46,7 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
     </div>
     <div className="navigation-bottom"><button aria-label="设置" title="设置" aria-pressed={settings} onClick={()=>setSettings(true)}>{layout.collapsed?'⚙':'设置'}</button></div>
    </aside>
-   {[0,1].map(i=><Divider key={i} id={'column-'+i} axis="x" layout={layout} value={widths[i]!/(widths[i]!+widths[i+1]!)*100} disabled={(layout.collapsed&&i===0)||(i===1&&!layout.auxiliaryOpen)} onDelta={(delta,s)=>setLayout(resizeColumns(s,size.width,i,delta))} onRestore={restore} onDragging={setDragging}/>)}
+   {[0,1].map(i=><Divider key={i} id={'column-'+i} axis="x" layout={layout} value={widths[i]!/(widths[i]!+widths[i+1]!)*100} disabled={(layout.collapsed&&i===0)||(i===1&&!layout.auxiliaryOpen)} onDelta={(delta,s)=>setLayout(resizeColumns(s,size.width,i,delta))} onRestore={restore} onDragging={setDragging} onReset={()=>setLayout(s=>({...s,columns:defaultLayout().columns}))}/>)}
    <section data-column="main" className="workbench-main" style={{gridColumn:3,gridRow:1}}>
     <div hidden={settings} className="middle-surface"><MiddleWorkspace key={parts.contextId??"unselected"} parts={parts}/></div>
     <div data-settings hidden={!settings} className="settings-surface"><div className="settings-title"><h2>设置</h2><button onClick={()=>setSettings(false)}>返回工作区</button></div>
@@ -72,7 +72,7 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
      <p>辅助视图功能尚未接入。此区域目前只验证展开、收起及布局。</p>
     </div>:<button className="auxiliary-toggle" aria-label="展开辅助区" title="展开辅助区" onClick={()=>setLayout({...layout,auxiliaryOpen:true})}>›</button>}
    </aside>
-   {layout.bottomOpen&&<><div style={{gridColumn:'3 / -1',gridRow:2}}><Divider id="bottom" axis="y" layout={layout} value={layout.bottomRatio*100} onDelta={(delta,s)=>setLayout({...s,bottomRatio:Math.max(.12,Math.min(.5,s.bottomRatio-delta/size.height))})} onRestore={restore} onDragging={setDragging}/></div><section className="bottom-output" style={{gridColumn:'3 / -1',gridRow:3}}><strong>运行输出</strong><p>{label}</p>{status.diagnostics.map((d,i)=><p key={i}>{d.module}：{d.reason}</p>)}{error&&<p role="alert">{error}</p>}</section></>}
+   {layout.bottomOpen&&<><div style={{gridColumn:'3 / -1',gridRow:2}}><Divider id="bottom" axis="y" layout={layout} value={layout.bottomRatio*100} onDelta={(delta,s)=>setLayout({...s,bottomRatio:Math.max(.12,Math.min(.5,s.bottomRatio-delta/size.height))})} onRestore={restore} onDragging={setDragging} onReset={()=>setLayout(s=>({...s,bottomRatio:defaultLayout().bottomRatio}))}/></div><section className="bottom-output" style={{gridColumn:'3 / -1',gridRow:3}}><strong>运行输出</strong><p>{label}</p>{status.diagnostics.map((d,i)=><p key={i}>{d.module}：{d.reason}</p>)}{error&&<p role="alert">{error}</p>}</section></>}
   </div></div>
   {layout.roleVisible&&<div className="role-floating" aria-label="独立虚拟形象位置（角色素材未配置）">{role}</div>}
   <footer className="workbench-footer"><span>{error||(layoutSaved?'业务访问需确认授权；布局自动保存。':'布局保存不可用；本次窗口内仍可调整。')}</span><span>WEXPCeasy · 0.1.1</span></footer>
