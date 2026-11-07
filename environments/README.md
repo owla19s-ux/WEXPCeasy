@@ -31,9 +31,9 @@
 ## 本阶段施工及验收入口
 
 - [0.1.1 正式计划](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)
-- [B3 D-10 环境管理缺口及版本门槛](../docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)
+- [B3 D-10 环境管理缺口及版本门槛](../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md)
 - [Local 连接器](../connections/local/README.md)、[Connections 公共宿主](../connections/README.md)
 - [F06-009/F06-010 环境发现与配置](../docs/A1-正式产品设计/产品功能总表.md)
-- [Windows 程序、数据与工具环境目录规则](../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
+- [Windows 程序、数据与工具环境目录规则](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
 
 **验收状态**：独立源码目录/职责入口已建立；完整环境管理设计和产品实现未验收。按“已实现/未验证/缺失/版本待决”逐项回执，不将目录建立认作功能完成。
