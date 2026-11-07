@@ -21,15 +21,15 @@
 这是独立短周期启动/停止验证入口，不是持续后台插件服务器；测试插件真实导入、真实执行和释放，hello 是仓库已有样本而非市场兼容性证明。Windows 待验：包解析与路径/链接、平台构建二进制、启动抛错后的退出/资源释放、Electron 通过独立 worker/子进程托管。未把任何第三方插件装入 Electron 主进程。
 
 
-第六批：[最新准备度/证据及限制](../../docs/batch6/EXPERIMENTS.md)。原生Core+Loader实验、WEX外部DSH连接和Windows实机证据分别验收；预留平台不因局部实验通过进入正式施工。
+第六批：[最新准备度/证据及限制](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)。原生Core+Loader实验、WEX外部DSH连接和Windows实机证据分别验收；预留平台不因局部实验通过进入正式施工。
 
 
 ## 上级契约与文档入口
 
 - **上级业务/职责研究（历史）：** [dsh/README.md](../../dsh/README.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [双插件体系边界](../../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)
-- [第六批实验与证据](../../docs/batch6/EXPERIMENTS.md)
-- [DSH 能力差距审计](../../docs/audits/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
+- [双插件体系边界](../../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)
+- [第六批实验与证据](../../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)
+- [DSH 能力差距审计](../../docs/A0-产品构想与研究/方案与研究/审查历史/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
 
 本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
