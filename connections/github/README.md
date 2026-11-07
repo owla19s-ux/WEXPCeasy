@@ -22,14 +22,12 @@ GitHub 操作与连接配置。权限使用共用机制；专属面板留在本�
 
 - [GitHub 官方 MCP + Octokit 完整能力接入契约](CONTRACT.md)（GH-01～GH-12）。官方 GitHub MCP Server 为首选，Octokit REST/GraphQL 补充能力缺口；WEX 只做受控连接器，不重写 GitHub API。旧 WEX/WEXPC 源码仅作测试与安全参考。
 
-## 上级契约与文档入口
+## 直接依赖与施工入口
 
-- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
-- **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [提供方边界 Walkthrough](../../docs/A0-产品构想与研究/方案与研究/架构研究历史/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
-- [复杂业务契约压力审查](../../docs/A0-产品构想与研究/方案与研究/审查历史/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
+- [Connections 宿主](../README.md)：公共配置、派发、Operation 与回执归属。
+- [GitHub 模块 CONTRACT](CONTRACT.md)：核对该连接器特有的目标行为与未完成项，不能把长期清单视为全部已交付。
 
-本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
+本子模块不承担研究及版本资料的全局导航。
 
 ## G1/G4：远端资源引用与操作回执
 
