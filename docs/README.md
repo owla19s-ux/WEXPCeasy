@@ -44,7 +44,7 @@ A0 已归档历史研究正文，冗余旧路径逐步清理；详细说明见 [
 
 - [架构](A1-正式产品设计/README.md)、[决策](decisions/README.md)：按日期、批准状态和新旧适用性阅读。
 - [研究](A0-产品构想与研究/README.md)、[API / Pi AI 独立验证](A0-产品构想与研究/方案与研究/既有研究/api/README.md)、[历史 CONTRACT](A0-产品构想与研究/方案与研究/既有研究/contracts/)：实验与研究依据。
-- [历史审查索引](audits/README.md)：历史审查正文统一以 A0 归档为准，版本证据以 A2 为准。
+- [历史审查索引](A0-产品构想与研究/方案与研究/README.md)：历史审查正文统一以 A0 归档为准，版本证据以 A2 为准。
 - [Electron / React 隔离实验](../experiments/electron-host-spike/README.md)、[工作流交互原型](../workflows/editor/prototype/README.md)：不等于正式产品或 Windows 实机验收。
 
 ## 历史与外部资料
