@@ -23,8 +23,8 @@
 
 ## 上级契约与文档入口
 
-- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/research/contracts/connections/CONTRACT-archive.md)
-- **适配器子契约：** [Provider适配器子契约](../../docs/research/contracts/connections/api/CONTRACT-archive.md)
+- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
+- **适配器子契约：** [Provider适配器子契约](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/api/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [提供方边界 Walkthrough](../../docs/architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
 - [外部 Agent 生态与 Provider 观察](../../docs/research/AGENT-ECOSYSTEM-2026-10-31.md)
@@ -39,4 +39,4 @@ API 适配器负责 Provider/Model 配置、鉴权适配、请求和流式解析
 
 ## 独立研究与兼容证据
 
-[历史复用与 Pi AI 验证](../../docs/research/api/README.md)及[隔离实验](../../experiments/pi-ai-compat/README.md)：未修改本域正式契约，未替换产品实现。整体无退化替换未通过，具体可复用能力与缺口以报告为准。
+[历史复用与 Pi AI 验证](../../docs/A0-产品构想与研究/方案与研究/既有研究/api/README.md)及[隔离实验](../../experiments/pi-ai-compat/README.md)：未修改本域正式契约，未替换产品实现。整体无退化替换未通过，具体可复用能力与缺口以报告为准。
