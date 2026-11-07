@@ -38,15 +38,13 @@
 对真实路径、文件/Git 版本、进程和退出结果提供可核验观察；WEX 管理的排队与资源占用由 `workflows/runtime` 协调，连接器在实际动作前复核适用条件。不同 Context/路径别名可能指向同一资源，不能靠 Context ID 判定无冲突。WEX 的占用记录约束不了未纳管的外部进程，仍需隔离工作区或重新核对并报告冲突；不承诺全局文件锁。终端/Git 的 Windows 能力范围仍待实测，本批不扩大首期范围。
 
 
-## 上级契约与文档入口
+## 直接依赖与施工入口
 
-- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
-- **适配器子契约：** [本地资源适配器子契约](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/local/CONTRACT-archive.md)
-- **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [源码目录与 Windows 数据布局](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
-- [安全与数据持续性](../../docs/A0-产品构想与研究/方案与研究/既有研究/SECURITY-AND-PERSISTENCE-2026-10-31.md)
+- [Connections 宿主](../README.md)：公共 Operation 与回执边界。
+- [Local 模块 CONTRACT](CONTRACT.md)：仅按需查阅历史适配器研究，不替代当前实现事实。
+- [Windows 数据与安装路径设计](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)：涉及真实本地路径与数据根规则时使用。
 
-本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
+本子模块不另建全局文档索引。
 
 ## G1/G4/G7：本地资源与附件访问
 
