@@ -6,7 +6,7 @@
 
 - [WEXPC1 固定版本 README](https://github.com/owla19s-ux/WEXPC1/blob/70406cf3924035b1982e2f8b2a769ca51c9406b8/README.md)：TS + Electron + React、React Flow 首期重点、DSH 首期连接器；主要功能域只有 README，旧产品未迁入。
 - [职责/数据权威与七场景](../架构研究历史/RESEARCH-DECISIONS-2026-10-30.md)：任务归 workflows、操作尝试归 connections、授权归 permissions、UI 不拥有业务真相。
-- [Space 与目录](../../历史参考/旧UI设计/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)、[Windows 数据要求](../../../WEXPC-SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)：独立 Context、多处引用、分别选址、安装与数据分离。
+- [Space 与目录](../../历史参考/旧UI设计/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)、[Windows 数据要求](../../../A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)：独立 Context、多处引用、分别选址、安装与数据分离。
 - [旧 WEXPC 产品基线](https://github.com/owla19s-ux/wexpc/blob/faf11f31d44e4fc4788e766074b8db6b83ab4a1b/docs/PC-PRODUCT-AND-TECH-BASELINE.md) §0、§2、§5、§6：用于需求追溯。本轮锁定 `faf11f31d44e4fc4788e766074b8db6b83ab4a1b`；不将旧技术选型覆盖 WEXPC1。其版本交付要求未自动变更。
 - [需求重新理解](PRODUCT-REINTERPRETATION-AND-ENGINEERING-REVIEW-2026-10-30.md)：功能/组合/视图/保障分开；其中按纵向链路施工的旧方法不用于本轮模块施工。
 
@@ -73,4 +73,4 @@
 
 ### 提交前并行更新核对
 
-提交前 main 已前进至 `018992118bde05aae2631b26f77b66fac2c50672`。已核对新增的[第三批模块化方法研究](../../../WEXPC-GLOBAL-CONTRACT-MAP-V0.1.md)及研究摘要 §10：仍按模块施工、链路组合验收，owner 与本报告一致。本轮基线取证仍固定 `70406cf`，不将另一批 dependency-cruiser 夹具写成本轮运行证据。索引以最新 main 合并追加，保留对方更新。
+提交前 main 已前进至 `018992118bde05aae2631b26f77b66fac2c50672`。已核对新增的[第三批模块化方法研究](../架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)及研究摘要 §10：仍按模块施工、链路组合验收，owner 与本报告一致。本轮基线取证仍固定 `70406cf`，不将另一批 dependency-cruiser 夹具写成本轮运行证据。索引以最新 main 合并追加，保留对方更新。
