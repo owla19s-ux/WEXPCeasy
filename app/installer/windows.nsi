@@ -22,13 +22,20 @@ BrandingText "WEXPCeasy"
 !insertmacro MUI_LANGUAGE "SimpChinese"
 
 Function ValidateInstallDirectory
+ IfFileExists "$INSTDIR\." 0 +2
  GetFullPathName $INSTDIR "$INSTDIR"
  StrCpy $R9 "drive_root"
+ StrCmp $INSTDIR "" invalid
  ${GetRoot} "$INSTDIR" $R0
+ StrCmp $R0 "" invalid
  StrCmp $INSTDIR $R0 invalid
+ StrCpy $R2 "$R0\"
+ StrCmp $INSTDIR $R2 invalid
  StrCpy $R9 "other_installation"
  ReadRegStr $R0 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\WEXPCeasy" "InstallLocation"
  StrCmp $R0 "" registry_ok
+ IfFileExists "$R0\." 0 +2
+ GetFullPathName $R0 "$R0"
  StrCmp $R0 $INSTDIR registry_ok invalid
  registry_ok:
  StrCpy $R9 "reparse_installation"
