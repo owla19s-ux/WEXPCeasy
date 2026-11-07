@@ -14,14 +14,16 @@ export function MiddleWorkspace({parts}:{parts:SpaceSections}){
  useEffect(()=>{try{localStorage.setItem(workspaceStorageKey(parts.contextId),JSON.stringify(state));}catch{/* Layout is best-effort; business data never lives here. */}},[state,parts.contextId]);
  useEffect(()=>{if(!host.current)return;const observer=new ResizeObserver(entries=>setWidth(entries[0]?.contentRect.width??0));observer.observe(host.current);return()=>observer.disconnect();},[]);
  const active=state.tabs.find(t=>t.id===state.active)!;
- const split=state.preview&&width>=620;
- const sidebar=state.preview&&!split;
+ const previewVisible=state.preview||parts.resourcePreview!==null;
+ const split=previewVisible&&width>=620;
+ const sidebar=previewVisible&&!split;
  const change=(patch:Partial<WorkspaceState>)=>setState(s=>({...s,...patch}));
  function finish(event:ReactPointerEvent<HTMLDivElement>,cancel:boolean){
   const d=drag.current;if(!d)return;drag.current=null;
   if(cancel)change({previewPercent:d.percent});
   if(event.currentTarget.hasPointerCapture(d.pointer))event.currentTarget.releasePointerCapture(d.pointer);
  }
+ const closePreview=()=>{parts.dismissResourcePreview();change({preview:false});};
  const add=()=>setState(addView);
  const remove=(id:ViewId)=>setState(current=>removeView(current,id));
  const shift=(id:ViewId,delta:-1|1)=>setState(current=>moveView(current,id,delta));
@@ -29,7 +31,7 @@ export function MiddleWorkspace({parts}:{parts:SpaceSections}){
   <div className="middle-content">
    <div className="middle-current" style={split?{width:(100-state.previewPercent)+'%'}:undefined}>
     <div className="middle-view-title"><strong>{active.title}</strong><div className="middle-view-actions">
-     <button type="button" onClick={()=>change({preview:!state.preview})} aria-label={state.preview?'关闭摘要预览':'预览当前 Context 摘要'}>{state.preview?'关闭预览':'摘要预览'}</button>
+     <button type="button" onClick={()=>{if(parts.resourcePreview!==null)parts.dismissResourcePreview();change({preview:!state.preview});}} aria-label={previewVisible?'切换摘要预览':'预览当前 Context 摘要'}>{previewVisible?'摘要':'摘要预览'}</button>
     </div></div>
     <div className="middle-view-scroll">
      {state.active==='context'?<><div className="surface-toolbar">{parts.toolbar}</div><div className="content-scroll">{parts.content}</div></>:<div className="structure-scroll">{parts.structure}</div>}
@@ -42,9 +44,9 @@ export function MiddleWorkspace({parts}:{parts:SpaceSections}){
     onPointerMove={e=>{const d=drag.current;if(!d||d.pointer!==e.pointerId||width<=0)return;change({previewPercent:Math.max(25,Math.min(70,d.percent-(e.clientX-d.x)/width*100))});}}
     onPointerUp={e=>finish(e,false)} onPointerCancel={e=>finish(e,true)} onLostPointerCapture={e=>finish(e,true)}
     onKeyDown={e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();change({previewPercent:Math.max(25,Math.min(70,state.previewPercent+(e.key==='ArrowLeft'?2:-2)*(e.shiftKey?5:1)))})}}}/>}
-   {state.preview&&<aside className={'middle-preview '+(sidebar?'preview-compact':'')} style={split?{width:state.previewPercent+'%'}:undefined} aria-label="Context 摘要预览">
-    <div className="middle-view-title"><strong>Context 摘要</strong><button type="button" aria-label="关闭摘要预览" onClick={()=>change({preview:false})}>×</button></div>
-    <div className="middle-preview-body">{parts.summary}</div>
+   {previewVisible&&<aside className={'middle-preview '+(sidebar?'preview-compact':'')} style={split?{width:state.previewPercent+'%'}:undefined} aria-label="Context 摘要预览">
+    <div className="middle-view-title"><strong>{parts.resourcePreview!==null?"资源预览":"Context 摘要"}</strong><button type="button" aria-label="关闭预览" onClick={closePreview}>×</button></div>
+    <div className="middle-preview-body">{parts.resourcePreview??parts.summary}</div>
    </aside>}
   </div>
   <nav className="middle-tabs" aria-label="当前工作视图标签">
