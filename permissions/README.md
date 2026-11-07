@@ -26,7 +26,7 @@
 
 ## 判断什么
 
-用户的明确授权、当前执行主体与入口、适用职责、Context/任务范围、目标资源及动作共同约束请求。保留“模块启用 / 全局访问 / 对话启用”三层依据；独立聊天/非对话任务也必须具有适用于自身入口的范围，不能伪造一个对话标识绕过检查。非对话入口的分层映射已形成产品级候选矩阵；在可信事实来源、入口策略和真实消费者完成实现/验收前，当前实现仍拒绝非对话入口。
+用户的明确授权、当前执行主体与入口、适用职责、Context/任务范围、目标资源及动作共同约束请求。保留“模块启用 / 全局访问 / 对话启用”三层依据；独立聊天/非对话任务也必须具有适用于自身入口的范围，不能伪造一个对话标识绕过检查。非对话入口的分层映射已形成产品级候选矩阵；除已实现的受限 `local` 入口外，Task/Callback 仍拒绝或不可判定；正式 UI/Windows 身份接线需另行验收。
 
 组织关系不产生授权：多个 Space 引用同一 Context、角色跨 Context 兼任、任务分配、工具可发现、模板启用、同一个模型或外部账号，都不能自动扩权。职责描述与授权分别维护，不按角色名称设超级管理员。不存在隐含跨入口权限并集。
 
@@ -81,13 +81,13 @@
 
 `createPermissions(Store, TrustPort)` 提供 evaluate / recheck / grant / revoke / history。TrustPort 只能由可信宿主实现：current 将真实调用对象绑定为核验事实，canManage 核验精确管理请求，canReadHistory 仅用于本批受信任完整历史管理入口。外部文本、Renderer字段、Key、角色和Context自报值不实现该端口。当前无IPC/OS主体认证实现，正例事实为测试宿主注入；CLI默认全部无可信事实/无管理权。
 
-许可按 subject、entry、conversation、可空context、resource、action、target、relationship及relationshipGeneration精确匹配；对话三层开关与来源限制任一不满足均不能允许。非对话返回 entry_policy_unresolved，不伪造对话、自动降级或跨Context发布策略。
+许可按 subject、entry、conversation、可空context、resource、action、target、relationship及relationshipGeneration精确匹配；对话三层开关与来源限制任一不满足均不能允许。此段为第七批历史状态：当时非对话返回 `entry_policy_unresolved`；2026-11-05 后受限 `local` 入口已实现，Task/Callback 仍不可判定。不伪造对话、自动降级或跨 Context 发布策略。
 
 每次授权/撤销以聚合修订CAS持久化，记录命令/原意图/精确范围/代次；撤销保留历史，重新授予必须新事实。recheck 重新读取当前授权，并核对旧决定的范围/修订/代次；旧允许、迟到旧修订和重新授予前的旧决定均不能继续使用。保守地使任一授权变更失效旧决定；当前无按资源细粒度代次优化。
 
 提交三态原样交给调用方；重复意图核对原命令并query原提交，unknown不自动再写。失败/损坏/存储不可用返回不可判定或unknown，不放行。history当前只向受信任管理入口提供完整本域历史；普通用户按资源筛选、分页与可见性投影尚未开放，不可将布尔管理检查当成任意用户读取许可。
 
-出口前接口是复核点，不是外部副作用的原子锁；复核与真实资源/网络发送间竞态、IPC重放、Windows主体与安装关系识别仍C。未实现有限次数、自动审批、D01非对话政策、D05强审计全局阻断或D06降级发布政策。
+出口前接口是复核点，不是外部副作用的原子锁；复核与真实资源/网络发送间竞态、IPC重放、Windows主体与安装关系识别仍C。未实现有限次数、自动审批、完整 D01 非对话策略（除受限 local 入口外）、D05 强审计全局阻断或 D06 降级发布政策。
 
 测试：`npm run test:permissions`。真实SQLite/共享存储替身共用本域行为；`permissions/tests/reader-contract.mjs` 被app消费者对真实权限与权限替身共同执行。历史是本域事实，不复制Operation或Task账本。
 
