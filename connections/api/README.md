@@ -21,15 +21,12 @@
 本域拥有 Provider 请求/流式解析与连接配置，宿主连接边界保存真实调用尝试及回执；`conversations` 维护消息/逻辑生成，任务调度维护工作进展。模型输出的工具意图只能作为下一次受控请求，不能直接执行。API Key 的秘密值归 `shared/credentials`，使用权限归 `permissions`；换 Provider 不改变任务范围。连接器不要求 Cordis 或 WEX 动态插件加载器。
 
 
-## 上级契约与文档入口
+## 直接依赖与施工入口
 
-- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
-- **适配器子契约：** [Provider适配器子契约](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/api/CONTRACT-archive.md)
-- **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [提供方边界 Walkthrough](../../docs/A0-产品构想与研究/方案与研究/架构研究历史/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
-- [外部 Agent 生态与 Provider 观察](../../docs/A0-产品构想与研究/方案与研究/既有研究/AGENT-ECOSYSTEM-2026-10-31.md)
+- [Connections 宿主](../README.md)：公共配置、派发、Operation 与回执归属。
+- [本模块历史适配器 CONTRACT](CONTRACT.md)：仅在核对历史协议差异时阅读，不作为当前独立实施权威。
 
-本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
+本子模块不承担 A0/A1/A2 总索引；实现及测试以本 README、源码和公开端口为准。
 
 ## G2/G6：Provider 请求与工具意图
 
