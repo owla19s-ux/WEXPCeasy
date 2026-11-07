@@ -1,3 +1,5 @@
+> **2026-11-07 现行适用性补充（覆盖旧版施工路线，不改历史原文）**：本稿中“首期 React Flow 核心编辑”“先完成工作流+DSH 连接器可用闭环”“UI/main.*、UI/space/page.* 等规划文件名”均为 2026-10-30 的历史目录与实验设想，**不是 WEXPCeasy 当前 0.1.1 任务或真实源码树**。0.1.1 的正式范围见 [PLAN](../versions/0.1.1/PLAN.md)：自由格子工作流、正式调度器、DSH 插件产品化及 DSH 连接器推迟至 0.1.2；当前 UI 采用 [自主共享工作窗口设计](../product/WEX-PC-0.1.1-基础UI布局与交互设计-2026-11-07.md)，实际 React/TypeScript 文件以 [UI/README](../../UI/README.md) 为准。环境管理独立 `environments/` 已由本稿 §13 和 [模块 README](../../environments/README.md) 明确。**不能从本稿的历史源码示意图或 §12 自动派工或移动已存在代码。**
+
 > **适用性更新（2026-11-04）**：本文保留历史架构推演及已确认约束；旧 workflows/runtime 调度目录方向已由顶层 [scheduler](../../scheduler/README.md)取代。当前模块入口与研究契约使用规则见[根 README](../../README.md)，不依据历史目录自动派工。
 
 # WEXPC 源码目录与 Windows 安装、数据存放要求
