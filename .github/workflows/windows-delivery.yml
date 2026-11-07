@@ -1,0 +1,41 @@
+name: Windows installer and recovery acceptance
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  delivery:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Ensure NSIS compiler
+        shell: pwsh
+        run: |
+          $compiler = 'C:\Program Files (x86)\NSIS\makensis.exe'
+          if (!(Test-Path $compiler)) {
+            choco install nsis --version=3.11 --yes --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          & $compiler /VERSION
+      - run: npm run typecheck
+      - run: npm run package:windows
+      - run: node --test app/tests/desktop-root.test.mjs
+      - name: Verify actual installation, native launch and data recovery
+        run: node tools/verify-windows-installation.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-installer-0.1.1-${{ github.sha }}
+          path: |
+            release/windows/*-Setup.exe
+            release/windows/manifest.json
+            windows-delivery-acceptance/
+          if-no-files-found: warn

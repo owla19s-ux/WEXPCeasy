@@ -28,7 +28,8 @@
     "build:desktop": "npm run build && node tools/build-desktop.mjs",
     "start:desktop": "npm run build:desktop && electron dist/app/src/desktop-main.js",
     "verify:desktop": "npm run build:desktop && node tools/verify-desktop.mjs",
-    "test:ui": "npm run build && node --test UI/tests/*.test.mjs"
+    "test:ui": "npm run build && node --test UI/tests/*.test.mjs",
+    "package:windows": "npm run build:desktop && node tools/package-windows.mjs"
   },
   "devDependencies": {
     "@types/node": "24.10.0",
