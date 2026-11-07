@@ -10,7 +10,7 @@
 >
 > **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
 >
-> **研究迁移**：历史深度契约归档于 [docs/research/contracts/conversations/CONTRACT-archive.md](../docs/research/contracts/conversations/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
+> **研究迁移**：历史深度契约归档于 [docs/research/contracts/conversations/CONTRACT-archive.md](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/conversations/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
 
 
 状态：已有 Conversations 领域产品代码与测试，正式用户交互及全部段落操作仍需逐项核验。`conversations/src/index.ts` 已有 `select`（段落选择）、`append`（消息加入）、`resend`（产生新消息/生成关联）与生成状态命令，`conversations/tests/conversations.test.mjs` 覆盖相应保存/恢复和取消测试。**这些操作不等同于历史 CV-07 的生成期间追加队列、CV-15 的采纳/拒绝、CV-05 的独立分支或 CV-16 的单序列项局部修订。** 复杂局部分支未冻结，不以本版基础实现冒充完整分支系统；这些历史能力是否属于当前版本仍需核对 0.1.1 正式计划和交互设计。普通对话无需先创建 Space、Context、工作流或 Task。本段为 2026-11-07 定向源码/测试文本审查，本轮未复跑测试。
@@ -25,7 +25,7 @@
 
 ## 模块编号规则
 
-- 对话业务细分使用 `CONVERSATIONS-<子域>-NNN`，详见 [CONTRACT 第 5 节](../docs/research/contracts/conversations/CONTRACT-archive.md#5-模块独立功能编号与细化契约)。
+- 对话业务细分使用 `CONVERSATIONS-<子域>-NNN`，详见 [CONTRACT 第 5 节](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/conversations/CONTRACT-archive.md#5-模块独立功能编号与细化契约)。
 - CV-01～CV-16 保留为既有业务契约锚点。
 - I01–I16 是全局交互语义编号；本模块只引用，不重复定义。
 - 本模块不拥有 Provider/Operation、Task、Agent配置或权限账本。
@@ -40,17 +40,17 @@
 
 ## 第四批：模块业务契约设计（历史研究）
 
-[本模块契约与独立验收规格](../docs/research/contracts/conversations/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
+[本模块契约与独立验收规格](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/conversations/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 
 ### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：第六批[历史条款](../docs/research/contracts/conversations/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/conversations/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
 
-- [本域契约及关联依据](../docs/research/contracts/conversations/CONTRACT-archive.md#文档关联与施工入口)
+- [本域契约及关联依据](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/conversations/CONTRACT-archive.md#文档关联与施工入口)
 - [WEXPC1 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
