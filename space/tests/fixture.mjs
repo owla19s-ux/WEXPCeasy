@@ -6,7 +6,7 @@ import * as api from '../../dist/space/src/index.js';
 // Fixture permission port is injected by a trusted test host, never a product local grant.
 export async function fixture(t,options={}){
  assert.equal(typeof api.openSpaceService,'function','Space public service must exist');
- const dir=realpathSync(mkdtempSync(join(tmpdir(),'wex-space-')));const root=join(dir,'public'),a=join(dir,'context-a'),b=join(dir,'context-b');
+ const dir=realpathSync.native(mkdtempSync(join(tmpdir(),'wex-space-')));const root=join(dir,'public'),a=join(dir,'context-a'),b=join(dir,'context-b');
  for(const [p,id] of [[root,'root'],[a,'a-root'],[b,'b-root']]){mkdirSync(p);writeFileSync(join(p,'.wex-root.json'),JSON.stringify({format:1,id}));}
  let allowed=true,sequence=0;const facts=new WeakMap();
  const permission={evaluate(r){const scope=facts.get(r);return allowed&&scope?{status:'allow',revision:1,generation:1,scope}:{status:'deny',reason:'fixture_denied'};},recheck(r){return this.evaluate(r);}};
