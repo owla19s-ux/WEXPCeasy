@@ -47,7 +47,7 @@ export function createDesktopConnections(options:{authority:DesktopAuthority;con
      (input.kind==='github.read'?'读取 GitHub 文件':'向 GitHub 提交文件修改')+'\nhttps://github.com/'+file!.owner+'/'+file!.repo+'\n分支/修订：'+file!.ref+'\n文件：'+file!.path+
      (input.kind==='github.write'?'\n基于文件 SHA：'+input.expectedSha+'\n提交说明：'+input.message+'\n内容 '+Buffer.byteLength(input.content,'utf8')+' 字节；摘要 '+createHash('sha256').update(input.content).digest('hex')+'\n将执行一次真实远端写入。结果未知不会自动重试。':'\n将执行真实网络读取。');
     if(!await a.confirm(options.confirm,summary)||closed)return {status:'cancelled'};
-    const configScope=scope(input.kind==='snapshot'?'configuration.read':'configuration.write',input.kind==='snapshot'?'connections:configurations':input.kind==='github.create'?'connections:configurations':'connection:'+input.id);
+    const configScope=scope(input.kind==='snapshot'||input.kind==='github.read'||input.kind==='github.write'?'configuration.read':'configuration.write',input.kind==='snapshot'?'connections:configurations':input.kind==='github.create'?'connections:configurations':'connection:'+input.id);
     a.permit(configScope);const request=a.bind(configScope)!,decision=host!.permissions!.evaluate(request);
     if(decision.status!=='allow')return {status:'rejected',reason:'permission_unavailable'};
     const service=host!.connections!;
