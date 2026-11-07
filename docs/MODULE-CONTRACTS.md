@@ -22,7 +22,7 @@
 | [space](../space/README.md)、[AI](../AI/README.md)、[conversations](../conversations/README.md)、[views](../views/README.md) | 已有职责与业务契约设计；AI 已补 AIC-01～09 与 AI-* 细分规格；views 已补 VIEW-01～07 与 VIEWS-* 细分规格 | 尚无对应完整产品业务实现；Agent引擎、AI派生记忆和views引擎未实现 |
 | [plugins](../plugins/README.md)、[dsh](../dsh/README.md)、[accounts](../accounts/README.md) | plugins 已补 PLUGINS-* 候选业务契约；dsh 仍为独立 Core+Loader 兼容实验；accounts 保留身份预留 | WEX插件加载器未实现；DSH实验不等于WEX插件平台或外部Agent连接器产品化 |
 
-基础模块第八批证据与限制见[交付报告](batch8/REPORT.md)。本表包含 WEXPC1 历史设计基线；当前实现状态必须核对最新 main 的源码与测试；契约正文中的 A/B/C/D 等级仍按原定义解释，不能因代码或实验通过而自动升级。
+基础模块第八批证据与限制见[交付报告](A0-产品构想与研究/历史参考/工程研究批次/batch8/REPORT.md)。本表包含 WEXPC1 历史设计基线；当前实现状态必须核对最新 main 的源码与测试；契约正文中的 A/B/C/D 等级仍按原定义解释，不能因代码或实验通过而自动升级。
 
 ## 1. 依据与决定等级
 
@@ -198,7 +198,7 @@ A的主要依据：TS/Electron/React；Context独立/多处引用/模板可选�
 
 ## 第六批更新（2026-10-31）
 
-[最新收敛、实验及施工准备度](batch6/README.md)取代上述历史准备度结论；F01–F09均有处置，11域分范围准入。B/C/D仍分离，完整业务组合与Windows实机未通过。
+[最新收敛、实验及施工准备度](A0-产品构想与研究/历史参考/工程研究批次/batch6/README.md)取代上述历史准备度结论；F01–F09均有处置，11域分范围准入。B/C/D仍分离，完整业务组合与Windows实机未通过。
 
 
 ## 2026-11-01：F功能子契约补充入口
