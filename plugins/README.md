@@ -20,7 +20,7 @@
 
 当前不新建 runtime/、registry/、market/ 等空壳目录。已有早期关于 Cordis 作为 WEX 模块基础的设想保留在 Git 历史和研究资料中，不再作为当前施工决策。
 
-详见 [本阶段研究共识](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md) 与 [DSH 双路线架构说明](../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)。
+详见 [本阶段研究共识](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md) 与 [DSH 双路线架构说明](../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)。
 
 
 第六批：[最新准备度/证据及限制](../docs/batch6/READINESS.md)。原生Core+Loader实验、WEX外部DSH连接和Windows实机证据分别验收；预留平台不因局部实验通过进入正式施工。
@@ -31,10 +31,10 @@
 - [WEX 自有插件业务契约](CONTRACT.md)
 
 - [文档体系总索引](../docs/README.md)
-- [全局架构：双插件体系边界](../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)
-- [运行时扩展契约研究](../docs/architecture/RUNTIME-EXTENSION-CONTRACT-V0.1.md)
+- [全局架构：双插件体系边界](../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)
+- [运行时扩展契约研究](../docs/A0-产品构想与研究/方案与研究/架构研究历史/RUNTIME-EXTENSION-CONTRACT-V0.1.md)
 - [研究决策](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
-- [DSH 能力差距审计](../docs/audits/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
+- [DSH 能力差距审计](../docs/A0-产品构想与研究/方案与研究/审查历史/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
 - [第六批准备度](../docs/batch6/READINESS.md)
 
 本目录当前为预留机制或独立实验，不等于完整产品模块已获施工准入。研究/实验结果只证明其明确记录的范围；不得外推为完整 WEX 集成、Windows 实机或生产可用性。
