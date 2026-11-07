@@ -30,7 +30,6 @@
 
 - [WEX 自有插件历史业务契约（候选，非当前施工要求）](CONTRACT.md)
 
-- [文档体系总索引](../docs/README.md)
 - [全局架构：双插件体系边界](../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)
 - [运行时扩展契约研究](../docs/A0-产品构想与研究/方案与研究/架构研究历史/RUNTIME-EXTENSION-CONTRACT-V0.1.md)
 - [研究决策](../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
