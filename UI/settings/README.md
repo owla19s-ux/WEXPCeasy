@@ -4,12 +4,12 @@
 
 设置页采用已讨论的 PC **左侧大类/子类导航，右侧子类详细设置**，支持页面宽度与滚动适配。环境管理将拥有设置入口，显示已有环境、位置、版本和可用性及未来获批准的安装/修复状态；界面只消费 [environments](../../environments/README.md) 的公开能力，不在 Renderer 下载执行安装器、不复制环境数据。Local 提供获准的底层 OS 操作，App 做原生确认，Connections 记录 Operation，Permissions 判权，Context 只绑定环境引用。
 
-**实现状态**：本目录目前只有说明，没有正式设置页产品代码；环境管理 `environments/` 目前也只有 README。UI 入口不构成环境安装已实现的证据，具体功能仍受 B3 D-10 的版本门槛控制。
+**实现状态（2026-11-07）**：本子目录仍只有说明，**但正式 `UI/src/workbench.tsx` 已有基础设置入口、左侧类别/子项和右侧展示容器**；API/Agent/Permissions 等设置项仍有未接线/禁用入口，不等于完整设置页可用。`environments/` 目前只有 README，环境安装未实现，具体范围继续受 B3 D-10 约束。不得因本子目录无 src 而重建第二套设置宿主。
 
 
 配置页面和设置入口。加载连接器等模块的专属配置面板，不复制面板实现。
 
-状态：2026-10-30 按用户确认建立的源码维护目录，当前只有职责说明，尚无产品实现。目录不是运行时数据路径，也不代表独立插件、进程或编译包。
+该物理子目录是 2026-10-30 的维护位置候选，当前只有职责说明；正式基础页面代码在 `UI/src/workbench.tsx`，后续按实际消费关系拆分。此目录不是运行时数据路径，也不是独立业务模块。
 
 [源码目录与 Windows 数据要求](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
 
@@ -18,7 +18,7 @@
 
 ## 上级契约与文档入口
 
-- **上级契约：** [UI/CONTRACT.md](../../UI/CONTRACT.md)
+- **当前 UI 入口：** [UI/README.md](../../UI/README.md)
 - **上级契约：** [permissions/CONTRACT.md](../../docs/research/contracts/permissions/CONTRACT-archive.md)
 - **上级契约：** [shared/CONTRACT.md](../../docs/research/contracts/shared/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
