@@ -21,7 +21,7 @@
 - **施工依据**：[0.1.1 正式计划](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md) → [本域契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md) → `permissions/src/` 与 `permissions/tests/`。第四批契约设计状态是历史起点，不代表当前代码不存在。
 
 
-**当前：第七批基础产品实现已落地；稳定实现与限制见本文“第七批实际实现”及[验收报告](../docs/batch7/REPORT.md)。下方阶段描述保留为历史依据。**
+**当前：第七批基础产品实现已落地；稳定实现与限制见本文“第七批实际实现”及[验收报告](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch7/REPORT.md)。下方阶段描述保留为历史依据。**
 历史初始状态（第二批）：当时尚无产品授权引擎；第七批已实现本域基础授权服务。此处仍是唯一的权限业务域；[shared/permissions](../shared/permissions/README.md) 仅保留旧入口指引，不再承担另一套授权服务。模块细分使用 PERMISSIONS-*，既有 PER-01～04 保持稳定。
 
 ## 判断什么
@@ -63,7 +63,7 @@
 
 ### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md)、[实验结果](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)、[施工顺序](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/NEXT.md)。
 
 
 ## 文档入口
