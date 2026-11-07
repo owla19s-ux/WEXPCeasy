@@ -11,7 +11,7 @@
 
 该物理子目录是 2026-10-30 的维护位置候选，当前只有职责说明；正式基础页面代码在 `UI/src/workbench.tsx`，后续按实际消费关系拆分。此目录不是运行时数据路径，也不是独立业务模块。
 
-[源码目录与 Windows 数据要求](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
+[源码目录与 Windows 数据要求](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
 
 修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
 
@@ -22,7 +22,7 @@
 - **上级契约：** [permissions/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md)
 - **上级契约：** [shared/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/shared/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [源码目录与 Windows 数据布局](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
+- [源码目录与 Windows 数据布局](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
 - [安全与数据持续性](../../docs/A0-产品构想与研究/方案与研究/既有研究/SECURITY-AND-PERSISTENCE-2026-10-31.md)
 
 本目录负责页面/面板局部组织，不拥有领域业务状态、权限或验收事实；业务语义以对应 owner 契约为准。
@@ -31,4 +31,4 @@
 
 设置页挂载各模块自己的配置面板，不接管配置字段或建立全局配置中心。凭证配置只通过受信任宿主入口操作，不回显秘密；日志/诊断导出必须由各 owner 提供获准且脱敏的内容。普通运行日志、Connections Operation、Permissions 授权审计和 Workflows 任务/验收证据分开呈现，不能用一个日志列表替代权威记录。
 
-见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+见[基础能力落地映射](../../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
