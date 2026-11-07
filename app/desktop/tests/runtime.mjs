@@ -37,9 +37,26 @@ try{
 // Exercise the actual React form through DOM events; only native platform interactions are fixtures.
  const click=async text=>wc.executeJavaScript(`(()=>{const b=[...document.querySelectorAll('button')].find(x=>x.textContent.trim()===${JSON.stringify(text)});if(!b)throw Error('button_missing');b.click();return true;})()`);
  const waitFor=async expression=>{const end=Date.now()+10000;while(!await wc.executeJavaScript(expression)){if(Date.now()>end)throw Error('renderer_wait_timeout');await new Promise(r=>setTimeout(r,25));}};
+ await waitFor("!!document.querySelector('[data-workbench]')");
+ const columns=await wc.executeJavaScript("[...document.querySelectorAll('[data-column]')].map(x=>x.getBoundingClientRect().width)");
+ assert.equal(columns.length,4);assert.ok(columns[2]>=360);
+ const divider=await wc.executeJavaScript("(()=>{const r=document.querySelector('[data-divider=\"column-1\"]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+80)};})()");
+ wc.sendInputEvent({type:'mouseMove',...divider});wc.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...divider});
+ wc.sendInputEvent({type:'mouseMove',x:divider.x+24,y:divider.y});wc.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:divider.x+24,y:divider.y});
+ await waitFor("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width>"+(columns[1]+12));
+ const adjusted=await wc.executeJavaScript("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width");
+ await wc.executeJavaScript("document.querySelector('[data-divider=\"column-1\"]').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));true");
+ await waitFor("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width>"+(adjusted+8));
+ await waitFor("!!localStorage.getItem('wex.workbench.layout.v1')");
+ const saved=await wc.executeJavaScript("localStorage.getItem('wex.workbench.layout.v1')");
+ const loaded=new Promise(resolve=>wc.once('did-finish-load',resolve));wc.reload();await loaded;
+ await waitFor("!!document.querySelector('[data-workbench]')");
+ assert.equal(await wc.executeJavaScript("localStorage.getItem('wex.workbench.layout.v1')"),saved);
+ await click('设置');await waitFor("!document.querySelector('[data-settings]').hidden");
+ await click('返回工作区');
  await click('打开工作区');await waitFor("!!document.querySelector('form input')");
  await wc.executeJavaScript(`(()=>{const field=document.querySelector('form input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(field,'Desktop Space');field.dispatchEvent(new Event('input',{bubbles:true}));return true;})()`);
- await new Promise(r=>setTimeout(r,30));await wc.executeJavaScript("document.querySelector('form').requestSubmit();true");
+ await new Promise(r=>setTimeout(r,30));await click('设置');await click('返回工作区');assert.equal(await wc.executeJavaScript("document.querySelector('form input').value"),'Desktop Space');await wc.executeJavaScript("document.querySelector('form').requestSubmit();true");
  await waitFor("[...document.querySelectorAll('nav button')].some(x=>x.textContent==='Desktop Space')");
  const invoke=async input=>{const reply=await wc.executeJavaScript('window.wexHost.space('+JSON.stringify(input)+')');assert.equal(reply.ok,true);return reply.value;};
  const created=await invoke({kind:'context.create',name:'Desktop Context',description:'persistent'});assert.equal(created.status,'committed');
