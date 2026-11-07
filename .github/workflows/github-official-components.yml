@@ -5,6 +5,8 @@ on:
     paths:
       - 'connections/github/**'
       - 'connections/src/**'
+      - 'app/src/foundations.ts'
+      - 'app/tests/github-official-host.test.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/github-official-components.yml'
@@ -28,6 +30,8 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
+      - name: Vault-backed host assembly and restart contracts
+        run: node --test app/tests/github-official-host.test.mjs
       - name: Official SDK and pinned native MCP read
         run: node connections/github/tests/live-official-components.mjs
         env:
