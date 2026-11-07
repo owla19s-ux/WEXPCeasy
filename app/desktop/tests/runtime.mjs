@@ -47,6 +47,15 @@ try{
  const adjusted=await wc.executeJavaScript("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width");
  await wc.executeJavaScript("document.querySelector('[data-divider=\"column-1\"]').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));true");
  await waitFor("document.querySelector('[data-column=\"structure\"]').getBoundingClientRect().width<"+(adjusted-8));
+ const panelBefore=await wc.executeJavaScript("document.querySelector('.aux-panel').getBoundingClientRect().height");
+ const handle=await wc.executeJavaScript("(()=>{const r=document.querySelector('[data-divider=\"panel-0\"]').getBoundingClientRect();return {x:Math.round(r.x+80),y:Math.round(r.y+r.height/2)};})()");
+ wc.sendInputEvent({type:'mouseMove',...handle});wc.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...handle});
+ wc.sendInputEvent({type:'mouseMove',x:handle.x,y:handle.y+16});wc.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,x:handle.x,y:handle.y+16});
+ await waitFor("document.querySelector('.aux-panel').getBoundingClientRect().height>"+(panelBefore+6));
+ await wc.executeJavaScript("[...document.querySelectorAll('[aria-label=\"占满辅助列\"]')].at(-1).click();true");
+ await waitFor("document.querySelectorAll('.aux-panel:not([hidden])').length===1");
+ await wc.executeJavaScript("document.querySelector('[aria-label=\"还原面板\"]').click();true");
+ await waitFor("document.querySelectorAll('.aux-panel:not([hidden])').length===3");
  await waitFor("!!localStorage.getItem('wex.workbench.layout.v1')");
  const saved=await wc.executeJavaScript("localStorage.getItem('wex.workbench.layout.v1')");
  const loaded=new Promise(resolve=>wc.once('did-finish-load',resolve));wc.reload();await loaded;
@@ -119,7 +128,7 @@ try{
  assert.equal((await runtime.lifecycle.stop()).status,'stopped');
  const reopened=await startFoundations({dataRoot:root,trust:{current:()=>undefined,canManage:()=>false,canReadHistory:()=>false}});
  assert.equal(reopened.status,'ready');assert.equal((await reopened.stop()).status,'stopped');
- const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,fixtures:['native dialog responses','native directory selection','one permissions-store close failure'],limits:['Windows Local handle/scanner availability is reported explicitly','not an installer or manual Windows acceptance'],checks:['category creation and address form/primary selection through actual React DOM','controlled Local resource preview or explicit platform unavailability','React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
+ const report={source:process.env.GITHUB_SHA??'unknown',platform:process.platform,rendering:process.platform==='linux'?'software-xvfb':'default',electron:process.versions.electron,node:process.versions.node,sqlite:process.versions.sqlite,fixtures:['native dialog responses','native directory selection','one permissions-store close failure'],limits:['Windows Local handle/scanner availability is reported explicitly','not an installer or manual Windows acceptance'],checks:['four-column native divider and keyboard resizing, auxiliary height and expand restoration, layout recovery and preserved Space draft','category creation and address form/primary selection through actual React DOM','controlled Local resource preview or explicit platform unavailability','React Space creation and Context navigation via actual DOM events','real SQLite Context create and group movement via IPC','native decline and path injection rejected','sandboxed React and narrow preload','default-deny identity','CSP network denied','window open denied','foreign real WebContents cannot read status or quit','quit waits and retains lease on release failure','retry releases real SQLite and root; restart succeeds']};
  await writeFile(resolve('desktop-acceptance',process.platform+'.json'),JSON.stringify(report,null,2));
  console.log('DESKTOP_ACCEPTANCE '+JSON.stringify(report));clearTimeout(timer);app.quit();
 }catch(error){console.error(error);clearTimeout(timer);app.exit(1);}
