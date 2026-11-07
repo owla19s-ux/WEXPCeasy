@@ -113,3 +113,23 @@
 - **L013**：GitHub official SDK read workflow 当前 SHA **success**；仅该 workflow 范围。
 - **B1 基础模块条目**：Linux B1 job **success**，Windows B1 job **failure、待具体 JUnit 证据**，因此跨平台 B1 未整体通过。
 - **B2**：此次 workflow_run **skipped**；若要断言跨模块验收，必须另核实际执行的成功运行。
+
+### G.4 B1 Windows JUnit 产物追查（新增精确证据）
+
+已从 [B1 #42347862242 artifact #13564596537](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862242/artifacts/13564596537) 下载并实际解析 `b1-acceptance.xml`。**基线严格为 `b5a474b59fabb55c89ce3fc3f662d20e50335565`，共 492 个 JUnit `testcase`，其中 12 个有 failure，分布如下；该结果取代 G 节此前「尚未解析 JUnit」的时间点描述。**
+
+| owner / 测试文件 | 失败数 | 实际断言与风险 |
+| --- | ---: | --- |
+| `connections/local/tests/bindings.test.mjs` | 2 | 可信 Local 绑定期望 `ok` 实得 `unavailable`；撤权并释放 lease 的测试访问 `undefined.version`（可能为上游绑定失败引发的连锁） |
+| `connections/local/tests/directories.test.mjs` | 3 | 目录授权列举预期 `ok` 实得 `unavailable`（2 项）；cursor 释放测试“预期 reject 但实际未 reject”（1 项） |
+| `space/tests/recovery.test.mjs` | 6 | 两项短路径 `C:\\Users\\RUNNER~1` 与规范化 `C:\\Users\\runneradmin` 不一致；撤权与 Context 列举测试发生 `committed`/ `ok` 而预期 `rejected`、部分完整性布尔断言不符；另有临时目录清理 EPERM hook 失败 |
+| `space/tests/space.test.mjs` | 1 | 测试 after-hook 清理临时目录 EPERM，尚未证明是业务逻辑失败 |
+
+**分类与优先级**：
+
+- **CI-B1-LOCAL（高）**：Local 文件/目录真实绑定和 cursor 清理在 Windows runner 异常，须检查 Windows 路径能力/句柄、权限与 lease 生命周期，不得通过放宽读取授权直接让测试通过。归 `connections/local` owner，关联 L015。
+- **CI-B1-SPACE-SEC（高）**：撤权期间返回 `committed/ok` 与预期拒绝不符，属于需优先复验的安全断言；可能受前序错误或 Windows I/O 时序影响，**在未证明原因前不得声明存在已确认的权限绕过，也不得改断言为允许**。归 `space` + `permissions` 公开接口消费测试，关联 L005/L008/L009。
+- **CI-B1-PATH（中）**：Windows 8.3 短路径与长路径不一致，检查源身份如何规范化及测试是否错误使用字面路径等式，不能随意归一化导致两种不同资源合并。
+- **CI-B1-CLEANUP（中）**：后置清理 EPERM 须检查未释放句柄/SQLite 关闭时序，不能将 cleanup hook 失败等同于相应测试的业务主断言失败。
+
+**施工与测试边界**：以上是 GitHub-hosted Windows runner 的自动化故障，**当前就应由相应代码 owner 修复**；用户推迟的仅是需要本人实际 Windows 设备的集中 E4 用户操作/安装验收。新修复需要新 SHA 下重新核对 `/actions/runs` 总集合，不能只转贴此次历史 JUnit。
