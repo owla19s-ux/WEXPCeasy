@@ -75,7 +75,7 @@ UI只通过可信窄桥提交意图/查询获准状态，页面暂停/卸载不�
 
 可先用领域替身实现导航、面板和明确反馈；通知仅线索，点击/全局搜索按当前权限查询，失联明确覆盖不足。真实Electron桥/身份/缓存撤权、Windows焦点/通知/休眠/安装X09未验；D04后台、D05预览/保留、追加交互未决，不默开常驻或自动更新。
 
-本域独立输入/输出、取消/失败/超时/unknown及双方替身样例沿用上文；下一批先真实本域测试，再真实提供/消费与装配，不用实验替代。[全域准备度与独立入口](../docs/batch6/READINESS.md)、[局部证据与未验证条件](../docs/batch6/EXPERIMENTS.md)、[集中待决](../docs/batch6/DECISIONS.md)。
+本域独立输入/输出、取消/失败/超时/unknown及双方替身样例沿用上文；下一批先真实本域测试，再真实提供/消费与装配，不用实验替代。[全域准备度与独立入口](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md)、[局部证据与未验证条件](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)、[集中待决](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/DECISIONS.md)。
 
 
 ## 文档关联与施工入口
@@ -92,15 +92,15 @@ UI只通过可信窄桥提交意图/查询获准状态，页面暂停/卸载不�
 - **审查报告**：
 - [桌面应用基础能力审计](../docs/A0-产品构想与研究/方案与研究/审查历史/APP-FOUNDATIONS-GAP-AUDIT-2026-10-31.md)
 - [视图与证据链审计](../docs/audits/VIEWS-AND-EVIDENCE-AUDIT-2026-10-31.md)
-- **准备度与批次结论**：[本域施工准备度](../docs/batch6/READINESS.md) · [F01–F09 契约收敛](../docs/batch6/CONVERGENCE.md) · [集中决策与待决项](../docs/batch6/DECISIONS.md)
-- **实验与验证证据**：[第六批实验总表](../docs/batch6/EXPERIMENTS.md) · [可复现实验入口](../experiments/contract-readiness-spike/README.md)
+- **准备度与批次结论**：[本域施工准备度](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md) · [F01–F09 契约收敛](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/CONVERGENCE.md) · [集中决策与待决项](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/DECISIONS.md)
+- **实验与验证证据**：[第六批实验总表](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md) · [可复现实验入口](../experiments/contract-readiness-spike/README.md)
 
 维护规则：模块职责/业务行为修改在本域 README/CONTRACT；跨模块架构或政策变更更新对应全局文档；每次实验只更新证据，不改写未批准的决策。施工批次结束后，先回写模块契约，再更新本节关联；不得把批次历史报告当作模块当前状态的替代品。
 
 
 ## 第八批验证补充（2026-10-31）
 
-正式页面/IPC协议尚未产品化；隔离React最小页面已验证窄preload状态查询、错误反馈与Renderer无Node。负例探针属于测试preload，不是公开产品API。AST新增禁止UI直接导入permissions等特权领域；业务事实仍由owner持有。见[第八批报告](../docs/batch8/REPORT.md)与[实验说明](../experiments/electron-host-spike/README.md)。
+正式页面/IPC协议尚未产品化；隔离React最小页面已验证窄preload状态查询、错误反馈与Renderer无Node。负例探针属于测试preload，不是公开产品API。AST新增禁止UI直接导入permissions等特权领域；业务事实仍由owner持有。见[第八批报告](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch8/REPORT.md)与[实验说明](../experiments/electron-host-spike/README.md)。
 
 ## G5/G7 与跨对话工作接续交互补充（2026-10-31）
 
