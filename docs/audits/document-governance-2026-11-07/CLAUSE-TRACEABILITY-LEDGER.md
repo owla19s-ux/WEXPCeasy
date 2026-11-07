@@ -78,3 +78,38 @@
 - [历史 CONTRACT 语义专项逐轮记录](CONTRACT-SEMANTIC-TRACEABILITY.md) 包含每轮源码样例、冲突定位及保留问题；本账负责统一追踪列，不重复成为新规范。
 - [2026-11-07 文档复审](SECOND-PASS.md) 记录权威与引用治理；[版本计划](../../versions/0.1.1/PLAN.md) 决定版本与批次；[B3 桌面交付任务](../../versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md) 决定 UI/IPC/GitHub/环境专项入口。
 - 后续新增条目须保存：**追踪 ID、旧编号、最新决策链接、owner、版本、公开源码、测试命令和结果（含 SHA）、风险/阻塞与裁决人**；现有 32 条不是整个 F01–F15 功能总表的 216 项逐条覆盖，不得宣称“全仓完成语义对冲”。
+
+## G. GitHub Actions 全运行集合与当前 CI 缺口（2026-11-07）
+
+> **用户已确认**：Windows 人工实机 E4 **统一推迟到具备电脑、可整体测试时再做**。当前不逐项要求 Windows 人工设备、不以人工实机未做阻碍文档治理。GitHub 托管 Windows runner 的自动化测试**仍可继续检查和修复**，不得混同人工 E4。本文没有触发新 Actions、没有执行 npm。
+
+**查证基线**：先查 GitHub 仓库 `/actions/runs?per_page=30` 总集合，再按 Job ID 读取日志，核对 `main@b5a474b59fabb55c89ce3fc3f662d20e50335565`。
+
+| 工作流与真实运行 | 实际结果 | 可确认的证据边界 |
+| --- | --- | --- |
+| [Documentation audit #42347862241](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862241) | success | 本 SHA 的文档自动审计通过；不代表人工语义逐条完成 |
+| [GitHub official SDK read acceptance #42347862269](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862269) | success | 官方 SDK 读取范围通过；不能推断写入或 GH-01～12 全覆盖 |
+| [Foundation verification #42347862263](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862263) | **failure**，`npm test`：**673 tests / 672 pass / 1 fail** | 唯一失败：`UI/tests/layout.test.mjs:23`，导航栏正向拖动后 `current[0]>old[0]` 不成立；当前三列布局的宽度转换/持久化需按 UI v2 规则修复 |
+| [B1 public contract acceptance #42347862242](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862242) | Linux job **success**；Windows job **failure** | Windows `node --test --test-reporter=junit` 退出 1，需进一步读 [JUnit 证据产物](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862242/artifacts/13564596537) 定位具体断言；**没有查实失败测试名称，不推测原因** |
+| [B3 desktop host acceptance #42347862252](https://github.com/owla19s-ux/WEXPCeasy/actions/runs/42347862252) | Linux、Windows **均 failure** | 两边同为 `app/desktop/tests/runtime.mjs:44`，`AssertionError: 3 !== 4`，旧测试还要求四列，而新 UI 已改三段 |
+| B2 cross-module acceptance #42347905340 / #42347897270 / #42347876429 | **skipped** | 不等于通过，也不等于测试执行失败；需单独审查 workflow_run 触发条件 |
+
+### G.1 可在当前阶段施工的 CI 阻塞（不是等待 Windows 人工设备）
+
+- **CI-UI-01 / L029 / B3 D-08**：`UI/tests/layout.test.mjs` 导航拖动失效。源 `UI/src/layout.ts` 的 `resizeColumns` 在辅助区收起时回写列比例，需要查明 nav/main 比例与物理宽度换算是否保持一致；必须保留“导航宽度实际增加、总和守恒、辅助宽度偏好不丢失”的断言。**不得删测试掩盖缺陷或退回四列**。
+- **CI-DESKTOP-01 / L019-L020-L029 / B3 D-08、D-09**：`app/desktop/tests/runtime.mjs:44` 断言 `columns.length===4` 已与布局 v2 不符，后续代码还操作旧 `structure` 与 `aux-panel`；需要按现行三段布局、真实 DOM、视图标签与预览、分隔线及 v1→v2 恢复测试**整段迁移**。只改数字 4→3 不代表修复。
+- **CI-B1-WIN-01 / B1-08**：已知 Windows runner B1 测试执行阶段失败且 JUnit 已上传；先取得具体失败测试，再按属主修复。由于 B1 测试集合不含 UI/layout，**不得将它归因为上述 UI 失败**。
+- **CI-RESULT-01**：所有 CI 成功必须逐 run、逐 job、逐 SHA 登记。Foundation 672 个绿灯不能冒充 `npm test` 全绿；B2 skipped 不能归档为通过。
+- **修改权限**：本轮授权仅文档治理，没有修改 `UI/`、`app/` 产品代码或测试；应由对应代码 owner 施工并使用已有工作流验证新 SHA。
+
+### G.2 Windows 人工实机 E4：统一延期批次
+
+**状态 `DEFERRED-UNTIL-HARDWARE`（用户明确决定）**。等有真实 Windows 设备、可做完整用户操作时再集中测试：安装与目录选择、启动/重启/重装后恢复、真实 Electron/React 页面、Space/Context/API/AI/Conversations、凭证/授权和撤权、连接器、窗口 Snap 与高 DPI/文字缩放、拖动/焦点/草稿、异常与重启恢复。**当前不拆成每模块一轮人工实机任务**。GitHub Windows hosted runner 的自动化不等同 E4，仍属于可在线验证范围。
+
+### G.3 总账证据等级回填
+
+- **L029**：当前 SHA 存在明确 **E2 失败**（Foundation UI layout），不可写测试通过。
+- **L019/L020/L029**：当前 SHA 存在明确 **E3 自动化失败**（B3 双平台同断言），不可写桌面集成验收通过。
+- **L013**：GitHub official SDK read workflow 当前 SHA **success**；仅该 workflow 范围。
+- **B1 基础模块条目**：Linux B1 job **success**，Windows B1 job **failure、待具体 JUnit 证据**，因此跨平台 B1 未整体通过。
+- **B2**：此次 workflow_run **skipped**；若要断言跨模块验收，必须另核实际执行的成功运行。
