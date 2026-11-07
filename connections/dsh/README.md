@@ -17,7 +17,7 @@
 
 **与内置 DSH Core+Loader 插件宿主并行开发，互不作为启动或交付前置。** 本连接器的最小可用闭环是：配置 DSH 外部运行实例 → 验证连接状态 → 以 DSH 实际公开可行的方式派发任务 → 接收或查询可获得的执行结果、会话入口、产物引用 → 向 WEX 返回真实失败/结果未知回执并由 WEX 持久化。不能预设 DSH 具有尚未证实的外部任务 API，也不能将本连接器当作 DSH 插件运行容器。当前已有下述独立实验，没有产品级连接器或成功端到端验收。
 
-架构依据：[DSH 双路线验收目标](../../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)。
+架构依据：[DSH 双路线验收目标](../../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)。
 
 ## 本批实际实验（2026-10-30）
 
@@ -55,9 +55,9 @@ DSH Session、内部 Agent 状态和自身权限由独立 DSH 持有；本适配
 
 - **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [双插件体系边界](../../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)
+- [双插件体系边界](../../docs/A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)
 - [外部 Agent 生态](../../docs/A0-产品构想与研究/方案与研究/既有研究/AGENT-ECOSYSTEM-2026-10-31.md)
-- [DSH 能力差距审计](../../docs/audits/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
+- [DSH 能力差距审计](../../docs/A0-产品构想与研究/方案与研究/审查历史/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
 
 本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
@@ -65,4 +65,4 @@ DSH Session、内部 Agent 状态和自身权限由独立 DSH 持有；本适配
 
 外部 DSH 的 Session/Agent Loop 仍由 DSH 自身拥有。WEX 保存投递关联、可查询的外部会话定位、Operation 观察和产物引用；恢复时先查询原 Session/Operation，不以新会话重发任务。只有真实接口证明确实支持的查询、停止或接续能力才声明支持；进程退出、timeout、not found 均不自动证明外部任务停止或未执行。
 
-跨对话验收见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+跨对话验收见[基础能力落地映射](../../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
