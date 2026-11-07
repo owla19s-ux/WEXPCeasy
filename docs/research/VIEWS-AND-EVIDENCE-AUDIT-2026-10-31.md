@@ -1,5 +1,5 @@
-# 文档位置已调整
+# 资料已迁入 A0
 
-本文档已迁移至：[docs/audits/VIEWS-AND-EVIDENCE-AUDIT-2026-10-31.md](../audits/VIEWS-AND-EVIDENCE-AUDIT-2026-10-31.md)。
+完整正文请访问：[VIEWS-AND-EVIDENCE-AUDIT-2026-10-31.md](../A0-产品构想与研究/方案与研究/既有研究/VIEWS-AND-EVIDENCE-AUDIT-2026-10-31.md)。
 
-为兼容仓库内既有链接，暂时保留此指向页。正文只在新位置维护，不要在此处复制或继续修改旧内容。
+本页仅保留历史路径兼容，供源码模块文档及旧研究引用；不再维护第二份正文。
