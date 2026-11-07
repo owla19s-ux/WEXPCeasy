@@ -35,3 +35,29 @@
 ## 验证缺口（不得标完成）
 
 未运行 `node tools/check-docs.mjs --json --strict`、`node --test tools/check-docs.test.mjs`、`python docs/audits/document-governance-2026-11-04/verify.py --output ...`；当前环境不能直接取得可执行的完整仓库工作树。未进行最新 HEAD 的全量路径/反向引用枚举和 Windows/CI 验收。
+
+## 2026-11-07 续批：第二阶段模块文档直接引用迁移
+
+在前次四个业务模块入口基础上，续批已修改下列就近文档：
+
+- `app/README.md`、`app/CONTRACT.md`：历史契约与版本状态指向 A0/A2。
+- `UI/README.md`、`UI/CONTRACT.md`：基础 UI 设计与功能映射的正式正文指向 A1。
+- `shared/README.md`、`shared/CONTRACT.md`：归档契约指向 A0。
+- `permissions/README.md`、`permissions/CONTRACT.md`：历史契约与正式权限政策区分为 A0/A1，版本状态指向 A2。
+- `connections/api/README.md`、`connections/api/CONTRACT.md`：API/连接器历史契约、研究索引指向 A0。
+- `connections/github/README.md`、`connections/local/README.md`、`connections/local/CONTRACT.md`、`connections/dsh/README.md`：相应历史契约及研究引用指向 A0。
+- `AI/roles/README.md`：AI 归档契约与研究报告指向 A0。
+- `workflows/README.md`、`workflows/CONTRACT.md`：历史契约指向 A0、版本总表指向 A2。
+- `environments/README.md`：产品功能总表及版本状态入口指向 A1/A2。
+- `views/CONTRACT.md`、`plugins/CONTRACT.md`：产品功能与模块映射指向 A1、历史跨模块契约指向 A0。
+- `dsh/README.md`：版本状态入口指向 A2。
+- `UI/conversation/README.md`、`UI/settings/README.md`：归档契约与研究索引指向 A0。
+
+本批采用原文件 SHA 的 GitHub Contents 更新，不改产品源码、配置、依赖清单或测试。这里的“引用迁移”**不构成逐个模块的契约语义复验完成**。其中 `app`、`UI`、`views`、`plugins` 仍有旧 `docs/architecture/`、`docs/audits/`、`docs/batch6/`、`docs/planning/` 等追溯链接：需要按各目标文件是否具备独立历史证据决定是否继续迁移，不能仅按路径前缀批量删除。未找到或未读取到的 CONTRACT 不擅自新建。
+
+### 尚待完成与删除条件
+
+- 最新 HEAD 的完整树枚举、全量 Markdown 解析、相对路径及锚点检查、反向引用零残留检查，**均未执行**。
+- `docs/audits/document-governance-2026-11-04/` 原始 JSON/脚本与批次证据保持原位。
+- 模块 README/CONTRACT 的内容及代码事实深度对齐、依赖有效性与 CI/Windows 验收仍需独立证据；本次仅确认并修改明确的资料定位关系。
+- 禁止在完成全量引用与证据审查前统一删除旧兼容文件。
