@@ -4,7 +4,7 @@ import {ContextAddresses} from './space-addresses.js';
 import type {DesktopSpaceInput,DesktopSpaceReply,DesktopBridge} from './index.js';
 type Snapshot=Extract<DesktopSpaceReply,{view:'snapshot'}>;
 type Detail=Extract<DesktopSpaceReply,{view:'context'}>;
-export interface SpaceSections {toolbar:ReactNode;categories:ReactNode;structure:ReactNode;content:ReactNode;summary:ReactNode}
+export interface SpaceSections {contextId:string|null;toolbar:ReactNode;categories:ReactNode;structure:ReactNode;content:ReactNode;summary:ReactNode}
 export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sections:SpaceSections)=>ReactNode}){
  const [data,setData]=useState<Snapshot>(),[detail,setDetail]=useState<Detail>(),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const [categoryFilter,setCategoryFilter]=useState(''),[categoryId,setCategoryId]=useState('');
@@ -55,7 +55,7 @@ export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sectio
  <label>目标分组<select id="context-group" disabled={busy} value={groupId} onChange={event=>setGroupId(event.target.value)}><option value="">不分组</option>{data.groups.filter(g=>g.spaceId===(detail.organization.spaceId??spaceId)).map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
  <button disabled={busy||!(detail.organization.spaceId??spaceId)} onClick={()=>void run(async()=>{const result=await call({kind:'context.group',contextId:detail.context.id,spaceId:detail.organization.spaceId??spaceId,groupId:groupId||null,expectedRevision:detail.organization.revision});if(result?.status==='committed'){await refresh();await open(detail.context.id);}})}>移动到所选分组</button></article>}</div>:<div className="workspace-empty"><h2>连接你的工作空间</h2><p>打开工作区，继续管理 Space、Context 和关联资源。</p></div>;
  const summary=detail?<dl><dt>当前显示</dt><dd>{detail.context.name}</dd><dt>Context ID</dt><dd>{detail.context.id}</dd><dt>配置修订</dt><dd>{detail.context.revision}</dd><dt>关联地址</dt><dd>{detail.resources.length}</dd></dl>:<p>选择一个 Context 查看当前对象信息。</p>;
- const sections={toolbar,categories,structure,content,summary};
+ const sections:SpaceSections={contextId:detail?.context.id??null,toolbar,categories,structure,content,summary};
  if(render)return <>{render(sections)}</>;
  return <section className="workspace">{toolbar}{categories}<div className="workspace-grid">{structure}{content}</div></section>;
 }
