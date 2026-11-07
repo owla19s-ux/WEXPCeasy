@@ -53,10 +53,10 @@ DSH Session、内部 Agent 状态和自身权限由独立 DSH 持有；本适配
 
 ## 上级契约与文档入口
 
-- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/research/contracts/connections/CONTRACT-archive.md)
+- **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
 - [双插件体系边界](../../docs/architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)
-- [外部 Agent 生态](../../docs/research/AGENT-ECOSYSTEM-2026-10-31.md)
+- [外部 Agent 生态](../../docs/A0-产品构想与研究/方案与研究/既有研究/AGENT-ECOSYSTEM-2026-10-31.md)
 - [DSH 能力差距审计](../../docs/audits/DSH-WEXPC1-GAP-MATRIX-V0.1.md)
 
 本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
