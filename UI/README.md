@@ -94,7 +94,7 @@ WEX 内置界面。主入口已经采用 React/TypeScript，负责导航、加�
 
 ### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：第六批[历史条款](CONTRACT.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](CONTRACT.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md)、[实验结果](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)、[施工顺序](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/NEXT.md)。
 
 
 ## 文档入口
@@ -108,7 +108,7 @@ WEX 内置界面。主入口已经采用 React/TypeScript，负责导航、加�
 
 ## 第八批验证补充（2026-10-31）
 
-**历史第八批结论（2026-10-31）**：当时正式页面/IPC 尚未产品化；隔离React最小页面已验证窄preload状态查询、错误反馈与Renderer无Node。负例探针属于测试preload，不是公开产品API。AST新增禁止UI直接导入permissions等特权领域；业务事实仍由owner持有。见[第八批报告](../docs/batch8/REPORT.md)与[实验说明](../experiments/electron-host-spike/README.md)。
+**历史第八批结论（2026-10-31）**：当时正式页面/IPC 尚未产品化；隔离React最小页面已验证窄preload状态查询、错误反馈与Renderer无Node。负例探针属于测试preload，不是公开产品API。AST新增禁止UI直接导入permissions等特权领域；业务事实仍由owner持有。见[第八批报告](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch8/REPORT.md)与[实验说明](../experiments/electron-host-spike/README.md)。
 
 ## G5/G7：内部检索与输入附件
 
