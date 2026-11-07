@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,mkdir,writeFile,readFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -12,7 +12,7 @@ async function fixture(t){
  for(const [path,id] of [[root,'public-root'],[context,'context-root']]){await mkdir(path);await writeFile(join(path,'.wex-root.json'),JSON.stringify({format:1,id}));}
  let allow=true,confirmations=0;
  const access=createDesktopSpace({rootId:'public-root',confirm:async()=>{confirmations++;return allow;},chooseDirectory:async()=>context});
- const host=await startFoundations({dataRoot:root,...access.policy,space:{deriveRequest:access.derive},localFiles:{},localDirectories:{}});
+ const host=await startFoundations({dataRoot:root,...access.policy,space:{deriveRequest:access.derive},localFiles:{coordinateWrites:true},localDirectories:{}});
  access.attach(host);t.after(async()=>{access.close();await host.stop();await rm(base,{recursive:true,force:true});});
  return {access,host,root,context,setAllow:value=>allow=value,count:()=>confirmations};
 }
@@ -109,4 +109,23 @@ test('categories and multi-address primary references survive a fresh SQLite hos
   const snapshot=await access.request({kind:'snapshot'});assert.equal(snapshot.categories[0].id,category.id);assert.equal(snapshot.spaces[0].id,space.id);assert.equal(snapshot.spaces[0].categoryId,category.id);
   const detail=await access.request({kind:'context.open',id:context.id});assert.equal(detail.context.primaryAddress,address.id);assert.deepEqual(detail.resources[0].purpose,['reference','operation']);assert.equal(detail.resources[0].notes,'original');
  }finally{access.close();await host.stop();}
+});
+
+test('desktop Local save binds the observed file version, persists one Operation and rejects stale or redirected intent',async t=>{
+ const f=await fixture(t),path=join(f.context,'editable.txt');await writeFile(path,'original');
+ const context=await f.access.request({kind:'context.create',name:'Editor'});
+ const address=await f.access.request({kind:'address.add',contextId:context.id,name:'Editable',address:pathToFileURL(path).href,purpose:['operation']});
+ const read=()=>f.access.request({kind:'resource.read',contextId:context.id,id:address.id,mode:'file'});
+ const observed=await read();assert.equal(observed.status,'ok');assert.equal(typeof observed.editToken,'string');
+ const input={kind:'resource.save',contextId:context.id,id:address.id,editToken:observed.editToken,content:'edited'};
+ assert.equal((await f.access.request({...input,path:'/injected'})).status,'rejected');
+ f.setAllow(false);assert.equal((await f.access.request(input)).status,'cancelled');assert.equal(await readFile(path,'utf8'),'original');f.setAllow(true);
+ let saved=await f.access.request(input);assert.equal(saved.status,'saved');assert.equal(await readFile(path,'utf8'),'edited');
+ assert.equal(f.host.connections.operations.get(saved.operationId).phase,'observed');
+ assert.equal((await f.access.request(input)).status,'rejected');
+ const next=await read();await writeFile(path,'external edit');
+ saved=await f.access.request({...input,editToken:next.editToken,content:'must not overwrite'});assert.equal(saved.status,'rejected');assert.equal(saved.reason,'version_conflict');assert.equal(await readFile(path,'utf8'),'external edit');
+ const latest=await read();
+ assert.equal((await f.access.request({kind:'address.edit',contextId:context.id,id:address.id,expectedRevision:1,name:'Retargeted',address:pathToFileURL(join(f.context,'other.txt')).href,purpose:['operation']})).status,'committed');
+ saved=await f.access.request({...input,editToken:latest.editToken,content:'wrong target'});assert.equal(saved.status,'rejected');assert.equal(await readFile(path,'utf8'),'external edit');
 });
