@@ -1,6 +1,6 @@
 # conversations — 独立对话与生成业务
 
-> **当前代码事实（2026-11-07，`main bd72dfea`）**：已有 `conversations/src/index.ts` 与独立 `conversations/tests/`，包括消息/会话、保存恢复、生成授权、系统提示及损坏拒绝等测试。基础领域实现已存在，但正式 `UI/conversation` 对话页面尚未接入 `UI/src/renderer.tsx`。
+> **当前代码事实（2026-11-07，`main bd72dfea`）**：已有 `conversations/src/index.ts` 与独立 `conversations/tests/`，包括消息/会话、保存恢复、生成授权、系统提示及损坏拒绝等测试。基础领域实现已存在，但正式会话业务页面尚未在 `UI/src/workbench.tsx` 中接线；`renderer.tsx` 只挂载 `Workbench`，不可据此判断对话领域无实现。
 
 > **当前模块施工状态（文档整理，2026-11-03）**：有业务设计；正式产品实现与测试待核验。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
 >
@@ -34,7 +34,7 @@
 
 覆盖样本 L05。以消息/段落/生成的业务条件和外部尝试关联制定契约，背景查询和模型调用作为窄依赖。独立测试覆盖无 Task/Context、重发、断流、迟到和保存失败；替身不得让未知工具副作用被重新执行。
 
-契约就近、公开出口/依赖约束、分层测试和模块施工方法见[统一研究](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)。本段只给制定契约的依据，不表示公开接口已实现或所有建议已获采纳。
+契约就近、公开出口/依赖约束、分层测试和模块施工方法见[统一研究](../docs/A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)。本段只给制定契约的依据，不表示公开接口已实现或所有建议已获采纳。
 
 
 
@@ -45,7 +45,7 @@
 
 ### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/conversations/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/conversations/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/READINESS.md)、[实验结果](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/EXPERIMENTS.md)、[施工顺序](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch6/NEXT.md)。
 
 
 ## 文档入口
