@@ -38,3 +38,18 @@ GitHub 文本搜索旧 `docs/research/contracts/` 可看到现行文档、迁移
 2. 对其余低层目录与包含旧源码状态的文件完成逐文件业务/证据核验；已确认的 owner 不能因目录名被重复实现。
 3. 真实编译/模块测试、边界检查、Windows E4 均未在本轮运行，不能标通过。
 4. 旧兼容页删除仍受全仓反向引用零残留、独立证据不丢失、路径/锚点检查通过三道门槛限制；**本轮未删除任何兼容文件**。
+
+## 五、续查补充：第二层目录与 App 通信研究
+
+在记录本批审计后，又检查了 `dsh/runtime/README.md`、`workflows/modes/README.md`、`workflows/modes/software-development/README.md`、`app/COMMUNICATION.md`，确认存在引用旧兼容页的相对 Markdown 链接，已转向 A0/A1 唯一正文：
+
+| 文档 | 修改内容 | 提交 |
+| --- | --- | --- |
+| `dsh/runtime/README.md` | 第六批实验→A0；双插件正式边界→A1；历史 DSH 差距审查→A0 | `ce20a79f` |
+| `workflows/modes/README.md` | Windows 数据规则→A1；第六批研究→A0 | `40c6f06d` |
+| `workflows/modes/software-development/README.md` | 数据规则→A1；旧功能全景研究→A0 | `48887907` |
+| `app/COMMUNICATION.md` | 第四批 Agent/安全/Windows 生命周期/契约压力研究→A0 | `5ae04d2d` |
+
+`app/COMMUNICATION.md` 是第四批旧通信设计稿，其候选 IPC 组织方式与接口不因引用修复而获得当代实现授权。仍须以 `app/src`、`UI/src/index.ts` 与当前授权契约核对。
+
+本续查同样没有执行源码测试或全仓锚点检查；旧路径兼容文件仍全部保留。
