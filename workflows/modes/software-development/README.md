@@ -9,12 +9,10 @@
 修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
 
 
-## 上级契约与文档入口
+## 直接依赖
 
-- **上级业务/职责研究（历史）：** [workflows/modes/CONTRACT.md](../../../workflows/modes/CONTRACT.md)
-- **专业模式子契约：** [software-development CONTRACT](CONTRACT.md)
-- **全局文档总索引：** [docs/README.md](../../../docs/README.md)
-- [产品功能全景](../../../docs/A0-产品构想与研究/方案与研究/既有研究/PRODUCT-FUNCTION-LANDSCAPE-2026-10-31.md)
-- [研究决策](../../../docs/decisions/RESEARCH-DECISIONS-2026-10-30.md)
+- [Workflows 模块](../../README.md)：业务定义与版本边界。
+- [Modes 模块](../README.md)：专业组合的上级职责。
 
-本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
+专业模式仍以明确版本和正式实现证据判断，不从历史功能全景派工。
+
