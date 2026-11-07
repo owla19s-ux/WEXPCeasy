@@ -5,16 +5,18 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {startFoundations} from '../../dist/app/src/index.js';
+import {createDesktopAuthority} from '../../dist/app/src/desktop-authority.js';
 import {createDesktopSpace} from '../../dist/app/src/desktop-space.js';
 // Native confirmation and directory chooser are platform fixtures; all domain services and SQLite are real.
 async function fixture(t){
  const base=await mkdtemp(join(tmpdir(),'wex-desktop-space-')),root=join(base,'public'),context=join(base,'context');
  for(const [path,id] of [[root,'public-root'],[context,'context-root']]){await mkdir(path);await writeFile(join(path,'.wex-root.json'),JSON.stringify({format:1,id}));}
- let allow=true,confirmations=0;
- const access=createDesktopSpace({rootId:'public-root',confirm:async()=>{confirmations++;return allow;},chooseDirectory:async()=>context});
+ let allow=true,confirmations=0,pause;
+ const authority=createDesktopAuthority();
+ const access=createDesktopSpace({authority,rootId:'public-root',confirm:async summary=>{confirmations++;if(pause&&summary.startsWith('保存本地文件：'))await pause();return allow;},chooseDirectory:async()=>context});
  const host=await startFoundations({dataRoot:root,...access.policy,space:{deriveRequest:access.derive},localFiles:{coordinateWrites:true},localDirectories:{}});
  access.attach(host);t.after(async()=>{access.close();await host.stop();await rm(base,{recursive:true,force:true});});
- return {access,host,root,context,setAllow:value=>allow=value,count:()=>confirmations};
+ return {access,host,root,context,authority,setAllow:value=>allow=value,pauseSave:value=>pause=value,count:()=>confirmations};
 }
 test('desktop Space rejects unlisted capabilities and authority/path injection before native prompts',async t=>{
  const f=await fixture(t);
@@ -123,6 +125,14 @@ test('desktop Local save binds the observed file version, persists one Operation
  let saved=await f.access.request(input);assert.equal(saved.status,'saved');assert.equal(await readFile(path,'utf8'),'edited');
  assert.equal(f.host.connections.operations.get(saved.operationId).phase,'observed');
  assert.equal((await f.access.request(input)).status,'rejected');
+ const admitted=await read();let enter,release;const entered=new Promise(r=>enter=r);
+ f.pauseSave(()=>{enter();return new Promise(r=>release=r);});
+ const pending=f.access.request({...input,editToken:admitted.editToken,content:'revoked write'});await entered;
+ const grants=await f.authority.settings({kind:'snapshot'},async()=>true);
+ const grant=grants.entries.find(e=>e.resource==='local'&&e.action==='write');assert.ok(grant);
+ assert.equal((await f.authority.settings({kind:'revoke',id:grant.id,expectedRevision:grants.revision},async()=>true)).status,'committed');
+ release();assert.notEqual((await pending).status,'saved');f.pauseSave(undefined);
+ assert.equal(await readFile(path,'utf8'),'edited');
  const next=await read();await writeFile(path,'external edit');
  saved=await f.access.request({...input,editToken:next.editToken,content:'must not overwrite'});assert.equal(saved.status,'rejected');assert.equal(saved.reason,'version_conflict');assert.equal(await readFile(path,'utf8'),'external edit');
  const latest=await read();
