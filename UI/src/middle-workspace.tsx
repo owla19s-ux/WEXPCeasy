@@ -1,49 +1,30 @@
 import {useEffect,useRef,useState} from 'react';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import type {SpaceSections} from './space.js';
-type ViewId='context'|'structure';
-type View={id:ViewId;title:string};
-const defaults:View[]=[{id:'context',title:'Context 配置'}];
-type State={tabs:View[];active:ViewId;preview:boolean;previewPercent:number};
-const key='wex.middle-workspace.v1';
-const storageKey=(contextId:string|null)=>key+':'+(contextId??'unselected');
-const fallback=():State=>({tabs:defaults,active:'context',preview:false,previewPercent:48});
-function restore(contextId:string|null):State{
- try{
-  const v=JSON.parse(localStorage.getItem(storageKey(contextId))||'null') as State;
-  if(!v||!Array.isArray(v.tabs)||v.tabs.length<1||v.tabs.length>2)return fallback();
-  const allowed=new Set<ViewId>(['context','structure']),ids=new Set<ViewId>();
-  const tabs:View[]=[];
-  for(const tab of v.tabs){
-   if(!tab||!allowed.has(tab.id)||ids.has(tab.id)||typeof tab.title!=='string')return fallback();
-   ids.add(tab.id);tabs.push({id:tab.id,title:tab.title.slice(0,50)||'视图'});
-  }
-  if(!ids.has('context')||!ids.has(v.active))return fallback();
-  return {tabs,active:v.active,preview:v.preview===true,
-   previewPercent:typeof v.previewPercent==='number'&&Number.isFinite(v.previewPercent)?Math.max(25,Math.min(70,v.previewPercent)):48};
- }catch{return fallback();}
-}
+import {addView,moveView,removeView,restoreWorkspaceState,workspaceStorageKey} from './workspace-state.js';
+import type {ViewId,WorkspaceState} from './workspace-state.js';
+const restore=(contextId:string|null)=>{try{return restoreWorkspaceState(localStorage.getItem(workspaceStorageKey(contextId)));}catch{return restoreWorkspaceState(null);}};
 /** View tabs belong to the UI. Actual Context, resource and edit state remain with their owning modules. */
 export function MiddleWorkspace({parts}:{parts:SpaceSections}){
- const [state,setState]=useState<State>(()=>restore(parts.contextId));
+ const [state,setState]=useState<WorkspaceState>(()=>restore(parts.contextId));
  const [renaming,setRenaming]=useState<ViewId|null>(null);
  const [width,setWidth]=useState(0);
  const host=useRef<HTMLDivElement>(null);
  const drag=useRef<{x:number;percent:number;pointer:number}|null>(null);
- useEffect(()=>{try{localStorage.setItem(storageKey(parts.contextId),JSON.stringify(state));}catch{/* Layout is best-effort; business data never lives here. */}},[state,parts.contextId]);
+ useEffect(()=>{try{localStorage.setItem(workspaceStorageKey(parts.contextId),JSON.stringify(state));}catch{/* Layout is best-effort; business data never lives here. */}},[state,parts.contextId]);
  useEffect(()=>{if(!host.current)return;const observer=new ResizeObserver(entries=>setWidth(entries[0]?.contentRect.width??0));observer.observe(host.current);return()=>observer.disconnect();},[]);
  const active=state.tabs.find(t=>t.id===state.active)!;
  const split=state.preview&&width>=620;
  const sidebar=state.preview&&!split;
- const change=(patch:Partial<State>)=>setState(s=>({...s,...patch}));
+ const change=(patch:Partial<WorkspaceState>)=>setState(s=>({...s,...patch}));
  function finish(event:ReactPointerEvent<HTMLDivElement>,cancel:boolean){
   const d=drag.current;if(!d)return;drag.current=null;
   if(cancel)change({previewPercent:d.percent});
   if(event.currentTarget.hasPointerCapture(d.pointer))event.currentTarget.releasePointerCapture(d.pointer);
  }
- const add=()=>setState(s=>s.tabs.some(v=>v.id==='structure')?{...s,active:'structure'}:{...s,tabs:[...s.tabs,{id:'structure',title:'资源结构'}],active:'structure'});
- const remove=(id:ViewId)=>setState(s=>{if(id==='context')return s;return {...s,tabs:s.tabs.filter(v=>v.id!==id),active:s.active===id?'context':s.active,preview:s.active===id?false:s.preview};});
- const shift=(id:ViewId,delta:number)=>setState(s=>{const i=s.tabs.findIndex(t=>t.id===id),j=i+delta;if(j<0||j>=s.tabs.length)return s;const tabs=s.tabs.slice();[tabs[i],tabs[j]]=[tabs[j]!,tabs[i]!];return {...s,tabs};});
+ const add=()=>setState(addView);
+ const remove=(id:ViewId)=>setState(current=>removeView(current,id));
+ const shift=(id:ViewId,delta:-1|1)=>setState(current=>moveView(current,id,delta));
  return <div className="middle-workspace" ref={host} data-middle-workspace>
   <div className="middle-content">
    <div className="middle-current" style={split?{width:(100-state.previewPercent)+'%'}:undefined}>
