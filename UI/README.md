@@ -100,8 +100,6 @@ WEX 内置界面。主入口已经采用 React/TypeScript，负责导航、加�
 ## 文档入口
 
 - [历史交互契约及其依据](CONTRACT.md#文档关联与施工入口)
-- [WEXPC1 文档体系总索引](../docs/README.md)
-- [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
 当前施工范围与必要契约摘要以本 README 和根 README 为入口；历史契约及其关联资料只供按需追溯，不自动派工或批准候选政策。
 
