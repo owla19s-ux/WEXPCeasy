@@ -25,13 +25,14 @@ function Divider(p:DividerProps){
 const panelNames:Record<PanelKind,string>={context:'对象信息',diagnostics:'运行状态',conversation:'对话'};
 export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:DesktopBridge;status:DesktopStatus;label:string;error:string;onRefresh:()=>void;onQuit:()=>void}){
  const [layout,setLayout]=useState<Layout>(()=>{try{return restoreLayout(localStorage.getItem(layoutKey));}catch{return defaultLayout();}});
+ const [layoutSaved,setLayoutSaved]=useState(true);
  const [dragging,setDragging]=useState(false),[settings,setSettings]=useState(false),[setting,setSetting]=useState('display');
  const grid=useRef<HTMLDivElement>(null);
  const [size,setSize]=useState({width:window.innerWidth,height:window.innerHeight-76});
  useEffect(()=>{const element=grid.current;if(!element)return;const observer=new ResizeObserver(entries=>{
   const r=entries[0]?.contentRect;if(r)setSize({width:r.width,height:r.height});
  });observer.observe(element);return()=>observer.disconnect();},[]);
- useEffect(()=>{if(dragging)return;try{localStorage.setItem(layoutKey,JSON.stringify(layout));}catch{/* Layout still works when profile storage is unavailable. */}},[layout,dragging]);
+ useEffect(()=>{if(dragging)return;try{localStorage.setItem(layoutKey,JSON.stringify(layout));setLayoutSaved(true);}catch{setLayoutSaved(false);}},[layout,dragging]);
  const widths=columnWidths(layout,size.width),mainHeight=layout.bottomOpen?Math.max(320,size.height*(1-layout.bottomRatio)-6):size.height;
  const stackHeight=Math.max(112,mainHeight-40),heights=panelHeights(layout,stackHeight);
  const rows=layout.panels.flatMap((p,i)=>i===layout.panels.length-1?[heights[i]+'px']:[heights[i]+'px','6px']).join(' ');
@@ -94,6 +95,6 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
    </aside>
    {layout.bottomOpen&&<><div style={{gridColumn:'3 / -1',gridRow:2}}><Divider id="bottom" axis="y" layout={layout} value={layout.bottomRatio*100} onDelta={(delta,s)=>setLayout({...s,bottomRatio:Math.max(.12,Math.min(.5,s.bottomRatio-delta/size.height))})} onRestore={restore} onDragging={setDragging}/></div><section className="bottom-output" style={{gridColumn:'3 / -1',gridRow:3}}><strong>运行输出</strong><p>{label}</p>{status.diagnostics.map((d,i)=><p key={i}>{d.module}：{d.reason}</p>)}{error&&<p role="alert">{error}</p>}</section></>}
   </div></div>
-  <footer className="workbench-footer"><span>{error||'业务访问需确认授权；布局自动保存。'}</span><span>WEXPCeasy · 0.1.1</span></footer>
+  <footer className="workbench-footer"><span>{error||(layoutSaved?'业务访问需确认授权；布局自动保存。':'布局保存不可用；本次窗口内仍可调整。')}</span><span>WEXPCeasy · 0.1.1</span></footer>
  </main>}/>;
 }
