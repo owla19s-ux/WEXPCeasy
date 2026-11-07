@@ -13,7 +13,7 @@ GitHub 操作与连接配置。权限使用共用机制；专属面板留在本�
 
 状态：已有基础 GitHub 适配代码、真实 Octokit/MCP SDK 导入、受控读取/写入适配及独立测试；**完整官方工具覆盖、受信二进制运行/版本校验、Windows 分发、真实远端写入与回执恢复**仍须依 B3 D-06 逐项核验。0.1.1 必需的基础读写与长期广泛 API 覆盖分别判断；GitHub 专项不阻塞无关 UI。
 
-[源码目录与 Windows 数据要求](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
+[源码目录与 Windows 数据要求](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
 
 修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
 
@@ -26,8 +26,8 @@ GitHub 操作与连接配置。权限使用共用机制；专属面板留在本�
 
 - **上级业务/职责研究（历史）：** [connections/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [提供方边界 Walkthrough](../../docs/architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
-- [复杂业务契约压力审查](../../docs/audits/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
+- [提供方边界 Walkthrough](../../docs/A0-产品构想与研究/方案与研究/架构研究历史/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
+- [复杂业务契约压力审查](../../docs/A0-产品构想与研究/方案与研究/审查历史/COMPLEX-CONTRACT-STRESS-REVIEW-2026-10-31.md)
 
 本子目录不另建第二份业务权威。当前稳定职责与施工范围以对应 owner README 和根 README 为入口；历史契约只按需追溯，实验结论仅按原环境和范围解释。
 
@@ -35,4 +35,4 @@ GitHub 操作与连接配置。权限使用共用机制；专属面板留在本�
 
 GitHub 仓库、分支、提交、PR 和文件均按远端对象身份/版本观察引用；名称、URL 或默认分支不能替代当前修订核对。每次写操作由 Connections 宿主记录 Operation/attempt，回读远端结果后再报告；提交请求超时或回执缺失时先查询原 Operation/远端事实，不盲目创建第二次提交、PR 或分支。
 
-见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+见[基础能力落地映射](../../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
