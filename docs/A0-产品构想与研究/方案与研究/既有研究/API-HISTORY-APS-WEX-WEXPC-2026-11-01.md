@@ -75,4 +75,4 @@ WEX API 已细化 Chat Completions / Responses 事件差别、DeepSeek thinking 
 
 ## 八、原始 Excel 总表状态注意
 
-产品全局总表现行入口是 [PRODUCT-FUNCTION-CATALOG-2026-11-01.md](../../../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) 和 [FUNCTION-CONTRACT-MAP-2026-11-01.md](../../../A1-正式产品设计/功能与模块归属映射.md)。它们是仓库内 Markdown 资料，**不等于 2026-10-31 的 .xlsx 讨论稿已经在仓库**。截至本次检查，仓库 main 完整树中无 `.xlsx` 文件。若需要原始 Excel 入库，应按原文件字节单独上传，不要把 Markdown 替代品误称原始文件。
+产品全局总表现行入口是 [PRODUCT-FUNCTION-CATALOG-2026-11-01.md](../../../A1-正式产品设计/产品功能总表.md) 和 [FUNCTION-CONTRACT-MAP-2026-11-01.md](../../../A1-正式产品设计/功能与模块归属映射.md)。它们是仓库内 Markdown 资料，**不等于 2026-10-31 的 .xlsx 讨论稿已经在仓库**。截至本次检查，仓库 main 完整树中无 `.xlsx` 文件。若需要原始 Excel 入库，应按原文件字节单独上传，不要把 Markdown 替代品误称原始文件。
