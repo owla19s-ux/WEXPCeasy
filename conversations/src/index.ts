@@ -114,6 +114,7 @@ function apply(conversation: Conversation, change: Exclude<ConversationChange, {
     return true;
   }
   if (change.kind === 'finish') {
+    if (generation.replyId !== undefined && generation.replyId !== change.messageId) return false;
     conversation.messages.push({ id: change.messageId, role: 'assistant', segments: change.segments });
     generation.status = 'completed';
     generation.outputMessageId = change.messageId;
@@ -145,7 +146,8 @@ function validateConversation(conversation: Conversation): void {
         !['pending', 'running', 'completed', 'cancelled', 'failed', 'unknown'].includes(generation.status)) throw Error('invalid_generation');
     if ((generation.requestId===undefined)!==(generation.replyId===undefined) ||
         (generation.requestId!==undefined&&(!id(generation.requestId)||!id(generation.replyId))) ||
-        (generation.status==='completed'&&!generation.outputMessageId)) throw Error('invalid_generation_identity');
+        (generation.status==='completed'&&(!generation.outputMessageId||
+          (generation.replyId!==undefined&&generation.outputMessageId!==generation.replyId)))) throw Error('invalid_generation_identity');
     generations.add(generation.id);
     if (generation.operationId !== undefined) {
       if (!id(generation.operationId) || operations.has(generation.operationId)) throw Error('invalid_operation');
