@@ -6,7 +6,7 @@
 
 状态：2026-10-30 按用户确认建立的源码维护目录，当前只有职责说明，尚无产品实现。目录不是运行时数据路径，也不代表独立插件、进程或编译包。
 
-[源码目录与 Windows 数据要求](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
+[源码目录与 Windows 数据要求](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
 
 修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
 
@@ -33,9 +33,9 @@
 
 ## 上级契约与文档入口
 
-- **上级业务/职责研究（历史）：** [workflows/CONTRACT.md](../../docs/research/contracts/workflows/CONTRACT-archive.md)
+- **上级业务/职责研究（历史）：** [workflows/CONTRACT.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/workflows/CONTRACT-archive.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [模块局部性设计](../../docs/architecture/MODULE-LOCALITY-DESIGN-V0.1.md)
+- [模块局部性设计](../../docs/A0-产品构想与研究/方案与研究/架构研究历史/MODULE-LOCALITY-DESIGN-V0.1.md)
 - [第六批关键机制实验](../../docs/batch6/EXPERIMENTS.md)
 - [集中决策与待决项](../../docs/batch6/DECISIONS.md)
 
@@ -47,4 +47,4 @@ Runtime 负责推进 Task/工作轮次、保存检查点引用、协调资源冲
 
 新 Conversation/模型/Agent 接手时，先读取 Task 当前修订、核对资源、查询原 Operation、重新判权并检查冲突，再决定继续观察、继续无副作用工作、人工裁决或创建新轮次。未知副作用未核清前不重派；没有常驻宿主时不承诺关机后继续执行。
 
-强制组合样例与状态边界见[基础能力落地映射](../../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+强制组合样例与状态边界见[基础能力落地映射](../../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
