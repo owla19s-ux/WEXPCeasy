@@ -10,14 +10,14 @@
 >
 > **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
 >
-> **研究迁移**：历史深度契约归档于 [docs/research/contracts/AI/CONTRACT-archive.md](../docs/research/contracts/AI/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
+> **研究迁移**：历史深度契约归档于 [docs/research/contracts/AI/CONTRACT-archive.md](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/AI/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
 
 
 状态：已建立 AIC-01～09 与 AI-* 细分契约，且存在正式基础配置源码和测试；**未宣称具备自主 Agent 引擎**。前期保存可复用 AI 配置、模型/连接选择、提示与角色描述；不因本目录存在而新建自主循环或完整记忆平台。
 
 ## 模块编号规则
 
-- 核心 Agent/角色/资格/配置依据/记忆功能：`AI-<子域>-NNN`，详见 [CONTRACT 第 8 节](../docs/research/contracts/AI/CONTRACT-archive.md#8-模块独立功能编号与细化契约)。
+- 核心 Agent/角色/资格/配置依据/记忆功能：`AI-<子域>-NNN`，详见 [CONTRACT 第 8 节](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/AI/CONTRACT-archive.md#8-模块独立功能编号与细化契约)。
 - AIC-01～AIC-09 保留为既有能力契约锚点，不重排。
 - `AI/roles` 是角色配置子域，不拥有 Context 选择、Task 分配、Provider 调用或权限账本。
 - F10-014 公共策略与经验库尚未分配 owner；D10 派生记忆共享政策仍未批准。
@@ -42,17 +42,17 @@
 
 ## 第四批：模块业务契约设计（历史研究）
 
-[本模块契约与独立验收规格](../docs/research/contracts/AI/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
+[本模块契约与独立验收规格](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/AI/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 
 ### 第六批施工准备度（历史：2026-10-31）
 
-**绿（仅配置依据包）**：第六批[历史条款](../docs/research/contracts/AI/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**绿（仅配置依据包）**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/AI/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
 
-- [本域契约及关联依据](../docs/research/contracts/AI/CONTRACT-archive.md#文档关联与施工入口)
+- [本域契约及关联依据](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/AI/CONTRACT-archive.md#文档关联与施工入口)
 - [WEXPC1 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
