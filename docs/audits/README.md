@@ -4,6 +4,8 @@
 
 ## 审查报告
 
+- [2026-11-07 第六轮 CONTRACT 与子目录审查](document-governance-2026-11-07/SIXTH-PASS-CONTRACT-AND-SUBMODULE-AUDIT.md)：区分现行模块 README、兼容 CONTRACT、历史候选规格，并修复第二层源码目录资料引用；尚未完成全仓链接与测试验收。
+- [2026-11-07 第五轮源码入口核验](document-governance-2026-11-07/FIFTH-PASS-MODULE-ENTRYPOINT-RECONCILIATION.md)：公开入口存在性与历史状态区分；不得当作功能验收。
 - [2026-11-07 文档体系第二轮复审](document-governance-2026-11-07/SECOND-PASS.md)：现行权威文档逐份检查、过时状态修正、链接静态抽查及未覆盖项，**不等于全仓自动验收**。
 - [2026-11-04 全仓文档治理回执](document-governance-2026-11-04/REPORT.md)：完整当时库存、历史归档、链接和模块事实快照；原始分类统计不代表最新 HEAD。
 
