@@ -1,5 +1,8 @@
 import {useEffect,useRef,useState} from 'react';
 import type {PointerEvent as ReactPointerEvent} from 'react';
+import {AiSettings} from './ai-settings.js';
+import {PermissionSettings} from './permission-settings.js';
+import {ConversationPanel} from './conversation.js';
 import {ApiSettings} from './api-settings.js';
 import {SpacePanel} from './space.js';
 import {MiddleWorkspace} from './middle-workspace.js';
@@ -28,7 +31,7 @@ function Divider(p:DividerProps){
 export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:DesktopBridge;status:DesktopStatus;label:string;error:string;onRefresh:()=>void;onQuit:()=>void}){
  const [layout,setLayout]=useState<Layout>(()=>{try{return restoreLayout(localStorage.getItem(layoutKey)??localStorage.getItem('wex.workbench.layout.v1'));}catch{return defaultLayout();}});
  const [layoutSaved,setLayoutSaved]=useState(true);
- const [dragging,setDragging]=useState(false),[settings,setSettings]=useState(false),[setting,setSetting]=useState('display');
+ const [dragging,setDragging]=useState(false),[settings,setSettings]=useState(false),[setting,setSetting]=useState('display'),[conversation,setConversation]=useState(false);
  const grid=useRef<HTMLDivElement>(null);
  const [size,setSize]=useState({width:window.innerWidth,height:window.innerHeight-76});
  useEffect(()=>{const element=grid.current;if(!element)return;const observer=new ResizeObserver(entries=>{
@@ -42,21 +45,24 @@ export function Workbench({bridge,status,label,error,onRefresh,onQuit}:{bridge:D
   <div className="workbench-body"><div ref={grid} className="workbench-grid" style={{gridTemplateColumns:widths.map(v=>v+'px').join(' 6px '),gridTemplateRows:layout.bottomOpen?'minmax(320px,1fr) 6px '+Math.max(100,size.height*layout.bottomRatio)+'px':'minmax(0,1fr)'}}>
    <aside data-column="navigation" className={'workbench-navigation '+(layout.collapsed?'is-collapsed':'')} style={{gridColumn:1,gridRow:'1 / -1'}}>
     <div className="navigation-top"><strong>{layout.collapsed?'W':'工作空间'}</strong><button aria-label={layout.collapsed?'展开导航':'折叠导航'} onClick={()=>setLayout({...layout,collapsed:!layout.collapsed})}>{layout.collapsed?'›':'‹'}</button></div>
-    <div className="navigation-scroll"><button className="nav-primary" aria-pressed={!settings} onClick={()=>setSettings(false)}>{layout.collapsed?'◫':'Space / Context'}</button>
-     {!layout.collapsed&&<><button disabled title="对话入口尚不可用">普通对话</button>{parts.categories}{parts.structure}</>}
+    <div className="navigation-scroll"><button className="nav-primary" aria-pressed={!settings} onClick={()=>{setSettings(false);setConversation(false);}}>{layout.collapsed?'◫':'Space / Context'}</button>
+     {!layout.collapsed&&<><button aria-pressed={conversation&&!settings} onClick={()=>{setConversation(true);setSettings(false);}}>普通对话</button>{parts.categories}{parts.structure}</>}
     </div>
     <div className="navigation-bottom"><button aria-label="设置" title="设置" aria-pressed={settings} onClick={()=>setSettings(true)}>{layout.collapsed?'⚙':'设置'}</button></div>
    </aside>
    {[0,1].map(i=><Divider key={i} id={'column-'+i} axis="x" layout={layout} value={widths[i]!/(widths[i]!+widths[i+1]!)*100} disabled={(layout.collapsed&&i===0)||(i===1&&!layout.auxiliaryOpen)} onDelta={(delta,s)=>setLayout(resizeColumns(s,size.width,i,delta))} onRestore={restore} onDragging={setDragging} onReset={()=>setLayout(s=>({...s,columns:defaultLayout().columns}))}/>)}
    <section data-column="main" className="workbench-main" style={{gridColumn:3,gridRow:1}}>
-    <div hidden={settings} className="middle-surface"><MiddleWorkspace key={parts.contextId??"unselected"} parts={parts}/></div>
+    <div hidden={settings||conversation} className="middle-surface"><MiddleWorkspace key={parts.contextId??"unselected"} parts={parts}/></div>
+    <div hidden={settings||!conversation} className="content-scroll"><ConversationPanel bridge={bridge}/></div>
     <div data-settings hidden={!settings} className="settings-surface"><div className="settings-title"><h2>设置</h2><button onClick={()=>setSettings(false)}>返回工作区</button></div>
      <div className="settings-grid"><div className="settings-navigation">
-      <details><summary>连接与服务</summary><button aria-pressed={setting==='api'} onClick={()=>setSetting('api')}>API 与模型</button><button disabled>Agent 与角色</button><button disabled>GitHub / Local</button></details>
-      <details><summary>权限</summary><p>操作前显示实际授权确认。</p></details>
+      <details><summary>连接与服务</summary><button aria-pressed={setting==='api'} onClick={()=>setSetting('api')}>API 与模型</button><button aria-pressed={setting==='ai'} onClick={()=>setSetting('ai')}>Agent 与角色</button><button disabled>GitHub / Local</button></details>
+      <details><summary>权限</summary><button aria-pressed={setting==='permissions'} onClick={()=>setSetting('permissions')}>当前窗口授权</button></details>
       <details><summary>验证</summary><button onClick={()=>setSetting('diagnostics')}>运行状态</button></details>
       <details open><summary>系统</summary><button aria-pressed={setting==='display'} onClick={()=>setSetting('display')}>显示与布局</button><button aria-pressed={setting==='voice'} onClick={()=>setSetting('voice')}>语音</button><button aria-pressed={setting==='diagnostics'} onClick={()=>setSetting('diagnostics')}>运行诊断</button></details>
      </div><div className="settings-detail">
+      {setting==='ai'&&<AiSettings bridge={bridge}/>}
+      {setting==='permissions'&&<PermissionSettings bridge={bridge}/>}
       {setting==='api'&&<ApiSettings bridge={bridge}/>}
       {setting==='display'&&<><h3>显示与布局</h3><p>拖动分隔线调整尺寸；聚焦分隔线后可用方向键调节，Shift 加快。</p>
        <label className="check-label"><input type="checkbox" checked={layout.roleVisible} onChange={e=>setLayout({...layout,roleVisible:e.target.checked})}/>显示窗口内虚拟形象</label>

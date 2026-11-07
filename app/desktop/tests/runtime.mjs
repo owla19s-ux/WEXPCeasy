@@ -32,7 +32,7 @@ try{
  const wc=runtime.window.webContents;
  const facts=await wc.executeJavaScript(`(async()=>({node:typeof require,process:typeof process,bridge:Object.keys(window.wexHost).sort(),reply:await window.wexHost.readStatus(),title:document.title,text:document.body.innerText}))()`);
  assert.equal(facts.node,'undefined');assert.equal(facts.process,'undefined');
- assert.deepEqual(facts.bridge,['api','cancelApi','readStatus','requestQuit','space']);assert.equal(facts.reply.ok,true);
+ assert.deepEqual(facts.bridge,['ai','api','cancelApi','cancelConversations','conversations','onConversationText','permissions','readStatus','requestQuit','space']);assert.equal(facts.reply.ok,true);
  assert.equal(facts.reply.value.phase,'ready');assert.equal(facts.title,'WEXPCeasy');assert.match(facts.text,/WEXPCeasy/);
 // Exercise the actual React form through DOM events; only native platform interactions are fixtures.
  const click=async text=>wc.executeJavaScript(`(()=>{const b=[...document.querySelectorAll('button')].find(x=>(x.textContent.trim()===${JSON.stringify(text)}||x.getAttribute('aria-label')===${JSON.stringify(text)}));if(!b)throw Error('button_missing');b.click();return true;})()`);
@@ -141,11 +141,12 @@ try{
  const promptCount=confirmations.length;
  const foreign=new BrowserWindow({show:false,webPreferences:{preload:resolve('desktop-dist/preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
  await foreign.loadURL(before);
- for(const method of ['readStatus','requestQuit','cancelApi']){
+ for(const method of ['readStatus','requestQuit','cancelApi','cancelConversations']){
   assert.deepEqual(await foreign.webContents.executeJavaScript('window.wexHost.'+method+'()'),{ok:false,error:'untrusted_sender'});
  }
  assert.deepEqual(await foreign.webContents.executeJavaScript("window.wexHost.space({kind:'snapshot'})"),{ok:false,error:'untrusted_sender'});
  assert.deepEqual(await foreign.webContents.executeJavaScript("window.wexHost.api({kind:'snapshot'})"),{ok:false,error:'untrusted_sender'});
+ for(const method of ['ai','conversations','permissions'])assert.deepEqual(await foreign.webContents.executeJavaScript("window.wexHost."+method+"({kind:'snapshot'})"),{ok:false,error:'untrusted_sender'});
  assert.equal(confirmations.length,promptCount);
  foreign.destroy();assert.equal(runtime.readStatus().phase,'ready');
  runtime.window.show();

@@ -203,9 +203,9 @@ export function inspectConversationStore(store:Store):{status:'ready'|'unavailab
 }
 
 export function createConversations(store: Store, authorize: (
-  request: object, action: 'read' | ConversationChange['kind'], conversationId: string,
+  request: object, action: 'read' | 'list' | ConversationChange['kind'], conversationId: string,
 ) => boolean) {
-  function allowed(request: object, action: 'read' | ConversationChange['kind'], conversationId: string) {
+  function allowed(request: object, action: 'read' | 'list' | ConversationChange['kind'], conversationId: string) {
     try { return authorize(request, action, conversationId) === true; }
     catch { return false; }
   }
@@ -213,6 +213,20 @@ export function createConversations(store: Store, authorize: (
 
 
   return Object.freeze({
+    /** The host binds each candidate read; listing does not grant access to its rows. */
+    list(request:object,bindRead:(id:string)=>object|undefined){
+      if(!allowed(request,'list','*'))return {status:'denied'} as const;
+      try{
+        const rows=readConversationState(store).state.conversations;
+        const visible=rows.flatMap(conversation=>{
+          const row=bindRead(conversation.id);if(!row||!allowed(row,'read',conversation.id))return [];
+          return [{row,conversation}];
+        });
+        if(!allowed(request,'list','*'))return {status:'denied'} as const;
+        const conversations=visible.filter(v=>allowed(v.row,'read',v.conversation.id)).map(v=>structuredClone(v.conversation));
+        return allowed(request,'list','*')?{status:'ok',conversations} as const:{status:'denied'} as const;
+      }catch{return {status:'unavailable'} as const;}
+    },
     read(request: object, conversationId: string) {
       if (!id(conversationId) || !allowed(request, 'read', conversationId)) return { status: 'denied' } as const;
       try {

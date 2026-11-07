@@ -5,23 +5,26 @@ import {createDesktopLifecycle} from './desktop-lifecycle.js';
 import {createDesktopGateway} from './desktop-gateway.js';
 import {fileURLToPath} from 'node:url';
 import {createDesktopAuthority} from './desktop-authority.js';
+import {createDesktopAi} from './desktop-ai.js';
+import {createDesktopConversations} from './desktop-conversations.js';
 import {createDesktopApi} from './desktop-api.js';
 import {createCredentialPrompt} from './credential-prompt.js';
 import {createDesktopSpace} from './desktop-space.js';
 /** Called only by trusted main-process code. Renderer receives no module instances. */
-export async function runDesktop(options:{url:string;preload:string;start:(policy?:Pick<FoundationOptions,'trust'|'local'|'space'|'api'>)=>Promise<FoundationHost>;show?:boolean;spaceRootId?:string;spacePlatform?:{confirm:(summary:string)=>Promise<boolean>;chooseDirectory:()=>Promise<string|undefined>}}){
+export async function runDesktop(options:{url:string;preload:string;start:(policy?:Pick<FoundationOptions,'trust'|'local'|'space'|'api'|'ai'>)=>Promise<FoundationHost>;show?:boolean;spaceRootId?:string;spacePlatform?:{confirm:(summary:string)=>Promise<boolean>;chooseDirectory:()=>Promise<string|undefined>}}){
  const authority=createDesktopAuthority();
  let access:ReturnType<typeof createDesktopSpace>|undefined,api:ReturnType<typeof createDesktopApi>|undefined;
+ let ai:ReturnType<typeof createDesktopAi>|undefined,conversations:ReturnType<typeof createDesktopConversations>|undefined;
  let credential:ReturnType<typeof createCredentialPrompt>|undefined;
  const lifecycle=createDesktopLifecycle(async()=>{
-  const value=await options.start(access?{...authority.policy,space:{deriveRequest:access.derive},api:{deriveRequest:api!.derive}}:undefined);
-  access?.attach(value);api?.attach(value);return value;
+  const value=await options.start(access?{...authority.policy,space:{deriveRequest:access.derive},api:{deriveRequest:api!.derive},ai:{bindRead:ai!.bindRead}}:undefined);
+  access?.attach(value);api?.attach(value);ai?.attach(value);conversations?.attach(value);return value;
  });
  let phase:DesktopStatus['phase']='starting',host:FoundationHost|undefined,exiting=false;
  let window:BrowserWindow|undefined;
  const readStatus=():DesktopStatus=>({phase,diagnostics:(host?.diagnostics??[]).map(({module,reason})=>({module,reason}))});
  app.on('before-quit',event=>{
-  if(exiting)return;event.preventDefault();access?.close();api?.close();credential?.dispose();phase='stopping';
+  if(exiting)return;event.preventDefault();conversations?.close();ai?.close();access?.close();api?.close();credential?.dispose();phase='stopping';
   void lifecycle.stop().then(result=>{
    if(result.status==='stopped'){exiting=true;app.quit();}
    else{phase='release-pending';window?.show();}
@@ -38,6 +41,8 @@ export async function runDesktop(options:{url:string;preload:string;start:(polic
  const nativeConfirm=options.spacePlatform?.confirm??(async(summary:string)=>(await dialog.showMessageBox(window!,{type:'question',title:'WEXPCeasy 操作确认',message:summary,buttons:['取消','允许本次操作'],defaultId:0,cancelId:0})).response===1);
  credential=createCredentialPrompt({parent:window,pageUrl:new URL('credential.html',options.url).href,preload:fileURLToPath(new URL('credential-preload.cjs',options.url)),show:options.show??true});
  api=createDesktopApi({authority,confirm:nativeConfirm,requestCredential:target=>credential!.request(target),cancelCredential:()=>credential?.cancel()});
+ ai=createDesktopAi({authority,confirm:nativeConfirm});
+ conversations=createDesktopConversations({authority,confirm:nativeConfirm,onText:event=>{if(!window!.isDestroyed())window!.webContents.send('wex:desktop:conversation-text',event);}});
  if(options.spaceRootId)access=createDesktopSpace({authority,rootId:options.spaceRootId,
   confirm:options.spacePlatform?.confirm??(async summary=>(await dialog.showMessageBox(window!,{type:'question',title:'WEXPCeasy 操作确认',message:summary,buttons:['取消','允许本次操作'],defaultId:0,cancelId:0})).response===1),
   chooseDirectory:options.spacePlatform?.chooseDirectory??(async()=>{const result=await dialog.showOpenDialog(window!,{title:'选择目录（Context 自身记录需已有 WEX 数据根）',properties:['openDirectory']});return result.canceled?undefined:result.filePaths[0];})
@@ -65,6 +70,22 @@ export async function runDesktop(options:{url:string;preload:string;start:(polic
   return {ok:true,value:await api!.request(payload)};
  });
  ipcMain.handle('wex:desktop:api-cancel',createDesktopGateway({sender:contents,url:options.url,read:()=>{api?.cancel();return {accepted:true as const};}}));
+ ipcMain.handle('wex:desktop:ai',async(event,payload)=>{
+  const check=businessSource(event,{});if(!check.ok)return check;
+  if(phase!=='ready'&&phase!=='degraded')return {ok:false,error:'host_unavailable'};
+  return {ok:true,value:await ai!.request(payload)};
+ });
+ ipcMain.handle('wex:desktop:conversations',async(event,payload)=>{
+  const check=businessSource(event,{});if(!check.ok)return check;
+  if(phase!=='ready'&&phase!=='degraded')return {ok:false,error:'host_unavailable'};
+  return {ok:true,value:await conversations!.request(payload)};
+ });
+ ipcMain.handle('wex:desktop:conversation-cancel',createDesktopGateway({sender:contents,url:options.url,read:()=>conversations!.cancel()}));
+ ipcMain.handle('wex:desktop:permissions',async(event,payload)=>{
+  const check=businessSource(event,{});if(!check.ok)return check;
+  if(phase!=='ready'&&phase!=='degraded')return {ok:false,error:'host_unavailable'};
+  try{return {ok:true,value:await authority.settings(payload,nativeConfirm)};}catch{return {ok:false,error:'permission_settings_unavailable'};}
+ });
  // Begin ownership before awaiting page load, so a concurrent close waits for startup.
  const startup=lifecycle.start();
  void startup.then(value=>{host=value;if(phase==='starting')phase=value?.status??'failed';},()=>{phase='failed';});
