@@ -101,7 +101,7 @@ CV-06与CV-16必须分开：前者修改历史输入并创建新生成，后者�
 ## 文档关联与施工入口
 
 - **模块导航**：[conversations README](../../../../../../conversations/README.md) · [全模块契约索引](../../../../../MODULE-CONTRACTS.md) · [文档总索引](../../../../../README.md)
-- **产品需求**：[F01–F15 产品功能总表](../../../../../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [交互语义与 UI 映射边界](../../../../../product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md) · [功能—模块契约映射](../../../../../product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
+- **产品需求**：[F01–F15 产品功能总表](../../../../../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [交互语义与 UI 映射边界](../../../../../product/INTERACTION-AND-UI-BOUNDARY-2026-11-01.md) · [功能—模块契约映射](../../../../../A1-正式产品设计/功能与模块归属映射.md)
 - **跨模块依据**：[AI 契约](../../../../../../AI/CONTRACT.md) · [connections 契约](../../../../../../connections/CONTRACT.md) · [workflows 契约](../../../../../../workflows/CONTRACT.md) · [D01–D02 权限矩阵](../../../../../product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)
 
 维护规则：消息/序列项/逻辑生成事实写回本契约；Provider 请求与 Operation 事实转交 connections；Agent/角色配置转交 AI；Task 转交 workflows；任何许可决定转交 permissions。

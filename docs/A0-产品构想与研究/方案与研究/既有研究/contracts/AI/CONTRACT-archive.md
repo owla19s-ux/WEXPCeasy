@@ -114,7 +114,7 @@ AI/roles 负责保存当前 Agent/角色配置中可用的工具能力集合及�
 ## 文档关联与施工入口
 
 - **模块导航**：[AI README](../../../../../../AI/README.md) · [角色子域](../../../../../../AI/roles/README.md) · [全模块契约索引](../../../../../MODULE-CONTRACTS.md) · [文档总索引](../../../../../README.md)
-- **产品需求**：[F01–F15 产品功能总表](../../../../../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../../../../../product/FUNCTION-CONTRACT-MAP-2026-11-01.md)
+- **产品需求**：[F01–F15 产品功能总表](../../../../../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../../../../../A1-正式产品设计/功能与模块归属映射.md)
 - **跨模块依据**：[D01–D02 权限判定矩阵](../../../../../product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md) · [connections 契约](../../../../../../connections/CONTRACT.md) · [workflows 契约](../../../../../../workflows/CONTRACT.md) · [Space 契约](../space/CONTRACT-2026-10-31.md)
 - **记忆政策**：PRD-D05/D10/D13 及本文件第 6～8 节；未决共享/保留政策不得按实现方便自行默认。
 

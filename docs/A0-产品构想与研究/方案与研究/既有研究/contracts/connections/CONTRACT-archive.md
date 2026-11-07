@@ -165,9 +165,9 @@ DSH headless 既有实验锁 npm `0.2.1-rc.5`、源码 `ce7073d51254c26cd63b22a6
 - **模块导航**：[全模块契约索引](../../../../../MODULE-CONTRACTS.md) · [文档体系总索引](../../../../../README.md)
 - **全局架构**：
 - [全局契约地图](../../../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
-- [提供方边界 Walkthrough](../../../../../architecture/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
+- [提供方边界 Walkthrough](../../../架构研究历史/PROVIDER-BOUNDARY-WALKTHROUGH-V0.1.md)
 - [运行时扩展契约](../../../../../architecture/RUNTIME-EXTENSION-CONTRACT-V0.1.md)
-- [双插件体系边界](../../../../../architecture/DUAL-PLUGIN-SYSTEM-BOUNDARIES-2026-10-30.md)
+- [双插件体系边界](../../../../../A1-正式产品设计/架构与决策/DSH与WEX双插件边界-2026-10-30.md)
 - **决策与研究**：
 - [研究决策与当前边界](../../../../../decisions/RESEARCH-DECISIONS-2026-10-30.md)
 - [外部 Agent 生态](../../AGENT-ECOSYSTEM-2026-10-31.md)
