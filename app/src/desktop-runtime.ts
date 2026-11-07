@@ -26,7 +26,7 @@ export async function runDesktop(options:{url:string;preload:string;start:(polic
  session.defaultSession.setPermissionCheckHandler(()=>false);
  const assets=new Set([options.url,new URL('renderer.js',options.url).href,new URL('style.css',options.url).href]);
  session.defaultSession.webRequest.onBeforeRequest((details,callback)=>callback({cancel:!assets.has(details.url)}));
- window=new BrowserWindow({width:1440,height:900,minWidth:1024,minHeight:640,show:options.show??true,
+ window=new BrowserWindow({width:1440,height:900,minWidth:480,minHeight:320,show:options.show??true,
   webPreferences:{preload:options.preload,nodeIntegration:false,contextIsolation:true,sandbox:true,webviewTag:false,webSecurity:true,allowRunningInsecureContent:false}});
  if(options.show!==false)window.maximize();
  if(options.spaceRootId)access=createDesktopSpace({rootId:options.spaceRootId,
