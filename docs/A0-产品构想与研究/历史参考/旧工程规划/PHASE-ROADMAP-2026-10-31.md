@@ -7,7 +7,7 @@
 - 日期：2026-10-31
 - 规划基线：`main` `4e78382670875628e2675f43c71afa78fabfbcec`
 - 状态：工程路线规划；不替代正式产品基线，不自动批准 A/B/C/D 中的待决事项。
-- 产品方向依据：[WEX 当前基线](../../../../README.md)、[产品功能全景](../../../research/PRODUCT-FUNCTION-LANDSCAPE-2026-10-31.md)、[WEX PC 产品基线](https://github.com/owla19s-ux/wexpc/blob/faf11f31d44e4fc4788e766074b8db6b83ab4a1b/docs/PC-PRODUCT-AND-TECH-BASELINE.md)。
+- 产品方向依据：[WEX 当前基线](../../../../README.md)、[产品功能全景](../../方案与研究/既有研究/PRODUCT-FUNCTION-LANDSCAPE-2026-10-31.md)、[WEX PC 产品基线](https://github.com/owla19s-ux/wexpc/blob/faf11f31d44e4fc4788e766074b8db6b83ab4a1b/docs/PC-PRODUCT-AND-TECH-BASELINE.md)。
 
 ## 1. 规划目标
 
