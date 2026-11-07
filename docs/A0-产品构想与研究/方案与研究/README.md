@@ -7,3 +7,5 @@
 - 研究明确采纳之后，正式产品规格进入 [A1](../../A1-正式产品设计/README.md)，版本功能及工程验收归 [A2](../../A2-版本与工程状态/README.md)。
 
 [A0 总入口](../README.md)
+
+- [模块局部性候选](架构研究历史/MODULE-LOCALITY-DESIGN-V0.1.md)、[旧运行时选型](架构研究历史/RUNTIME-OPTIONS-V0.1.md)、[边界候选研究](架构研究历史/BOUNDARY-DECISION-NOTES-V0.1.md)：不自动指挥本版施工。
