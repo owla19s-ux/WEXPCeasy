@@ -9,7 +9,7 @@ import {createGitHubConfiguredFileReader,githubFileTarget} from '../../../dist/c
 /** Acceptance entry only: GitHub Actions supplies its real official Octokit and read-only token.
  * No credential or SDK instance comes from product input; no remote mutation is invoked.
  */
-export async function verifyGitHubRead({github,owner,repo,ref,workspacePath}){
+export async function verifyGitHubRead({github,readAdapter,provider='octokit',owner,repo,ref,workspacePath}){
  assert.match(ref,/^[0-9a-f]{40}$/);
  const file={owner,repo,ref,path:'package.json'},target=githubFileTarget(file),request={};
  const scope={subject:'github-actions',entry:'github-read-acceptance',conversation:null,context:null,
@@ -21,9 +21,12 @@ export async function verifyGitHubRead({github,owner,repo,ref,workspacePath}){
  let clientAcquisitions=0,sequence=0,service;
  const manage=kind=>{const c={intent:'acceptance-'+(++sequence),expectedRevision:pm.read().revision,scope};approved.add(c);assert.equal(permission[kind](c).status,'committed');};
  try{
-  service=createConnectionService(permission,configs,operations,[],{readAdapters:[createGitHubConfiguredFileReader(async(connection,access)=>{
+  service=createConnectionService(permission,configs,operations,[],{readAdapters:[readAdapter?{...readAdapter,async read(connection,target,signal,access){
+   assert.equal(access.request,request);assert.equal(access.check(),true);clientAcquisitions++;
+   return readAdapter.read(connection,target,signal,access);
+  }}:createGitHubConfiguredFileReader(async(connection,access)=>{
    assert.equal(access.request,request);assert.equal(access.check(),true);
-   assert.equal(connection.endpoint,'https://api.github.com');clientAcquisitions++;return github;
+   assert.equal(connection.endpoint,'https://api.github.com');clientAcquisitions++;return typeof github==='function'?github(connection,access):github;
   })]});
   const config={id:'github',adapter:'github',endpoint:'https://api.github.com',credentialRef:'github-actions-readonly',enabled:true};
   assert.equal(service.configs.put(config,0,'config-create').status,'ok');
@@ -42,9 +45,9 @@ export async function verifyGitHubRead({github,owner,repo,ref,workspacePath}){
   manage('grant');assert.equal(service.configs.put({...config,enabled:false},1,'config-disable').status,'ok');
   assert.notEqual((await service.read('github',request,'github',2,target)).status,'ok');assert.equal(clientAcquisitions,1);
   assert.equal(service.operations.read().operations.length,0);
-  return {sha:ref,runtime:process.version,authMode:'GitHub Actions GITHUB_TOKEN; contents:read',
+  return {sha:ref,runtime:process.version,provider,authMode:'GitHub Actions GITHUB_TOKEN; contents:read',
    owner,repo,path:file.path,blobSha:expectedSha,size:bytes.length,clientAcquisitions,
-   checks:{defaultDeny:true,realOfficialSdkRead:true,pinnedCommitAndBlob:true,revocation:true,disabledConnection:true},
+   checks:{defaultDeny:true,realOfficialSdkRead:provider==='octokit',pinnedCommitAndBlob:true,revocation:true,disabledConnection:true},
    remoteMutations:0,limitations:['Read-only service acceptance; no authenticated write verification','Host CI identity is not Windows IPC authentication']};
  }finally{
   if(service)assert.equal((await service.stop()).status,'stopped');
