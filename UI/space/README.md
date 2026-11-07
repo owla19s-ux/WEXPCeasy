@@ -16,7 +16,7 @@ Space／Context 页面。展示组织与关联，业务调用 space，不把 Con
 - **上级契约：** [UI/CONTRACT.md](../../UI/CONTRACT.md)
 - **现行 Space 施工入口：** [space/README.md](../../space/README.md)
 - **全局文档总索引：** [docs/README.md](../../docs/README.md)
-- [Space 与工作流编辑器设计](../../docs/architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
+- [Space 与工作流编辑器设计](../../docs/A0-产品构想与研究/历史参考/旧UI设计/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
 
 本目录负责页面/面板局部组织，不拥有领域业务状态、权限或验收事实；业务语义以对应 owner 契约为准。
 
