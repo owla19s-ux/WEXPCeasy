@@ -2,7 +2,7 @@
 
 ## 官方组件、模块边界与当前版本（2026-11-07）
 
-本目录是独立 GitHub **远端 API** 连接器，不负责 `connections/local/` 的本地 Git，也不是 [environments](../../environments/README.md) 环境管理器。现有 `src/index.ts` 包含受限文件读写与结构兼容的客户端工厂接口，**不等于已将官方 GitHub MCP Server 或 Octokit SDK 完整产品化集成**。
+本目录是独立 GitHub **远端 API** 连接器，不负责 `connections/local/` 的本地 Git，也不是 [environments](../../environments/README.md) 环境管理器。现有 `src/index.ts` 已实际导入 `octokit` 与 `@modelcontextprotocol/sdk`，提供受控 Octokit 客户端工厂、MCP Stdio 读取适配及有限的 GitHub 文件读写；`app/src/foundations.ts` 已有官方模式的装配分支，`tests/official-client.test.mjs` 与 `tests/mcp-client.test.mjs` 有 SDK/模拟 MCP 进程测试。**因此官方 SDK/MCP 基础代码已经接入；但不能将其等同于完整 GitHub MCP Server 工具集、真实远端写入/分发及 GH-01～GH-12 的整体产品验收。**
 
 `CONTRACT.md` 的 GH-01～GH-12 及更广泛官方覆盖描述属于完整目标及历史研究规格，其“无产品 GitHub 代码”是历史快照。**正式施工入口**：[B3 D-06/D-06A](../../docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)；先核验许可证、官方版本、依赖与运行/分发，再按 M-01 检验连接器 owner 隔离。GitHub MCP 的协议/运行适配归本模块；App 仅负责宿主装配，不能复制 GitHub 协议、凭证或 Operation 账本。0.1.1 必需能力与长期完整官方工具覆盖分别验收。
 
@@ -11,7 +11,7 @@
 
 GitHub 操作与连接配置。权限使用共用机制；专属面板留在本模块。
 
-状态：已有基础 GitHub 适配代码与测试，官方 GitHub MCP/Octokit 的完整能力、源码归位/版本与分发方式须依 B3 D-06 逐项核验。0.1.1 必需的基础读写与长期广泛 API 覆盖分别判断；GitHub 专项不阻塞无关 UI。
+状态：已有基础 GitHub 适配代码、真实 Octokit/MCP SDK 导入、受控读取/写入适配及独立测试；**完整官方工具覆盖、受信二进制运行/版本校验、Windows 分发、真实远端写入与回执恢复**仍须依 B3 D-06 逐项核验。0.1.1 必需的基础读写与长期广泛 API 覆盖分别判断；GitHub 专项不阻塞无关 UI。
 
 [源码目录与 Windows 数据要求](../../docs/architecture/SOURCE-LAYOUT-AND-WINDOWS-DATA-2026-10-30.md)
 
