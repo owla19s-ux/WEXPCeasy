@@ -12,7 +12,7 @@
 - [A0｜产品构想与研究](A0-产品构想与研究/README.md)：统一管理前期产品构想与研究资料，内部按 [需求与想法](A0-产品构想与研究/需求与想法/README.md)、[方案与研究](A0-产品构想与研究/方案与研究/README.md)、[历史参考](A0-产品构想与研究/历史参考/README.md) 分类。
 - 原始想法及基础设计讨论不自动进入版本；方案实验是验证可行性，不等于正式采用。用户确认后才进入正式产品级整理与任务书，Codex 保留任务书驱动的施工路径。
 
-A0 已归档 94 份研究与历史 Markdown 正文，旧路径保留兼容入口；详细说明见 [A0 迁移记录](A0-产品构想与研究/迁移记录-2026-11-07.md)。
+A0 已归档历史研究正文，冗余旧路径逐步清理；详细说明见 [A0 迁移记录](A0-产品构想与研究/迁移记录-2026-11-07.md)。
 
 ## 正式产品与当前版本
 
@@ -39,17 +39,16 @@ A0 已归档 94 份研究与历史 Markdown 正文，旧路径保留兼容入口
 
 [条款级需求—源码—测试追踪总账（2026-11-07）](A2-版本与工程状态/0.1.1/证据/条款源码测试追踪-2026-11-07.md) 按历史条款、现行 owner、版本、源码、测试和证据缺口建立 32 条定向索引；[深入语义对冲记录](A2-版本与工程状态/0.1.1/证据/历史契约语义核验-2026-11-07.md) 保留对冲依据。两者均为治理资料，**不能取代模块 README 或版本计划成为施工规范，也不表示已经完成全仓 216 功能项逐条审查**。
 
-[2026-11-07 第二轮复审](audits/document-governance-2026-11-07/SECOND-PASS.md)记录当时的权威入口与状态；[第七轮完整树与 407 份 Markdown 路径审计](audits/document-governance-2026-11-07/SEVENTH-PASS-CURRENT-TREE-LINKS.md)及[第八轮锚点/反向引用专项](audits/document-governance-2026-11-07/EIGHTH-PASS-ANCHORS-AND-REVERSE-REFERENCES.md)记录后续覆盖范围和未完成的严格验证；[当日状态治理回执](audits/document-governance-2026-11-07/REPORT.md)记录较早的 README/0.1.1 状态纠正；[2026-11-04 模块源码与证据核对](audits/document-governance-2026-11-04/MODULE-STATUS.md)只作历史快照；[旧全模块契约索引](MODULE-CONTRACTS.md)保留历史设计和追溯，不派工。
 
 ## 架构、决策、实验与审查
 
 - [架构](architecture/README.md)、[决策](decisions/README.md)：按日期、批准状态和新旧适用性阅读。
 - [研究](research/README.md)、[API / Pi AI 独立验证](research/api/README.md)、[历史 CONTRACT](research/contracts/)：实验与研究依据。
-- [审查报告](audits/README.md)、[最新复审记录](audits/document-governance-2026-11-07/SECOND-PASS.md)、[11-04 完整治理回执](audits/document-governance-2026-11-04/REPORT.md)：审查范围与未覆盖项分别记录。
+- [历史审查索引](audits/README.md)：历史审查正文统一以 A0 归档为准，版本证据以 A2 为准。
 - [Electron / React 隔离实验](../experiments/electron-host-spike/README.md)、[工作流交互原型](../workflows/editor/prototype/README.md)：不等于正式产品或 Windows 实机验收。
 
 ## 历史与外部资料
 
 - [历史阶段规划](A0-产品构想与研究/历史参考/旧工程规划/PHASE-ROADMAP-2026-10-31.md)、[第六批](A0-产品构想与研究/历史参考/工程研究批次/batch6/README.md)、[第七批报告](A0-产品构想与研究/历史参考/工程研究批次/batch7/REPORT.md)、[第八批报告](A0-产品构想与研究/历史参考/工程研究批次/batch8/REPORT.md)：原范围、当时状态与证据。
-- [旧资料 A0 归档](A0-产品构想与研究/历史参考/旧版本归档/README.md)、[历史治理过程](A0-产品构想与研究/方案与研究/既有研究/document-governance/CONSOLIDATION-2026-11-02.md)：保留可追溯入口。
+- [旧资料 A0 归档](A0-产品构想与研究/历史参考/旧版本归档/README.md)：历史版本资料入口。
 - [外部参考 A0 归档](A0-产品构想与研究/历史参考/外部项目/dsh/README.md)、[DSH 上游快照](../dsh/upstream/)、[未来需求](../需求对冲架构/README.md)：来源、候选与产品规则分开。
