@@ -13,7 +13,7 @@
 .workbench pre{max-width:100%;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
 
 /* Responsive shared middle workspace. The third content pane no longer reserves a permanent column. */
-.workbench-body{overflow:hidden;min-width:0}
+.workbench-body{overflow:hidden;min-width:0;position:relative}
 .workbench-grid{min-height:0;min-width:0!important}
 .workbench-navigation,.workbench-main,.workbench-auxiliary{min-width:0}
 .workbench-main{display:flex;flex-direction:column;min-height:0}
@@ -45,13 +45,13 @@
 .middle-tab input{width:96px;min-width:72px;padding:4px}
 .workbench-auxiliary{overflow:hidden}
 .auxiliary-toggle{height:100%;width:100%;padding:0!important;border:0!important;border-radius:0!important;background:#172432!important}
-.role-floating{position:absolute;right:48px;bottom:42px;width:88px;max-width:20vw;pointer-events:none;z-index:4}
-.role-floating .role-empty{height:88px;margin:0;background:#172430e6}
-.role-floating .role-empty small{display:none}
+
+
+
 .navigation-scroll [data-categories]{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px}
 .navigation-scroll [data-categories] h2,.navigation-scroll [data-categories] p{width:100%}
 .navigation-scroll [data-categories] button{width:auto;min-width:0;flex:1 1 25%;margin:0;padding:12px 4px;text-align:center;writing-mode:horizontal-tb;overflow-wrap:anywhere}
-@media (max-width:760px){.navigation-scroll [data-categories] button{flex-basis:100%}.workbench-top>div>span{display:none}.top-actions{gap:4px!important}.workbench-top{padding:0 7px}.role-floating{right:28px}}
+@media (max-width:760px){.navigation-scroll [data-categories] button{flex-basis:100%}.workbench-top>div>span{display:none}.top-actions{gap:4px!important}.workbench-top{padding:0 7px}}
 
 /* Desktop base stylesheet also targets all nav buttons; keep browser-style tabs compact. */
 .middle-tabs button{width:auto!important;margin:0!important;display:inline-flex;align-items:center;justify-content:center;flex:none}
@@ -60,3 +60,14 @@
 .auxiliary-placeholder>p{padding:12px;margin:0}
 .workbench-divider[aria-disabled=true]{pointer-events:none}
 @media(max-width:600px){.workbench-top .phase{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.navigation-scroll{overflow-x:hidden}.middle-tabs{padding:3px}}
+
+/* Independent in-window avatar and interaction bar: separate layers, no fixed layout reservation. */
+.interaction-overlay{position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden}
+.interaction-bar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 24px));height:66px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px 8px 80px;background:#192b39f2;border:1px solid #405867;border-radius:16px;box-shadow:0 6px 24px #0008;pointer-events:auto;min-width:0}
+.interaction-bar strong{font-size:12px;white-space:nowrap}
+.interaction-bar span{font-size:11px;line-height:1.3;color:#b6c6d0;overflow:hidden;text-overflow:ellipsis}
+.interaction-bar button{flex:none}
+.interaction-avatar{position:absolute;width:58px;height:58px;border:1px solid #699c8b!important;border-radius:50%!important;box-shadow:0 3px 16px #0007;display:flex!important;align-items:center;justify-content:center;padding:0!important;touch-action:none;user-select:none;cursor:grab;pointer-events:auto;z-index:1;background:#244139!important}
+.interaction-avatar:active{cursor:grabbing}
+.interaction-avatar span{font-size:23px;font-weight:700;color:#b6f0d8}
+@media(max-width:600px){.interaction-bar{width:calc(100% - 16px);padding-left:65px;gap:5px}.interaction-bar strong{display:none}.interaction-bar span{font-size:10px}}
