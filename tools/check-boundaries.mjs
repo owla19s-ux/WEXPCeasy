@@ -32,7 +32,7 @@ export function analyze(files){
  if(!spec||!ts.isStringLiteralLike(spec)){fail(file,'unresolved_dynamic','nonliteral module');continue;}
  const name=spec.text,from=owner(file);
  if(from==='UI'&&(builtinModules.includes(name.replace(/^node:/,''))||name==='electron'||/credentials|storage/.test(name)))fail(file,'renderer_privileged',name);
- if(!name.startsWith('.')){const declared=(from==='app'&&name==='electron')||(from==='UI'&&['react','react-dom/client','react/jsx-runtime'].includes(name));if(!declared&&!name.startsWith('node:')&&!builtinModules.includes(name.replace(/^node:/,'')))fail(file,'unresolved_import',name);continue;}
+ if(!name.startsWith('.')){const declared=(from==='connections/github'&&name==='octokit')||(from==='app'&&name==='electron')||(from==='UI'&&['react','react-dom/client','react/jsx-runtime'].includes(name));if(!declared&&!name.startsWith('node:')&&!builtinModules.includes(name.replace(/^node:/,'')))fail(file,'unresolved_import',name);continue;}
  const path=posix.normalize(posix.join(posix.dirname(file),name));
  const target=[path,path.replace(/\.js$/,'.ts'),path.replace(/\.js$/,'.tsx'),path+'/index.ts'].find(p=>Object.hasOwn(files,p));
  if(!target){fail(file,'unresolved_import',name);continue;}

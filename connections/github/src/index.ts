@@ -1,3 +1,4 @@
+import {Octokit} from 'octokit';
 import type {ConnectionConfig,ConfiguredDispatchAdapter,ReadAdapter,AdapterAccess,ConfiguredReadAdapter} from '../../src/index.js';
 import type {Json} from '../../../shared/src/index.js';
 
@@ -95,4 +96,55 @@ export function createGitHubConfiguredFileReader(client:GitHubClientFactory):Con
   read(connection:Readonly<ConnectionConfig>,target:string,signal:AbortSignal,access?:AdapterAccess):Promise<unknown>{
    return createGitHubFileReader(connection,client).read(target,signal,access);
   }});
+}
+
+/** Trusted host ports only. The resolver binds the stored credential reference to this invocation. */
+export interface GitHubOfficialClientOptions {
+ resolveCredential(connection:Readonly<ConnectionConfig>,access:AdapterAccess):Promise<string|undefined>;
+ fetch?:typeof globalThis.fetch;
+ timeoutMs?:number;
+}
+export function createGitHubOfficialClientFactory(options:GitHubOfficialClientOptions):GitHubClientFactory {
+ const resolveCredential=options.resolveCredential,transport=options.fetch??globalThis.fetch;
+ const timeoutMs=options.timeoutMs??15000;
+ if(typeof resolveCredential!=='function'||typeof transport!=='function'||!Number.isSafeInteger(timeoutMs)||timeoutMs<1||timeoutMs>60000)
+  throw Error('invalid_github_client_options');
+ return async(connection,access)=>{
+  const current=capture(connection);
+  const check=()=>{try{return access?.check()===true;}catch{return false;}};
+  if(!access||!check()||!current.credentialRef)throw Error('github_access_unavailable');
+  let secret:string|undefined;
+  try{secret=await resolveCredential(current,access);}catch{throw Error('github_credential_unavailable');}
+  if(!check())throw Error('github_access_unavailable');
+  if(typeof secret!=='string'||!secret||/[\u0000-\u0020\u007f]/.test(secret))throw Error('github_credential_unavailable');
+  const sdk=new Octokit({
+   auth:secret,baseUrl:'https://api.github.com',
+   retry:{enabled:false},throttle:{enabled:false},
+   log:{debug(){},info(){},warn(){},error(){}},
+   request:{fetch:async(url,init)=>{
+    if(!check())throw Error('github_access_unavailable');
+    const signal=init?.signal?AbortSignal.any([init.signal,AbortSignal.timeout(timeoutMs)]):AbortSignal.timeout(timeoutMs);
+    if(signal.aborted)throw Error('github_request_cancelled');
+    return transport(url,{...init,signal,redirect:'error'});
+   }},
+  });
+  async function invoke(call:()=>Promise<{data:unknown}>):Promise<{data:unknown}>{
+   if(!check())throw Error('github_access_unavailable');
+   try{
+    const result=await call();
+    if(!check())throw Error('github_access_unavailable');
+    return {data:result.data};
+   }catch(error){
+    if(!check())throw Error('github_access_unavailable');
+    const status=error&&typeof error==='object'&&'status'in error?error.status:undefined;
+    throw Object.assign(Error('github_request_unavailable'),
+     Number.isSafeInteger(status)?{status}:{});
+   }
+  }
+  const client:GitHubOfficialClient={rest:{repos:{
+   getContent:input=>invoke(()=>sdk.rest.repos.getContent(input)),
+   createOrUpdateFileContents:input=>invoke(()=>sdk.rest.repos.createOrUpdateFileContents(input)),
+  }}};
+  return Object.freeze({rest:Object.freeze({repos:Object.freeze(client.rest.repos)})});
+ };
 }
