@@ -7,7 +7,8 @@ import {createAiConfigurations} from '../../dist/AI/src/index.js';
 import {openSqliteStore} from '../../dist/shared/src/index.js';
 function fixture(t,policy){
  const directory=mkdtempSync(join(tmpdir(),'wex-ai-list-')),path=join(directory,'ai.sqlite');
- let store=openSqliteStore(path,'ai'),service;
+ let store=openSqliteStore(path,'ai'),service,closed=false;
+ const close=()=>{if(!closed){store.close();closed=true;}};
  const writer={},reader={};
  const make=()=>createAiConfigurations(store,(request,access)=>request===writer||request===reader&&policy(access),()=>true);
  service=make();
@@ -17,9 +18,9 @@ function fixture(t,policy){
   ['p',{kind:'position',name:'Position',responsibility:'Review'}],
   ['agent',{kind:'agent',name:'Agent',roleId:'a',positionId:'p',model:{connectionId:'connection',modelId:'model'}}],
  ])assert.equal(service.save(writer,{id,intent:'create-'+id,expectedRevision:0,value}).status,'committed');
- t.after(()=>{store.close();rmSync(directory,{recursive:true,force:true});});
- return {reader,writer,get store(){return store;},get service(){return service;},
-  reopen(){store.close();store=openSqliteStore(path,'ai');service=make();}};
+ t.after(()=>{close();rmSync(directory,{recursive:true,force:true});});
+ return {reader,writer,close,get store(){return store;},get service(){return service;},
+  reopen(){close();store=openSqliteStore(path,'ai');closed=false;service=make();}};
 }
 test('AI lists require a list grant and independent row reads without hidden totals',t=>{
  let list=true,reads=new Set(['a']);
@@ -40,7 +41,7 @@ test('AI enumeration is read-only persists across reopen and returns independent
  assert.deepEqual(f.service.list(f.reader,'role'),roles);
 });
 test('AI list denial and invalid kinds precede storage access',t=>{
- const f=fixture(t,()=>false);f.store.close();
+ const f=fixture(t,()=>false);f.close();
  assert.deepEqual(f.service.list(f.reader,'role'),{status:'denied'});
  for(const kind of ['other','',null,{},'role:*'])assert.deepEqual(f.service.list(f.writer,kind),{status:'denied'});
 });
