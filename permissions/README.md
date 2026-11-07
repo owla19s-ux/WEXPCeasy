@@ -17,7 +17,7 @@
 
 - **公开代码入口**：`permissions/src/index.ts`；已有 `createPermissions(Store, TrustPort)`，提供 evaluate/recheck/grant/revoke/history，采用真实存储和可信宿主注入。
 - **运行验证**：`npm run test:permissions`；跨域组合另运行 `npm test`。当前授权正例的可信事实来自测试宿主，不等于正式 Windows/IPC 身份认证。
-- **当前安全边界**：非对话入口仍返回 `entry_policy_unresolved`；不伪造对话授权，不开放尚未批准的自动授权、有限次数或特殊风险操作。
+- **当前安全边界（2026-11-07 源码核对）**：`permissions/src/service.ts` 已实现受控 `local` 入口（要求可信宿主给出 `conversation:null`、`entryEnabled:true`，并具有独立的精确 Grant）；`task` 和 `callback` 入口仍返回 `entry_policy_unresolved`。这不意味着 Windows 正式 IPC/用户身份接入已验收；不伪造对话授权，不开放尚未批准的自动授权、有限次数或特殊信任根操作。对应测试 `permissions/tests/local.test.mjs`、`permissions/tests/local-space.test.mjs`，历史验证回执 `permissions/evidence/2026-11-05/local-entry.json`；本次文档核对未复跑。
 - **施工依据**：[0.1.1 正式计划](../docs/versions/0.1.1/PLAN.md) → [本域契约](../docs/research/contracts/permissions/CONTRACT-archive.md) → `permissions/src/` 与 `permissions/tests/`。第四批契约设计状态是历史起点，不代表当前代码不存在。
 
 
@@ -93,7 +93,7 @@
 
 ## G3：非对话入口施工门槛
 
-当前真实实现对 Conversation 入口有允许路径；Task、用户直接操作和外部回调等非对话入口仍按 `entry_policy_unresolved` 阻断。不得伪造 Conversation ID、继承创建 Task 的对话授权，或把角色/Context/连接可用性当成许可。对应入口的可信主体、实例/代次、目标和动作策略经批准、实现并由真实消费者验证前，不开放副作用。
+当前真实实现对 Conversation 入口有允许路径；Task、外部回调等入口仍按 `entry_policy_unresolved` 阻断；用户直接本地入口已有必须满足独立可信策略及精确 Grant 的受限实现，但正式桌面身份绑定尚未验收。不得伪造 Conversation ID、继承创建 Task 的对话授权，或把角色/Context/连接可用性当成许可。对应入口的可信主体、实例/代次、目标和动作策略经批准、实现并由真实消费者验证前，不开放副作用。
 
 G1 引用、G2 工具意图、G4 Operation 历史和 G5 搜索命中均不产生授权。详见[基础能力落地映射](../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
 
