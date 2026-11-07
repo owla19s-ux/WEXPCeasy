@@ -81,7 +81,7 @@ VIEW-03保留不同关系类别的来源类型，不合并为“通用边”；F
 
 - **模块导航**：[views README](README.md) · [全模块契约索引](../docs/MODULE-CONTRACTS.md) · [文档总索引](../docs/README.md)
 - **产品需求**：[F01–F15 产品功能总表](../docs/A1-正式产品设计/产品功能总表.md) · [功能—模块契约映射](../docs/A1-正式产品设计/功能与模块归属映射.md)
-- **跨模块设计**：[工作流自由画布与节点工作界面](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md) · [工作流契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/workflows/CONTRACT-archive.md) · [Space 契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/space/CONTRACT-2026-10-31.md)
-- **决策与研究**：[工作流画布方向决策](../docs/decisions/WORKFLOW-CANVAS-DIRECTION-2026-11-01.md) · [全局模块化架构](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
+- **跨模块设计**：[工作流自由画布与节点工作界面](../docs/A1-正式产品设计/架构与决策/工作流画布与节点界面设计-2026-11-01.md) · [工作流契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/workflows/CONTRACT-archive.md) · [Space 契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/space/CONTRACT-2026-10-31.md)
+- **决策与研究**：[工作流画布方向决策](../docs/decisions/WORKFLOW-CANVAS-DIRECTION-2026-11-01.md) · [全局模块化架构](../docs/A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)
 
 维护规则：视图业务语义写回本文件；源领域对象/关系的变更转交其 owner；跨模块边界变化更新全局索引。原型或图形库数据不自动成为 views 的正式数据契约。
