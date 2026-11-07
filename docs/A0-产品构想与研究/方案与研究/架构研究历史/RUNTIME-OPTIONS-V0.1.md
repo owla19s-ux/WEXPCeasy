@@ -2,7 +2,7 @@
 
 - 日期：2026-10-29（北京时间）
 - 状态：研究与选型建议，未定案、未实现、未验证。
-- 目标依据：[运行时扩展契约](../../../architecture/RUNTIME-EXTENSION-CONTRACT-V0.1.md)。
+- 目标依据：[运行时扩展契约](RUNTIME-EXTENSION-CONTRACT-V0.1.md)。
 - 本轮没有运行加载原型、安装依赖或修改 WEXPC 产品代码。
 - 建议优先验证：保留 Rust/Tauri 主程序，以独立扩展进程运行 JS 发布包，UI 独立加载并通过受控消息接口交互。不是直接决定采用 Node 或全仓改语言。
 

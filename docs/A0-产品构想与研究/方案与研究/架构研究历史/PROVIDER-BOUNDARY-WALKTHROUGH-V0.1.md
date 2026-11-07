@@ -12,7 +12,7 @@
 
 本次对照 WEXPC1 main 的以下草案（阅读基线 afc46c1548c92528334f3dc55869ffd5181257eb）：
 - [目录与模块设计](../../../architecture/MODULE-LOCALITY-DESIGN-V0.1.md)，尤其 §6、§7、§14。
-- [运行时接入契约](../../../architecture/RUNTIME-EXTENSION-CONTRACT-V0.1.md)，尤其 §3、§6、§7。
+- [运行时接入契约](RUNTIME-EXTENSION-CONTRACT-V0.1.md)，尤其 §3、§6、§7。
 - [验证顺序](../审查历史/ARCHITECTURE-VALIDATION-ORDER-AND-VERSION-GATE.md)。
 
 原文保持不变。本文件补充取舍和未决项，不覆盖原稿，也不因写入仓库成为施工规范。本次完成的是文档推演，没有执行新测试。
