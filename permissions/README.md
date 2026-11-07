@@ -10,7 +10,7 @@
 >
 > **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
 >
-> **研究迁移**：历史深度契约归档于 [docs/research/contracts/permissions/CONTRACT-archive.md](../docs/research/contracts/permissions/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
+> **研究迁移**：历史深度契约归档于 [docs/research/contracts/permissions/CONTRACT-archive.md](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
 
 
 ## 当前施工速览（0.1.1 / B1-01）
@@ -18,7 +18,7 @@
 - **公开代码入口**：`permissions/src/index.ts`；已有 `createPermissions(Store, TrustPort)`，提供 evaluate/recheck/grant/revoke/history，采用真实存储和可信宿主注入。
 - **运行验证**：`npm run test:permissions`；跨域组合另运行 `npm test`。当前授权正例的可信事实来自测试宿主，不等于正式 Windows/IPC 身份认证。
 - **当前安全边界（2026-11-07 源码核对）**：`permissions/src/service.ts` 已实现受控 `local` 入口（要求可信宿主给出 `conversation:null`、`entryEnabled:true`，并具有独立的精确 Grant）；`task` 和 `callback` 入口仍返回 `entry_policy_unresolved`。这不意味着 Windows 正式 IPC/用户身份接入已验收；不伪造对话授权，不开放尚未批准的自动授权、有限次数或特殊信任根操作。对应测试 `permissions/tests/local.test.mjs`、`permissions/tests/local-space.test.mjs`，历史验证回执 `permissions/evidence/2026-11-05/local-entry.json`；本次文档核对未复跑。
-- **施工依据**：[0.1.1 正式计划](../docs/versions/0.1.1/PLAN.md) → [本域契约](../docs/research/contracts/permissions/CONTRACT-archive.md) → `permissions/src/` 与 `permissions/tests/`。第四批契约设计状态是历史起点，不代表当前代码不存在。
+- **施工依据**：[0.1.1 正式计划](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md) → [本域契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md) → `permissions/src/` 与 `permissions/tests/`。第四批契约设计状态是历史起点，不代表当前代码不存在。
 
 
 **当前：第七批基础产品实现已落地；稳定实现与限制见本文“第七批实际实现”及[验收报告](../docs/batch7/REPORT.md)。下方阶段描述保留为历史依据。**
@@ -58,17 +58,17 @@
 
 ## 第四批：模块业务契约设计（历史研究）
 
-[本模块契约与独立验收规格](../docs/research/contracts/permissions/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
+[本模块契约与独立验收规格](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 
 ### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：第六批[历史条款](../docs/research/contracts/permissions/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
 
-- [本域契约及关联依据](../docs/research/contracts/permissions/CONTRACT-archive.md#文档关联与施工入口)
+- [本域契约及关联依据](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md#文档关联与施工入口)
 - [WEX 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
@@ -100,15 +100,15 @@ G1 引用、G2 工具意图、G4 Operation 历史和 G5 搜索命中均不产生
 
 ## 模块编号规则
 
-- 权限域细分使用 `PERMISSIONS-<子域>-NNN`，详见 [CONTRACT 第 11 节](../docs/research/contracts/permissions/CONTRACT-archive.md#11-模块独立功能编号与细化契约)。
+- 权限域细分使用 `PERMISSIONS-<子域>-NNN`，详见 [CONTRACT 第 11 节](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/permissions/CONTRACT-archive.md#11-模块独立功能编号与细化契约)。
 - PER-01～PER-04 保留为既有稳定能力锚点。
 - D01/D02 已确认政策与特殊信任边界待决项分别标注；编号建立不代表未实现政策已落地。
 
 ## D01/D02 权限判定矩阵
 
-产品级判定矩阵：[PRD-D01–D02 权限判定矩阵与执行模式](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。矩阵是后续业务契约收敛目标，不代表当前权限服务已实现 AI 资格、Context 开关、工作流节点策略、对话四级、工作流启动审批或特殊信任边界。
+产品级判定矩阵：[PRD-D01–D02 权限判定矩阵与执行模式](../docs/A1-正式产品设计/权限决策矩阵.md)。矩阵是后续业务契约收敛目标，不代表当前权限服务已实现 AI 资格、Context 开关、工作流节点策略、对话四级、工作流启动审批或特殊信任边界。
 
 
 ### 已确认的 D02 执行模式（2026-11-01）
 
-IV级允许在明确授权范围内执行全部风险等级操作，不因风险标签本身逐次询问；工作流每次启动由用户确认本次完整节点权限方案一次；主AI与秘书AI共享当前对话等级，须用户主动设置。特殊信任根边界（Shell提权、插件来源信任、WEX自身权限策略、凭证明文）仍待用户确认。具体矩阵见[PRD-D01–D02](../docs/product/PRD-D01-D02-PERMISSION-DECISION-MATRIX-2026-11-01.md)。
+IV级允许在明确授权范围内执行全部风险等级操作，不因风险标签本身逐次询问；工作流每次启动由用户确认本次完整节点权限方案一次；主AI与秘书AI共享当前对话等级，须用户主动设置。特殊信任根边界（Shell提权、插件来源信任、WEX自身权限策略、凭证明文）仍待用户确认。具体矩阵见[PRD-D01–D02](../docs/A1-正式产品设计/权限决策矩阵.md)。
