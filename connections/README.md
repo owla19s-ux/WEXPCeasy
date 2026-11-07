@@ -28,14 +28,14 @@
 >
 > **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
 >
-> **研究迁移**：历史深度契约归档于 [docs/research/contracts/connections/CONTRACT-archive.md](../docs/research/contracts/connections/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
+> **研究迁移**：历史深度契约归档于 [docs/research/contracts/connections/CONTRACT-archive.md](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
 
 
 **当前消费状态（2026-11-02）**：app 已可选装配本域静态服务，包含在途排空、原库恢复和关闭失败重试；见[宿主组合回执](../app/CONNECTIONS-INTEGRATION-2026-11-02.md)。未接正式 UI 或真实服务。
 
 **模块代码状态（2026-11-02）**：`src/` 已有最小配置存储、Operation 账本、受控读取和单次写派发边界；已补齐配置移除、账本损坏拒绝和配置绑定写派发；新入口在派发前复核当前启用/修订/适配器版本，保留原配置依据与“未外发”回执。实现范围、接线限制和命令见 [配置派发施工回执](CONFIGURED-DISPATCH-2026-11-02.md)；[上一批回执](IMPLEMENTATION-2026-11-02.md)保留历史。这不是完整连接系统或真实外部适配器验收。
 
-**当前版本施工顺序（2026-11-02）**：0.1.1 仅补齐基础 Connections 配置、能力调用、受控操作与集成；外部 DSH Agent 连接器推迟到 0.1.2。下文“外部 Agent 优先研究”是历史研究优先级，不是本版施工顺序。见 [正式计划](../docs/versions/0.1.1/PLAN.md)。
+**当前版本施工顺序（2026-11-02）**：0.1.1 仅补齐基础 Connections 配置、能力调用、受控操作与集成；外部 DSH Agent 连接器推迟到 0.1.2。下文“外部 Agent 优先研究”是历史研究优先级，不是本版施工顺序。见 [正式计划](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)。
 
 **设计背景（2026-11-01）**：已建立 C01–C05 与 CONNECTIONS-* 核心宿主细分契约；API/LOCAL 子模块保留 API-*/LOCAL-* 编号。已有 headless 与受控交换独立实验，仍未形成 WEX 产品级公共连接协议或完整调用闭环。旧文档中“WEX 连接器默认采用 Cordis”的意见已废止。
 
@@ -49,7 +49,7 @@
 
 ## 模块编号规则
 
-- 核心连接宿主：`CONNECTIONS-<子域>-NNN`，完整细分见 [CONTRACT 第 7 节](../docs/research/contracts/connections/CONTRACT-archive.md#7-模块独立功能编号与细化契约)。
+- 核心连接宿主：`CONNECTIONS-<子域>-NNN`，完整细分见 [CONTRACT 第 7 节](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md#7-模块独立功能编号与细化契约)。
 - Provider/API 适配：`connections/api` 保留 `API-01～10`。
 - 本地工具适配：`connections/local` 保留 `LOCAL-01～10`。
 - 外部 DSH Agent：`connections/dsh` 是独立适配路线；其专属子契约后续单独细化。
@@ -102,7 +102,7 @@
 
 ## 第四批：模块业务契约设计（历史研究）
 
-[本模块契约与独立验收规格](../docs/research/contracts/connections/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
+[本模块契约与独立验收规格](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
 
 ## 公共网络适配边界补充（2026-10-31；条件候选）
 
@@ -115,12 +115,12 @@
 
 ### 第六批施工准备度（历史：2026-10-31）
 
-**黄**：第六批[历史条款](../docs/research/contracts/connections/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
+**黄**：第六批[历史条款](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md)记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。[全域矩阵](../docs/batch6/READINESS.md)、[实验结果](../docs/batch6/EXPERIMENTS.md)、[施工顺序](../docs/batch6/NEXT.md)。
 
 
 ## 文档入口
 
-- [本域契约及关联依据](../docs/research/contracts/connections/CONTRACT-archive.md#文档关联与施工入口)
+- [本域契约及关联依据](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/CONTRACT-archive.md#文档关联与施工入口)
 - [WEX 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
 
