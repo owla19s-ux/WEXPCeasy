@@ -13,7 +13,7 @@
 > **研究迁移**：历史深度契约归档于 [docs/research/contracts/workflows/CONTRACT-archive.md](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/workflows/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
 
 
-**状态（2026-11-01）**：workflows 维护工作流业务数据；运行调度方向已更新为独立顶层 scheduler；现有 React Flow 仅为历史交互实验；模块细分使用 WORKFLOWS-* 编号，模式和软件开发子域保留 MODE-*、SD-*。当前画布方向调整为自研轻量自由画布，设计见 [当前工作流画布架构](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)。本域尚无正式工作流调度产品代码。
+**状态（2026-11-01）**：workflows 维护工作流业务数据；运行调度方向已更新为独立顶层 scheduler；现有 React Flow 仅为历史交互实验；模块细分使用 WORKFLOWS-* 编号，模式和软件开发子域保留 MODE-*、SD-*。当前画布方向调整为自研轻量自由画布，设计见 [当前工作流画布架构](../docs/A1-正式产品设计/架构与决策/工作流画布与节点界面设计-2026-11-01.md)。本域尚无正式工作流调度产品代码。
 
 > **版本边界（2026-11-02）**：正式自由格子工作流、任务调度器和节点运行属于 **0.1.2**；本目录在 0.1.1 仅作为长期架构/契约参考，不是当前施工派工。见 [0.1.1 计划](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)。历史准备度和实验不改变版本边界。
 
@@ -61,7 +61,7 @@
 
 覆盖样本 L06/L07/L09/L10。围绕 Task/工作轮次、分配、证据接收/验收和恢复决策归并契约，连接执行与操作观察只作为依赖。可以在执行/判权/存储替身上验证真实任务行为，再与真实提供方组合；不能把 L06 整条链路分散实现成各域共管任务状态。
 
-契约就近、公开出口/依赖约束、分层测试和模块施工方法见[统一研究](../docs/architecture/GLOBAL-CONTRACT-MAP-V0.1.md)。本段只给制定契约的依据，不表示公开接口已实现或所有建议已获采纳。
+契约就近、公开出口/依赖约束、分层测试和模块施工方法见[统一研究](../docs/A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)。本段只给制定契约的依据，不表示公开接口已实现或所有建议已获采纳。
 
 
 
@@ -78,7 +78,7 @@
 ## 文档入口
 
 - [本域契约及关联依据](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/workflows/CONTRACT-archive.md#文档关联与施工入口)
-- [当前工作流自由画布设计](../docs/architecture/WORKFLOW-CANVAS-AND-NODE-WORKSPACE-DESIGN-2026-11-01.md)
+- [当前工作流自由画布设计](../docs/A1-正式产品设计/架构与决策/工作流画布与节点界面设计-2026-11-01.md)
 - [工作流画布方向决策](../docs/decisions/WORKFLOW-CANVAS-DIRECTION-2026-11-01.md)
 - [WEXPC1 文档体系总索引](../docs/README.md)
 - [全模块契约索引](../docs/MODULE-CONTRACTS.md)
@@ -89,4 +89,4 @@
 
 Task/工作轮次/Requirement/Artifact/Review/Verification/Acceptance 由本域维护；Task 引用输入资料与 Operation，不复制文件正文或 Operation 状态。Task 检查点必须能让新 Conversation、模型或执行者在读取最新修订、核对资源和原 Operation、重新判权后安全接续。检查点不是聊天总结，也不保证 Agent 或进程仍在运行。
 
-见[基础能力落地映射](../docs/planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+见[基础能力落地映射](../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
