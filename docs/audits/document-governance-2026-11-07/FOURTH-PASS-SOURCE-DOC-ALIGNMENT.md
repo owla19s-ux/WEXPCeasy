@@ -35,3 +35,8 @@
 6. **验证环境限制**：本轮没有完整可执行的仓库本地工作树，未执行 `npm run build`、`npm run typecheck`、`npm test`、`npm run check:boundaries`、`node tools/check-docs.mjs --json --strict` 或 Windows 实机操作。无 CI/测试通过的新证据，不宣称全仓链接、锚点、接口或业务验收通过。
 
 遵守根 README 的模块 README 施工入口原则。A0 历史文档只为追溯，A1 是已确认产品设计，A2 是当前版本工程状态。继续保留旧路径兼容文件和原始审计证据，待最新 HEAD **全量反向引用、路径、锚点与证据独立性**确认后再统一删除。
+
+## 4. 追加治理与验证环境回执
+
+- `app/README.md` 中第七批“无 Electron/preload/IPC/React UI”叙述已改为明确的 2026-10-31 历史快照，并补充与当前 `desktop-main.ts`、`renderer.tsx` 及 Workbench 的时间差；最新具体 UI/IPC 能力仍需测试验证。提交 `7c30819a`。
+- 在当前命令执行环境尝试 `git ls-remote https://github.com/owla19s-ux/WEXPCeasy.git HEAD`，失败：`Could not resolve host: github.com`。因此无法直接 clone 最新 main、运行全仓本地文档脚本或 Node 测试。已完成的 GitHub 连接器逐文件读取与改写**不能替代**本地完整工作树的批量路径及语义验证。
