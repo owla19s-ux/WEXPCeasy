@@ -106,7 +106,7 @@
 ## 文档关联与施工入口
 
 - **模块导航**：[shared README](../../../../../../shared/README.md) · [全模块契约索引](../../../../../MODULE-CONTRACTS.md) · [文档总索引](../../../../../README.md)
-- **产品需求**：[F01–F15 产品功能总表](../../../../../product/PRODUCT-FUNCTION-CATALOG-2026-11-01.md) · [功能—模块契约映射](../../../../../A1-正式产品设计/功能与模块归属映射.md)
+- **产品需求**：[F01–F15 产品功能总表](../../../../../A1-正式产品设计/产品功能总表.md) · [功能—模块契约映射](../../../../../A1-正式产品设计/功能与模块归属映射.md)
 - **跨模块依据**：[app 契约](../../../../../../app/CONTRACT.md) · [permissions 契约](../../../../../../permissions/CONTRACT.md) · [connections 契约](../../../../../../connections/CONTRACT.md) · [全局模块化架构](../../../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
 - **待决政策**：PRD-D05 数据保留、PRD-D12 清理策略、PRD-C07 备份恢复与 Windows E4 平台实验。
 
