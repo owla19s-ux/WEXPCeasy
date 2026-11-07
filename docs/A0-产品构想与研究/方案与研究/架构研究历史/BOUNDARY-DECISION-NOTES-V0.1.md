@@ -1,7 +1,7 @@
 # 三项关键边界：源码证据与收敛建议
 
 日期：2026-10-29。状态：候选取舍，不是正式 ADR 或施工命令。
-承接：[全局契约地图](../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)。
+承接：[全局契约地图](GLOBAL-CONTRACT-MAP-V0.1.md)。
 本次只读 WEXPC，更新 WEXPC1；没有运行测试、调用模型或修改产品代码。证据基线：faf11f31d44e4fc4788e766074b8db6b83ab4a1b。
 
 ## 1. 结论先行

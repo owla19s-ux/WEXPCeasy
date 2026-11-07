@@ -26,7 +26,7 @@
 
 ## 1. 依据与决定等级
 
-已核对最新main根README与所有现有主要域/子域README、[研究摘要](decisions/RESEARCH-DECISIONS-2026-10-30.md)、[模块化方法与L01–L12](architecture/GLOBAL-CONTRACT-MAP-V0.1.md)、[专项研究索引](A0-产品构想与研究/README.md)、DSH/Cordis加载及原生Bundle报告、headless/boundary源码、ReactFlow模型/验证报告；旧WEXPC `faf11f31d44e4fc4788e766074b8db6b83ab4a1b` [产品基线](https://github.com/owla19s-ux/wexpc/blob/faf11f31d44e4fc4788e766074b8db6b83ab4a1b/docs/PC-PRODUCT-AND-TECH-BASELINE.md)仅继承仍有效的需求/权限/重装规则，不继承Rust/Tauri实现。基线根AGENTS.md不存在；协作依据是用户本批任务、既有README/第三批建议和已确认main协作原则，不虚构AGENTS授权。
+已核对最新main根README与所有现有主要域/子域README、[研究摘要](decisions/RESEARCH-DECISIONS-2026-10-30.md)、[模块化方法与L01–L12](A0-产品构想与研究/方案与研究/架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)、[专项研究索引](A0-产品构想与研究/README.md)、DSH/Cordis加载及原生Bundle报告、headless/boundary源码、ReactFlow模型/验证报告；旧WEXPC `faf11f31d44e4fc4788e766074b8db6b83ab4a1b` [产品基线](https://github.com/owla19s-ux/wexpc/blob/faf11f31d44e4fc4788e766074b8db6b83ab4a1b/docs/PC-PRODUCT-AND-TECH-BASELINE.md)仅继承仍有效的需求/权限/重装规则，不继承Rust/Tauri实现。基线根AGENTS.md不存在；协作依据是用户本批任务、既有README/第三批建议和已确认main协作原则，不虚构AGENTS授权。
 
 | 等级 | 可以据此做什么 | 不可以据此做什么 |
 |---|---|---|

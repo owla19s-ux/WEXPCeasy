@@ -283,10 +283,10 @@ runtime窄配额owner仍B候选；同池原子预留、unknown不退、对账差
 
 - **模块导航**：[全模块契约索引](../../../../../MODULE-CONTRACTS.md) · [文档体系总索引](../../../../../README.md)
 - **全局架构**：
-- [全局契约地图](../../../../../architecture/GLOBAL-CONTRACT-MAP-V0.1.md)
-- [模块局部性设计](../../../../../architecture/MODULE-LOCALITY-DESIGN-V0.1.md)
+- [全局契约地图](../../../架构研究历史/GLOBAL-CONTRACT-MAP-V0.1.md)
+- [模块局部性设计](../../../架构研究历史/MODULE-LOCALITY-DESIGN-V0.1.md)
 - [当前工作流自由画布与节点工作界面设计](../../../../../A1-正式产品设计/架构与决策/工作流画布与节点界面设计-2026-11-01.md)
-- [Space 组织与目录接入历史共识](../../../../../architecture/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
+- [Space 组织与目录接入历史共识](../../../../历史参考/旧UI设计/SPACE-AND-WORKFLOW-EDITOR-DESIGN-2026-10-30.md)
 - **决策与研究**：
 - [研究决策与当前边界](../../../../../decisions/RESEARCH-DECISIONS-2026-10-30.md)
 - **审查报告**：
@@ -298,7 +298,7 @@ runtime窄配额owner仍B候选；同池原子预留、unknown不退、对账差
 
 ## G1/G4/G5 与跨对话持续工作补充（2026-10-31）
 
-本节把 Task 资料引用、操作结果关联、内部检索和持久检查点归入 Workflows；详细 owner 矩阵见[基础能力落地映射](../../../../../planning/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+本节把 Task 资料引用、操作结果关联、内部检索和持久检查点归入 Workflows；详细 owner 矩阵见[基础能力落地映射](../../../../历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
 
 **G1：Task 输入与产物引用。** Task 可引用 Context 资料、外部文件/仓库、会话输入、其他 Task 产物和核验依据。Workflows 保存引用及使用时的来源版本/观察，不复制来源正文或接管外部文件。Artifact 记录产物身份、来源 Task/轮次、输入与规则依据、实际定位及版本观察；实际字节由对应资源 owner/连接器管理。Verification 必须绑定具体 Artifact、输入清单、规则版本和核验环境。
 

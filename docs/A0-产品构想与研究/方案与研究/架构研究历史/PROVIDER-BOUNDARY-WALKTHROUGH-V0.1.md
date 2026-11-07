@@ -11,7 +11,7 @@
 这些目标不等于目录、状态 owner 或接口已定。模块职责、业务语义、实现契约均仍为候选；三者需要随推演与试点共同修正。不能先冻结前两层，再把实现问题留给语言处理。
 
 本次对照 WEXPC1 main 的以下草案（阅读基线 afc46c1548c92528334f3dc55869ffd5181257eb）：
-- [目录与模块设计](../../../architecture/MODULE-LOCALITY-DESIGN-V0.1.md)，尤其 §6、§7、§14。
+- [目录与模块设计](MODULE-LOCALITY-DESIGN-V0.1.md)，尤其 §6、§7、§14。
 - [运行时接入契约](RUNTIME-EXTENSION-CONTRACT-V0.1.md)，尤其 §3、§6、§7。
 - [验证顺序](../审查历史/ARCHITECTURE-VALIDATION-ORDER-AND-VERSION-GATE.md)。
 
