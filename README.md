@@ -1,10 +1,5 @@
 # WEX｜AI 工作入口
 
-## 环境管理独立 owner 与连接器入口（2026-11-07）
-
-环境管理已由用户确认作为独立顶层源码维护域：[environments/README.md](environments/README.md)，**与 Connections 并列，不是 Local 连接器**。当前仅有职责 README，无 `src/`、测试或可运行环境安装器。Local 为受控本机文件/目录及未来获批的进程/安装器适配；Connections 独占公共配置、Operation/回执；App 负责可信 OS 交互，Space 只引用环境。0.1.1 仅核查既定环境识别/目录/绑定能力，不自动追加完整下载安装、修复、升级、卸载。Codex 施工连接器前须读 [连接系统总入口](connections/README.md) 和 [B3 M-01 / D-10](docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)，并遵守子连接器 owner 边界。
-
-
 > 仓库：`owla19s-ux/WEXPCeasy`｜Windows PC 优先｜默认分支：`main`
 >
 > 这是 AI 的施工与验收导航，不是产品说明书。完整介绍见 [docs/PROJECT.md](docs/PROJECT.md)。
@@ -13,11 +8,13 @@
 
 **当前桌面施工任务入口：[B3 桌面 UI、连接器接入与 Windows 交付](docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)**；基础模块残余事项见 [B1 连续施工任务](docs/versions/0.1.1/B1-EXECUTION-TASK-2026-11-06.md)。版本边界与退出标准见 [0.1.1 正式计划](docs/versions/0.1.1/PLAN.md)。
 
-**当前执行导航（2026-11-07）**：B1 各主要 owner 已有正式源码和独立测试，B1/B2/B3 的自动化测试并不替代批次签收。下一步优先在已实现的 Electron/React + Space UI 基础上接线可信业务 IPC、API/Agent 配置、Conversations 对话页、设置/权限、多视图与 Windows 安装恢复；GitHub 官方能力专项按连接器 owner 独立推进。按模块完成、逐项验收，不重复建立已有基础代码。
+**当前执行导航（2026-11-07）**：B1 各主要 owner 已有正式源码和独立测试，B1/B2/B3 的自动化测试并不替代批次签收。下一步在已实现的 Electron/React + Space UI 与部分 D-08 共享工作窗口源码上，优先核对构建和 UI 实际使用，再补可信业务 IPC、API/Agent 配置、Conversations 对话页、设置/权限、文件编辑及 Windows 安装恢复；GitHub 官方能力专项按连接器 owner 独立推进。按模块完成、逐项验收，不重复建立已有基础代码。
 
 进入具体模块时阅读对应模块 README，检查最新源码及测试；发现旧文档和真实代码不符时，以代码与可复现证据为事实依据，向验收模式反馈，施工模式不自行修订文档。不得跳过未完成的 B1 必需模块直接宣布第一批通过，也不得为已完成的基础能力重新施工。
 
-**核对快照（2026-11-07，`main bd72dfea`）**：`space/`、`connections/api/`、`AI/`、`conversations/`、`connections/github/`、`connections/local/` 均存在产品 `src/` 与独立测试；正式 `app/src/desktop-*.ts`、`UI/src/renderer.tsx`、`UI/src/space.tsx` 已存在。该 SHA 上 B1、B2、B3 桌面宿主、Foundation、GitHub read 和文档审计工作流成功；但当前 Renderer 主入口只挂载宿主状态与 SpacePanel，不能据此认定完整对话/设置 UI 或 Windows 安装交付已完成。**本段是带 SHA 的事实快照，每次开工仍必须重新核对最新 main。**
+**核对快照（2026-11-07，`main bd72dfea`）**：`space/`、`connections/api/`、`AI/`、`conversations/`、`connections/github/`、`connections/local/` 均存在产品 `src/` 与独立测试；正式 `app/src/desktop-*.ts`、`UI/src/renderer.tsx`、`UI/src/space.tsx` 已存在。该 SHA 上 B1、B2、B3 桌面宿主、Foundation、GitHub read 和文档审计工作流成功；但当前 Renderer 主入口只挂载宿主状态与 SpacePanel，不能据此认定完整对话/设置 UI 或 Windows 安装交付已完成。**本段是带 SHA 的历史证据快照，不是当前 HEAD。**
+
+**2026-11-07 后续变更提示（待正式验证）**：D-08 已提交 `UI/src/middle-workspace.tsx`、`workspace-state.ts`、`interaction-dock.tsx` 及旧布局替换，`UI/src/space-addresses.tsx` 的授权读取结果已转为按需侧预览；`workbench.tsx`、`layout.ts` 结构已有变化。详见 [UI 模块入口](UI/README.md) 和 [B3 D-08A.2 回执](docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)。**没有本批完整 TypeScript/Windows 实机通过证据，不得把历史“仅 SpacePanel”的描述当成当前界面结构，也不得宣布 D-08 已完成。**
 
 ## 开工前检查
 
@@ -52,6 +49,10 @@
 - 通用本地验证基线：`npm run build`、`npm run typecheck`、`npm test`、`npm run check:boundaries`。先检查 `package.json` 的实际脚本和环境是否可用；模块 README 补充专属测试命令。
 - **检查 CI 先看 [Actions 总工作流运行列表](https://github.com/owla19s-ux/WEXPCeasy/actions/runs)**，核对最新运行集合、关联提交 SHA、状态和结论，再查看对应 workflow、job 与失败日志。不要只看固定工作流或旧运行记录，也不要让用户反复提供链接。
 - 可以运行必要的 GitHub Actions 测试。失败先查原因并修复，不盲目重跑；CI 绿灯不能代替模块验收或 Windows 实机验证。
+
+## 环境管理独立 owner 与连接器入口（2026-11-07）
+
+环境管理已由用户确认作为独立顶层源码维护域：[environments/README.md](environments/README.md)，**与 Connections 并列，不是 Local 连接器**。当前仅有职责 README，无 `src/`、测试或可运行环境安装器。Local 为受控本机文件/目录及未来获批的进程/安装器适配；Connections 独占公共配置、Operation/回执；App 负责可信 OS 交互，Space 只引用环境。0.1.1 仅核查既定环境识别/目录/绑定能力，不自动追加完整下载安装、修复、升级、卸载。Codex 施工连接器前须读 [连接系统总入口](connections/README.md) 和 [B3 M-01 / D-10](docs/versions/0.1.1/B3-DESKTOP-DELIVERY-TASK-2026-11-07.md)，并遵守子连接器 owner 边界。
 
 ## 按需资料
 
