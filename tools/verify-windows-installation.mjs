@@ -96,7 +96,9 @@ try{
  const report={sourceSha:process.env.GITHUB_SHA,installerSha256:manifest.installer.sha256,platform:process.platform,fixtures:['native root-selection choice supplied by test','local API configuration only, no external Provider request'],checks:['standalone packaged Electron contains all runtime resources','installer rejects unrelated nonempty directory','Unicode installation and independent data paths','actual packaged app opens and closes through native window message','running app blocks reinstall and uninstall before files change','same-path reinstall preserves locator and real SQLite API/AI/conversation records','uninstaller preserves external data and unknown installation-directory files','fresh install reconnects old root without old system index'],limits:['unsigned CI artifact','Windows PowerShell with WinForms is required for first-start directory selection','installer failure diagnostics use Windows TEMP before a data root is selected','not manual Windows E4, Snap or multi-monitor DPI acceptance','native root picker interaction not automated']};
  await writeFile('windows-delivery-acceptance/report.json',JSON.stringify(report,null,2));console.log('WINDOWS_DELIVERY_ACCEPTANCE '+JSON.stringify(report));
 }catch(error){
- await writeFile('windows-delivery-acceptance/failure.json',JSON.stringify({sourceSha:process.env.GITHUB_SHA,error:String(error)},null,2));throw error;
+ let installerDiagnostic;try{installerDiagnostic=await readFile(join(tmpdir(),'WEXPCeasy-install.log'),'utf8');}catch{}
+ const evidence={sourceSha:process.env.GITHUB_SHA,error:String(error),remaining:{executable:await exists(join(install,'WEXPCeasy.exe')),uninstaller:await exists(join(install,'Uninstall.exe')),registered:registered()},installerDiagnostic};
+ console.error('WINDOWS_DELIVERY_FAILURE',JSON.stringify(evidence));await writeFile('windows-delivery-acceptance/failure.json',JSON.stringify(evidence,null,2));throw error;
 }finally{
  if(active){active.kill();await new Promise(resolve=>active.once('close',resolve));}
  await rm(parent,{recursive:true,force:true,maxRetries:10,retryDelay:200});
