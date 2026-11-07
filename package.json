@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node --test shared/tests/*.test.mjs permissions/tests/*.test.mjs app/tests/*.test.mjs connections/tests/*.test.mjs connections/github/tests/*.test.mjs connections/local/tests/*.test.mjs connections/api/tests/*.test.mjs tools/tests/*.test.mjs space/tests/*.test.mjs AI/tests/*.test.mjs conversations/tests/*.test.mjs && npm run check:boundaries",
+    "test": "npm run build && node --test shared/tests/*.test.mjs permissions/tests/*.test.mjs app/tests/*.test.mjs connections/tests/*.test.mjs connections/github/tests/*.test.mjs connections/local/tests/*.test.mjs connections/api/tests/*.test.mjs tools/tests/*.test.mjs UI/tests/*.test.mjs space/tests/*.test.mjs AI/tests/*.test.mjs conversations/tests/*.test.mjs && npm run check:boundaries",
     "test:shared": "npm run build && node --test shared/tests/*.test.mjs",
     "test:permissions": "npm run build && node --test permissions/tests/*.test.mjs",
     "test:app": "npm run build && node --test app/tests/*.test.mjs",
@@ -27,7 +27,8 @@
     "test:local": "npm run build && node --test connections/local/tests/*.test.mjs",
     "build:desktop": "npm run build && node tools/build-desktop.mjs",
     "start:desktop": "npm run build:desktop && electron dist/app/src/desktop-main.js",
-    "verify:desktop": "npm run build:desktop && node tools/verify-desktop.mjs"
+    "verify:desktop": "npm run build:desktop && node tools/verify-desktop.mjs",
+    "test:ui": "npm run build && node --test UI/tests/*.test.mjs"
   },
   "devDependencies": {
     "@types/node": "24.10.0",
