@@ -142,3 +142,16 @@ for(const [status,headers] of [[403,{'retry-after':'1','x-ratelimit-remaining':'
   assert.equal(calls,1);
  });
 }
+
+test('public read boundary reports cancelled while SDK credentials are pending',{timeout:2000},async()=>{
+ const {createReadBoundary}=await import('../../../dist/connections/src/index.js');
+ const controller=new AbortController();let entered,calls=0;
+ const ready=new Promise(resolve=>{entered=resolve;});
+ const factory=github.createGitHubOfficialClientFactory({resolveCredential:()=>{entered();return new Promise(()=>{});},
+  fetch:async()=>{calls++;return response(200,{});}});
+ const scope={resource:'github',action:'read',target};
+ const permission={evaluate:()=>({status:'allow',scope,revision:1,generation:1}),recheck(){return this.evaluate();}};
+ const boundary=createReadBoundary(permission,github.createGitHubFileReader(connection,factory));
+ const pending=boundary.read({},target,controller.signal);await ready;controller.abort(Error('fixture-token'));
+ assert.deepEqual(await pending,{status:'cancelled',reason:'aborted'});assert.equal(calls,0);
+});

@@ -22,3 +22,21 @@ test('revoke while reading prevents disclosure',async()=>{
  const job=b.read({},'item');active=false;release();
  assert.equal((await job).status,'denied');
 });
+
+test('cancel during a pending read discards data and reports cancellation distinctly',async()=>{
+ const controller=new AbortController();let release;
+ const wait=new Promise(resolve=>{release=resolve;});
+ const permission={evaluate:()=>({status:'allow',scope,revision:1,generation:1}),recheck(){return this.evaluate();}};
+ const boundary=createReadBoundary(permission,{id:'fixture',async read(){await wait;return 'private result';}});
+ const pending=boundary.read({},'item',controller.signal);controller.abort(Error('private reason'));release();
+ assert.deepEqual(await pending,{status:'cancelled',reason:'aborted'});
+});
+test('adapter abort errors do not become unavailable or disclose private error details',async()=>{
+ const controller=new AbortController();
+ const permission={evaluate:()=>({status:'allow',scope,revision:1,generation:1}),recheck(){return this.evaluate();}};
+ const boundary=createReadBoundary(permission,{id:'fixture',async read(_target,signal){
+  await new Promise(resolve=>signal.addEventListener('abort',resolve,{once:true}));throw Error('private adapter detail');
+ }});
+ const pending=boundary.read({},'item',controller.signal);controller.abort(Error('private reason'));
+ assert.deepEqual(await pending,{status:'cancelled',reason:'aborted'});
+});
