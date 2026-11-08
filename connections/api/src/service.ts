@@ -1,13 +1,14 @@
 import {encodeToolRound} from './continuation.js';
 import {chatRoute} from './protocols/openai-chat.js';
 import {resolvePreparationParameters} from './preparation-parameters.js';
+import {applyConfigMutation} from './config-mutations.js';
 import type {ToolRoundReader} from './continuation.js';
 import type {Operation} from '../../src/index.js';
 import {captureTools,captureResponseFormat} from './tools.js';
 import {createHash,randomUUID} from 'node:crypto';
 import type {Store,Json} from '../../../shared/src/index.js';
 import type {PermissionReader,Decision,Scope} from '../../../permissions/src/index.js';
-import {Failure,fail,text,revision,closed,object,capture,canonical,freeze,parameters,endpoint,observation,decode,command} from './model.js';
+import {Failure,fail,text,revision,closed,object,capture,canonical,freeze,parameters,observation,decode,command} from './model.js';
 import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,ModelObservation,ModelObserver,State,Intent,Preparation,RequestSnapshot} from './model.js';
 interface Projection {action:string;target:string;context:string|null}
 export interface ApiDeletionGuard {
@@ -62,33 +63,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
   if(prior){if(prior.command!==fingerprint)fail('intent_conflict');verifyDependencies();recheck(request,d);const proof=prior.phase==='committed'?store.query(key+':apply'):undefined;verifyDependencies();recheck(request,d);if(!proof)return {status:'unknown',intent:c.intent,id:prior.id};return {status:'committed',id:prior.id,revision:prior.revision};}
   const next=capture(state);let result:{id:string;revision:number};
   switch(c.kind){
-   case 'connection.create':{const item:ApiConnection={id:id(next),revision:1,name:c.name,provider:c.provider,protocol:c.protocol,endpoint:endpoint(c.endpoint,c.endpointMode),endpointMode:c.endpointMode,credentialRef:c.credentialRef,enabled:c.enabled,parameters:c.parameters};next.connections.push(item);result=item;break;}
-   case 'connection.edit':{const item=find(next.connections,c.id);expected(item,c.expectedRevision);for(const field of ['name','provider','protocol','endpoint','endpointMode','credentialRef','enabled','parameters'] as const)if(Object.hasOwn(c,field))Object.assign(item,{[field]:c[field]});item.endpoint=endpoint(item.endpoint,item.endpointMode);item.revision++;result=item;break;}
-   case 'connection.copy':{
-    const source=find(next.connections,c.id);
-    if(source.revision!==c.expectedRevision)fail('revision_conflict');
-    const copy:ApiConnection={...source,id:id(next),revision:1,name:c.name,credentialRef:null,enabled:false};
-    next.connections.push(copy);
-    result=copy;
-    break;
-   }
-   case 'connection.delete':{
-    const item=find(next.connections,c.id);
-    expected(item,c.expectedRevision);
-    if(next.models.some(model=>model.connectionId===item.id))fail('resource_referenced');
-    next.connections=next.connections.filter(connection=>connection.id!==item.id);
-    result={id:item.id,revision:item.revision+1};
-    break;
-   }
-   case 'model.delete':{
-    const item=find(next.models,c.id);
-    expected(item,c.expectedRevision);
-    next.models=next.models.filter(model=>model.id!==item.id);
-    result={id:item.id,revision:item.revision+1};
-    break;
-   }
-   case 'model.create':{find(next.connections,c.connectionId);if(next.models.some(m=>m.connectionId===c.connectionId&&m.modelId===c.modelId))fail('duplicate_model_unsupported');const item:ApiModel={id:id(next),revision:1,connectionId:c.connectionId,name:c.name,modelId:c.modelId,parameters:c.parameters,observation:null};next.models.push(item);result=item;break;}
-   case 'model.edit':{const item=find(next.models,c.id);expected(item,c.expectedRevision);if(c.name!==undefined)item.name=c.name;if(c.parameters!==undefined)item.parameters=c.parameters;item.revision++;result=item;break;}
+   default:{result=applyConfigMutation(next,c,()=>id(next));break;}
    case 'model.observe':{const item=find(next.models,c.id);expected(item,c.expectedRevision);const connection=find(next.connections,item.connectionId);let observed:ModelObservation|undefined,toolProbe=false;
     if(c.probeOperationId){
      const probe=derived(request,d,{action:'model.probe',target:`model:${item.id}`,context:null});
