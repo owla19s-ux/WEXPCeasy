@@ -18,7 +18,7 @@ function setup(t,overrides={}){
  service.configs.put({id:'c',adapter:'fixture',endpoint:'fixture:server',credentialRef:null,enabled:true},0,'create');
  t.after(async()=>{await service.stop();configs.close();operations.close();rmSync(dir,{recursive:true,force:true});});
  function request(action,target){const r={};facts.set(r,{subject:'user',entry:'native',conversation:null,context:null,resource:'fixture',target,action,relationship:'direct',relationshipGeneration:1});return r;}
- return {service,request,revoke:()=>{allowed=false;},counts:()=>({calls,discoveries,stops})};
+ return {service,request,adapter,revoke:()=>{allowed=false;},counts:()=>({calls,discoveries,stops})};
 }
 test('public capability discovery is authorized and denied requests reveal no connection state',async t=>{
  const h=setup(t);
@@ -75,4 +75,20 @@ test('service drains invocation receipts before stopping capability adapters',as
 test('capability shutdown failures keep service incomplete until release is confirmed',async t=>{
  let attempts=0;const h=setup(t,{async stop(){if(++attempts===1)throw Error('release failed');}});
  assert.equal((await h.service.stop()).status,'incomplete');assert.equal((await h.service.stop()).status,'stopped');
+});
+
+test('capability version changes invalidate an in-flight catalog',async t=>{
+ let h;h=setup(t,{async discover(){h.adapter.version='2';return [{name:'stale'}];}});
+ const result=await h.service.discover('fixture',h.request('read',api.connectionToolsTarget('c')),'c',1);
+ assert.notEqual(result.status,'ok');
+});
+test('shutdown deadline also bounds a stalled capability release without double closing',async t=>{
+ let release,attempts=0;const wait=new Promise(r=>release=r);
+ const h=setup(t,{async stop(){attempts++;await wait;}});
+ let timer;
+ try{
+  const result=await Promise.race([h.service.stop(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('shutdown deadline ignored')),500);})]);
+  assert.equal(result.status,'incomplete');assert.equal(attempts,1);
+ }finally{clearTimeout(timer);release();}
+ assert.equal((await h.service.stop()).status,'stopped');assert.equal(attempts,1);
 });

@@ -33,9 +33,29 @@ test('public Connections uses one MCP process across separate authorization leas
   assert.deepEqual(value.structuredContent.arguments,args);pids.push(value.structuredContent.pid);
  }
  assert.equal(new Set(pids).size,1);assert.equal(credentials,4);
+ const parallel=await Promise.all(['get_file_contents','pull_request_read','actions_list'].map(async(name,index)=>{
+  const args={index,repo:'parallel'},id='parallel'+index,r=request('write',connections.connectionToolTarget('gh',name,args));
+  assert.equal((await service.invoke('github',r,id,'gh',1,name,args,id)).status,'observed');
+  const value=service.operations.get(id).observations[0].value;
+  assert.deepEqual(value.structuredContent.arguments,args);
+  return value.structuredContent.pid;
+ }));
+ assert.deepEqual(parallel,[pids[0],pids[0],pids[0]]);
  valid=false;
  const args={},r=request('write',connections.connectionToolTarget('gh','actions_list',args));
  assert.equal((await service.invoke('github',r,'revoked','gh',1,'actions_list',args,'revoked')).status,'unknown');
  assert.equal(service.operations.get('revoked').phase,'unknown');
  assert.equal((await service.invoke('github',r,'revoked','gh',1,'actions_list',args,'revoked')).reason,'already_recorded_no_automatic_retry');
+});
+
+test('cancelling discovery interrupts credential acquisition before MCP startup',async t=>{
+ let enter;const entered=new Promise(r=>enter=r);
+ const adapter=github.createGitHubMcpConnectionAdapter({runtime,timeoutMs:5000,resolveCredential:()=>{enter();return new Promise(()=>{});}});
+ t.after(()=>adapter.stop());
+ const controller=new AbortController();
+ const pending=assert.rejects(adapter.discover({id:'gh',adapter:'github',endpoint:'https://api.github.com',credentialRef:'ref',enabled:true},
+  controller.signal,{request:{},check:()=>true}),{message:'github_mcp_unavailable'});
+ await entered;controller.abort();let timer;
+ try{await Promise.race([pending,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('cancellation did not interrupt initialization')),1000);})]);}
+ finally{clearTimeout(timer);}
 });
