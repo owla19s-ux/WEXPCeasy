@@ -74,7 +74,8 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
      const latest=resolve();
      return canonical(permission.recheck(request,decision))===canonical(decision)
       &&canonical(latest.connection)===canonical(connection)
-      &&(!model||canonical(latest.model)===canonical(model));
+      &&(!model||canonical(latest.model)===canonical(model))
+      &&!stopped&&!controller.signal.aborted;
     }catch{return false;}
    };
    if(ledger.get(operationId))return blocked('already_recorded_no_automatic_retry');
@@ -96,8 +97,10 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(!current())return blocked('authorization_or_configuration_changed');
    if(ledger.markDispatched(operationId).status!=='ok')return {status:'unknown',operationId,reason:'dispatch_record_unconfirmed'};
    if(!current()){
-    const receipt=ledger.observe(operationId,'api-not-dispatched',{externalDispatched:false},'observed');
-    return receipt.status==='ok'?blocked('authorization_or_configuration_changed'):{status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'};
+    try {
+     const receipt=ledger.observe(operationId,'api-not-dispatched',{externalDispatched:false},'observed');
+     return receipt.status==='ok'?blocked('authorization_or_configuration_changed'):{status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'};
+    } catch {return {status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'};}
    }
    timer=setTimeout(()=>{timedOut=true;abort();},timeoutMs);
    dispatched=true;
@@ -208,7 +211,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const protocol=resolveApiProtocol(snapshot.connection.protocol);if(!protocol)return blocked('unsupported_protocol');
    let wireBody:unknown;
    try{wireBody=protocol.encodeBody(snapshot.body);}catch{return blocked('unsupported_protocol_input');}
-   const current=()=>{if(!allowed())return false;const next=api.prepare(prepareRequest,p);return next.status==='ok'&&next.snapshot.fingerprint===snapshot.fingerprint;};
+   const current=()=>{try{if(!allowed())return false;const next=api.prepare(prepareRequest,p);return next.status==='ok'&&next.snapshot.fingerprint===snapshot.fingerprint&&!stopped&&!signal?.aborted&&!controller?.signal.aborted;}catch{return false;}};
    const fingerprint=createHash('sha256').update(canonical({scope:initial.scope,snapshot:snapshot.fingerprint})).digest('hex');
    if(ledger.get(operationId))return blocked('already_recorded_no_automatic_retry');
    if(!current())return blocked('authorization_or_configuration_changed');
@@ -231,10 +234,18 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(!current())return blocked('authorization_or_configuration_changed');
    const marked=ledger.markDispatched(operationId);if(marked.status!=='ok')return {status:'unknown',operationId,reason:'dispatch_record_unconfirmed'};
    if(!current()){
-    const receipt=ledger.observe(operationId,'api-not-dispatched',{externalDispatched:false},'observed');return receipt.status==='ok'?blocked('authorization_or_configuration_changed'):{status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'};
+    try {
+     const receipt=ledger.observe(operationId,'api-not-dispatched',{externalDispatched:false},'observed');
+     return receipt.status==='ok'?blocked('authorization_or_configuration_changed'):{status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'};
+    } catch {return {status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'};}
    }
    controller=new AbortController();active.add(controller);signal?.addEventListener('abort',abort,{once:true});
-   if(stopped||signal?.aborted){const receipt=ledger.observe(operationId,'api-not-dispatched',{externalDispatched:false},'observed');return receipt.status==='ok'?blocked('stopped_or_cancelled'):{status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'};}
+   if(stopped||signal?.aborted){
+    try {
+     const receipt=ledger.observe(operationId,'api-not-dispatched',{externalDispatched:false},'observed');
+     return receipt.status==='ok'?blocked('stopped_or_cancelled'):{status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'};
+    } catch {return {status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'};}
+   }
    timer=setTimeout(()=>{timedOut=true;controller?.abort();},snapshot.timeoutMs);
    startPhase(snapshot.headersTimeoutMs,'headers_timeout');
    dispatched=true;
