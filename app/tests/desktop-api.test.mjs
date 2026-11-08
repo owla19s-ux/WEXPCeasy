@@ -38,3 +38,30 @@ test('declining API configuration cannot mutate or open a credential entry windo
  const f=await fixture(t);f.deny();assert.equal((await f.settings.request(input)).status,'cancelled');assert.equal(f.secrets(),0);
  f.settings.close();assert.equal((await f.settings.request({kind:'snapshot'})).status,'unavailable');
 });
+
+test('desktop API selects supported wire protocols explicitly and persists revisions',async t=>{
+ const f=await fixture(t);
+ const created=await f.settings.request({...input,name:'Native Messages',protocol:'anthropic-messages',provider:'Anthropic'});
+ assert.equal(created.status,'committed');
+ let snapshot=await f.settings.request({kind:'snapshot'});
+ assert.equal(snapshot.status,'ok');
+ const native=snapshot.connections.find(c=>c.id===created.id);
+ assert.equal(native.protocol,'anthropic-messages');
+ const edited=await f.settings.request({kind:'connection.edit',id:created.id,expectedRevision:native.revision,protocol:'openai-chat'});
+ assert.equal(edited.status,'committed');
+ snapshot=await f.settings.request({kind:'snapshot'});
+ assert.equal(snapshot.connections.find(c=>c.id===created.id).protocol,'openai-chat');
+ const old=await f.settings.request(input);
+ assert.equal(old.status,'committed');
+ snapshot=await f.settings.request({kind:'snapshot'});
+ assert.equal(snapshot.connections.find(c=>c.id===old.id).protocol,'openai-chat');
+});
+
+test('desktop API rejects unknown or malformed protocols before permission prompts',async t=>{
+ const f=await fixture(t);
+ for(const protocol of ['unknown-protocol','__proto__','anthropic-message','','OpenAI']) {
+  assert.equal((await f.settings.request({...input,protocol})).status,'rejected');
+ }
+ assert.equal((await f.settings.request({...input,protocol:{unsafe:true}})).status,'rejected');
+ assert.equal(f.count(),0);
+});
