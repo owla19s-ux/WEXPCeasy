@@ -29,7 +29,8 @@
     "start:desktop": "npm run build:desktop && electron dist/app/src/desktop-main.js",
     "verify:desktop": "npm run build:desktop && node tools/verify-desktop.mjs",
     "test:ui": "npm run build && node --test UI/tests/*.test.mjs",
-    "package:windows": "npm run build:desktop && node tools/package-windows.mjs"
+    "package:windows": "npm run build:desktop && node tools/package-windows.mjs",
+    "setup:github-upstream": "node tools/checkout-github-upstream.mjs"
   },
   "devDependencies": {
     "@types/node": "24.10.0",

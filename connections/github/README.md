@@ -20,7 +20,8 @@ GitHub 操作与连接配置。权限使用共用机制；专属面板留在本�
 
 - **上游源码位置**：[`upstream/github-mcp-server/`](upstream/github-mcp-server/) 是官方 `github/github-mcp-server` 的 **Git submodule**，完整源码仍由 GitHub 官方维护；WEX 不复制、不改写其中的 GitHub 业务实现。
 - **当前固定上游提交**：`99d6d6503a7b2a133e2f8a595d6d0ba24b4086d3`。更新版本先审查官方变更、许可证、工具集 Schema、认证和兼容测试，再调整 submodule 指针；禁止自动跟踪不固定的 main。
-- **本地获取完整源码**：在仓库根运行 `git submodule update --init --recursive connections/github/upstream/github-mcp-server`。普通 GitHub 网页与不递归的 checkout 只展示 Gitlink/提交引用，不会把整个上游源文件复制进当前 Git 仓库。
+- **本地获取完整源码**：在仓库根运行 `npm run setup:github-upstream`（等价于固定提交的递归子模块检出并核对）。普通 GitHub 网页与不递归的 checkout 只展示 Gitlink/提交引用，不会把整个上游源文件复制进当前 Git 仓库；首次检出需要能够访问 `github.com`。
+- **完整性核对**：检出后检查子模块 HEAD 与固定提交一致，并确认官方 `go.mod`、`LICENSE`、`cmd/github-mcp-server/main.go`、`pkg/` 和 `internal/` 存在。当前运行环境未执行网络检出，不能虚报完整源码已经在所有开发环境落盘。
 - **WEX 自有代码位置**：`connections/github/src/` 仅维护 MCP 客户端、GitHub Connector Adapter、能力发现/映射及受控调用；`connections/src/` 管 Connection/Operation，`permissions/` 管授权，`app/` 管宿主与 IPC。不得把第三方上游源码改造成 WEX 公共连接层。
 - **构建与分发**：当前仅归位源代码引用，**不包含编译好的 Windows 可执行文件，也未设置安装、更新或打包流程**。后续按官方 Go 构建要求或经校验的官方 Release 二进制处理，运行路径及签名/哈希校验归可信安装路径，Renderer 不得启动任意命令。
 - **交付状态警告**：源码归位 ≠ MCP 全工具接通；现有 `src/index.ts` 仍只允许 `get_file_contents` 的只读 MCP 路径，Octokit 仅有少量文件 API。完整官方能力动态发现、适配、审批、对话/Context/UI 使用与真实操作验收尚未完成，不能将本项登记为“GitHub 完整功能已实现”。
