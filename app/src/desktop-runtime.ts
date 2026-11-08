@@ -4,7 +4,7 @@ import type {DesktopStatus} from '../../UI/src/index.js';
 import {createDesktopFailure} from './desktop-failure.js';
 import type {DesktopFailureAction,DesktopFailureState} from './desktop-failure.js';
 import {createDesktopLifecycle} from './desktop-lifecycle.js';
-import {createDesktopGateway} from './desktop-gateway.js';
+import {createDesktopGateway,createDesktopBusinessGate} from './desktop-gateway.js';
 import {fileURLToPath} from 'node:url';
 import {createDesktopAuthority} from './desktop-authority.js';
 import {createDesktopConnections} from './desktop-connections.js';
@@ -99,45 +99,38 @@ export async function runDesktop(options:{url:string;preload:string;start:(polic
  ipcMain.handle('wex:desktop:quit',createDesktopGateway({sender:contents,url:options.url,read:()=>{
   setImmediate(()=>app.quit());return {accepted:true as const};
  }}));
- const businessSource=createDesktopGateway({sender:contents,url:options.url,read:()=>true});
+ const businessGate=createDesktopBusinessGate({sender:contents,url:options.url,isReady:()=>phase==='ready'||phase==='degraded'});
  function liveControl<T>(read:()=>T){
   const gate=createDesktopGateway({sender:contents,url:options.url,read});
-  return (event:Parameters<typeof businessSource>[0],payload:unknown)=>{
-   const check=businessSource(event,{});if(!check.ok)return check;
-   if(phase!=='ready'&&phase!=='degraded')return {ok:false as const,error:'host_unavailable'};
+  return (event:Parameters<typeof businessGate>[0],payload:unknown)=>{
+   const check=businessGate(event);if(!check.ok)return check;
    return gate(event,payload);
   };
  }
  ipcMain.handle('wex:desktop:space',async(event,payload)=>{
-  const check=businessSource(event,{});if(!check.ok)return check;
-  if(phase!=='ready'&&phase!=='degraded')return {ok:false,error:'host_unavailable'};
+  const check=businessGate(event);if(!check.ok)return check;
   return {ok:true,value:access?await access.request(payload):{status:'unavailable',reason:'space_unavailable'}};
  });
  ipcMain.handle('wex:desktop:api',async(event,payload)=>{
-  const check=businessSource(event,{});if(!check.ok)return check;
-  if(phase!=='ready'&&phase!=='degraded')return {ok:false,error:'host_unavailable'};
+  const check=businessGate(event);if(!check.ok)return check;
   return {ok:true,value:await api!.request(payload)};
  });
  ipcMain.handle('wex:desktop:api-cancel',liveControl(()=>{api?.cancel();return {accepted:true as const};}));
  ipcMain.handle('wex:desktop:ai',async(event,payload)=>{
-  const check=businessSource(event,{});if(!check.ok)return check;
-  if(phase!=='ready'&&phase!=='degraded')return {ok:false,error:'host_unavailable'};
+  const check=businessGate(event);if(!check.ok)return check;
   return {ok:true,value:await ai!.request(payload)};
  });
  ipcMain.handle('wex:desktop:conversations',async(event,payload)=>{
-  const check=businessSource(event,{});if(!check.ok)return check;
-  if(phase!=='ready'&&phase!=='degraded')return {ok:false,error:'host_unavailable'};
+  const check=businessGate(event);if(!check.ok)return check;
   return {ok:true,value:await conversations!.request(payload)};
  });
  ipcMain.handle('wex:desktop:conversation-cancel',liveControl(()=>conversations!.cancel()));
  ipcMain.handle('wex:desktop:permissions',async(event,payload)=>{
-  const check=businessSource(event,{});if(!check.ok)return check;
-  if(phase!=='ready'&&phase!=='degraded')return {ok:false,error:'host_unavailable'};
+  const check=businessGate(event);if(!check.ok)return check;
   try{const value=await authority.settings(payload,nativeConfirm);if(value.status==='committed'&&!contents.isDestroyed())contents.send('wex:desktop:access-changed');return {ok:true,value};}catch{return {ok:false,error:'permission_settings_unavailable'};}
  });
  ipcMain.handle('wex:desktop:connections',async(event,payload)=>{
-  const check=businessSource(event,{});if(!check.ok)return check;
-  if(phase!=='ready'&&phase!=='degraded')return {ok:false,error:'host_unavailable'};
+  const check=businessGate(event);if(!check.ok)return check;
   return {ok:true,value:await connections!.request(payload)};
  });
  // Begin ownership before awaiting page load, so a concurrent close waits for startup.
