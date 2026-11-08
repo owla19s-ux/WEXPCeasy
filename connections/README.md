@@ -1,5 +1,16 @@
 # connections — WEX 内部与公共连接/适配体系
 
+## 2026-11-08｜公共 Connections 与官方 MCP 进度分层
+
+> 主分支静态核对基线：`e9ff10c81dc4`。以下为源码状态校正，不代表最新 SHA 自动化测试或版本验收通过。
+
+- **main 已有**：公共配置管理、受控读取/派发、Operation/attempt/回执及生命周期基础；GitHub、Local、API 各有独立 owner。既有代码与测试应保留并按公开端口复用。
+- **不能计入 main 已完成**：PR #4 的公共 `discover/invoke` 能力和 `connections/src/capabilities.ts` 在本轮 main 文件读取中未找到；PR #3 的通用官方工具桌面接线亦不能由 PR 回执直接推定合入。见 [PR #4](https://github.com/owla19s-ux/WEXPCeasy/pull/4)、[PR #3](https://github.com/owla19s-ux/WEXPCeasy/pull/3)；开工前先确认 PR 与 main 最新差异。
+- **最小施工边界**：确需纳入通用 MCP 时，沿用 Connections 统一配置、授权前后重检、Operation 和停机排空；新能力可独立为通用工具发现/调用端口，不将 GitHub 官方工具强塞到文件 read/write 的 target，也不为每个工具造一个独立公共 service。绝不因 GitHub 的需求重建整套连接架构。
+- **验收分层**：正式主分支接口存在 → 模块测试 → 公共调用/可信宿主 → UI/AI/Conversations/Space 调用 → 真实读写与恢复 → Windows 安装/实机。单个 PR 测试成功不代表后面各层签收。
+
+
+
 ## 当前源码 owner 与环境管理边界（2026-11-07）
 
 当前连接系统包含公共边界 `connections/src/` 和各自独立的 API、GitHub、Local 连接器。`connections/dsh/` 为 0.1.2 延期的外部 Agent 连接器，`connections/search/` 仅是外部 Search/Fetch 候选目录。每个子连接器有独立 owner；不能因为同属顶层 `connections/` 就跨连接器导入私有实现，细粒度静态边界见 [历史 B3 M-01](../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md)。
