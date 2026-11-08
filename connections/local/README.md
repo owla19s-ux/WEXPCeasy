@@ -1,59 +1,18 @@
-# connections/local
+# connections/local｜本机文件、目录与受控 OS 适配
 
-## 2026-11-08｜Local 写入与桌面编辑增量
+> Owner：`connections/local/`；公共 Operation 归 [Connections](../README.md)，环境业务生命周期归独立 [environments](../../environments/README.md)。本版范围见 [A2](../../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)。
 
-> 对照 `UI/src/local-file-editor.tsx` 与既有 Local 源码及 A2 记录的协调写入提交；属静态证据，非 Windows 实机签收。
+## 当前实现
 
-- **已有**：文件/目录受控读取、文件版本/编辑令牌、协调保存和 Operation 结果处理；桌面 `LocalFileEditor` 已支持草稿保留、版本绑定保存、冲突拒绝、重新读取、取消与 unknown 不重试。不得以“仅只读预览”为由重建文件编辑器。
-- **仍需验收**：真实 Windows 文件路径/ACL、外部同时修改、旧观察版本、撤权瞬间、中断/重启下原 Operation 回读；草稿仅保存在窗口内存，不能冒充已持久化的编辑会话。
-- **明确非本轮默认交付**：Shell、任意进程执行、完整本地 Git、下载安装器；环境管理权威归独立 `environments/`，Local 只负责被授权的实际 OS 能力。
+`src/index.ts`、`file-capability.ts`、`directories.ts`、`bindings.ts` 等已提供受控文件/目录读取、版本观察、目录绑定和有限文件写入。App 有协调写入/Operation 回执，`UI/src/local-file-editor.tsx` 已具备草稿保留、版本绑定保存、冲突重读、取消/unknown 不重试。**本机文件编辑已存在，不再按“只有只读预览”重做。**
 
+## 职责边界
 
+- Local 只处理用户获准的真实路径、文件/目录、版本观察和实际 OS 副作用；不同 Context 或路径别名可能指同一资源，不能以 Context ID 代替文件版本检查。
+- 工具/环境登记、安装计划、升级/卸载/恢复策略属于 Environments；Local 未来只提供经批准的本机执行适配。当前**没有完整 Shell、任意进程、正式安装器或本地 Git**，不因本目录名称默认纳入 0.1.1。
+- 用户选择/拖入文件由可信 App/UI 收集意图，实际访问仍经 Local + Permissions/Connections；Renderer 不直接调用 Node 文件系统或读取任意路径。
+- 文件写入 unknown 必须核查原 Operation/磁盘版本，不能盲重写。窗口内存草稿不等于持久化编辑会话。
 
-## 与独立 environments 模块的职责边界（2026-11-07）
+## 测试与下一步
 
-[environments](../../environments/README.md) 是与 Connections 并列的顶层**环境生命周期业务 owner**。Local 只负责受控本机资源定位、文件目录、将来获批的工具/进程/安装器执行适配与真实结果观察，不拥有环境登记、版本策略、安装计划、升级/卸载和恢复权威，也不自行决定 Context 环境选择。
-
-当前 Local 产品实现以文件/目录和有限的文件替换为主，**没有正式环境安装器、Shell、完整本地 Git**。F06-009/010 的环境识别与选择须按正式版本范围单独核对；不能因 Context 可添加工具、文件可读或 App 能选择目录就断言环境管理已完成。下载安装、提权、修改 PATH/注册表和执行任意脚本需独立批准与 Permissions + Connections Operation 授权/回执，不得另建账本。未来环境安装策略归 environments，本机执行端口仍由 Local owner 提供。
-
-> **当前代码事实（2026-11-07，`main bd72dfea`）**：`connections/local/src/index.ts`、`file-capability.ts`、`directories.ts`、`bindings.ts` 等已存在；`tests/` 包含文件、目录与绑定测试。现有范围主要是受控文件/目录能力，不能推定 Shell、编译器、本地 Git 或 Windows 实机均已交付。
-
-> **当前模块施工状态（文档整理，2026-11-03）**：候选契约与 Windows 风险已记录，产品实现待核查。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
->
-> **模块职责**：本地文件、进程、Git 与开发环境适配。
->
-> **下一施工范围**：先查代码；实现须通过 connections 受控边界，不绕过权限和 Operation 记录。
->
-> **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
->
-> **研究迁移**：历史深度契约归档于 [docs/research/contracts/connections/local/CONTRACT-archive.md](../../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/connections/local/CONTRACT-archive.md)，其中候选与待实验内容不是直接施工命令。旧 `CONTRACT.md` 暂保留兼容入口。
-
-本地文件、终端、Git 等能力，按实际复杂度拆分。外部文件保持原位置，按授权访问。
-
-状态：受控 Local 文件/目录能力已有正式源码及测试；Windows 原生选择/路径/权限的端到端验收和高风险本地工具能力应按 0.1.1 已确认范围另行判断。
-
-[源码目录与 Windows 数据要求](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
-
-修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
-
-## 2026-10-30 目录职责补充
-
-首版基础范围为授权文件和目录访问。终端、Git、编译工具链仍为研究与后续 Windows 实测决定的范围，不因目录已经存在就要求首版完整交付。由可信宿主装配并接入 connections 受控边界；权限判断不由工具自己绕过统一边界。
-
-## 冲突与执行证据
-
-对真实路径、文件/Git 版本、进程和退出结果提供可核验观察；WEX 管理的排队与资源占用由 `workflows/runtime` 协调，连接器在实际动作前复核适用条件。不同 Context/路径别名可能指向同一资源，不能靠 Context ID 判定无冲突。WEX 的占用记录约束不了未纳管的外部进程，仍需隔离工作区或重新核对并报告冲突；不承诺全局文件锁。终端/Git 的 Windows 能力范围仍待实测，本批不扩大首期范围。
-
-## 直接依赖与施工入口
-
-- [Connections 宿主](../README.md)：公共 Operation 与回执边界。
-- [Local 模块 CONTRACT](CONTRACT.md)：仅按需查阅历史适配器研究，不替代当前实现事实。
-- [Windows 数据与安装路径设计](../../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)：涉及真实本地路径与数据根规则时使用。
-
-本子模块不另建全局文档索引。
-
-## G1/G4/G7：本地资源与附件访问
-
-本地连接器负责真实文件/目录的定位、获准读取、元数据/版本观察及明确写入副作用；路径不是永久身份，访问时必须重新核对真实目标。用户选择文件/拖入/粘贴由 UI/App 收集意图，实际文件读取经本目录受控能力；Renderer 不直接读任意路径。外部关联、导入持久副本、会话临时附件和 Task 产物必须区分；本地连接器不自行决定把文件加入 Context。
-
-每次真实副作用通过 Connections 宿主边界形成 Operation；文件写入结果 unknown 时先核对实际版本，不盲重写。
+优先验证 Windows 路径/ACL/别名、外部并发修改、editToken 与观察版本、撤权、取消、重启恢复、权限拒绝及真实文件保存。执行模块测试与全仓可用 build/typecheck/test/boundaries，并明确同 SHA、模拟/真实环境及未验证项。需要新增本机执行能力时先取得具体版本与权限范围，不另建账本。
