@@ -49,7 +49,7 @@ const anthropicMessages:ApiProtocolAdapter=Object.freeze({
  },
  probeBody:()=>{throw Error('unsupported_anthropic_probe');},
  headers:(stream,token)=>anthropicHeaders(stream,token),
- contentType:stream=>stream?/^text\\/event-stream(?:\\s*;|$)/i:/^application\\/json(?:\\s*;|$)/i,
+ contentType:stream=>stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i,
  decode:decodeAnthropicMessages,
  directory:()=>{throw Error('unsupported_anthropic_directory');},
  responseIdentity:chatResponseIdentity,
