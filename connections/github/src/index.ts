@@ -9,7 +9,6 @@ import {Octokit} from 'octokit';
 import type {ConnectionConfig,ConfiguredDispatchAdapter,ReadAdapter,AdapterAccess,ConfiguredReadAdapter} from '../../src/index.js';
 import type {Json} from '../../../shared/src/index.js';
 
-export interface GitHubFile {owner:string;repo:string;ref:string;path:string}
 /** Structural subset of Octokit's official REST client; credentials and retry policy belong to the trusted host.
  * Supply a client bound to this exact connection, with automatic mutation retries disabled.
  * This module never accepts an SDK instance or credentials from a Renderer request. */
@@ -23,25 +22,9 @@ export type GitHubClientFactory=(connection:Readonly<ConnectionConfig>,access?:A
 const limit=1024*1024;
 const object=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype;
 const sha=(value:unknown):value is string=>typeof value==='string'&&/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/.test(value);
-function validate(file:GitHubFile):void {
- if(!file||typeof file.owner!=='string'||!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,38}$/.test(file.owner)||
-  typeof file.repo!=='string'||!/^[a-zA-Z0-9_.-]{1,100}$/.test(file.repo)||['.','..'].includes(file.repo)||
-  typeof file.ref!=='string'||!file.ref||file.ref.length>255||/[\u0000-\u0020]/.test(file.ref)||
-  typeof file.path!=='string'||!file.path||file.path.length>4096||/[\u0000-\u001f\\]/.test(file.path)||
-  file.path.split('/').some(part=>!part||part==='.'||part==='..'))throw Error('invalid_github_file_target');
-}
-/** Opaque exact permission target. A repository, ref and path cannot be retargeted through payload fields. */
-export function githubFileTarget(file:GitHubFile):string {
- validate(file);return 'github-file:'+JSON.stringify([file.owner,file.repo,file.ref,file.path]);
-}
-function parse(target:string):GitHubFile {
- if(typeof target!=='string'||!target.startsWith('github-file:'))throw Error('invalid_github_file_target');
- const fields:unknown=JSON.parse(target.slice(12));
- if(!Array.isArray(fields)||fields.length!==4)throw Error('invalid_github_file_target');
- const file={owner:fields[0],repo:fields[1],ref:fields[2],path:fields[3]} as GitHubFile;
- if(githubFileTarget(file)!==target)throw Error('noncanonical_github_file_target');
- return file;
-}
+import {parseGitHubFileTarget as parse} from './file-target.js';
+export {githubFileTarget} from './file-target.js';
+export type {GitHubFile} from './file-target.js';
 function capture(connection:Readonly<ConnectionConfig>):Readonly<ConnectionConfig> {
  if(connection.adapter!=='github'||connection.endpoint!=='https://api.github.com'||!connection.enabled)throw Error('github_connection_unavailable');
  return Object.freeze({...connection});
