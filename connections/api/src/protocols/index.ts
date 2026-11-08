@@ -1,9 +1,9 @@
 import type {ApiConnection,ApiModel,ToolDefinition} from '../model.js';
 import type {ChatStreamOptions,ChatStreamResult} from '../stream.js';
-import {anthropicRoute,anthropicHeaders,encodeAnthropicMessages,decodeAnthropicMessages,anthropicResponseIdentity,decodeAnthropicDirectory,anthropicProbeBody} from './anthropic-messages.js';
+import {anthropicRoute,anthropicHeaders,encodeAnthropicMessages,decodeAnthropicMessages,anthropicResponseIdentity,decodeAnthropicDirectory,anthropicProbeBody,anthropicGenerationVersion,anthropicDiagnosticVersion,anthropicContentType} from './anthropic-messages.js';
 import {
  chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,
- toolProbeDeclaration,chatResponseIdentity,decodeChatModelDirectory
+ toolProbeDeclaration,chatResponseIdentity,decodeChatModelDirectory,chatGenerationVersion,chatDiagnosticVersion
 } from './openai-chat.js';
 
 /**
@@ -25,7 +25,7 @@ export interface ApiProtocolAdapter {
  readonly decode:(source:AsyncIterable<Uint8Array>,stream:boolean,options:ChatStreamOptions)=>Promise<ChatStreamResult>;
  readonly directory:(body:string)=>string[];
  readonly responseIdentity:(result:ChatStreamResult)=>{providerResponseId?:string;providerModelId?:string};
- readonly probeTool:ToolDefinition;
+ readonly probeTool?:ToolDefinition;
  readonly generationVersion:string;
  readonly diagnosticVersion:(probe?:{stream:boolean;tools:boolean})=>string;
 }
@@ -35,10 +35,8 @@ const openaiChat:ApiProtocolAdapter=Object.freeze({
  route:chatRoute,probeBody:chatProbeBody,headers:chatHeaders,contentType:chatContentType,
  decode:decodeOpenAiChat,directory:decodeChatModelDirectory,responseIdentity:chatResponseIdentity,
  probeTool:toolProbeDeclaration,
- generationVersion:'openai-chat-text-1',
- diagnosticVersion:(probe?:{stream:boolean;tools:boolean})=>
-  probe?(probe.tools?(probe.stream?'openai-chat-stream-tool-probe-1':'openai-chat-tool-probe-1')
-   :probe.stream?'openai-chat-stream-probe-1':'openai-chat-probe-1'):'openai-chat-models-1'
+ generationVersion:chatGenerationVersion,
+ diagnosticVersion:chatDiagnosticVersion
 });
 
 const anthropicMessages:ApiProtocolAdapter=Object.freeze({
@@ -47,14 +45,12 @@ const anthropicMessages:ApiProtocolAdapter=Object.freeze({
  route:(connection:Pick<ApiConnection,'endpoint'|'endpointMode'>,kind:'models'|'completions')=>anthropicRoute(connection,kind),
  probeBody:anthropicProbeBody,
  headers:(stream:boolean,token?:string)=>anthropicHeaders(stream,token),
- contentType:(stream:boolean)=>stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i,
+ contentType:anthropicContentType,
  decode:decodeAnthropicMessages,
  directory:decodeAnthropicDirectory,
  responseIdentity:anthropicResponseIdentity,
- probeTool:toolProbeDeclaration,
- generationVersion:'anthropic-messages-text-1',
- diagnosticVersion:(probe?:{stream:boolean;tools:boolean})=>
-  probe?(probe.tools?(()=>{throw Error('unsupported_anthropic_tool_probe');})():probe.stream?'anthropic-messages-stream-probe-1':'anthropic-messages-probe-1'):'anthropic-messages-models-1'
+ generationVersion:anthropicGenerationVersion,
+ diagnosticVersion:anthropicDiagnosticVersion
 });
 
 const adapters:ReadonlyMap<string,ApiProtocolAdapter>=new Map([
