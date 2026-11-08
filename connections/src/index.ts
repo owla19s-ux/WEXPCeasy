@@ -19,3 +19,7 @@ export type {ConfiguredDispatchAdapter} from './configured-dispatch.js';
 
 export {createConnectionService} from './service.js';
 export type {ConnectionService,ConnectionClient} from './service.js';
+
+export {capabilityDiscoveryTarget,capabilityInvocationTarget,captureCapabilityArguments} from './capabilities.js';
+export type {ConfiguredCapabilityAdapter} from './capabilities.js';
+export type {ConnectionCapabilityClient} from './service.js';
