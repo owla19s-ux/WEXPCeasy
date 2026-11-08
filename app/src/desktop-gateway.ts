@@ -4,8 +4,8 @@ export type DesktopReply<T>={ok:true;value:T}|{ok:false;error:'untrusted_sender'
 /** Identity is supplied by Electron, never taken from Renderer data. No business authorization. */
 export function createDesktopGateway<T>(options:{sender:DesktopSender;url:string;read:()=>T}){
  return (event:DesktopEvent,payload:unknown):DesktopReply<T>=>{
-  const frame=event.senderFrame as {url?:unknown}|null;
   try{
+   const frame=event.senderFrame as {url?:unknown}|null;
    if(options.sender.isDestroyed()||event.sender!==options.sender||!frame||frame!==options.sender.mainFrame||frame.url!==options.url)return {ok:false,error:'untrusted_sender'};
   }catch{return {ok:false,error:'untrusted_sender'};}
   try{
