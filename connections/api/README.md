@@ -49,7 +49,7 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 | `src/transport.ts` | HTTP 派发、凭证、诊断/探针、取消与接收 | 保留公开发送入口和受控 Operation |
 | `src/protocols/index.ts` | 显式协议 ID 注册与选择 | 当前注册 `openai-chat` 和 `anthropic-messages`；按能力拒绝未实现的目录/探针 |
 | `src/protocols/openai-chat.ts` | Chat 路由、探针、目录解码、响应格式与身份 | 旧实现兼容、仍需回归 |
-| `src/protocols/anthropic-messages.ts` | Anthropic 原生文本请求、Header、非流及增量 SSE 解码 | 模型目录、探针、工具、思考/多模态未开放；不推断完整 Provider 支持 |
+| `src/protocols/anthropic-messages.ts` | Anthropic 原生文本请求、Header、目录列表、文本探针、非流及增量 SSE 解码 | 目录分页未完成；工具、思考/多模态未开放；不推断完整 Provider 支持 |
 | `src/network-diagnostics.ts` | HTTP 状态、网络错误及响应头安全摘要 | 通用传输诊断，不管理 Provider 协议 |
 | `src/stream.ts` / `response.ts` | OpenAI Chat SSE / JSON 解码 | 保留成熟实现，不误标为通用 Provider |
 | `src/tools.ts` / `continuation.ts` | Schema、工具片段/续接 | 保留既有防重复/来源校验 |
@@ -76,7 +76,7 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 
 ## 6. 协议研究与历史材料
 
-当前协议注册表有 `openai-chat` 与 `anthropic-messages` 两个入口。Service 的请求准备、Transport 的探针/目录/发送按 `resolveApiProtocol(connection.protocol)` 选择适配器，未知协议拒绝。Anthropic Messages 目前仅支持可验证的原生文本发送、JSON/SSE 解码、基本用量转换，使用原生 `/messages` 与 `x-api-key`；文本模型的 `max_tokens` 必须显式通过已观察的参数规格。Anthropic 目录刷新、生成探针、工具调用、推理续接和多模态尚未接通，不得视为完整服务商功能。现有 `ApiProtocolAdapter` 仍是逐步完善的运行接口，未来需按真实协议能力分离可选操作而不是强迫各协议复用 Chat 工具语义。Gemini、Responses 等其他原生协议尚未实现。跨 Provider 请求/流式/工具/usage 应通过正式 Protocol Adapter 兼容机制扩展，不以任何单个 SDK 替换整个产品协议。
+当前协议注册表有 `openai-chat` 与 `anthropic-messages` 两个入口。Service 的请求准备、Transport 的探针/目录/发送按 `resolveApiProtocol(connection.protocol)` 选择适配器，未知协议拒绝。Anthropic Messages 已实现原生文本发送、JSON/SSE 解码、基础用量转换、单页模型目录刷新及最小文本生成探针，通过原生 `/messages`、`/models` 与 `x-api-key` 请求；已采纳的原生探针可记录 `max_tokens` 参数要求。目录分页、工具调用、推理续接和多模态尚未接通，不得视为完整服务商功能。现有 `ApiProtocolAdapter` 仍是逐步完善的运行接口，未来需按真实协议能力分离可选操作而不是强迫各协议复用 Chat 工具语义。Gemini、Responses 等其他原生协议尚未实现。跨 Provider 请求/流式/工具/usage 应通过正式 Protocol Adapter 兼容机制扩展，不以任何单个 SDK 替换整个产品协议。
 
 - 历史研究和 Pi AI 隔离实验仅在需要兼容证据时查阅：[A0 API 研究](../../docs/A0-产品构想与研究/方案与研究/既有研究/api/README.md)、[Pi AI 实验](../../experiments/pi-ai-compat/README.md)。
 - 长期功能以 A1 为准，0.1.1 的实际施工及签收以 A2 为准。历史研究不是独立施工命令。
