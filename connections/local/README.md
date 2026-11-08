@@ -1,5 +1,15 @@
 # connections/local
 
+## 2026-11-08｜Local 写入与桌面编辑增量
+
+> 对照 `UI/src/local-file-editor.tsx` 与既有 Local 源码及 A2 记录的协调写入提交；属静态证据，非 Windows 实机签收。
+
+- **已有**：文件/目录受控读取、文件版本/编辑令牌、协调保存和 Operation 结果处理；桌面 `LocalFileEditor` 已支持草稿保留、版本绑定保存、冲突拒绝、重新读取、取消与 unknown 不重试。不得以“仅只读预览”为由重建文件编辑器。
+- **仍需验收**：真实 Windows 文件路径/ACL、外部同时修改、旧观察版本、撤权瞬间、中断/重启下原 Operation 回读；草稿仅保存在窗口内存，不能冒充已持久化的编辑会话。
+- **明确非本轮默认交付**：Shell、任意进程执行、完整本地 Git、下载安装器；环境管理权威归独立 `environments/`，Local 只负责被授权的实际 OS 能力。
+
+
+
 ## 与独立 environments 模块的职责边界（2026-11-07）
 
 [environments](../../environments/README.md) 是与 Connections 并列的顶层**环境生命周期业务 owner**。Local 只负责受控本机资源定位、文件目录、将来获批的工具/进程/安装器执行适配与真实结果观察，不拥有环境登记、版本策略、安装计划、升级/卸载和恢复权威，也不自行决定 Context 环境选择。
