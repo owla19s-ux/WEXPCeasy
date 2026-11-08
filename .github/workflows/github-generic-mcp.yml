@@ -1,7 +1,5 @@
 name: GitHub generic MCP adapter
 on:
-  push:
-    branches: [codex/github-generic-mcp]
   pull_request:
     paths:
       - 'connections/github/**'
@@ -25,3 +23,11 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+        if: runner.os == 'Linux'
+      - run: npm run build
+        if: runner.os == 'Windows'
+      - name: Windows GitHub adapter regression
+        if: runner.os == 'Windows'
+        run: node --test --test-concurrency=2 --test-timeout=30000 connections/github/tests/*.test.mjs
+      - run: npm run check:boundaries
+        if: runner.os == 'Windows'
