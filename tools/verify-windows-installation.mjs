@@ -59,6 +59,22 @@ async function run(exe,args,ms=120000){
  await writeFile('windows-delivery-acceptance/maintenance.json',JSON.stringify(maintenance,null,2));
  return code;
 }
+async function withExclusivePayloadFile(path,work){
+ const ready=join(parent,'payload-lock-ready'),release=join(parent,'payload-lock-release');
+ const quote=value=>"'"+value.replaceAll("'","''")+"'";
+ const script="$ErrorActionPreference='Stop'; $f=[System.IO.File]::Open("+quote(path)+",[System.IO.FileMode]::Open,[System.IO.FileAccess]::Read,[System.IO.FileShare]::None); try { [System.IO.File]::WriteAllText("+quote(ready)+",'ready'); while (-not [System.IO.File]::Exists("+quote(release)+")) { Start-Sleep -Milliseconds 25 } } finally { $f.Dispose() }";
+ const child=spawn(join(process.env.SystemRoot,'System32/WindowsPowerShell/v1.0/powershell.exe'),['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{stdio:'inherit',windowsHide:true});
+ let exited=false;
+ const ended=new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',code=>{exited=true;resolve(code);});});void ended.catch(()=>{});
+ try{
+  await timeout(async()=>{if(exited)throw Error('payload_lock_helper_exited');return exists(ready);},'payload_lock_ready',10000);
+  await work();
+ }finally{
+  await writeFile(release,'release');
+  try{assert.equal(await Promise.race([ended,new Promise((_,reject)=>{const timer=setTimeout(()=>reject(Error('payload_lock_release_timeout')),10000);timer.unref();})]),0);}
+  finally{if(!exited)child.kill();await rm(ready,{force:true});await rm(release,{force:true});}
+ }
+}
 async function controls(root){
  const authority=createDesktopAuthority(),confirm=async()=>true;
  const api=createDesktopApi({authority,confirm,requestCredential:async()=>undefined,cancelCredential(){}});
@@ -121,6 +137,19 @@ try{
    assert.ok([5,32,33].includes(Number(match[1])),'maintenance diagnostics did not capture the native file-open error: '+match[1]);
   }
  });
+ const installMarker=join(install,'.wex-install.ini'),originalMarker=await readFile(installMarker);
+ const preflightMarker=Buffer.concat([originalMarker,Buffer.from('\r\n; occupied-payload preflight fixture\r\n')]);
+ await writeFile(installMarker,preflightMarker);
+ try{
+  await withExclusivePayloadFile(installedGitHub.mcpRuntime.command,async()=>{
+   assert.notEqual(await run(installer,['/S','/D='+install]),0,'installer overwrote an occupied MCP runtime');
+   assert.deepEqual(await readFile(installMarker),preflightMarker,'occupied payload was only discovered after installation files changed');
+   assert.notEqual(await run(join(install,'Uninstall.exe'),['/S','_?='+install]),0,'uninstaller ignored an occupied owned payload');
+   assert.deepEqual(await readFile(installMarker),preflightMarker,'uninstall changed files before checking the occupied payload');
+   assert.equal(await exists(join(install,'WEXPCeasy.exe')),true);
+   assert.match(await readFile(join(tmpdir(),'WEXPCeasy-install.log'),'utf8'),/file=resources\\github-mcp\\github-mcp-server\.exe\|win32=(5|32|33)/,'owned file rejection lost its path or native error');
+  });
+ }finally{await writeFile(installMarker,originalMarker);}
  assert.equal(await run(installer,['/S','/D='+install]),0);
  await startAndClose([]);
  c=await controls(root);
