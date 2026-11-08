@@ -9,10 +9,8 @@ import {createLocalFileBindings,createLocalFileReader,createLocalFileAdapter} fr
 import type {LocalFileBindingOptions} from '../../connections/local/src/index.js';
 import {createReadBoundary} from '../../connections/src/index.js';
 import {createConversations,createConversationGeneration,inspectConversationStore} from '../../conversations/src/index.js';
-import {lstat} from 'node:fs/promises';
-import {join} from 'node:path';
-import {inspectRoot,directoryLock,openSqliteStore,createPersistedDiagnostics} from '../../shared/src/index.js';
-import type {Root,RootLock,ManagedStore,Store,LockResult,PersistedDiagnosticOptions,DiagnosticCode} from '../../shared/src/index.js';
+import {directoryLock,openSqliteStore,createPersistedDiagnostics} from '../../shared/src/index.js';
+import type {RootLock,ManagedStore,Store,LockResult,PersistedDiagnosticOptions,DiagnosticCode} from '../../shared/src/index.js';
 import {createPermissions,inspectPermissionStore} from '../../permissions/src/index.js';
 import type {TrustPort,Permissions,Decision} from '../../permissions/src/index.js';
 import {createApiService,createApiTransport} from '../../connections/api/src/index.js';
@@ -26,6 +24,7 @@ import {createLocalEntries} from './local-entries.js';
 import type {LocalEntryOptions,LocalEntryClient} from './local-entries.js';
 import {createAiConfigurations,verifyModelWithApi,inspectAiConfigurationStore} from '../../AI/src/index.js';
 import {assemble} from './assembly.js';
+import {openDomainStore,closeStores} from './foundation-stores.js';
 import type {Host,ModuleDiagnostic} from './assembly.js';
 export type FoundationTechnicalDiagnostics=Pick<ReturnType<typeof createPersistedDiagnostics>,'read'>&{reportDesktopFailure():{status:'written'|'failed'}};
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
@@ -34,19 +33,6 @@ export type FoundationLocalDirectories=Pick<ReturnType<typeof createLocalDirecto
 export type FoundationCredentials=Pick<ReturnType<typeof createCredentialVault>,'put'|'revoke'|'query'>&{available():boolean};
 export interface FoundationOptions {githubOfficial?:{mcpRuntime?:Readonly<GitHubMcpRuntime>;fetch?:typeof globalThis.fetch;timeoutMs?:number};credentials?:{cipher:CredentialCipher};technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions&{coordinateWrites?:boolean};conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
 export interface FoundationHost extends Host {readonly credentials?:FoundationCredentials;readonly technicalDiagnostics?:FoundationTechnicalDiagnostics;readonly localDirectories?:FoundationLocalDirectories;readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
-async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
- for(const suffix of ['', '-journal','-wal','-shm']){
-  try{const info=await lstat(join(root.path,name+suffix));if(info.isSymbolicLink()||!info.isFile())throw Error('unsafe store path');}
-  catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
- }
- if((await inspectRoot(root.path,root.id)).status!=='available')throw Error('root changed');
- return open(join(root.path,name),namespace);
-}
-async function closeStores(stores:Set<ManagedStore>):Promise<void>{
- let failed=false;
- for(const store of stores){try{store.close();stores.delete(store);}catch{failed=true;}}
- if(failed)throw Error('store_close_unconfirmed');
-}
 /** No business registry is exposed; callers are trusted main-process code, not Renderer/IPC. */
 export async function startFoundations(options:FoundationOptions):Promise<FoundationHost>{
  const probe=await inspectRoot(options.dataRoot,options.expectedRootId);
