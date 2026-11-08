@@ -118,4 +118,3 @@ export function createGitHubMcpFileReader(options:GitHubMcpOptions):ConfiguredRe
   },
  });
 }
-
