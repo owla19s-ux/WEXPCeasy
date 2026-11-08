@@ -2,6 +2,7 @@ import {encodeToolRound} from './continuation.js';
 import {chatRoute} from './protocols/openai-chat.js';
 import {resolvePreparationParameters} from './preparation-parameters.js';
 import {applyConfigMutation} from './config-mutations.js';
+import {reconcileTextProbeObservation} from './observation-reconciliation.js';
 import type {ToolRoundReader} from './continuation.js';
 import type {Operation} from '../../src/index.js';
 import {captureTools,captureResponseFormat} from './tools.js';
@@ -98,22 +99,8 @@ export function createApiService(store:Store,permission:PermissionReader,options
     try{observed=capture(options.observer.resolve(request,freeze(capture(connection)),freeze(capture(item))));}catch{return fail('observation_unavailable','unavailable');}
     }
     if(!observation(observed)||observed.connectionId!==connection.id||observed.connectionRevision!==connection.revision||observed.modelId!==item.modelId)fail('observation_identity_mismatch','unavailable');
-    const priorEvidence=item.observation;
-    if(c.probeOperationId&&!toolProbe&&priorEvidence?.connectionRevision===connection.revision){
-     const probeCapabilities=observed.capabilities;
-     const losesCapability=(Object.keys(priorEvidence.capabilities) as Array<keyof typeof priorEvidence.capabilities>).some(key=>{
-      const prior=priorEvidence.capabilities[key];
-      return (prior==='supported'||prior==='unsupported')&&probeCapabilities[key]!==prior;
-     });
-     const confirmsStream=observed.capabilities.stream==='supported'
-      &&priorEvidence.capabilities.stream!=='unsupported'
-      &&priorEvidence.capabilities.text!=='unsupported';
-     if(confirmsStream){
-      observed={...priorEvidence,capabilities:{...priorEvidence.capabilities,text:'supported',stream:'supported'},
-       streamProbe:{operationId:c.probeOperationId,observedAt:observed.observedAt}};
-     }else if(losesCapability||Object.keys(priorEvidence.parameters).length||Object.keys(priorEvidence.limits??{}).length){
-      fail('probe_would_replace_verified_evidence');
-     }
+    if(c.probeOperationId&&!toolProbe){
+     observed=reconcileTextProbeObservation(observed,item.observation,connection.revision,c.probeOperationId);
     }
     item.observation=observed;item.revision++;result=item;break;}
   }
