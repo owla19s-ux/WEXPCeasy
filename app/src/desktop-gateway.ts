@@ -14,3 +14,14 @@ export function createDesktopGateway<T>(options:{sender:DesktopSender;url:string
   try{return {ok:true,value:options.read()};}catch{return {ok:false,error:'host_unavailable'};}
  };
 }
+
+/** Admission only: trusted main-frame identity and a live host phase. Business validation stays with each owner. */
+export function createDesktopBusinessGate(options:{sender:DesktopSender;url:string;isReady:()=>boolean}){
+ const source=createDesktopGateway({sender:options.sender,url:options.url,read:()=>true as const});
+ return (event:DesktopEvent):DesktopReply<true>=>{
+  const checked=source(event,{});
+  if(!checked.ok)return checked;
+  try{return options.isReady()?checked:{ok:false,error:'host_unavailable'};}
+  catch{return {ok:false,error:'host_unavailable'};}
+ };
+}
