@@ -31,7 +31,7 @@ test('Anthropic JSON normalizes response and rejects truncation and native tool 
 });
 
 test('Anthropic SSE normalizes terminal text and token counts without accepting truncated streams',async()=>{
- const raw=event('message_start',{message:{id:'msg_123',type:'message',role:'assistant',model:'claude-test',usage:{input_tokens:3,output_tokens:0}}})
+ const raw=event('message_start',{message:{id:'msg_123',type:'message',role:'assistant',model:'claude-test',content:[],usage:{input_tokens:3,output_tokens:0}}})
  +event('content_block_start',{index:0,content_block:{type:'text',text:''}})
  +event('content_block_delta',{index:0,delta:{type:'text_delta',text:'Hello'}})
  +event('content_block_stop',{index:0})
