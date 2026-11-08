@@ -1,5 +1,15 @@
 # shared｜通用技术基础模块
 
+## 2026-11-08｜Shared 基础完整性状态补充
+
+> 以 A2 登记的近期 `shared/src/storage.ts` 源码修复及对应测试提交为线索；当前仍缺最新 `main` 同 SHA 的独立签收证据。
+
+- **不再当作空白基础设施**：Store/SQLite 命名空间及 CAS、数据根与路径、Vault/凭证、诊断已有公开入口和测试。近期专项涉及 durable receipt 校验、事务结果不确定隔离和跨 namespace wrapper 协调；先定位对应文件/测试再继续施工。
+- **关键验收仍缺**：伪造/遗失回执、跨域部分失败、rollback 无法确认、重启恢复、Windows 路径/ACL/safeStorage 及安装重装保留。模拟测试、局部绿色结果不能代替 Windows 实机。
+- **边界**：Shared 仅提供技术机制，不拥有 Permissions、Space、Conversations 或 Connections 的业务账本；不因恢复困难而新增一套业务权威。
+
+
+
 > **代码事实核对（2026-11-04，基线 `1048b6a`）**：产品源码 4 文件、测试 5 文件，公开入口 `shared/src/index.ts`。本轮根测试覆盖 shared、permissions、app、connections 及边界工具；不代表完整本版验收。 开工须重新核对最新 main。
 
 > **施工入口说明（2026-11-07）**：本页仅负责 shared 独立维护与验收；当前授权施工从 [根 README](../README.md) 与 [A2 0.1.1 当前功能状态](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md) 定向进入；[B3 任务](../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md)只提供历史细化验收证据，不规定所有任务的固定施工顺序。过去“当前模块是 Space”的说法为历史状态，不是现在的统一调度。工作模式不得修改施工文档。
