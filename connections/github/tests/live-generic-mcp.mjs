@@ -9,7 +9,7 @@ const upstream='99d6d6503a7b2a133e2f8a595d6d0ba24b4086d3';
 const directory=await mkdtemp(join(tmpdir(),'wex-github-source-'));
 const evidence={sha:process.env.GITHUB_SHA,upstream,node:process.version,platform:process.platform,
  remoteMutations:0,limitations:['No product UI/AI wiring or Windows installer acceptance','Only selected read tools exercised; discovery is not per-tool acceptance']};
-let adapter;
+let adapter,restricted;
 try{
  const response=await fetch('https://api.github.com/repos/github/github-mcp-server/tarball/'+upstream,{signal:AbortSignal.timeout(60000)});
  assert.equal(response.ok,true,'pinned official source download');
@@ -34,6 +34,13 @@ try{
  evidence.toolConfiguration={toolsets:'all',readOnly:false};
  evidence.tools=tools; // Actual names and schemas, no hardcoded tool-count claim.
  evidence.toolCount=tools.length;
+ restricted=createGitHubMcpAdapter(connection,{runtime:{command,expectedSha256},toolsets:['repos'],readOnly:true,
+  timeoutMs:60000,resolveCredential:async()=>process.env.WEX_GITHUB_READ_TOKEN});
+ const restrictedTools=await restricted.listTools(signal(),access());
+ assert.ok(restrictedTools.length>0&&restrictedTools.length<tools.length,'runtime configuration must change the catalogue');
+ assert.ok(!restrictedTools.some(t=>t.name==='create_or_update_file'),'read-only server must exclude file writes');
+ evidence.restricted={toolsets:['repos'],readOnly:true,tools:restrictedTools,toolCount:restrictedTools.length};
+ await restricted.stop();
  const [owner,repo]=process.env.GITHUB_REPOSITORY.split('/');
  const choose=(candidates)=>{const found=candidates.find(name=>tools.some(t=>t.name===name));assert.ok(found,'missing tools: '+candidates.join('/'));return found;};
  const calls=[
@@ -53,13 +60,15 @@ try{
  }
  await adapter.stop();assert.equal(adapter.status().state,'stopped');
  evidence.status='passed';
+ console.info(JSON.stringify({sha:evidence.sha,upstream,platform:evidence.platform,server:evidence.server,
+  toolCount:evidence.toolCount,restrictedToolCount:evidence.restricted.toolCount,calls:evidence.calls,remoteMutations:0}));
 }catch(error){
  evidence.status='failed';
  // Keep protocol/remote response bodies and credentials out of CI artifacts.
  evidence.failure=error instanceof Error&&error.code?'process_'+error.code:'source_build_or_protocol_or_tool_validation_failed';
  throw error;
 }finally{
- await adapter?.stop();
+ await adapter?.stop();await restricted?.stop();
  await writeFile('github-generic-mcp-evidence.json',JSON.stringify(evidence,null,2));
  await rm(directory,{recursive:true,force:true});
 }

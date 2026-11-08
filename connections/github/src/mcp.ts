@@ -9,6 +9,11 @@ import type {AdapterAccess,ConnectionConfig} from '../../src/index.js';
 import type {GitHubMcpOptions} from './mcp-options.js';
 type Tool=Awaited<ReturnType<Client['listTools']>>['tools'][number];
 
+export interface GitHubMcpAdapterOptions extends GitHubMcpOptions {
+ /** Trusted host runtime selection; omitted toolsets enables all official toolsets. */
+ toolsets?:readonly string[];
+ readOnly?:boolean;
+}
 export type GitHubMcpToolResult=Awaited<ReturnType<Client['callTool']>>;
 export interface GitHubMcpAdapter {
  start(signal:AbortSignal,access:AdapterAccess):Promise<void>;
@@ -27,12 +32,14 @@ interface Session {
  * transport reuse, never an authorization grant. Mutations must be invoked by the
  * Connections Operation boundary; this adapter neither grants access nor retries calls.
  */
-export function createGitHubMcpAdapter(connection:Readonly<ConnectionConfig>,options:GitHubMcpOptions):GitHubMcpAdapter {
+export function createGitHubMcpAdapter(connection:Readonly<ConnectionConfig>,options:GitHubMcpAdapterOptions):GitHubMcpAdapter {
  const current=Object.freeze({...connection});
+ const toolsets=Object.freeze([...(options.toolsets??['all'])]),readOnly=options.readOnly??false;
  const runtime=Object.freeze({...options.runtime,prefixArgs:Object.freeze([...(options.runtime.prefixArgs??[])])});
  const resolveCredential=options.resolveCredential,timeoutMs=options.timeoutMs??15000;
  if(current.adapter!=='github'||current.endpoint!=='https://api.github.com'||!current.enabled||
   typeof current.id!=='string'||!current.id||!current.credentialRef||
+  toolsets.some(name=>typeof name!=='string'||!/^[a-z][a-z0-9_]*$/.test(name))||typeof readOnly!=='boolean'||
   !isAbsolute(runtime.command)||!/^[0-9a-f]{64}$/.test(runtime.expectedSha256)||
   runtime.prefixArgs.some(arg=>typeof arg!=='string'||arg.includes(String.fromCharCode(0)))||
   typeof resolveCredential!=='function'||!Number.isSafeInteger(timeoutMs)||timeoutMs<1||timeoutMs>60000)
@@ -84,7 +91,7 @@ export function createGitHubMcpAdapter(connection:Readonly<ConnectionConfig>,opt
      const directory=await mkdtemp(join(tmpdir(),'wex-github-mcp-'));
      // Assign resources before any cancellable await so all failure paths release them.
      const transport=new StdioClientTransport({
-      command:runtime.command,args:[...runtime.prefixArgs,'stdio','--toolsets=all'],
+      command:runtime.command,args:[...runtime.prefixArgs,'stdio','--toolsets='+toolsets.join(','),...(readOnly?['--read-only']:[])],
       cwd:directory,stderr:'ignore',
       env:{GITHUB_PERSONAL_ACCESS_TOKEN:token,GITHUB_HOST:'https://github.com',
        HOME:directory,USERPROFILE:directory,APPDATA:directory,LOCALAPPDATA:directory},
