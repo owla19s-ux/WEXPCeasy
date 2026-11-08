@@ -51,11 +51,11 @@ function mutate<S extends Registry|Body>(store:Store,snap:Snapshot,state:S,key:s
  const next=structuredClone(state),changed=change(next),out={id:changed.id,revision:changed.revision};
  const record:Intent={key,command:fingerprint,...out,phase:'committed'};
  const prepared=structuredClone(state);prepared.intents.push({...record,phase:'prepared'});
- verify();recheck(p,r,d);if(signal?.aborted)return fail('cancelled');
+ recheck(p,r,d);verify();if(signal?.aborted)return fail('cancelled');
  const prep=store.commit({intent:key+':prepare',expectedRevision:snap.revision,value:prepared as unknown as Json});
  if(prep.status==='unknown')return {status:'unknown',intent:c.intent,id:out.id};
  if(prep.status!=='committed')return {status:'failed_no_commit',reason:prep.reason};
- next.intents.push(record);verify();recheck(p,r,d);if(signal?.aborted)return fail('cancelled');
+ next.intents.push(record);recheck(p,r,d);verify();if(signal?.aborted)return fail('cancelled');
  const result=store.commit({intent:key+':apply',expectedRevision:prep.revision,value:next as unknown as Json});
  if(result.status==='unknown')return {status:'unknown',intent:c.intent,id:out.id};
  if(result.status!=='committed')return {status:'failed_no_commit',reason:result.reason};
@@ -214,12 +214,13 @@ export async function openSpaceService(options:SpaceOptions):Promise<SpaceOpenRe
     return mutate(store,snap,state,key,c,options.permission,request,d,signal,n=>organization(n,c,id),verify);
    }
    if(c.kind.startsWith('category.')||c.kind.startsWith('space.')||c.kind.startsWith('group.')){
+    let verify=()=>{};
     if((c.kind==='space.create'||c.kind==='space.edit')&&c.categoryId){
      const wanted={action:'category.read',target:`category:${c.categoryId}`,context:null};const derived=options.deriveRequest?.(request,wanted);
      if(!derived)return fail('reference_unavailable');
-     try{const a=authorize(options.permission,derived,wanted);if(a.scope.subject!==d.scope.subject||a.scope.entry!==d.scope.entry||a.scope.conversation!==d.scope.conversation||a.scope.relationship!==d.scope.relationship||a.scope.relationshipGeneration!==d.scope.relationshipGeneration)return fail('reference_unavailable');recheck(options.permission,derived,a);}catch{return fail('reference_unavailable');}
+     try{const a=authorize(options.permission,derived,wanted);if(a.scope.subject!==d.scope.subject||a.scope.entry!==d.scope.entry||a.scope.conversation!==d.scope.conversation||a.scope.relationship!==d.scope.relationship||a.scope.relationshipGeneration!==d.scope.relationshipGeneration)return fail('reference_unavailable');verify=()=>{try{recheck(options.permission,derived,a);}catch{return fail('reference_unavailable');}};verify();}catch{return fail('reference_unavailable');}
     }
-    return mutate(store,snap,state,key,c,options.permission,request,d,signal,n=>organization(n,c,id));
+    return mutate(store,snap,state,key,c,options.permission,request,d,signal,n=>organization(n,c,id),verify);
    }
    const contextId='contextId'in c?c.contextId:c.kind==='context.edit'?c.id:fail('unsupported_command');
    const entry=find(state.contexts,contextId);if(entry.phase!=='ready')return fail('context_pending','unavailable');
