@@ -1,5 +1,16 @@
 # connections/github｜GitHub 官方完整能力接入
 
+## 2026-11-08｜main 复核：官方 MCP 通用接入与 PR 证据须分离
+
+> **本节覆盖下文较早的“当前事实”描述，但不取消 GH-01～12 长期目标或既有实施方案。** 本轮以 `main@e9ff10c81dc4` 核对，属于静态代码/提交审查，未执行本 SHA 的完整 CI 或 Windows 实机测试。
+
+- **主分支可确认**：`connections/github/src/index.ts` 提供现有受控 GitHub 文件适配；`app/src/desktop-connections.ts` 的已核实请求白名单为 `github.create`、`github.read`、`github.write` 等文件级动作，尚不含 `github.tools/github.invoke`。因此桌面通用官方工具目录与调用**不得标为 main 已交付**。
+- **PR 验证证据（不等于已合入）**：[PR #4](https://github.com/owla19s-ux/WEXPCeasy/pull/4) 记录了公共 `discover/invoke`、官方 MCP 工具发现、仓库/PR/Actions 实际只读调用和 Operation 回执；[PR #3](https://github.com/owla19s-ux/WEXPCeasy/pull/3) 记录了可信宿主、桌面工具选择/调用及双平台验证。它们有各自的测试 SHA 和 Actions 证据，**必须先查 PR 合并状态与最新 main 路径，再移植或继续施工**；不得把 PR 的绿色结果直接登记为 main 的 B1/B3 签收。
+- **当前可执行下一步**：先核对两 PR 的合并、重叠与冲突及固定上游版本，再按已有测试选择最小可复用实现；合入后核验 `connections/src/capabilities.ts`、GitHub MCP 会话适配、App 可信 IPC、UI 消费端的实际文件和同 SHA 测试。仍须覆盖正式打包分发、实际远端写入/回读、Context/对话消费及 Windows 实机。
+- **旧路径迁移**：现有 Octokit 文件操作仍属有效兼容路径；仅在新通道已接线、旧调用方迁移和回归通过后才删除。不可用单文件限制替代官方完整工具能力。
+
+
+
 > **源码模块施工入口**。产品目标来自 [A1 F05-012](../../docs/A1-正式产品设计/产品功能总表.md)；具体能力/接口及验收依据见 [CONTRACT.md](CONTRACT.md)；版本范围与进度只在 [A2 0.1.1](../../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md) 判定。本文不单方面将完整目标全部宣布为 0.1.1 必须交付。
 >
 > **核心目标**：GitHub 官方 MCP Server 提供完整的官方工具能力；WEX 自己编写 GitHub Connector Adapter，通过现有 Connections 公共调用体系供 UI、Conversations、Space/Context、AI 和其他模块复用。**不得将“Octokit SDK 已导入”“单文件读取成功”解释为模块完整。**
