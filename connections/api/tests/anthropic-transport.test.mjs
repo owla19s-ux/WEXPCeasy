@@ -133,3 +133,49 @@ test('native Anthropic directory and text probe use their own wire paths and kee
  assert.equal(h.ledger.get('native-tools'),undefined);
  assert.equal(calls,2);
 });
+
+test('native preparation rejects unencodable input before a snapshot, HTTP or Operation',async t=>{
+ let calls=0;
+ const h=await setup(t,(_req,res)=>{calls++;res.writeHead(500);res.end();});
+ const tools=[{name:'read',parameters:{type:'object',properties:{},additionalProperties:false}}];
+ const variants=[
+  {parameters:{}},
+  {messages:[{role:'system',content:'Only system'}]},
+  {messages:[{role:'user',content:'Hello'},{role:'system',content:'Late'}]},
+  {tools}
+ ];
+ for(const [index,patch] of variants.entries()){
+  const input={...h.input,...patch};
+  const prepared=h.f.service.prepare(h.f.request('request.prepare',`model:${h.model.id}`),input);
+  assert.deepEqual(prepared,{status:'rejected',reason:'unsupported_protocol_input'});
+  const operationId=`invalid-native-${index}`;
+  const result=await h.transport.send(h.sendRequest(),operationId,input);
+  assert.equal(result.status,'blocked');
+  assert.equal(result.reason,'unsupported_protocol_input');
+  assert.equal(h.ledger.get(operationId),undefined);
+ }
+ assert.equal(calls,0);
+});
+
+test('native preparation keeps valid normalized input immutable and rejects mixed media without dropping text',async t=>{
+ let calls=0;
+ const h=await setup(t,(_req,res)=>{calls++;res.writeHead(500);res.end();});
+ const messages=[{role:'system',content:'Be concise'},{role:'user',content:'Keep this exact text'}];
+ const prepared=h.f.service.prepare(h.f.request('request.prepare',`model:${h.model.id}`),{...h.input,messages});
+ assert.equal(prepared.status,'ok');
+ assert.deepEqual(prepared.snapshot.body.messages,messages);
+ messages[1].content='changed';
+ assert.equal(prepared.snapshot.body.messages[1].content,'Keep this exact text');
+ assert.ok(Object.isFrozen(prepared.snapshot.body.messages[1]));
+ for(const [index,message] of [
+  {role:'user',content:[{type:'text',text:'Keep this'},{type:'image_url',image_url:{url:'https://example.test/image.png'}}]},
+  {role:'user',content:'Keep this',audio:{data:'audio'}},
+  {role:'user',content:'Keep this',attachments:[{type:'file',id:'file-1'}]}
+ ].entries()){
+  const input={...h.input,messages:[message]};
+  const result=await h.transport.send(h.sendRequest(),`media-native-${index}`,input);
+  assert.equal(result.status,'blocked');
+  assert.equal(h.ledger.get(`media-native-${index}`),undefined);
+ }
+ assert.equal(calls,0);
+});

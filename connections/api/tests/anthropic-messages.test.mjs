@@ -57,3 +57,13 @@ test('native probe is a fixed small text request, not a tool capability probe',(
   {model:'claude-test',max_tokens:8,stream:false,messages:[{role:'user',content:'Reply with OK.'}]});
  assert.throws(()=>anthropicProbeBody({modelId:'claude-test'},{stream:true,tools:true}),/unsupported_anthropic_tool_probe/);
 });
+
+test('Anthropic encoder rejects extra message fields rather than silently discarding content',()=>{
+ for(const extra of [
+  {images:['image.png']},{audio:{data:'audio'}},{reasoning_content:'reasoning'},
+  {tool_calls:[]},{name:'caller'}
+ ]){
+  assert.throws(()=>encodeAnthropicMessages({model:'claude-test',stream:false,max_tokens:64,
+   messages:[{role:'user',content:'Keep this',...extra}]}),/unsupported_anthropic_message/);
+ }
+});
