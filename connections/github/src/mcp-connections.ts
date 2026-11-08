@@ -1,14 +1,6 @@
 import {isDeepStrictEqual} from 'node:util';
 import type {Json} from '../../../shared/src/index.js';
-import type {AdapterAccess,ConnectionConfig} from '../../src/index.js';
-
-/** Structural capability contract; Connections owns the authoritative boundary. */
-interface ConfiguredCapabilityAdapter {
- readonly id:string;readonly version:string;
- discover(connection:Readonly<ConnectionConfig>,signal:AbortSignal,access:AdapterAccess):Promise<unknown>;
- invoke(connection:Readonly<ConnectionConfig>,name:string,args:Record<string,Json>,signal:AbortSignal,access:AdapterAccess):Promise<Json>;
- stop():Promise<void>;
-}
+import type {AdapterAccess,ConnectionConfig,ConfiguredCapabilityAdapter} from '../../src/index.js';
 import {createGitHubMcpAdapter} from './mcp.js';
 import type {GitHubMcpAdapter,GitHubMcpAdapterOptions} from './mcp.js';
 
