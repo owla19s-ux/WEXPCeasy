@@ -60,9 +60,9 @@ export function encodeAnthropicMessages(body:Record<string,unknown>):Json{
  return result;
 }
 
-export function anthropicRoute(connection:{endpoint:string;endpointMode:'base'|'request'}):URL{
+export function anthropicRoute(connection:{endpoint:string;endpointMode:'base'|'request'},kind:'models'|'completions'='completions'):URL{
  const url=new URL(connection.endpoint);
- if(connection.endpointMode==='base')url.pathname=url.pathname.replace(/\/$/,'')+'/messages';
+ if(connection.endpointMode==='base')url.pathname=url.pathname.replace(/\/$/,'')+(kind==='models'?'/models':'/messages');
  return url;
 }
 export function anthropicHeaders(stream:boolean,token?:string):Record<string,string>{
@@ -174,4 +174,27 @@ export async function decodeAnthropicMessages(source:AsyncIterable<Uint8Array>,s
 export function anthropicResponseIdentity(result:ChatStreamResult){
  return {...(result.providerResponseId===undefined?{}:{providerResponseId:result.providerResponseId}),
   ...(result.providerModelId===undefined?{}:{providerModelId:result.providerModelId})};
+}
+
+
+/** A single complete native Models page; pagination is not silently truncated. */
+export function decodeAnthropicDirectory(body:string):string[]{
+ let data:RecordValue;
+ try{data=record(parseUniqueJson(body));}catch{throw Error('invalid_model_directory');}
+ if(!Array.isArray(data.data)||data.data.length>4096)throw Error('invalid_model_directory');
+ if(data.has_more===true)throw Error('model_directory_incomplete');
+ const ids=new Set<string>();
+ for(const raw of data.data){
+  const item=record(raw),id=item.id;
+  if(typeof id!=='string'||!id.trim()||ids.has(id))throw Error('invalid_model_directory');
+  ids.add(id);
+ }
+ return [...ids];
+}
+
+/** Minimal fixed-cost text probe. Tools are a separate capability, not inferred from success. */
+export function anthropicProbeBody(model:{modelId:string},probe:{stream:boolean;tools:boolean}):Json{
+ if(probe.tools)throw Error('unsupported_anthropic_tool_probe');
+ return {model:model.modelId,max_tokens:8,stream:probe.stream,
+  messages:[{role:'user',content:'Reply with OK.'}]};
 }
