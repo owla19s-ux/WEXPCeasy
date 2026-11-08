@@ -7,6 +7,7 @@ import {isAbsolute,join} from 'node:path';
 import {tmpdir} from 'node:os';
 import type {ConnectionConfig,AdapterAccess,ConfiguredReadAdapter} from '../../src/index.js';
 import type {Json} from '../../../shared/src/index.js';
+import type {GitHubOfficialClientOptions} from './official-client.js';
 
 /** Structural subset of Octokit's official REST client; credentials and retry policy belong to the trusted host.
  * Supply a client bound to this exact connection, with automatic mutation retries disabled.
