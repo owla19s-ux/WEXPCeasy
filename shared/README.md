@@ -1,60 +1,23 @@
-# shared｜通用技术基础模块
+# shared｜通用技术基础
 
-## 2026-11-08｜Shared 基础完整性状态补充
+> Owner：`shared/`；本版状态见 [A2](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)。这里只实现跨模块可复用的**技术机制**，不存第二套 Space/Conversation/Task/Permission/Operation 业务权威。
 
-> 以 A2 登记的近期 `shared/src/storage.ts` 源码修复及对应测试提交为线索；当前仍缺最新 `main` 同 SHA 的独立签收证据。
+## 已有实现与边界
 
-- **不再当作空白基础设施**：Store/SQLite 命名空间及 CAS、数据根与路径、Vault/凭证、诊断已有公开入口和测试。近期专项涉及 durable receipt 校验、事务结果不确定隔离和跨 namespace wrapper 协调；先定位对应文件/测试再继续施工。
-- **关键验收仍缺**：伪造/遗失回执、跨域部分失败、rollback 无法确认、重启恢复、Windows 路径/ACL/safeStorage 及安装重装保留。模拟测试、局部绿色结果不能代替 Windows 实机。
-- **边界**：Shared 仅提供技术机制，不拥有 Permissions、Space、Conversations 或 Connections 的业务账本；不因恢复困难而新增一套业务权威。
-
-
-
-> **代码事实核对（2026-11-04，基线 `1048b6a`）**：产品源码 4 文件、测试 5 文件，公开入口 `shared/src/index.ts`。本轮根测试覆盖 shared、permissions、app、connections 及边界工具；不代表完整本版验收。 开工须重新核对最新 main。
-
-> **施工入口说明（2026-11-07）**：本页仅负责 shared 独立维护与验收；当前授权施工从 [根 README](../README.md) 与 [A2 0.1.1 当前功能状态](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md) 定向进入；[B3 任务](../docs/A2-版本与工程状态/0.1.1/历史任务记录/B3-2026-11-07.md)只提供历史细化验收证据，不规定所有任务的固定施工顺序。过去“当前模块是 Space”的说法为历史状态，不是现在的统一调度。工作模式不得修改施工文档。
->
-> **实现状态（文档证据，待实时核查）**：已有 `shared/src/index.ts`、`shared/tests/` 和 `npm run test:shared` 入口；此前记录 SQLite 命名空间 Store/CAS、数据根检查、受限路径定位、合作目录锁、诊断 sink 已实现。本文更新没有重新执行测试或 Windows 实机验证。
-
-## 职责与边界
-
-shared 只提供可复用的**技术机制**，不拥有 Space/Context、Agent、Conversation、Operation、Task、权限策略或领域审计事实。业务 owner 通过公开端口使用 shared，不能把业务规则集中到这里。
-
-| 技术能力 | 已有证据与公开入口 | 仍需验证或补齐 |
+| 机制 | 已有源码/测试 | 当前缺口 |
 |---|---|---|
-| 命名空间 Store / CAS 与修订检查 | `shared/src/index.ts`，`npm run test:shared`；历史实现记录 | 真实代码 API、并发冲突、异常恢复、重启与隔离 |
-| 数据根和受限路径定位 | 同上；历史实现记录 | Windows 路径别名、权限拒绝、跨盘与 ACL 实测 |
-| 合作目录锁 | 同上；历史实现记录 | 跨进程、异常退出、残留锁及 Windows 实测 |
-| 技术诊断与有限持久记录 | `shared/src/diagnostics.ts`、`persisted-diagnostics.ts` 与 `shared/tests/persisted-diagnostics.test.mjs`；App 存在装配入口 | 已有字段白名单与 SQLite 持久回读等测试；完整日志轮转、运行环境接线及 Windows 真实权限仍需验证 |
-| 凭证引用与受控 Vault | `shared/src/credentials.ts`、`shared/tests/credentials.test.mjs`；App 的 `desktop-credentials.ts` 与测试提供 Windows safeStorage 适配 | 真实 Windows OS 账号/安装代次、ACL、凭证失效与重装恢复尚未完整验收；不得认为凭证可解密就已获授权 |
-| 完整备份/恢复、日志轮转、配置迁移 | 目前仍属需要独立验收的较完整能力，不由基本持久诊断自动满足 | 按版本范围与 App/各业务 owner 分工确认；不得拿单库重启回读冒充全域恢复 |
+| SQLite 命名空间 Store、CAS、事务恢复 | `src/index.ts`、`src/storage.ts` 与模块测试 | durable receipt、损坏/遗失回执、rollback 未知、跨 namespace 协调与恢复的同 SHA 证明 |
+| 数据根、受限路径和目录锁 | 公开技术端口与测试 | Windows 路径别名、跨进程锁、ACL、失盘和重启 |
+| 诊断/持久记录 | `src/diagnostics.ts`、`persisted-diagnostics.ts` 与测试 | 轮转、真实环境接线、脱敏与不同日志权威分离 |
+| 凭证/Vault | `src/credentials.ts`、相关测试及 App safeStorage 适配 | Windows OS 身份、凭证失效、安装/重装、权限和秘密泄露负例 |
 
-## 公开契约的最低语义
+已有完整性专项修复的提交/测试线索，**不能等同当前 SHA 全面通过或 Windows E4 签收**。Storage 成功只说明技术持久化结果；不能由 Shared 擅自决定业务成功/授权或远端副作用回滚。
 
-- **存储**：调用者声明命名空间、对象/键、读写意图及预期修订；成功返回持久化确认与修订，旧修订必须冲突拒绝，未知提交不得假装失败。shared 只保证技术原子性，不替业务 owner 决定业务回滚。
-- **路径与数据根**：验证用户选择的数据根及访问边界；失联/无权/路径冲突应返回可诊断错误，不静默创建业务对象，不把安装目录当作默认用户资料目录。
-- **锁与恢复**：明确锁的作用域、持有者与释放条件；进程退出、重启和并发冲突不得把“已获得锁”当作永久权威。
-- **凭证**：秘密值不得出现在业务配置、普通日志或诊断导出；领域只能保存受控凭证引用。Windows 真实保管与失效行为未验收前不承诺安全能力。
-- **诊断**：运行日志可轮转，但不得删除领域正式账本、授权审计或验收证据；跨域诊断只能引用事实，不复制可修改的权威数据。
+## 技术语义与验收
 
-具体函数签名、存储格式和已有测试，以当前源码为准；历史研究候选不自动成为实现要求。
+- Store 操作必须表达修订/冲突、已提交/确定未提交/unknown，不能遇到异常静默重试或覆盖数据。
+- 路径/数据根不是安装目录；跨盘、符号链接、权限变化和目标失联需要明确拒绝或诊断。
+- Lock、Vault、诊断属于技术基础；秘密不得进入普通日志/Renderer。诊断记录不代替领域正式账本。
+- 以 `npm run test:shared`、build/typecheck/test/boundaries 和 Windows 专项分别验证并记录 SHA。优先复验现有损坏、回滚、恢复、ACL/safeStorage 用例，失败后再修，不能创建重复数据库或凭证服务。
 
-## 模块独立验收
-
-| 编号 | 测试行为 | 验收断言 |
-|---|---|---|
-| SH-T01 | 写入、读取、重启恢复 | 数据与修订一致，不跨命名空间串读 |
-| SH-T02 | CAS 并发写入 | 旧修订拒绝，不静默最后写入获胜 |
-| SH-T03 | 存储失败/中断 | 确定未提交与结果未知可区分，不能假报成功 |
-| SH-T04 | 路径拒绝/失盘 | 不越界读写，不生成业务替代对象 |
-| SH-T05 | 锁冲突/异常退出 | 冲突可诊断，不产生永久不可恢复死锁 |
-| SH-T06 | 诊断与秘密 | 无权路径、Key 和敏感内容不出现在普通诊断中 |
-| SH-T07 | Windows 实机 | ACL、路径别名、凭证、跨进程行为有单独实机证据；未测标未验收 |
-
-## 下一次施工与交接
-
-先核查最新 `main` 的 `shared/src/`、`shared/tests/`、`package.json` 与 CI，再核对以上行为是否已有测试。**只修真实缺陷或已批准范围内的缺口**；不为满足目录规划而创建空子目录，不代替 permissions 实现授权，不代替业务模块保存状态。提交回执列 SHA、修改文件、执行命令、测试结果及 Windows 未验证项。
-
-**当前验收状态（2026-11-07 定向源码核对）**：已确认 `shared/src/index.ts` 实际公开 Store、路径、Vault 与持久诊断，相关模块测试文件存在；本轮只读核对源码/测试，**没有复跑测试或 Windows 实机验收**。不得根据旧状态重复创建凭证库或诊断持久机制，也不能据代码存在宣布模块验收通过。
-
-历史完整研究：[shared 契约归档](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/shared/CONTRACT-archive.md)；源码目录中的 [CONTRACT.md](CONTRACT.md) 仅保留历史入口兼容，不与本 README 并行维护现行接口。Windows 数据要求：[目录与数据设计](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)。
+施工顺序：根 README → 本 README → 公开源码与测试；版本/Windows 规则按需查阅 [正式设计](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)。
