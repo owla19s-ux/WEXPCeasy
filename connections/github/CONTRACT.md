@@ -85,7 +85,7 @@ GitHub **官方 MCP Server 是完整功能提供者**。WEX 维护自己的 Conn
 
 **测试状态不可互相代替**：上游源码已引用 ≠ 官方进程已运行 ≠ 工具全量发现 ≠ 通用调用可用 ≠ UI/AI 已接入 ≠ GitHub 真实操作验收。
 
-## 6. 当前源码现状（文档不宣称完成）
+## 6. 当前 main 源码现状（区分独立 PR 证据）
 
 - `connections/github/src/index.ts` 现有 Octokit 文件读写和 `createGitHubMcpFileReader` 单文件只读适配；MCP 启动参数固定只开放 `get_file_contents`。
 - MCP 测试主要基于模拟子进程、固定文件返回形状、版本与拒绝行为；没有证明完整官方工具可用。
@@ -131,7 +131,7 @@ GitHub **官方 MCP Server 是完整功能提供者**。WEX 维护自己的 Conn
 
 ### 7.4 运行验证门槛
 
-- 源码子模块与官方 Windows/Linux 构建：目前只有 Gitlink 和检出脚本，尚未在 WEX 本次修改中实测编译；固定源码与旧二进制 v2.1.0 不可混为同一运行版本。
+- 源码子模块与官方 Windows/Linux 构建：main 已有 Gitlink 与检出脚本；独立 [PR #3](https://github.com/owla19s-ux/WEXPCeasy/pull/3)、[PR #4](https://github.com/owla19s-ux/WEXPCeasy/pull/4) 的验证回执记录固定源码双平台构建、初始化及通用工具读取，但它们的测试证据不自动证明相应代码已经合入当前 main，也不代表正式 Windows 安装包已分发。固定源码与旧二进制 v2.1.0 不可混为同一运行版本。
 - 工具清单：同一运行配置下完整读取 `tools/list`，记录真实条目数量、Schema、配置；默认工具集和 `all` 不能混淆。
 - 兼容：现用 `@modelcontextprotocol/sdk@1.26.0` 属客户端 v1 系列，官方 SDK 已推出 v2 客户端；**不以升级为先决条件**，先实测固定服务版本的 initialize/list/call，再决定迁移成本。
 - 多工具：至少跨仓库、PR、Actions 三类以同一个 `invoke` 路径返回真实或模拟可核验结果，证明不是单文件特例。
