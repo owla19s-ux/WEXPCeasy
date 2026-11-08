@@ -1,6 +1,7 @@
 import type {ChatStreamOptions,ChatStreamResult} from '../stream.js';
 import type {Json} from '../../../../shared/src/index.js';
 import {parseUniqueJson} from '../json.js';
+import {ProviderTerminalError} from '../terminal.js';
 
 type RecordValue=Record<string,unknown>;
 function record(value:unknown):RecordValue{
@@ -25,8 +26,8 @@ function usage(value:unknown):ChatStreamResult['usage']{
 }
 function terminal(reason:unknown){
  if(reason==='end_turn'||reason==='stop_sequence')return;
- if(reason==='max_tokens')throw Error('provider_length_truncated');
- if(reason==='refusal')throw Error('provider_refusal');
+ if(reason==='max_tokens')throw new ProviderTerminalError('provider_output_truncated');
+ if(reason==='refusal')throw new ProviderTerminalError('provider_refusal');
  throw Error('unsupported_anthropic_stop_reason');
 }
 
