@@ -1,5 +1,16 @@
 # app
 
+## 2026-11-08｜桌面可信宿主当前进度修订
+
+> 此处覆盖 2026-11-03/07 早期施工快照，不把已有源码直接判为 Windows 实机签收。
+
+- **已经存在**：Electron/React 入口、preload、可信授权/凭证桥、Space/API/Conversations/GitHub 文件操作等桌面基础。现有 `app/src/desktop-connections.ts` 已处理连接快照、启停、凭证、GitHub 文件读写的显式命令校验、可信确认和权限复核；不能再写成“全部业务 IPC 尚未接入”。
+- **尚无主分支通用 MCP 证据**：当前 `desktop-connections.ts` 允许的请求种类未含 `github.tools/github.invoke`；相应通用工具桌面接线见独立 [PR #3](https://github.com/owla19s-ux/WEXPCeasy/pull/3) 的验证记录。先确认合并和冲突，再计入 main 的实现状态。
+- **Windows 交付**：NSIS 安装、数据根选择及重装恢复已有对应源码/测试提交线索；真实安装/卸载/重装、E4 人工操作、异常后资源彻底释放及当前 SHA 同步测试仍需逐项复核。历史“Windows 安装包尚未开发”的措辞不得当成当前事实。
+- **保持模块职责**：App 只做可信 OS/IPC、装配、运行时/崩溃恢复，不代替各领域保存配置或重造 Operation。
+
+
+
 > **当前代码事实（2026-11-07，`main bd72dfea`）**：已有正式 `app/src/desktop-main.ts`、`desktop-runtime.ts`、`desktop-space.ts`、`desktop-api.ts`、`desktop-authority.ts`、`desktop-credentials.ts`、preload 与桌面测试；最新 SHA 的 B3 desktop host acceptance 成功。不能据此认定 Agent/Conversations 全部 IPC、Windows 安装及真实操作完整验收。
 
 > **当前模块施工状态（文档整理，2026-11-03）**：已有 app/src/index.ts、headless 验证入口；正式 Windows UI/IPC/安装未验收。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
