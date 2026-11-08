@@ -1,6 +1,6 @@
 import type {ApiConnection,ApiModel,ToolDefinition} from '../model.js';
 import type {ChatStreamOptions,ChatStreamResult} from '../stream.js';
-import {anthropicRoute,anthropicHeaders,encodeAnthropicMessages,decodeAnthropicMessages,anthropicResponseIdentity} from './anthropic-messages.js';
+import {anthropicRoute,anthropicHeaders,encodeAnthropicMessages,decodeAnthropicMessages,anthropicResponseIdentity,decodeAnthropicDirectory,anthropicProbeBody} from './anthropic-messages.js';
 import {
  chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,
  toolProbeDeclaration,chatResponseIdentity,decodeChatModelDirectory
@@ -16,6 +16,7 @@ export interface ApiProtocolAdapter {
  readonly id:string;
  readonly supportsDirectory:boolean;
  readonly supportsProbe:boolean;
+ readonly supportsToolProbe:boolean;
  readonly encodeBody:(body:Record<string,unknown>)=>unknown;
  readonly route:(connection:Pick<ApiConnection,'endpoint'|'endpointMode'>,kind:'models'|'completions')=>URL;
  readonly probeBody:(model:Pick<ApiModel,'modelId'>,probe:{stream:boolean;tools:boolean})=>unknown;
@@ -30,7 +31,7 @@ export interface ApiProtocolAdapter {
 }
 
 const openaiChat:ApiProtocolAdapter=Object.freeze({
- id:'openai-chat',supportsDirectory:true,supportsProbe:true,encodeBody:(body:Record<string,unknown>)=>body,
+ id:'openai-chat',supportsDirectory:true,supportsProbe:true,supportsToolProbe:true,encodeBody:(body:Record<string,unknown>)=>body,
  route:chatRoute,probeBody:chatProbeBody,headers:chatHeaders,contentType:chatContentType,
  decode:decodeOpenAiChat,directory:decodeChatModelDirectory,responseIdentity:chatResponseIdentity,
  probeTool:toolProbeDeclaration,
@@ -41,21 +42,19 @@ const openaiChat:ApiProtocolAdapter=Object.freeze({
 });
 
 const anthropicMessages:ApiProtocolAdapter=Object.freeze({
- id:'anthropic-messages',supportsDirectory:false,supportsProbe:false,
+ id:'anthropic-messages',supportsDirectory:true,supportsProbe:true,supportsToolProbe:false,
  encodeBody:encodeAnthropicMessages,
- route:(connection:Pick<ApiConnection,'endpoint'|'endpointMode'>,kind:'models'|'completions')=>{
-  if(kind!=='completions')throw Error('unsupported_anthropic_directory');
-  return anthropicRoute(connection);
- },
- probeBody:()=>{throw Error('unsupported_anthropic_probe');},
+ route:(connection:Pick<ApiConnection,'endpoint'|'endpointMode'>,kind:'models'|'completions')=>anthropicRoute(connection,kind),
+ probeBody:anthropicProbeBody,
  headers:(stream:boolean,token?:string)=>anthropicHeaders(stream,token),
  contentType:(stream:boolean)=>stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i,
  decode:decodeAnthropicMessages,
- directory:()=>{throw Error('unsupported_anthropic_directory');},
+ directory:decodeAnthropicDirectory,
  responseIdentity:anthropicResponseIdentity,
  probeTool:toolProbeDeclaration,
  generationVersion:'anthropic-messages-text-1',
- diagnosticVersion:()=>{throw Error('unsupported_anthropic_diagnostic');}
+ diagnosticVersion:(probe?:{stream:boolean;tools:boolean})=>
+  probe?(probe.tools?(()=>{throw Error('unsupported_anthropic_tool_probe');})():probe.stream?'anthropic-messages-stream-probe-1':'anthropic-messages-probe-1'):'anthropic-messages-models-1'
 });
 
 const adapters:ReadonlyMap<string,ApiProtocolAdapter>=new Map([
