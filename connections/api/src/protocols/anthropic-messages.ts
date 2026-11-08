@@ -199,3 +199,14 @@ export function anthropicProbeBody(model:{modelId:string},probe:{stream:boolean;
  return {model:model.modelId,max_tokens:8,stream:probe.stream,
   messages:[{role:'user',content:'Reply with OK.'}]};
 }
+
+/** Wire versions and response media rules belong to this native protocol, not the registry. */
+export const anthropicGenerationVersion='anthropic-messages-text-1';
+export function anthropicDiagnosticVersion(probe?:{stream:boolean;tools:boolean}):string{
+ if(!probe)return 'anthropic-messages-models-1';
+ if(probe.tools)throw Error('unsupported_anthropic_tool_probe');
+ return probe.stream?'anthropic-messages-stream-probe-1':'anthropic-messages-probe-1';
+}
+export function anthropicContentType(stream:boolean):RegExp{
+ return stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i;
+}
