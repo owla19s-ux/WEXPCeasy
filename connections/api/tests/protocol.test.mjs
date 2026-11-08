@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration} from '../../dist/connections/api/src/protocols/openai-chat.js';
+import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration} from '../../../dist/connections/api/src/protocols/openai-chat.js';
 
 const base={endpoint:'https://api.example.test/v1',endpointMode:'base'};
 test('OpenAI Chat routes only append on base endpoints and preserve request-mode URLs',()=>{
