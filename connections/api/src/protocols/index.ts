@@ -1,6 +1,6 @@
 import type {ApiConnection,ApiModel,ToolDefinition} from '../model.js';
 import type {ChatStreamOptions,ChatStreamResult} from '../stream.js';
-import {anthropicRoute,anthropicHeaders,encodeAnthropicMessages,decodeAnthropicMessages} from './anthropic-messages.js';
+import {anthropicRoute,anthropicHeaders,encodeAnthropicMessages,decodeAnthropicMessages,anthropicResponseIdentity} from './anthropic-messages.js';
 import {
  chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,
  toolProbeDeclaration,chatResponseIdentity,decodeChatModelDirectory
@@ -52,7 +52,7 @@ const anthropicMessages:ApiProtocolAdapter=Object.freeze({
  contentType:(stream:boolean)=>stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i,
  decode:decodeAnthropicMessages,
  directory:()=>{throw Error('unsupported_anthropic_directory');},
- responseIdentity:chatResponseIdentity,
+ responseIdentity:anthropicResponseIdentity,
  probeTool:toolProbeDeclaration,
  generationVersion:'anthropic-messages-text-1',
  diagnosticVersion:()=>{throw Error('unsupported_anthropic_diagnostic');}
