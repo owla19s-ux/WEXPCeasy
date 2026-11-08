@@ -49,3 +49,13 @@ test('desktop IPC rejects throwing payload traps without exposing exceptions',()
   assert.deepEqual(gateway(event,payload),{ok:false,error:'invalid_request'});
  }
 });
+
+test('desktop IPC rejects malformed events before accessing host state',()=>{
+ const frame={url:'file:///app/index.html'},sender={mainFrame:frame,isDestroyed:()=>false};
+ let reads=0;
+ const gateway=createDesktopGateway({sender,url:frame.url,read:()=>{reads++;return true;}});
+ assert.deepEqual(gateway(null,{}),{ok:false,error:'untrusted_sender'});
+ const hostile={get senderFrame(){throw Error('secret frame');},sender};
+ assert.deepEqual(gateway(hostile,{}),{ok:false,error:'untrusted_sender'});
+ assert.equal(reads,0);
+});
