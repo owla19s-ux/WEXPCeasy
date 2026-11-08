@@ -1,119 +1,27 @@
-# app
+# app｜可信桌面宿主与生命周期
 
-## 2026-11-08｜桌面可信宿主当前进度修订
+> Owner：`app/`，版本状态见 [A2](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)，产品目录与 Windows 数据规则见 [正式设计](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)。
 
-> 此处覆盖 2026-11-03/07 早期施工快照，不把已有源码直接判为 Windows 实机签收。
+## 当前实现与源码入口
 
-- **已经存在**：Electron/React 入口、preload、可信授权/凭证桥、Space/API/Conversations/GitHub 文件操作等桌面基础。现有 `app/src/desktop-connections.ts` 已处理连接快照、启停、凭证、GitHub 文件读写的显式命令校验、可信确认和权限复核；不能再写成“全部业务 IPC 尚未接入”。
-- **尚无主分支通用 MCP 证据**：当前 `desktop-connections.ts` 允许的请求种类未含 `github.tools/github.invoke`；相应通用工具桌面接线见独立 [PR #3](https://github.com/owla19s-ux/WEXPCeasy/pull/3) 的验证记录。先确认合并和冲突，再计入 main 的实现状态。
-- **Windows 交付**：NSIS 安装、数据根选择及重装恢复已有对应源码/测试提交线索；真实安装/卸载/重装、E4 人工操作、异常后资源彻底释放及当前 SHA 同步测试仍需逐项复核。历史“Windows 安装包尚未开发”的措辞不得当成当前事实。
-- **保持模块职责**：App 只做可信 OS/IPC、装配、运行时/崩溃恢复，不代替各领域保存配置或重造 Operation。
+`src/index.ts` 与 `foundations.ts` 负责可信模块装配与启动/停止；`src/desktop-main.ts`、`desktop-runtime.ts`、preload 负责 Electron/React 宿主；`desktop-space.ts`、`desktop-api.ts`、`desktop-connections.ts` 等负责各领域的窄 IPC；`desktop-authority.ts`、`desktop-credentials.ts` 处理可信确认、授权与秘密隔离。另有 Windows NSIS 安装/数据根选择与恢复相关实现、`desktop-failure.ts` 的 Renderer 失效封锁/恢复机制以及桌面测试。
 
+**当前不是仅有 headless 宿主或仅 Space/API 占位 IPC。** `desktop-connections.ts` 当前读取到的请求白名单包含配置、凭证及 `github.read/write`，但不包含通用 `github.tools/github.invoke`；后者的双平台成果见独立 [PR #3](https://github.com/owla19s-ux/WEXPCeasy/pull/3)，不能在未确认合并时记作 main 实现。
 
+## Owner 不变量
 
-> **当前代码事实（2026-11-07，`main bd72dfea`）**：已有正式 `app/src/desktop-main.ts`、`desktop-runtime.ts`、`desktop-space.ts`、`desktop-api.ts`、`desktop-authority.ts`、`desktop-credentials.ts`、preload 与桌面测试；最新 SHA 的 B3 desktop host acceptance 成功。不能据此认定 Agent/Conversations 全部 IPC、Windows 安装及真实操作完整验收。
+- App 只管理可信宿主、装配、Native/IPC、凭证入口、进程、窗口、错误恢复；不拥有 AI/Space/Conversations/权限/Operation 的业务权威。
+- Renderer 不直接访问 Node、密钥、任意 OS 工具或可信判权对象；受限输入须捕获、确认并在实际动作前重检。
+- abort/关闭 UI 不等于外部已停止、已回滚；资源释放不确定时保留 incomplete 和可重试清理，不自动假设安全重启。
+- WEX 程序安装目录、用户公共数据根、Space 工作区、外部工具环境目录保持不同用途，不因重新安装改写已有数据。
 
-> **当前模块施工状态（文档整理，2026-11-03）**：已有 app/src/index.ts、headless 验证入口；正式 Windows UI/IPC/安装未验收。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
->
-> **模块职责**：可信宿主装配、生命周期与平台接线。
->
-> **下一施工范围**：按 B3 D-01 复核已有桌面可信入口并补实际业务 IPC、授权接线与错误恢复；按 D-09 完成 Windows 安装/数据持续性验收，不在主进程重写领域 owner。
->
-> **职责分离**：工作模式只改产品代码和测试，提交 SHA/测试/缺口回执，**不得修改 README、CONTRACT 或其他施工文档**；普通对话模式检查、验收并更新施工状态。已实现部分禁止无证据重写。
->
-> **历史研究边界**：旧 `CONTRACT.md` 是研究兼容入口，不作为现行施工指令；需要追溯时由 A0 独立检索。
+## 当前缺口和验收
 
+| 方向 | 已有 | 仍需验证 |
+|---|---|---|
+| 模块装配与受控 IPC | 真实入口、测试与多个领域接线 | 全部消费者、撤权/崩溃/旧请求、权限身份 |
+| 对话与 GitHub/Local | 有正式 UI/宿主交互基础 | 真实服务、原 Operation/未知结果及跨域恢复 |
+| Windows 安装和数据根 | NSIS、首次选择和恢复相关代码/测试已提交 | 当前 SHA Windows CI、真实安装/卸载/重装 E4 |
+| 生命周期/Renderer 失败 | 即时封锁、资源释放与恢复逻辑已有专项代码 | 关闭失败、重复失效、停止不确定与实机 |
 
-## 当前施工速览（0.1.1 / B1-01）
-
-- **公开代码入口**：`app/src/index.ts`；可信模块装配、生命周期与 `startFoundations`，支持可选 connections 服务装配。
-- **运行验证**：`npm run test:app`；无窗口诊断入口 `npm run start:headless -- <已有数据根>`；跨模块验证另运行 `npm test`。
-- **部分实现/未验收**：正式 Electron/React 宿主、preload 和 Space/API 窄 IPC 已有代码及 CI；其他业务 IPC、Windows 安装包、首次数据根选择、重装恢复和 Windows E4 实机仍需验证。历史第八批隔离实验不再代表当前全部进度。
-- **施工依据**：[0.1.1 正式计划](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md) → [本域契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md) → `app/src/` 与 `app/tests/`。最新连接组合事实另见 [施工回执](CONNECTIONS-INTEGRATION-2026-11-02.md)。
-
-
-**当前：基础宿主已可选装配真实 connections 服务，包含持久配置/操作与退出排空。最新范围及证据见[宿主连接组合回执](CONNECTIONS-INTEGRATION-2026-11-02.md)；第七/八批描述保留为历史依据。**
-程序启动、窗口生命周期和功能装配。主界面布局归 UI，不在启动入口累积业务。
-
-历史初始状态（2026-10-30）：当时本目录只有职责说明，尚无产品实现；该状态已由第七批基础实现覆盖。当前代码与限制以本文“第七批实际实现”及后续批次补充为准。目录不是运行时数据路径，也不代表独立插件、进程或编译包。
-
-[源码目录与 Windows 数据要求](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)
-
-修改原则：实现与必要测试按实际需要就近添加；不预建技术分层。模块专属 UI 随模块，内置页面集中在顶层 UI。实现后补充具体入口和验证方式。
-
-## 模块编号规则
-
-- app 宿主与运行维护细分使用 `APP-<子域>-NNN`，详见 [CONTRACT 第 7 节](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md#7-模块独立功能编号与细化契约)。
-- APP-01～APP-12 保留为既有能力锚点，不重排。
-- app 只负责可信宿主、装配、平台/进程生命周期和跨域作业协调；不成为全局业务状态中心。
-
-## 第二批：可信装配与生命周期
-
-`app` 作为装配根连接领域公开入口、UI、连接器与所需窄服务；功能域不反向导入启动入口。模块内部服务可直接协作，不为统一形式把所有函数变成公共连接能力。对外出口/回调仍经受控边界，不能把可变宿主或数据库对象交给连接器。
-
-负责窗口/宿主进程、平台能力和退出协调；业务状态含义归各领域。关闭视图不取消任务；退出宿主应与 `workflows/runtime`、连接边界协作保存未决工作及外部定位，不能把窗口销毁当作已停止外部 Agent。是否持续后台运行尚未决定。
-
-第三方代码的隔离承载与平台限制由此处装配落实，DSH 插件实验继续在独立进程内；不加载到 Electron 主进程。独立进程只是故障隔离起点，不自动具有权限沙箱。平台隔离、预加载桥接和 IPC 具体形式待 Windows 实验。
-
-公共登记索引只定位 Space/Context 与域数据，不保存第二份业务真相；数据根、各工作区及外部资源分开配置。部分域/目录不可用时报告受影响能力，不静默生成空白数据覆盖原资料。数据迁移/重定位策略未定。
-
-## 第三批：模块契约设计入口（研究建议）
-
-覆盖样本 L01及全部模块组合。app 装配可引用被选实现，但业务模块不能借 app 取得整个容器/数据库。先用明确替身验证生命周期与装配，再让真实模块跑共同样例和组合验收；前端/Node/外部进程适配分开，不预设每次模块调用都走 IPC。
-
-本段是历史研究建议，不是本版施工依据。
-
-
-
-## 第四批：模块业务契约设计（历史研究）
-
-历史业务契约资料列明公开能力、消费依赖、权威/私有边界、失败与未知、修订恢复和可断言样例。能力粒度与新增语义为待评审设计；已定约束、推荐、待实验、待决策分别标明。不是产品实现、正式接口或全部协议已定稿；只施工成熟能力，未决项不靠猜测补全。
-
-## 基础应用能力归属补充（2026-10-31；候选目录，尚未实现）
-
-应用基础设施审查见[源码目录 §12](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md#12-基础能力补充后的代码目录归并2026-10-31-审查建议尚未创建源码子目录)与[缺口清单](../docs/A0-产品构想与研究/方案与研究/审查历史/APP-FOUNDATIONS-GAP-AUDIT-2026-10-31.md)。`app` 仍是 Electron 可信启动和装配根，不是全局业务状态中心。按出现实际实现/测试需求再在本域设立：`lifecycle/`（单实例、重复启动、窗口、退出及崩溃降级）；`updates/`（程序版本、安装升级和回滚协调）；`health/`（汇集各模块就绪/依赖和进程健康证据）；`platform/`（Windows 原生窗口、菜单、托盘、关联入口及平台接线）。这些路径均为**候选，非已存在源码子目录**，小规模能力可直接就近实现。
-
-边界：数据根、技术锁和迁移基础由shared提供；具体连接可用性由connections/适配器提供；插件生命周期由对应宿主负责；授权由permissions决定；Task与Operation分别由workflows/connections维护。更新应用程序、迁移数据格式、更新DSH插件是不同责任，不能合并成一个无条件副作用操作。应用聚合的健康状态只能引用来源证据，不可反写业务完成结果。
-
-后续验收须至少涵盖同一数据根重复启动、子进程残留、renderer/main进程崩溃、启动循环安全恢复、更新失败及旧数据回接、部分依赖缺失时的降级。当前无Windows实机证据，不能据文档宣称这些能力已可用。
-
-
-### 第六批施工准备度（历史：2026-10-31）
-
-**黄**：第六批历史条款记录当时准备度，不是当前施工命令；C/D未决能力继续暂缓，绿色不代表全域实现/验收完成。详细批次证据留在 A0 归档，不作为施工索引。
-
-
-当前施工以本模块 README、对应源码与测试为主；历史契约只按需追溯，不作为新增施工依据。
-
-
-## 第七批实际实现（2026-10-31）
-
-当前公开入口 `app/src/index.ts`；`assemble` 只消费可信内置模块定义，不加载第三方代码。先检查重复ID与依赖环，再拓扑装配，仅注入声明的依赖窄面，冻结依赖映射；不公开全容器或DB。缺依赖、依赖不可用、初始化失败与超时分别诊断。必需能力失败为failed；可选能力失效为degraded；装配不产生业务授权。
-
-生命周期以stop进行并发协调，按逆序释放已注册资源；超时结果不允许迟到注册，迟到实例仍需stop。初始化或释放尚未确认时返回incomplete，清理失败保留诊断且保留可重试的实例；后续stop会重试未确认的释放，直到成功或再次失败。迟到初始化的清理失败也保留实例供后续重试。初始化函数在返回实例前自行清理其部分资源，AbortSignal只请求停止，不能保证平台工作已停。startFoundations外层同样只在incomplete时解除停止请求缓存，确保provider清理和root lease释放均可重试。
-
-`startFoundations` 实际核验已存在数据根、取得 RootLock、装配真实shared技术存储与permissions，再向受信任宿主暴露明确的权限能力。权限聚合位于用户所选根 `permissions.sqlite`；app只接线，不解释/维护其业务数据。数据库及journal/wal/shm既存符号链接拒绝；无法确认关闭时保留根锁。路径检查不承诺对抗同用户恶意并发换链，Windows句柄/重解析点/ACL仍C。
-
-`app/src/main.ts` 是可执行无窗口诊断入口：`npm run start:headless -- <已有根目录>`。根需预先由可信维护者创建 `.wex-root.json`，例如 `{"format":1,"id":"chosen-root"}`；本批没有安装/选根向导，不在缺根时生成替代数据。CLI不授予任何权限，退出只释放宿主资源，不创建/取消Task。
-
-**历史第七批（2026-10-31）时点说明：**当时无窗口诊断入口只验证基础装配，尚没有正式 Electron 窗口、preload/IPC 或 React UI。**此结论不能用于描述最新 main：**现已存在 `app/src/desktop-main.ts`、桌面 IPC/Preload 及 `UI/src/renderer.tsx`、`workbench.tsx`；但首次选根向导、安装包、完整业务 IPC、后台行为政策和 Windows E4 仍须单独核验。D04 与全部 D01–D07 未因早期测试自动裁决。
-
-测试：`npm run test:app`。提供方生命周期测试使用故障模块；消费方同一权限reader向量对照真实与替身；集成真实根/锁/SQLite/permissions，覆盖撤销持久化、缺模块/存储、链接逃逸和不确定释放。
-
-
-## 第八批验证补充（2026-10-31）
-
-当前产品装配源码与公开契约不变；隔离Electron实验真实消费app公开出口，验证ready、窗口关闭至停机、incomplete占锁/重试及启动pending退出。实验先等待初始化所有权再释放，不把故障注入/测试探针升级为产品入口。正式Electron启动器、首次选根及Windows E4仍未交付。见[第八批报告](../docs/A0-产品构想与研究/历史参考/工程研究批次/batch8/REPORT.md)与[实验说明](../experiments/electron-host-spike/README.md)。
-
-## G3/G6：可信入口与恢复协调
-
-App 负责把可信宿主身份/入口事实和窄能力注入模块，并协调启动、退出、数据根接回及诊断入口；不拥有权限政策、Task 检查点或 Operation 账本。重启后由各 owner 恢复自己的事实，App 不自动重派未知工作。应用关闭期间是否后台运行仍属既有用户待决，不因跨对话持续工作要求而默认常驻。
-
-见[基础能力落地映射](../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
-
-
-## 可选连接服务装配（2026-11-02）
-
-`startFoundations({dataRoot, trust, connections:{adapters, shutdownTimeoutMs?}})` 通过 connections 公开出口装配配置绑定写派发；省略 connections 保持原路径。可信宿主得到 `host.connections` 的 configs、operations（只读）和 dispatch，不得到 Store/DB 或账本写入口。初始化失败为 degraded 且不暴露连接 client；退出先排空，再关库，未完成时保留根锁并允许再次 stop。
-
-数据库、生命周期、真实组合验证和未完成项以[本批回执](CONNECTIONS-INTEGRATION-2026-11-02.md)与[本域契约](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/app/CONTRACT-archive.md#8-可选连接服务的可信装配2026-11-02)为准；这不是 Renderer/IPC 或正式 Electron UI。
+施工先看最新 Actions 全运行集合及 SHA，再跑可用的 `npm run test:app`、build/typecheck/test/boundaries 与 Windows 专项。根 README → 本 README → `src/` 与 `tests/` 是默认阅读路径；历史批次仅在具体证据争议时追查。
