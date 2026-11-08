@@ -8,15 +8,9 @@ import type {createOperationLedger} from '../../src/index.js';
 import type {ApiService} from './service.js';
 import type {CredentialReference,Preparation} from './model.js';
 import {canonical,capture,object,text,revision} from './model.js';
-import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration} from './protocols/openai-chat.js';
+import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration,chatResponseIdentity} from './protocols/openai-chat.js';
 import type {ChatStreamResult} from './stream.js';
 import {requestCorrelation,failureMetadata,networkFailure,providerError} from './network-diagnostics.js';
-function responseIdentity(result:ChatStreamResult){
- return {
-  ...(result.providerResponseId===undefined?{}:{providerResponseId:result.providerResponseId}),
-  ...(result.providerModelId===undefined?{}:{providerModelId:result.providerModelId})
- };
-}
 export type ApiDirectoryResult=
  | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;source:'provider';observedAt:string;modelIds:string[];providerRequestId?:string}}
  | {status:'blocked'|'unknown';operationId:string;reason:string};
@@ -138,7 +132,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     if(probe?.tools&&result.toolCalls?.length!==1)return unknown('tool_probe_proposal_missing');
     if(!probe?.tools&&!result.text.trim())return unknown('empty_probe_response');
     if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
-    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,...(probe?.tools?{tools:true as const}:{}),...(probe?.stream?{stream:true as const}:{}),observedAt:new Date().toISOString(),usage:result.usage,...responseIdentity(result),...correlation};
+    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,...(probe?.tools?{tools:true as const}:{}),...(probe?.stream?{stream:true as const}:{}),observedAt:new Date().toISOString(),usage:result.usage,...chatResponseIdentity(result),...correlation};
     if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
     if(ledger.observe(operationId,receiptId,{...observation,scopeHash:createHash('sha256').update(canonical(decision.scope)).digest('hex')},'observed').status!=='ok')
      return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
@@ -285,7 +279,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const receipt=ledger.observe(operationId,'api-result',{
     requestId:snapshot.requestId,
     ...(snapshot.toolContinuation?{sourceRequestId:snapshot.toolContinuation.sourceRequestId}:{}),
-    text:result.text,usage:result.usage,...responseIdentity(result),...(result.reasoning?{reasoning:result.reasoning}:{}),...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
+    text:result.text,usage:result.usage,...chatResponseIdentity(result),...(result.reasoning?{reasoning:result.reasoning}:{}),...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
    if(receipt.status!=='ok')return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
    return {status:'ok',operationId,result:{...result,...correlation}};
