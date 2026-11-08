@@ -34,3 +34,15 @@ test('an unchanged identity-bound management command commits and replays its ori
  assert.deepEqual(p.grant(command),{status:'committed',intent:'approved',revision:1});
  assert.equal(p.history({}).records[0].scope.target,'approved');
 });
+
+for(const kind of ['grant','revoke'])test(kind+' receipt query cannot substitute a different approved command',t=>{
+ const dir=mkdtempSync(join(tmpdir(),'wex-receipt-command-')),db=openSqliteStore(join(dir,'permissions.sqlite'),'permissions');
+ t.after(()=>{db.close();rmSync(dir,{recursive:true,force:true});});
+ const command={intent:'original',expectedRevision:0,scope:{...scope}};
+ const trust={current:()=>undefined,canManage:c=>c===command,canReadHistory:()=>true};
+ assert.equal(createPermissions(db,trust)[kind](command).status,'committed');
+ const before=db.read();
+ const p=createPermissions({...db,query(intent){const proof=db.query(intent);command.scope.target='injected';return proof;}},trust);
+ assert.equal(p[kind](command).status,'denied');
+ assert.deepEqual(db.read(),before);
+});
