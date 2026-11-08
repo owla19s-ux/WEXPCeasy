@@ -9,7 +9,7 @@ import {createLocalFileBindings,createLocalFileReader,createLocalFileAdapter} fr
 import type {LocalFileBindingOptions} from '../../connections/local/src/index.js';
 import {createReadBoundary} from '../../connections/src/index.js';
 import {createConversations,createConversationGeneration,inspectConversationStore} from '../../conversations/src/index.js';
-import {directoryLock,openSqliteStore,createPersistedDiagnostics} from '../../shared/src/index.js';
+import {inspectRoot,directoryLock,openSqliteStore,createPersistedDiagnostics} from '../../shared/src/index.js';
 import type {RootLock,ManagedStore,Store,LockResult,PersistedDiagnosticOptions,DiagnosticCode} from '../../shared/src/index.js';
 import {createPermissions,inspectPermissionStore} from '../../permissions/src/index.js';
 import type {TrustPort,Permissions,Decision} from '../../permissions/src/index.js';
