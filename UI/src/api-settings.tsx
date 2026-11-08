@@ -4,9 +4,12 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  const [connections,setConnections]=useState<ApiConnectionView[]>([]),[models,setModels]=useState<ApiModelView[]>([]);
  const [selected,setSelected]=useState<ApiConnectionView>(),[model,setModel]=useState<ApiModelView>();
  const [name,setName]=useState(''),[provider,setProvider]=useState('Custom'),[protocol,setProtocol]=useState('openai-chat'),[endpoint,setEndpoint]=useState('https://api.openai.com/v1');
+ const [directory,setDirectory]=useState<{connectionId:string;revision:number;modelIds:string[];operationId:string;observedAt:string}>(),[directoryId,setDirectoryId]=useState('');
  const [modelName,setModelName]=useState(''),[modelId,setModelId]=useState(''),[temperature,setTemperature]=useState(''),[maxTokens,setMaxTokens]=useState('');
  const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[backend,setBackend]=useState(false);
  const epoch=useRef(0),running=useRef(false);
+ const clearDirectory=()=>{setDirectory(undefined);setDirectoryId('');};
+ const activeDirectory=selected&&directory?.connectionId===selected.id&&directory.revision===selected.revision?directory:undefined;
  async function call(input:DesktopApiInput){
   const captured=epoch.current;
   const reply=await bridge.api(input);
@@ -20,10 +23,10 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  }
  async function refresh(){const r=await call({kind:'snapshot'});if(r.status==='ok'&&r.view==='connections'){setConnections(r.connections);setBackend(r.credentialBackend);if(selected)setSelected(r.connections.find(c=>c.id===selected.id));}}
  async function listModels(id:string){const r=await call({kind:'models',connectionId:id});if(r.status==='ok'&&r.view==='models')setModels(r.models);}
- async function run(work:()=>Promise<void>){if(running.current)return;const captured=epoch.current;running.current=true;setBusy(true);setMessage('');try{await work();}catch(e){if(captured===epoch.current){setConnections([]);setModels([]);setMessage(e instanceof Error?e.message:'操作不可用');}}finally{if(captured===epoch.current){running.current=false;setBusy(false);}}}
- function choose(c:ApiConnectionView){setSelected(c);setName(c.name);setProvider(c.provider);setProtocol(c.protocol);setEndpoint(c.endpoint);setModels([]);setModel(undefined);}
+ async function run(work:()=>Promise<void>){if(running.current)return;const captured=epoch.current;running.current=true;setBusy(true);setMessage('');try{await work();}catch(e){if(captured===epoch.current){clearDirectory();setConnections([]);setModels([]);setMessage(e instanceof Error?e.message:'操作不可用');}}finally{if(captured===epoch.current){running.current=false;setBusy(false);}}}
+ function choose(c:ApiConnectionView){clearDirectory();setSelected(c);setName(c.name);setProvider(c.provider);setProtocol(c.protocol);setEndpoint(c.endpoint);setModels([]);setModel(undefined);}
  useEffect(()=>{
-  const unsubscribe=bridge.onAccessChanged(()=>{epoch.current++;running.current=false;setBusy(false);setBackend(false);setConnections([]);setModels([]);setSelected(undefined);setModel(undefined);setName('');setProvider('Custom');setProtocol('openai-chat');setEndpoint('https://api.openai.com/v1');setModelName('');setModelId('');setTemperature('');setMaxTokens('');setMessage('授权已变更，请重新读取配置。');});
+  const unsubscribe=bridge.onAccessChanged(()=>{epoch.current++;running.current=false;clearDirectory();setBusy(false);setBackend(false);setConnections([]);setModels([]);setSelected(undefined);setModel(undefined);setName('');setProvider('Custom');setProtocol('openai-chat');setEndpoint('https://api.openai.com/v1');setModelName('');setModelId('');setTemperature('');setMaxTokens('');setMessage('授权已变更，请重新读取配置。');});
   return ()=>{epoch.current++;running.current=false;unsubscribe();};
  },[bridge]);
  const params=():ApiCommonParameters=>{
@@ -39,7 +42,7 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  <button disabled={busy} onClick={()=>void run(refresh)}>读取 API 配置</button>
  <p role="status">{message}</p>
  <ul>{connections.map(c=><li key={c.id}><button disabled={busy} aria-pressed={selected?.id===c.id} onClick={()=>choose(c)}>{c.name}</button> {c.enabled?'启用':'停用'} · {c.credentialRef?'已绑定凭证':'无凭证'}<small>{c.endpoint}</small></li>)}</ul>
- <button disabled={busy} onClick={()=>{setSelected(undefined);setName('');setProvider('Custom');setProtocol('openai-chat');setEndpoint('https://api.openai.com/v1');setModels([]);setModel(undefined);}}>新建 API 连接</button>
+ <button disabled={busy} onClick={()=>{clearDirectory();setSelected(undefined);setName('');setProvider('Custom');setProtocol('openai-chat');setEndpoint('https://api.openai.com/v1');setModels([]);setModel(undefined);}}>新建 API 连接</button>
  <form aria-label="API 连接配置" onSubmit={e=>{e.preventDefault();void run(async()=>{
   const r=await call(selected?{kind:'connection.edit',id:selected.id,expectedRevision:selected.revision,name,provider,protocol,endpoint}:{kind:'connection.create',name,provider,protocol,endpoint,endpointMode:'base',enabled:true});
   if(r.status==='committed'){setMessage('连接已保存');await refresh();}
@@ -54,7 +57,13 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  <button disabled={busy||!backend} onClick={()=>void run(async()=>{await call({kind:'credential.set',connectionId:selected.id,expectedRevision:selected.revision});await refresh();})}>安全录入 Key</button>
  {!backend&&<p>此平台的系统加密凭证服务不可用。</p>}
  <button disabled={busy} onClick={()=>void run(async()=>{await call({kind:'credential.revoke',connectionId:selected.id,expectedRevision:selected.revision});await refresh();})}>撤销凭证并停用</button>
- <button disabled={busy} onClick={()=>void run(async()=>{const r=await call({kind:'connection.refresh',id:selected.id,expectedRevision:selected.revision});if(r.status==='ok'&&r.view==='directory')setMessage('服务端模型：'+r.modelIds.join('、'));})}>读取服务端模型目录</button>
+ <button disabled={busy} onClick={()=>void run(async()=>{clearDirectory();const r=await call({kind:'connection.refresh',id:selected.id,expectedRevision:selected.revision});if(r.status==='ok'&&r.view==='directory'){setDirectory({connectionId:selected.id,revision:selected.revision,modelIds:r.modelIds,operationId:r.operationId,observedAt:r.observedAt});setMessage(r.modelIds.length?'服务端模型目录已读取':'服务端未返回模型 ID。');}})}>读取服务端模型目录</button>
+ {activeDirectory&&<div data-api-directory>
+ <p>目录读取时间：<time dateTime={activeDirectory.observedAt}>{activeDirectory.observedAt}</time> · Operation {activeDirectory.operationId}</p>
+ <label>服务端模型目录<select aria-label="服务端模型目录" disabled={busy} value={directoryId} onChange={e=>setDirectoryId(e.target.value)}><option value="">请选择模型 ID</option>{activeDirectory.modelIds.map(id=><option key={id} value={id}>{id}</option>)}</select></label>
+ <button disabled={busy||!directoryId} onClick={()=>{if(!activeDirectory.modelIds.includes(directoryId))return;setModel(undefined);setModelName(directoryId);setModelId(directoryId);setTemperature('');setMaxTokens('');}}>填入新模型表单</button>
+ <p>目录列出不代表模型可调用。填表不会保存配置；保存后仍需单独测试能力。</p>
+ </div>}
  <button disabled={busy} onClick={()=>void run(()=>listModels(selected.id))}>读取已配置模型</button>
  <ul>{models.map(m=><li key={m.id}><button disabled={busy} onClick={()=>{setModel(m);setModelName(m.name);setModelId(m.modelId);const p=m.parameters.temperature;setTemperature(p?.mode==='value'?String(p.value):'');const limit=m.parameters.max_tokens;setMaxTokens(limit?.mode==='value'?String(limit.value):'');}}>{m.name}</button> · {m.observation?.capabilities.text??'未验证'}</li>)}</ul>
  <button disabled={busy} onClick={()=>{setModel(undefined);setModelName('');setModelId('');setTemperature('');setMaxTokens('');}}>新增模型</button>

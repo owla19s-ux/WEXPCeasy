@@ -20,9 +20,12 @@ app.setPath('userData',join(root,'electron-user'));
 app.setPath('sessionData',join(root,'electron-session'));
 const contextRoot=join(root,'selected-context');await mkdir(contextRoot);await writeFile(join(contextRoot,'.wex-root.json'),JSON.stringify({format:1,id:randomUUID()}));
 let nativeAllowed=true;const confirmations=[];
-const providerCalls=[];let heldResponse,providerMode='normal';
+const providerCalls=[];let heldResponse,providerMode='normal',directoryCalls=0;
 const githubCalls=[];let githubText='Desktop GitHub original',githubSha='a'.repeat(40),githubMode='ok';
 const provider=createServer(async(req,res)=>{
+ if(req.method==='GET'&&req.url==='/v1/models'){
+  directoryCalls++;res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({data:[{id:'test-model'},{id:'second-model'}]}));return;
+ }
  const chunks=[];for await(const chunk of req)chunks.push(chunk);
  const input=JSON.parse(Buffer.concat(chunks).toString());providerCalls.push(input);
  res.writeHead(200,{'content-type':'text/event-stream'});
@@ -187,6 +190,20 @@ try{
  await wc.executeJavaScript("document.querySelector('form[aria-label=\"API 连接配置\"]').requestSubmit();true");
  await waitFor("[...document.querySelectorAll('[data-api-settings] li button')].some(b=>b.textContent==='Desktop Provider')");
  await click('Desktop Provider');
+ await click('读取服务端模型目录');
+ await waitFor("!!document.querySelector('select[aria-label=\"服务端模型目录\"] option[value=\"test-model\"]')");
+ assert.equal(directoryCalls,1);
+ assert.match(await wc.executeJavaScript("document.querySelector('[data-api-directory]').textContent"),/Operation/);
+ const beforeImportConnections=await wc.executeJavaScript("window.wexHost.api({kind:'snapshot'})");
+ const beforeImportConnection=beforeImportConnections.value.connections.find(c=>c.name==='Desktop Provider');
+ const beforeImportModels=await wc.executeJavaScript('window.wexHost.api('+JSON.stringify({kind:'models',connectionId:beforeImportConnection.id})+')');
+ assert.equal(beforeImportModels.value.models.length,0,'directory discovery must not register models');
+ await choose('select[aria-label="服务端模型目录"]','test-model');await click('填入新模型表单');
+ assert.equal(await wc.executeJavaScript("document.querySelectorAll('form[aria-label=\"模型配置\"] input')[1].value"),'test-model');
+ const draftOnlyModels=await wc.executeJavaScript('window.wexHost.api('+JSON.stringify({kind:'models',connectionId:beforeImportConnection.id})+')');
+ assert.equal(draftOnlyModels.value.models.length,0,'choosing a directory ID must not save or verify a model');
+ await wc.executeJavaScript("document.querySelector('[data-api-directory]').scrollIntoView({block:'center'});true");
+ await capture('-api-directory');
  await choose('form[aria-label="模型配置"] input','Desktop Model');
  await choose('form[aria-label="模型配置"] input:nth-of-type(1)','Desktop Model');
  const modelFields=await wc.executeJavaScript("([...document.querySelectorAll('form[aria-label=\"模型配置\"] input')].map(input=>({type:input.type,step:input.step})))");assert.equal(modelFields.length,4);assert.deepEqual(modelFields.map(x=>x.type),['text','text','number','number']);assert.equal(modelFields[3].step,'1');
@@ -202,6 +219,7 @@ try{
   assert.equal(reply.ok,true);return reply.value.models.find(m=>m.name==='Desktop Model');
  };
  const initialModel=await readDesktopModel();assert.ok(initialModel);
+ assert.equal(initialModel.observation,null,'directory selection must not manufacture model capability evidence');
  const seedParameters=await wc.executeJavaScript('window.wexHost.api('+JSON.stringify({kind:'model.edit',id:initialModel.id,expectedRevision:initialModel.revision,parameters:{temperature:{mode:'disabled'},top_p:{mode:'value',value:0.25},max_tokens:{mode:'value',value:64}}})+')');
  assert.equal(seedParameters.value.status,'committed');
  await click('读取已配置模型');await click('Desktop Model');

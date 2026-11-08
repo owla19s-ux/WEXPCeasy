@@ -20,19 +20,34 @@ async function fixture(){
 }
 async function verify(){
  const checks=[];
- for(const phase of ['snapshot','models','error']){
+ for(const phase of ['snapshot','models','directory','error']){
   const f=await fixture();
   try{
    await f.click('读取 API 配置');
    if(phase==='models'){await f.settle(snapshot(connection.name));await f.click(connection.name);await f.click('读取已配置模型');}
+   if(phase==='directory'){await f.settle(snapshot(connection.name));await f.click(connection.name);await f.click('读取服务端模型目录');}
    await f.revoke();
    const status=f.container.querySelector('[role=status]').textContent;
-   await f.settle(phase==='snapshot'?snapshot('stale-private-provider'):phase==='models'?{status:'ok',view:'models',models:[{id:'stale-model',revision:1,name:'stale-private-model',modelId:'old',parameters:{}}]}:'stale-private-error',phase==='error');
+   await f.settle(phase==='snapshot'?snapshot('stale-private-provider'):phase==='models'?{status:'ok',view:'models',models:[{id:'stale-model',revision:1,name:'stale-private-model',modelId:'old',parameters:{}}]}:phase==='directory'?{status:'ok',view:'directory',modelIds:['stale-private-directory'],operationId:'stale-private-operation',observedAt:'2026-11-08T00:00:00Z'}:'stale-private-error',phase==='error');
    check(!f.container.textContent.includes('stale-private'),'late '+phase+' disclosed revoked data');
    check(f.container.querySelector('[role=status]').textContent===status,'late result replaced revocation notice');
    await f.click('读取 API 配置');await f.settle(snapshot('Fresh Provider'));
    check(f.container.textContent.includes('Fresh Provider'),'fresh authorized read unavailable');
    checks.push('revocation invalidates late '+phase);
+  }finally{await f.close();}
+ }
+ for(const transition of ['connection','revision','new']){
+  const f=await fixture();
+  try{
+   await f.click('读取 API 配置');await f.settle({status:'ok',view:'connections',credentialBackend:false,connections:[connection,{...connection,id:'other',name:'Other Provider'}]});
+   await f.click(connection.name);await f.click('读取服务端模型目录');
+   await f.settle({status:'ok',view:'directory',modelIds:['old-private-directory-id'],operationId:'old-directory-operation',observedAt:'2026-11-08T00:00:00Z'});
+   check(f.container.querySelector('[data-api-directory]')?.textContent.includes('old-private-directory-id'),'fresh directory not displayed');
+   if(transition==='connection')await f.click('Other Provider');
+   else if(transition==='new')await f.click('新建 API 连接');
+   else{await f.click('读取 API 配置');await f.settle({status:'ok',view:'connections',credentialBackend:false,connections:[{...connection,revision:2}]});}
+   check(!f.container.querySelector('[data-api-directory]'),'directory survived a different connection or revision');
+   checks.push(transition+' invalidates directory selection');
   }finally{await f.close();}
  }
  return {ok:true,checks,fixture:'deferred DesktopBridge; real React and browser DOM',remoteMutations:0};
