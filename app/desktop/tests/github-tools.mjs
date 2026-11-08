@@ -20,7 +20,7 @@ app.setPath('userData',join(root,'user'));app.setPath('sessionData',join(root,'s
 const key=randomBytes(32);
 const cipher={available:()=>true,seal(value){const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',key,iv);return Buffer.concat([iv,c.update(value,'utf8'),c.final(),c.getAuthTag()]).toString('base64');},
  unseal(value){const b=Buffer.from(value,'base64'),d=createDecipheriv('aes-256-gcm',key,b.subarray(0,12));d.setAuthTag(b.subarray(-16));return Buffer.concat([d.update(b.subarray(12,-16)),d.final()]).toString('utf8');}};
-let nativeAllowed=true,runtime,host;const prompts=[];
+let nativeAllowed=true,runtime,host,stage='startup';const prompts=[];
 const timer=setTimeout(()=>{console.error('github_tool_ui_timeout');app.exit(1);},120000);
 try{
  runtime=await runDesktop({url:pathToFileURL(resolve('desktop-dist/index.html')).href,preload:resolve('desktop-dist/preload.cjs'),show:true,spaceRootId:id,
@@ -45,7 +45,7 @@ try{
  await waitFor('!!document.querySelector("[data-connection-settings] select[name=github-tools-connection]")');
  await click('登记 GitHub 连接');
  await waitFor('[...document.querySelectorAll("button")].some(b=>b.textContent==="安全录入 GitHub Token")');
- await click('安全录入 GitHub Token');
+ stage='credential';await click('安全录入 GitHub Token');
  let secure;const until=Date.now()+15000;
  while(Date.now()<until){
   secure=BrowserWindow.getAllWindows().find(w=>w!==runtime.window);
@@ -59,12 +59,13 @@ try{
  const connectionId=await wc.executeJavaScript('document.querySelector("select[name=github-tools-connection]").options[1].value');
  await change('select[name=github-tools-connection]',connectionId,'HTMLSelectElement');
  await waitFor('!!document.querySelector("[data-github-tools]")');
+ stage='catalog';assert.equal(await wc.executeJavaScript('!!document.querySelector("section[aria-label=\\"GitHub 文件操作\\"]")'),false);
  await click('读取官方工具目录');
  await waitFor('document.querySelectorAll("select[name=github-tool] option").length>0');
  const toolCount=await wc.executeJavaScript('document.querySelectorAll("select[name=github-tool] option").length');
  await change('select[name=github-tool]','actions_list','HTMLSelectElement');
  await change('textarea[name=github-tool-arguments]',JSON.stringify({method:'list_workflows',owner,repo,perPage:3}),'HTMLTextAreaElement');
- const before=host.connections.operations.read().operations.length;
+ stage='invoke';const before=host.connections.operations.read().operations.length;
  nativeAllowed=false;await click('确认调用所选工具');
  await waitFor('document.querySelector("[data-github-tools] [role=status]").textContent.includes("取消")');
  assert.equal(host.connections.operations.read().operations.length,before);
@@ -76,20 +77,21 @@ try{
  assert.ok(prompts.some(p=>p.includes('actions_list')&&p.includes('list_workflows')));
  const visible=await wc.executeJavaScript('document.body.textContent');assert.equal(visible.includes(token),false);
  await mkdir('desktop-acceptance',{recursive:true});
+ await wc.executeJavaScript('document.querySelector("[data-tool-result]").scrollIntoView({block:"center"});new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r(true))))');
  await writeFile('desktop-acceptance/github-tools-'+process.platform+'.png',(await wc.capturePage()).toPNG());
- const promptCount=prompts.length;
+ stage='foreign-window';const promptCount=prompts.length;
  const foreign=new BrowserWindow({show:false,webPreferences:{preload:resolve('desktop-dist/preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
  await foreign.loadURL(wc.getURL());
  const denied=await foreign.webContents.executeJavaScript('window.wexHost.connections('+JSON.stringify({kind:'github.tools',id:connectionId,expectedRevision:2})+')');
  assert.deepEqual(denied,{ok:false,error:'untrusted_sender'});assert.equal(prompts.length,promptCount);foreign.destroy();
- const grants=(await wc.executeJavaScript('window.wexHost.permissions({kind:"snapshot"})')).value;
+ stage='revocation';const grants=(await wc.executeJavaScript('window.wexHost.permissions({kind:"snapshot"})')).value;
  const grant=grants.entries.find(e=>e.resource==='github'&&e.action==='write');assert.ok(grant);
  const revoked=await wc.executeJavaScript('window.wexHost.permissions('+JSON.stringify({kind:'revoke',id:grant.id,expectedRevision:grants.revision})+')');
  assert.equal(revoked.value.status,'committed');
  await waitFor('!document.querySelector("[data-tool-result]")&&!document.querySelector("select[name=github-tool]")');
  assert.equal(host.connections.operations.read().operations.length,before+1);
  const prefs=wc.getLastWebPreferences();assert.equal(prefs.sandbox,true);assert.equal(prefs.nodeIntegration,false);assert.equal(prefs.contextIsolation,true);
- assert.equal((await runtime.lifecycle.stop()).status,'stopped');host=undefined;
+ stage='shutdown';assert.equal((await runtime.lifecycle.stop()).status,'stopped');host=undefined;
  await writeFile('desktop-acceptance/github-tools-'+process.platform+'.json',JSON.stringify({sha:process.env.GITHUB_SHA,platform:process.platform,
   sourceCommit:'99d6d6503a7b2a133e2f8a595d6d0ba24b4086d3',toolCount,remoteMutations:0,
   checks:['actual React catalog selection and parameter entry','isolated credential modal','native decline sends no tool',
@@ -97,7 +99,8 @@ try{
   fixtures:['scripted native confirmation','ephemeral AES credential cipher'],limitations:['runtime supplied by trusted test host','no installer or manual desktop acceptance']},null,2));
  console.info('Official MCP desktop tool UI acceptance passed; tool count: '+toolCount+'; remote mutations: 0.');
  clearTimeout(timer);await rm(root,{recursive:true,force:true});app.quit();
-}catch{
+}catch(error){
+ console.error('github_tool_ui_stage '+stage+' '+String(error?.message??'unknown').split(token).join('[redacted]'));
  try{await runtime?.lifecycle.stop();}catch{}
  clearTimeout(timer);console.error('github_tool_ui_acceptance_failed');app.exit(1);
 }
