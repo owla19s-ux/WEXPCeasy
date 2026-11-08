@@ -4,11 +4,12 @@ import type {DesktopAuthority} from './desktop-authority.js';
 import type {CredentialTarget} from './credential-prompt.js';
 import type {LocalOperation} from './local-entries.js';
 import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,Parameters} from '../../connections/api/src/index.js';
+import {supportedApiProtocols} from '../../connections/api/src/index.js';
 import type {DesktopApiInput,DesktopApiReply,ApiCommonParameters} from '../../UI/src/index.js';
 const definitions:Record<string,{required:string[];optional?:string[]}>={
  snapshot:{required:['kind']},models:{required:['kind','connectionId']},
- 'connection.create':{required:['kind','name','provider','endpoint','endpointMode','enabled'],optional:['parameters']},
- 'connection.edit':{required:['kind','id','expectedRevision'],optional:['name','provider','endpoint','endpointMode','enabled','parameters']},
+ 'connection.create':{required:['kind','name','provider','endpoint','endpointMode','enabled'],optional:['parameters','protocol']},
+ 'connection.edit':{required:['kind','id','expectedRevision'],optional:['name','provider','protocol','endpoint','endpointMode','enabled','parameters']},
  'connection.delete':{required:['kind','id','expectedRevision']},
  'connection.refresh':{required:['kind','id','expectedRevision']},
  'model.create':{required:['kind','connectionId','name','modelId'],optional:['parameters']},
@@ -39,6 +40,7 @@ function capture(raw:unknown):DesktopApiInput|undefined{
   else if(key==='expectedRevision'){if(!Number.isSafeInteger(value)||Number(value)<1)return;}
   else if(typeof value!=='string'||!value.trim()||value.length>4096)return;
   if(key==='endpointMode'&&!['base','request'].includes(String(value)))return;
+  if(key==='protocol'&&!supportedApiProtocols().includes(String(value)))return;
   out[key]=value;
  }
  return out as unknown as DesktopApiInput;
@@ -143,7 +145,7 @@ export function createDesktopApi(options:{authority:DesktopAuthority;confirm:(su
     return {...saved,operationId};
    }finally{active=undefined;}
   }
-  if(input.kind==='connection.create')return execute({...input,intent:randomUUID(),protocol:'openai-chat',credentialRef:null,parameters:input.parameters??{}});
+  if(input.kind==='connection.create')return execute({...input,intent:randomUUID(),protocol:input.protocol??'openai-chat',credentialRef:null,parameters:input.parameters??{}});
   if(input.kind==='connection.edit'){
    const current=await connection(input.id);
    return execute({...input,intent:randomUUID(),...(input.parameters?{parameters:{...current.parameters,...input.parameters} as Parameters}:{})});
