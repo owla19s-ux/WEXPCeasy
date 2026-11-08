@@ -40,6 +40,7 @@ export function createGitHubMcpAdapter(options:GitHubMcpAdapterOptions){
  let server:Readonly<{name:string;version:string}>|undefined;
  let state:GitHubMcpAdapterStatus['state']='stopped';
  let tools:GitHubMcpTool[]=[];
+ let credentialFingerprint:string|undefined;
  let lifetime=new AbortController(),stopping=false;
  let tail:Promise<unknown>=Promise.resolve();
  const unavailable=()=>Error('github_mcp_unavailable');
@@ -57,7 +58,7 @@ export function createGitHubMcpAdapter(options:GitHubMcpAdapterOptions){
   try{if(client){await client.close();client=undefined;}}catch{failed=true;}
   try{if(transport){await transport.close();transport=undefined;}}catch{failed=true;}
   try{if(directory){await rm(directory,{recursive:true,force:true});directory=undefined;}}catch{failed=true;}
-  tools=[];server=undefined;
+  tools=[];server=undefined;credentialFingerprint=undefined;
   if(failed)throw unavailable();
  }
  async function operation<T>(work:(signal:AbortSignal)=>Promise<T>,signal?:AbortSignal):Promise<T>{
@@ -103,9 +104,17 @@ export function createGitHubMcpAdapter(options:GitHubMcpAdapterOptions){
    const captured=Object.freeze({...input});
    return enqueue(async()=>{
     if(state==='connected'){
-     if(JSON.stringify(connection)!==JSON.stringify(captured)||authority!==access)
+     if(JSON.stringify(connection)!==JSON.stringify(captured))
       throw Error('github_mcp_connection_mismatch');
-     await operation(async()=>{},signal);return;
+     const previous=authority;authority=access;
+     await operation(async combined=>{
+      // A session is reusable; the previous invocation's authorization is not.
+      if(previous!==access){
+       const token=await resolveCredential(captured,access);ensure(combined);
+       if(typeof token!=='string'||!token||createHash('sha256').update(token).digest('hex')!==credentialFingerprint)
+        throw unavailable();
+      }
+     },signal);return;
     }
     if(stopping)throw unavailable();
     // A failed session needs explicit stop before reuse: no implicit reconnect/replay.
@@ -122,6 +131,7 @@ export function createGitHubMcpAdapter(options:GitHubMcpAdapterOptions){
      const token=await resolveCredential(captured,access);
      ensure(combined);
      if(typeof token!=='string'||!token||/[\u0000-\u0020\u007f]/.test(token))throw unavailable();
+     credentialFingerprint=createHash('sha256').update(token).digest('hex');
      directory=await mkdtemp(join(tmpdir(),'wex-github-mcp-'));
      ensure(combined);
      transport=new StdioClientTransport({

@@ -3,7 +3,7 @@ import {createCredentialVault} from '../../shared/src/index.js';
 import type {CredentialCipher,CredentialBinding} from '../../shared/src/index.js';
 import {createLocalDirectoryBindings,createLocalDirectoryReader} from '../../connections/local/src/index.js';
 import type {LocalDirectoryReadOptions} from '../../connections/local/src/index.js';
-import {createGitHubFileAdapter,createGitHubConfiguredFileReader,createGitHubOfficialClientFactory,createGitHubMcpFileReader,githubCredentialTarget} from '../../connections/github/src/index.js';
+import {createGitHubFileAdapter,createGitHubConfiguredFileReader,createGitHubOfficialClientFactory,createGitHubMcpFileReader,createGitHubMcpConnectionAdapter,githubCredentialTarget} from '../../connections/github/src/index.js';
 import type {GitHubClientFactory,GitHubMcpRuntime,GitHubOfficialClientOptions} from '../../connections/github/src/index.js';
 import {createLocalFileBindings,createLocalFileReader,createLocalFileAdapter} from '../../connections/local/src/index.js';
 import type {LocalFileBindingOptions} from '../../connections/local/src/index.js';
@@ -19,7 +19,7 @@ import {createApiService,createApiTransport} from '../../connections/api/src/ind
 import type {ApiService,ApiOptions,ApiCredentialPort} from '../../connections/api/src/index.js';
 import {createOperationLedger} from '../../connections/src/index.js';
 import {createConnectionService} from '../../connections/src/index.js';
-import type {ConnectionClient,ConfiguredDispatchAdapter,ConfiguredReadAdapter} from '../../connections/src/index.js';
+import type {ConnectionClient,ConfiguredDispatchAdapter,ConfiguredReadAdapter,ConfiguredCapabilityAdapter} from '../../connections/src/index.js';
 import {openSpaceService} from '../../space/src/index.js';
 import type {SpaceService,SpaceOptions} from '../../space/src/index.js';
 import {createLocalEntries} from './local-entries.js';
@@ -32,7 +32,7 @@ export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'res
 export type FoundationLocalFiles=Pick<ReturnType<typeof createLocalFileBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationLocalDirectories=Pick<ReturnType<typeof createLocalDirectoryBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationCredentials=Pick<ReturnType<typeof createCredentialVault>,'put'|'revoke'|'query'>&{available():boolean};
-export interface FoundationOptions {githubOfficial?:{mcpRuntime?:Readonly<GitHubMcpRuntime>;fetch?:typeof globalThis.fetch;timeoutMs?:number};credentials?:{cipher:CredentialCipher};technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions&{coordinateWrites?:boolean};conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationOptions {githubOfficial?:{mcpRuntime?:Readonly<GitHubMcpRuntime>;fetch?:typeof globalThis.fetch;timeoutMs?:number};credentials?:{cipher:CredentialCipher};technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions&{coordinateWrites?:boolean};conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];capabilityAdapters?:readonly ConfiguredCapabilityAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
 export interface FoundationHost extends Host {readonly credentials?:FoundationCredentials;readonly technicalDiagnostics?:FoundationTechnicalDiagnostics;readonly localDirectories?:FoundationLocalDirectories;readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient;readonly space?:SpaceService;readonly local?:LocalEntryClient}
 async function openDomainStore(root:Root,name:string,namespace:string,open:(path:string,namespace:string)=>ManagedStore):Promise<ManagedStore>{
  for(const suffix of ['', '-journal','-wal','-shm']){
@@ -208,16 +208,21 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
     runtime:options.githubOfficial.mcpRuntime,resolveCredential,
     ...(options.githubOfficial.timeoutMs!==undefined?{timeoutMs:options.githubOfficial.timeoutMs}:{}),
    }):githubClient?createGitHubConfiguredFileReader(githubClient):undefined;
+   const githubCapabilities=options.githubOfficial?.mcpRuntime?createGitHubMcpConnectionAdapter({
+    runtime:options.githubOfficial.mcpRuntime,resolveCredential,
+    ...(options.githubOfficial.timeoutMs!==undefined?{timeoutMs:options.githubOfficial.timeoutMs}:{}),
+   }):undefined;
+   const capabilityAdapters=[...(options.connections?.capabilityAdapters??[]),...(githubCapabilities?[githubCapabilities]:[])];
    const adapters=[...(options.connections?.adapters??[]),...(files?[createLocalFileAdapter(files.resolve)]:[]),...(githubClient?[createGitHubFileAdapter(githubClient)]:[])];
    const readAdapters=[...(options.connections?.readAdapters??[]),...(githubReader?[githubReader]:[])];
-   const service=createConnectionService(permission,configs,operations,adapters,{...(options.connections??{}),readAdapters});
+   const service=createConnectionService(permission,configs,operations,adapters,{...(options.connections??{}),readAdapters,capabilityAdapters});
    if(files)localFiles=Object.freeze({register:files.register,read:createReadBoundary(permission,createLocalFileReader(files.resolve)).read});
    if(directories&&directoryReader)localDirectories=Object.freeze({register:directories.register,read:createReadBoundary(permission,directoryReader).read});
    apiLedger=createOperationLedger(operations);
    const dispatch:ConnectionClient['dispatch']=(...args)=>args[0]==='local'&&coordinator
     ?coordinator.dispatch(args[1],args[2],()=>service.operations.read().operations.some(o=>o.connection?.adapterId==='local'&&o.phase!=='observed'),()=>service.dispatch(...args))
     :service.dispatch(...args);
-   connections=Object.freeze({configs:service.configs,operations:service.operations,dispatch,read:service.read});
+   connections=Object.freeze({configs:service.configs,operations:service.operations,dispatch,read:service.read,discover:service.discover,invoke:service.invoke});
    return {value:connections,stop:async()=>{
     if((await service.stop()).status!=='stopped')throw Error('connections_still_running');
     await files?.close();await directories?.close();

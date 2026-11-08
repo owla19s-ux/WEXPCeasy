@@ -320,3 +320,5 @@ export function githubCredentialTarget(connection:Readonly<ConnectionConfig>):{
 
 export {createGitHubMcpAdapter} from './mcp.js';
 export type {GitHubMcpAdapterOptions,GitHubMcpAdapterStatus,GitHubMcpTool,GitHubMcpToolResult} from './mcp.js';
+
+export {createGitHubMcpConnectionAdapter} from './connection-adapter.js';
