@@ -8,7 +8,7 @@ import {createSqliteStore,openSqliteStore} from '../../dist/shared/src/index.js'
 import {storeContract,memoryStore} from './store-contract.mjs';
 export function sqliteFixture(mode='normal'){
  const dir=mkdtempSync(join(tmpdir(),'wex-contract-'));const db=new DatabaseSync(join(dir,'data.db'));
- const port={prepare:s=>db.prepare(s),close:()=>db.close(),exec(sql){
+ const port={prepare:s=>db.prepare(s),close:()=>db.close(),get isTransaction(){return db.isTransaction;},exec(sql){
  if(mode==='before'&&sql==='BEGIN IMMEDIATE')throw Error('unavailable before transaction');
  db.exec(sql);
  if(mode==='ack'&&sql==='COMMIT')throw Error('transport lost after durable commit');

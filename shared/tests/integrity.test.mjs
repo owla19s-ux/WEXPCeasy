@@ -73,3 +73,31 @@ test('failed COMMIT plus failed rollback never exposes uncommitted receipts as d
  raw.exec('ROLLBACK');
  const reopened=openSqliteStore(path,'uncertain');try{assert.deepEqual(reopened.read(),{revision:0,value:null});assert.equal(reopened.query('uncertain'),undefined);}finally{reopened.close();}
 });
+
+test('Store does not expose or roll back a transaction started by its caller',t=>{
+ const {raw}=fixture(t);const store=createSqliteStore(raw,'outside');
+ raw.exec('BEGIN IMMEDIATE');
+ try{
+  assert.throws(()=>store.read());assert.throws(()=>store.query('external'));
+  assert.deepEqual(store.commit({intent:'nested',expectedRevision:0,value:1}),{status:'not_committed',reason:'storage_unavailable'});
+  assert.equal(raw.isTransaction,true);
+ }finally{raw.exec('ROLLBACK');}
+ assert.deepEqual(store.read(),{revision:0,value:null});
+});
+test('an old read-only Store remains readable when its optional revision index is absent',t=>{
+ const {raw,path}=fixture(t);
+ raw.exec('DROP INDEX IF EXISTS intents_namespace_revision');
+ const readonly=new DatabaseSync(path,{readOnly:true});
+ const store=createSqliteStore(readonly,'test');
+ try{assert.deepEqual(store.read(),{revision:0,value:null});assert.equal(store.commit({intent:'readonly',expectedRevision:0,value:1}).status,'not_committed');}
+ finally{store.close();}
+});
+test('an unobservable transaction state requires reopen after uncertain rollback',t=>{
+ const {raw,path}=fixture(t);
+ const port={prepare:s=>raw.prepare(s),close(){},exec(sql){raw.exec(sql);if(sql==='COMMIT')throw Error('lost ack');}};
+ const store=createSqliteStore(port,'no-state');
+ assert.equal(store.commit({intent:'durable',expectedRevision:0,value:'kept'}).status,'unknown');
+ assert.throws(()=>store.query('durable'));
+ const reopened=openSqliteStore(path,'no-state');
+ try{assert.equal(reopened.query('durable').revision,1);assert.equal(reopened.read().value,'kept');}finally{reopened.close();}
+});
