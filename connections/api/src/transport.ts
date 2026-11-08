@@ -74,7 +74,8 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
      const latest=resolve();
      return canonical(permission.recheck(request,decision))===canonical(decision)
       &&canonical(latest.connection)===canonical(connection)
-      &&(!model||canonical(latest.model)===canonical(model));
+      &&(!model||canonical(latest.model)===canonical(model))
+      &&!stopped&&!controller.signal.aborted;
     }catch{return false;}
    };
    if(ledger.get(operationId))return blocked('already_recorded_no_automatic_retry');
@@ -210,7 +211,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const protocol=resolveApiProtocol(snapshot.connection.protocol);if(!protocol)return blocked('unsupported_protocol');
    let wireBody:unknown;
    try{wireBody=protocol.encodeBody(snapshot.body);}catch{return blocked('unsupported_protocol_input');}
-   const current=()=>{if(!allowed())return false;const next=api.prepare(prepareRequest,p);return next.status==='ok'&&next.snapshot.fingerprint===snapshot.fingerprint;};
+   const current=()=>{try{if(!allowed())return false;const next=api.prepare(prepareRequest,p);return next.status==='ok'&&next.snapshot.fingerprint===snapshot.fingerprint&&!stopped&&!signal?.aborted&&!controller?.signal.aborted;}catch{return false;}};
    const fingerprint=createHash('sha256').update(canonical({scope:initial.scope,snapshot:snapshot.fingerprint})).digest('hex');
    if(ledger.get(operationId))return blocked('already_recorded_no_automatic_retry');
    if(!current())return blocked('authorization_or_configuration_changed');
