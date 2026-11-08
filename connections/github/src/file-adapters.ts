@@ -1,6 +1,6 @@
 import type {ConnectionConfig,ConfiguredDispatchAdapter,ReadAdapter,AdapterAccess,ConfiguredReadAdapter} from '../../src/index.js';
 import type {Json} from '../../../shared/src/index.js';
-import type {GitHubClientFactory} from './index.js';
+import type {GitHubClientFactory} from './official-client.js';
 import {parseGitHubFileTarget as parse} from './file-target.js';
 
 const limit=1024*1024;
