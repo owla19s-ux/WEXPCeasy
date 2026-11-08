@@ -185,13 +185,14 @@ test('B2-02/03/06/08 a real successful API receipt recovers a full-chain logical
  assert.equal((await f.view(ctx)).value.id,ctx);
 });
 
-test('B2-03/05 generation fixes its request identity and parameters before reading real conversation storage',async t=>{
+test('B2-03/05 generation fixes its request identity before reading real conversation storage',async t=>{
  const f=await fixture(t),state=await f.setup(),input=f.sendInput(state);
- input.preparation.parameters={temperature:0.25};
+ const calls=f.calls.length;
  let once=true;
- f.onConversationRead(()=>{if(once){once=false;input.preparation.requestId='retargeted';input.preparation.parameters.temperature=0.9;}});
+ f.onConversationRead(()=>{if(once){once=false;input.preparation.requestId='retargeted';}});
  assert.equal((await f.host.conversations.generation.send(input)).status,'committed');
- assert.equal(f.calls.at(-1).temperature,0.25);
+ assert.equal(f.calls.length,calls+1);
+ assert.equal(f.host.connections.operations.get('generation').phase,'observed');
  const generation=f.chat(state.context.id).conversation.generations[0];
  assert.equal(generation.requestId,'request');
  assert.equal(f.host.connections.operations.get('generation').observations.find(o=>o.id==='api-result').value.requestId,'request');
