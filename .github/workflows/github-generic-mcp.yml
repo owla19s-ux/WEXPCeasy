@@ -4,10 +4,14 @@ on:
     branches: [main, codex/github-mcp-130431d-20261108]
     paths:
       - 'connections/github/**'
+      - 'connections/src/**'
+      - 'connections/tests/**'
       - '.github/workflows/github-generic-mcp.yml'
   pull_request:
     paths:
       - 'connections/github/**'
+      - 'connections/src/**'
+      - 'connections/tests/**'
       - '.github/workflows/github-generic-mcp.yml'
 permissions:
   contents: read
@@ -27,7 +31,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npm run test:github
+      - name: Public Connections and GitHub adapter suites
+        run: npm run build && node --test connections/tests/*.test.mjs connections/github/tests/*.test.mjs
       - name: Full suite on Linux
         if: runner.os == 'Linux'
         run: npm test
