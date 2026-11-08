@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import type {DesktopBridge,AiEntry,AiConfiguration} from './index.js';
 export function AiSettings({bridge}:{bridge:DesktopBridge}){
  const [entries,setEntries]=useState<AiEntry[]>([]),[selected,setSelected]=useState<AiEntry>();
@@ -6,22 +6,24 @@ export function AiSettings({bridge}:{bridge:DesktopBridge}){
  const [roleId,setRoleId]=useState(''),[positionId,setPositionId]=useState(''),[connectionId,setConnectionId]=useState(''),[modelId,setModelId]=useState('');
  const [models,setModels]=useState<{id:string;connectionId:string;name:string}[]>([]);
  const [busy,setBusy]=useState(false),[message,setMessage]=useState('');
- async function refresh(){const r=await bridge.ai({kind:'snapshot'});if(!r.ok||r.value.status!=='ok'){setEntries([]);throw Error(r.ok?r.value.status:r.error);}setEntries(r.value.entries);}
- async function run(work:()=>Promise<void>){if(busy)return;setBusy(true);setMessage('');try{await work();}catch(e){setEntries([]);setMessage(e instanceof Error?e.message:'配置不可用');}finally{setBusy(false);}}
+ const epoch=useRef(0),running=useRef(false);
+ async function checked<T,>(request:()=>Promise<T>):Promise<T>{const captured=epoch.current;const reply=await request();if(captured!==epoch.current)throw Error('stale_ai_settings_request');return reply;}
+ async function refresh(){const r=await checked(()=>bridge.ai({kind:'snapshot'}));if(!r.ok||r.value.status!=='ok'){setEntries([]);throw Error(r.ok?r.value.status:r.error);}setEntries(r.value.entries);}
+ async function run(work:()=>Promise<void>){if(running.current)return;const captured=epoch.current;running.current=true;setBusy(true);setMessage('');try{await work();}catch(e){if(captured===epoch.current){setEntries([]);setMessage(e instanceof Error?e.message:'配置不可用');}}finally{if(captured===epoch.current){running.current=false;setBusy(false);}}}
  function choose(e:AiEntry){setSelected(e);setKind(e.kind);setName(e.name);if(e.kind==='role')setText(e.prompt);if(e.kind==='position')setText(e.responsibility);if(e.kind==='agent'){setRoleId(e.roleId);setPositionId(e.positionId);setConnectionId(e.model.connectionId);setModelId(e.model.modelId);}}
  async function readModels(){
-  const c=await bridge.api({kind:'snapshot'});if(!c.ok||c.value.status!=='ok'||c.value.view!=='connections')throw Error('连接不可用');
+  const c=await checked(()=>bridge.api({kind:'snapshot'}));if(!c.ok||c.value.status!=='ok'||c.value.view!=='connections')throw Error('连接不可用');
   const rows:typeof models=[];
-  for(const connection of c.value.connections){const m=await bridge.api({kind:'models',connectionId:connection.id});if(!m.ok||m.value.status!=='ok'||m.value.view!=='models')throw Error('模型不可用');rows.push(...m.value.models.map(v=>({id:v.id,connectionId:v.connectionId,name:connection.name+' / '+v.name})));}
+  for(const connection of c.value.connections){const m=await checked(()=>bridge.api({kind:'models',connectionId:connection.id}));if(!m.ok||m.value.status!=='ok'||m.value.view!=='models')throw Error('模型不可用');rows.push(...m.value.models.map(v=>({id:v.id,connectionId:v.connectionId,name:connection.name+' / '+v.name})));}
   setModels(rows);
  }
- useEffect(()=>bridge.onAccessChanged(()=>{setEntries([]);setModels([]);setSelected(undefined);setName('');setText('');setRoleId('');setPositionId('');setConnectionId('');setModelId('');setMessage('授权已变更，请重新读取配置。');}),[bridge]);
+ useEffect(()=>{const unsubscribe=bridge.onAccessChanged(()=>{epoch.current++;running.current=false;setBusy(false);setEntries([]);setModels([]);setSelected(undefined);setName('');setText('');setRoleId('');setPositionId('');setConnectionId('');setModelId('');setMessage('授权已变更，请重新读取配置。');});return ()=>{epoch.current++;running.current=false;unsubscribe();};},[bridge]);
  return <div data-ai-settings><h3>Agent 与角色</h3><p>岗位、角色、Agent 独立保存；选择不增加权限。</p><button disabled={busy} onClick={()=>void run(refresh)}>读取 AI 配置</button><p role="status">{message}</p>
  <ul>{entries.map(e=><li key={e.kind+e.id}><button disabled={busy} onClick={()=>choose(e)}>{e.name}</button> · {e.kind}<small>{e.id} / 修订 {e.revision}</small></li>)}</ul>
  <button disabled={busy} onClick={()=>{setSelected(undefined);setName('');setText('');}}>新建配置</button>
  <form aria-label="AI 配置" onSubmit={e=>{e.preventDefault();void run(async()=>{
   const value:AiConfiguration=kind==='role'?{kind,name,prompt:text}:kind==='position'?{kind,name,responsibility:text}:{kind,name,roleId,positionId,model:{connectionId,modelId}};
-  const r=await bridge.ai({kind:'save',id:selected?.id??crypto.randomUUID(),expectedRevision:selected?.revision??0,value});
+  const r=await checked(()=>bridge.ai({kind:'save',id:selected?.id??crypto.randomUUID(),expectedRevision:selected?.revision??0,value}));
   if(!r.ok||r.value.status!=='committed')throw Error(r.ok?r.value.status:r.error);
   setMessage('配置已保存');setSelected(undefined);await refresh();
  });}}>
