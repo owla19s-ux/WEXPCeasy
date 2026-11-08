@@ -35,3 +35,11 @@ export function chatContentType(stream:boolean):RegExp {
 export function decodeOpenAiChat(source:AsyncIterable<Uint8Array>,stream:boolean,options:ChatStreamOptions):Promise<ChatStreamResult>{
  return stream?decodeChatStream(source,options):decodeChatResponse(source,options);
 }
+
+/** Provider response identifiers are taken from the validated Chat result, not HTTP body guesses. */
+export function chatResponseIdentity(result:ChatStreamResult){
+ return {
+  ...(result.providerResponseId===undefined?{}:{providerResponseId:result.providerResponseId}),
+  ...(result.providerModelId===undefined?{}:{providerModelId:result.providerModelId})
+ };
+}
