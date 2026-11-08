@@ -1,3 +1,4 @@
+import {GitHubTools} from './github-tools.js';
 import {useEffect,useRef,useState} from 'react';
 import type {DesktopBridge,DesktopConnectionsReply,DesktopGitHubFile} from './index.js';
 type Snapshot=Extract<DesktopConnectionsReply,{status:'ok'}>;
@@ -31,7 +32,7 @@ export function ConnectionSettings({bridge}:{bridge:DesktopBridge}){
  useEffect(()=>()=>{epoch.current++;},[]);
  function target(key:keyof DesktopGitHubFile,value:string){setFile(old=>({...old,[key]:value}));clearFile();}
  const connection=data?.connections.find(c=>c.id===selected&&c.adapter==='github');
- return <div data-connection-settings><h3>GitHub / Local 连接</h3><p>API 与模型在独立设置页管理；Local 文件地址在 Space / Context 中按次确认访问。GitHub 使用官方 SDK；每次远端读写均需原生确认。</p>
+ return <div data-connection-settings><h3>GitHub / Local 连接</h3><p>API 与模型在独立设置页管理；Local 文件地址在 Space / Context 中按次确认访问。GitHub 官方工具与文件操作复用同一连接；每次调用均需原生确认。</p>
  <button disabled={busy} onClick={()=>void run(refresh)}>读取连接与操作记录</button>
  <button disabled={busy||!data} onClick={()=>void run(n=>mutate({kind:'github.create',expectedRevision:data!.revision},n))}>登记 GitHub 连接</button>
  <p role="status">{message}</p>
@@ -63,6 +64,8 @@ export function ConnectionSettings({bridge}:{bridge:DesktopBridge}){
   if(epoch.current===n){clearFile();if(r.status==='written')setMessage('已提交 '+r.commitSha+' · Operation '+r.operationId+'。重新读取可继续编辑。');await refresh(n);}
  })}>确认提交 GitHub 修改</button></>}
  <p>仅修改已读取的 UTF-8 文件。冲突或结果未知时重新读取并核对原 Operation；不会自动重发。</p></section>}
+ <label>GitHub 工具连接<select name="github-tools-connection" disabled={busy} value={selected} onChange={e=>{setSelected(e.target.value);clearFile();}}><option value="">选择已登记连接</option>{data.connections.filter(c=>c.adapter==='github').map(c=><option key={c.id} value={c.id}>{c.id}</option>)}</select></label>
+ {connection&&<GitHubTools key={connection.id+':'+data.revision} bridge={bridge} connectionId={connection.id} revision={data.revision} enabled={connection.enabled&&connection.hasCredential} runtimeConfigured={data.githubMcpConfigured===true}/>}
  <h4>Operation 摘要</h4><p>unknown 表示结果未知；此页不会自动重试。</p>
  <ul>{data.operations.map(o=><li key={o.id}><strong>{o.phase}</strong><small>{o.id} · {o.adapter??'API'} · 尝试 {o.attempts} 次</small></li>)}</ul></>}</div>;
 }

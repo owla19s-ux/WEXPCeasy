@@ -68,10 +68,13 @@ export type DesktopPermissionReply={status:'ok';revision:number;entries:{id:stri
  {status:'committed';revision:number}|{status:'unknown';intent:string}|{status:'rejected'|'unavailable';reason:string}|{status:'cancelled'};
 
 export interface DesktopGitHubFile {owner:string;repo:string;ref:string;path:string}
-export type DesktopConnectionsInput={kind:'snapshot'}|{kind:'toggle';id:string;expectedRevision:number;enabled:boolean}|
+export interface DesktopGitHubTool {name:string;description?:string;inputSchema:Record<string,ApiJson>;annotations?:Record<string,ApiJson>}
+export type DesktopConnectionsInput={kind:'github.tools';id:string;expectedRevision:number}|
+ {kind:'github.invoke';id:string;expectedRevision:number;toolName:string;arguments:Record<string,ApiJson>}|{kind:'snapshot'}|{kind:'toggle';id:string;expectedRevision:number;enabled:boolean}|
  {kind:'github.create';expectedRevision:number}|{kind:'credential.set';id:string;expectedRevision:number}|{kind:'credential.revoke';id:string;expectedRevision:number}|
  {kind:'github.read';id:string;expectedRevision:number;file:DesktopGitHubFile}|
  {kind:'github.write';id:string;expectedRevision:number;file:DesktopGitHubFile;expectedSha:string;content:string;message:string};
-export type DesktopConnectionsReply={status:'ok';revision:number;connections:{id:string;adapter:string;endpoint:string;enabled:boolean;hasCredential:boolean}[];operations:{id:string;phase:string;attempts:number;connectionId:string|null;adapter:string|null}[];localFiles:boolean;localDirectories:boolean;credentialBackend?:boolean}|
+export type DesktopConnectionsReply={status:'tools';tools:DesktopGitHubTool[]}|
+ {status:'tool-result';toolName:string;result:ApiJson;operationId:string}|{status:'ok';revision:number;connections:{id:string;adapter:string;endpoint:string;enabled:boolean;hasCredential:boolean}[];operations:{id:string;phase:string;attempts:number;connectionId:string|null;adapter:string|null}[];localFiles:boolean;localDirectories:boolean;credentialBackend?:boolean;githubMcpConfigured?:boolean}|
  {status:'committed';revision:number;notice?:string}|{status:'file';file:DesktopGitHubFile;sha:string;content:string;size:number}|
  {status:'written';sha:string;commitSha:string;operationId:string}|{status:'rejected'|'unavailable'|'conflict'|'unknown';reason:string;operationId?:string}|{status:'cancelled'};

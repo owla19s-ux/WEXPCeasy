@@ -44,6 +44,7 @@ export function createConnectionService(permission:PermissionReader,configStore:
  const pending=new Set<Promise<void>>();let stopping=false;
  function live<T>(read:()=>T):T {if(stopping)throw Error('connections_stopping');return read();}
  const client=Object.freeze({
+  capabilities:()=>live(()=>Object.freeze(capabilities.map(a=>Object.freeze({id:a.id,version:a.version})))),
   configs:Object.freeze({
    read:()=>live(configs.read),get:(id:string)=>live(()=>configs.get(id)),
    put:(config:ConnectionConfig,revision:number,intent:string):ConfigResult=>stopping?{status:'unavailable',reason:'connections_stopping'}:configs.put(config,revision,intent),
@@ -100,4 +101,4 @@ export function createConnectionService(permission:PermissionReader,configStore:
  });
 }
 export type ConnectionService=ReturnType<typeof createConnectionService>;
-export type ConnectionClient=Pick<ConnectionService,'configs'|'operations'|'dispatch'|'read'|'discover'|'invoke'>;
+export type ConnectionClient=Pick<ConnectionService,'configs'|'operations'|'dispatch'|'read'|'discover'|'invoke'|'capabilities'>;

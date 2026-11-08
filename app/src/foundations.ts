@@ -222,7 +222,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    const dispatch:ConnectionClient['dispatch']=(...args)=>args[0]==='local'&&coordinator
     ?coordinator.dispatch(args[1],args[2],()=>service.operations.read().operations.some(o=>o.connection?.adapterId==='local'&&o.phase!=='observed'),()=>service.dispatch(...args))
     :service.dispatch(...args);
-   connections=Object.freeze({configs:service.configs,operations:service.operations,dispatch,read:service.read,discover:service.discover,invoke:service.invoke});
+   connections=Object.freeze({configs:service.configs,operations:service.operations,dispatch,read:service.read,discover:service.discover,invoke:service.invoke,capabilities:service.capabilities});
    return {value:connections,stop:async()=>{
     if((await service.stop()).status!=='stopped')throw Error('connections_still_running');
     await files?.close();await directories?.close();
