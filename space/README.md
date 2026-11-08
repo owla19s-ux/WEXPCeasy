@@ -1,5 +1,16 @@
 # Space / Context｜模块施工入口
 
+## 2026-11-08｜Space 源码状态复核补充
+
+> 本节基于 `main@e9ff10c81dc4` 的静态入口核对和 2026-11-08 Space 源码/文档提交；不等同完整同 SHA CI 签收。
+
+- **已有正式公开入口**：`space/src/index.ts` 导出 `openSpaceService` 及 Category、Space、Group、Context、Address、Association、Tool 和视图/投影相关类型；Context ID、地址与引用不是仅停留在设计文档。
+- **近期行为补强**：此前提交 `3693a8ec`、`beea0ce2`、`c2e68469` 对 Category 创建/编辑中的可见性撤权与准备/回执边界进行了定向修复及负例补充；须以当次测试/当前 SHA 复验，不能将提交直接写作独立签收。
+- **未完成证明**：工具关联的真实连接器可用性、失联、撤权后的 UI 展示、权限/恢复组合与 Windows 操作仍需核验。禁止添加已否决的 Placement 实体；Context 关联与实际授权/执行必须分离。
+- **维护准则**：以本 README/CONTRACT 规定的既有 Space 职责为准；模块内部定向补缺、查真实调用，不因旧资料再造重复空间/引用模型。
+
+
+
 > 仓库：`owla19s-ux/WEXPCeasy`；模块 Owner：`space/`；PC 优先。本文为模块功能、源码和验收入口，不代表全部产品能力已交付。
 >
 > **权威顺序**：A1 正式产品设计规定完整产品目标；本文说明模块实现与施工入口；[CONTRACT.md](CONTRACT.md) 规定当前确认的模块行为、接口及边界；A2 只记录版本范围和工程验证。A0 按需追溯，不作为直接施工命令。
