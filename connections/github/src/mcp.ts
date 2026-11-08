@@ -69,8 +69,8 @@ export function createGitHubMcpAdapter(options:GitHubMcpAdapterOptions){
   const abort=()=>rejectAbort(unavailable());
   combined.addEventListener('abort',abort,{once:true});
   try{
-   ensure(combined);
-   const result=await Promise.race([work(combined),aborted]);
+   // Install rejection handlers before authority checks can abort the lifetime.
+   const result=await Promise.race([Promise.resolve().then(()=>{ensure(combined);return work(combined);}),aborted]);
    ensure(combined);return result;
   }catch{
    lifetime.abort();state='error';
