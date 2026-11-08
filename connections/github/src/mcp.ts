@@ -131,6 +131,11 @@ export function createGitHubMcpAdapter(options:GitHubMcpAdapterOptions){
        HOME:directory,USERPROFILE:directory,APPDATA:directory,LOCALAPPDATA:directory},
      });
      client=new Client({name:'WEXPCeasy',version:'0.1.1'});
+     const sessionLifetime=lifetime;
+     client.onclose=()=>{
+      if(lifetime!==sessionLifetime||sessionLifetime.signal.aborted||stopping)return;
+      state='error';tools=[];server=undefined;sessionLifetime.abort();
+     };
      await client.connect(transport,{signal:combined,timeout:timeoutMs});
      ensure(combined);
      const observed=client.getServerVersion();
