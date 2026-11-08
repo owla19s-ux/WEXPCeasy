@@ -104,3 +104,17 @@ test('failed capability cleanup is incomplete and can be retried',async t=>{
  assert.equal((await f.service.stop()).status,'incomplete');
  assert.equal((await f.service.stop()).status,'stopped');assert.equal(attempts,2);
 });
+
+test('adapter version changes during discovery invalidate the captured configuration',async t=>{
+ let f;
+ f=fixture(t,{async discover(){f.adapter.version='changed';return [{name:'stale'}];}});
+ t.after(()=>f.service.stop());
+ assert.equal((await f.discover()).status,'denied');
+});
+test('revocation during a generic tool call cannot be journaled as an observed result',async t=>{
+ let f;
+ f=fixture(t,{async invoke(){f.deny();return {privateResult:'stale'};}});
+ t.after(()=>f.service.stop());
+ assert.equal((await f.invoke()).status,'unknown');
+ assert.equal(f.service.operations.get('op').phase,'unknown');
+});
