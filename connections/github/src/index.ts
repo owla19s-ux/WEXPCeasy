@@ -151,3 +151,5 @@ export {githubCredentialRef,githubCredentialTarget} from './credentials.js';
 /** General official GitHub MCP client adapter; separate from legacy file-only compatibility. */
 export {createGitHubMcpAdapter} from './mcp.js';
 export type {GitHubMcpAdapter,GitHubMcpAdapterOptions,GitHubMcpToolResult} from './mcp.js';
+
+export {createGitHubMcpCapabilityAdapter} from './mcp-connections.js';
