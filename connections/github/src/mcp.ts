@@ -55,7 +55,7 @@ export function createGitHubMcpAdapter(connection:Readonly<ConnectionConfig>,opt
   let failed=false;
   try{await previous.client.close();}catch{failed=true;}
   try{await previous.transport.close();}catch{failed=true;}
-  try{await rm(previous.directory,{recursive:true,force:true});}catch{failed=true;}
+  try{await rm(previous.directory,{recursive:true,force:true,maxRetries:5,retryDelay:100});}catch{failed=true;}
   if(failed)throw Error('github_mcp_unavailable');
   if(session===previous)session=undefined;
  }
@@ -96,6 +96,11 @@ export function createGitHubMcpAdapter(connection:Readonly<ConnectionConfig>,opt
       env:{GITHUB_PERSONAL_ACCESS_TOKEN:token,GITHUB_HOST:'https://github.com',
        HOME:directory,USERPROFILE:directory,APPDATA:directory,LOCALAPPDATA:directory},
      });
+     // SDK connect() closes asynchronously when initialization fails. Join that
+     // same close promise rather than racing another close against directory removal.
+     const closeTransport=transport.close.bind(transport);
+     let closing:Promise<void>|undefined;
+     transport.close=()=>closing??=(closeTransport());
      const client=new Client({name:'WEXPCeasy',version:'0.1.1'});
      const created:Session={client,transport,directory,fingerprint,connected:false};
      session=created;

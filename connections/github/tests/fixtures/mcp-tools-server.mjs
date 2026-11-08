@@ -1,9 +1,14 @@
 import {writeFile} from 'node:fs/promises';
 import {Server} from '@modelcontextprotocol/sdk/server/index.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
-import {ListToolsRequestSchema,CallToolRequestSchema} from '@modelcontextprotocol/sdk/types.js';
+import {ListToolsRequestSchema,CallToolRequestSchema,InitializeRequestSchema,LATEST_PROTOCOL_VERSION} from '@modelcontextprotocol/sdk/types.js';
 const mode=process.argv[2];
 const server=new Server({name:'github-mcp-server',version:'future-source-build'},{capabilities:{tools:{}}});
+if(mode==='slow-init')server.setRequestHandler(InitializeRequestSchema,async()=>{
+ await writeFile(process.argv[3],process.cwd());
+ await new Promise(r=>setTimeout(r,5000));
+ return {protocolVersion:LATEST_PROTOCOL_VERSION,capabilities:{tools:{}},serverInfo:{name:'github-mcp-server',version:'fixture'}};
+});
 const names=['get_repository','pull_request_read','actions_list'];
 let calls=0;
 server.setRequestHandler(ListToolsRequestSchema,async request=>{

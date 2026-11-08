@@ -141,3 +141,17 @@ test('runtime toolset configuration is captured rather than mutated by its calle
  const result=await a.callTool('get_repository',{},signal(),access());
  assert.deepEqual(result.structuredContent.toolsets,['--toolsets=repos']);
 });
+
+test('initialization cancellation joins SDK process closure before deleting its working directory',async t=>{
+ const dir=mkdtempSync(join(tmpdir(),'wex-mcp-init-')),marker=join(dir,'initializing');
+ t.after(()=>rmSync(dir,{recursive:true,force:true}));
+ const a=adapter('slow-init',{timeoutMs:10000,runtime:{command,expectedSha256,prefixArgs:[fixture,'slow-init',marker]}});
+ t.after(()=>a.stop());
+ const controller=new AbortController();
+ const outcome=assert.rejects(a.start(controller.signal,access()),{message:'github_mcp_unavailable'});
+ for(let n=0;n<500&&!existsSync(marker);n++)await new Promise(r=>setTimeout(r,10));
+ assert.equal(existsSync(marker),true,'server must receive initialize before cancellation');
+ const cwd=readFileSync(marker,'utf8');
+ controller.abort();await outcome;await a.stop();
+ assert.equal(existsSync(cwd),false);
+});
