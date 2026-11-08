@@ -1,5 +1,6 @@
 import type {ApiConnection,ApiModel,ToolDefinition} from '../model.js';
 import type {ChatStreamOptions,ChatStreamResult} from '../stream.js';
+import {anthropicRoute,anthropicHeaders,encodeAnthropicMessages,decodeAnthropicMessages} from './anthropic-messages.js';
 import {
  chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,
  toolProbeDeclaration,chatResponseIdentity,decodeChatModelDirectory
@@ -13,6 +14,9 @@ import {
  */
 export interface ApiProtocolAdapter {
  readonly id:string;
+ readonly supportsDirectory:boolean;
+ readonly supportsProbe:boolean;
+ readonly encodeBody:(body:Record<string,unknown>)=>unknown;
  readonly route:(connection:Pick<ApiConnection,'endpoint'|'endpointMode'>,kind:'models'|'completions')=>URL;
  readonly probeBody:(model:Pick<ApiModel,'modelId'>,probe:{stream:boolean;tools:boolean})=>unknown;
  readonly headers:(stream:boolean,token?:string,hasBody?:boolean)=>Record<string,string>;
@@ -26,7 +30,7 @@ export interface ApiProtocolAdapter {
 }
 
 const openaiChat:ApiProtocolAdapter=Object.freeze({
- id:'openai-chat',
+ id:'openai-chat',supportsDirectory:true,supportsProbe:true,encodeBody:body=>body,
  route:chatRoute,probeBody:chatProbeBody,headers:chatHeaders,contentType:chatContentType,
  decode:decodeOpenAiChat,directory:decodeChatModelDirectory,responseIdentity:chatResponseIdentity,
  probeTool:toolProbeDeclaration,
@@ -36,7 +40,27 @@ const openaiChat:ApiProtocolAdapter=Object.freeze({
    :probe.stream?'openai-chat-stream-probe-1':'openai-chat-probe-1'):'openai-chat-models-1'
 });
 
-const adapters:ReadonlyMap<string,ApiProtocolAdapter>=new Map([[openaiChat.id,openaiChat]]);
+const anthropicMessages:ApiProtocolAdapter=Object.freeze({
+ id:'anthropic-messages',supportsDirectory:false,supportsProbe:false,
+ encodeBody:encodeAnthropicMessages,
+ route:(connection,kind)=>{
+  if(kind!=='completions')throw Error('unsupported_anthropic_directory');
+  return anthropicRoute(connection);
+ },
+ probeBody:()=>{throw Error('unsupported_anthropic_probe');},
+ headers:(stream,token)=>anthropicHeaders(stream,token),
+ contentType:stream=>stream?/^text\\/event-stream(?:\\s*;|$)/i:/^application\\/json(?:\\s*;|$)/i,
+ decode:decodeAnthropicMessages,
+ directory:()=>{throw Error('unsupported_anthropic_directory');},
+ responseIdentity:chatResponseIdentity,
+ probeTool:toolProbeDeclaration,
+ generationVersion:'anthropic-messages-text-1',
+ diagnosticVersion:()=>{throw Error('unsupported_anthropic_diagnostic');}
+});
+
+const adapters:ReadonlyMap<string,ApiProtocolAdapter>=new Map([
+ [openaiChat.id,openaiChat],[anthropicMessages.id,anthropicMessages]
+]);
 
 /** Unknown protocols must fail closed; the Provider display name never selects wire behavior. */
 export function resolveApiProtocol(id:string):ApiProtocolAdapter|undefined{
