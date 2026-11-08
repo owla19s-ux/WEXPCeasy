@@ -59,3 +59,17 @@
 - [GitHub 专属 UI](UI/README.md)
 - [A1 产品功能总表 F05-012](../../docs/A1-正式产品设计/产品功能总表.md)
 - [A2 0.1.1 版本状态](../../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)
+
+## 6. 研究复核：通用调用通道与旧适配迁移（2026-11-08）
+
+本节依据官方 `pkg/github/tools.go`、`docs/server-configuration.md`、MCP 客户端协议以及 WEX 现有 `connections/src/config.ts`、`configured-read.ts`、`configured-dispatch.ts`、`service.ts`、`app/src/foundations.ts`、`tests/live-official-components.mjs` 核对；**属于有明确源码依据的施工设计，真实全工具运行和 Windows 产品接线仍未实测，不能标记为完成。**
+
+**确认的技术判断**：已有 Connections 的 Config/Operation/停止收口不需要重造；其公开端口目前是 `read` 和 `dispatch`，不能自然表达 MCP 的任意 `toolName + arguments`。下一步在复用现有生命周期和回执实现的前提下，优先尝试**最小通用工具调用入口**（例如 `discover/invoke`，名称与签名须由实现及测试确定），而不是把一百多种工具塞入单文件 `target` 或挨个重写业务 API。开发期优先证实所有已发现工具可以经过统一调用路径；产品发布阶段的细分策略不作为本次打通的前置。
+
+**旧实现迁移**：保留 `@modelcontextprotocol/sdk`（现有 v1 客户端基础）、官方上游模块和有价值的回归用例；以通用 MCP Adapter 替换 `createGitHubMcpFileReader` 的单文件专用业务路径；`createGitHubFileReader` / `createGitHubFileAdapter` / `createGitHubOfficialClientFactory` 的去留以缺口核对为准。**先迁移 `app/src/foundations.ts` 和消费端并通过测试，再删旧导出，禁止直接删除导致旧调用方断裂。**
+
+**已发现版本差异**：当前 WEX 用 `@modelcontextprotocol/sdk@1.26.0`，已有只读实测使用官方 Server v2.1.0；本仓最新引入的官方上游源码提交不等于已编译/运行的 v2.1.0 二进制，当前专用读取器还硬编码 `mcpVersion='2.1.0'`。须先用固定源码构建出的可执行文件跑初始化、`tools/list` 和 `tools/call`；不宜直接将硬编码版本比较延续到通用 Adapter。MCP TypeScript SDK v2 已有独立客户端包，但**本次并不要求先升级 SDK**；先验证现有 SDK 的实际兼容性。
+
+**最小可验顺序**：官方源码检出与构建 → `--toolsets=all` 下完整 `tools/list`（含分页/Schema）→ 同一通用 `tools/call` 接口测试仓库、PR、Actions 等不同类别 → 经 Connections 公共调用入口触发 → 切换宿主装配 → 删除冗余专用路径。工具因账号权限不可执行与 Adapter 根本无法转发是两种不同结果。
+
+详细接口映射和未决运行事项见 [CONTRACT 第 7 节](CONTRACT.md#7-通用-mcp-adapter-实施映射与验证界限)。

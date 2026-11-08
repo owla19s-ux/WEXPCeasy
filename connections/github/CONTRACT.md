@@ -1,6 +1,6 @@
 # GitHub Connector｜正式模块功能与接口契约
 
-> **当前适用**：`connections/github/` 的产品能力目标、Adapter 边界和验证依据；不表示全部已经实现，也不自动改变 0.1.1 版本范围。
+> **当前适用**：`connections/github/` 的产品目标与经源码核对的 Adapter 实施依据；公共通用调用接口的最终签名与官方全工具运行兼容尚待实测冻结，不表示全部已经实现，也不自动改变 0.1.1 版本范围。
 >
 > 上位产品要求：[A1 F05-012](../../docs/A1-正式产品设计/产品功能总表.md)；运行说明：[README](README.md)；历史 GH-01～GH-12 保留原编号与含义，不另建一套功能编号。
 
@@ -93,3 +93,49 @@ GitHub **官方 MCP Server 是完整功能提供者**。WEX 维护自己的 Conn
 - 上游源码已作为 submodule 被引用并有检出脚本，**Windows 构建与分发、官方多工具调用、真实运行兼容与产品入口验收仍未完成**。
 
 施工以 [README](README.md) → 本契约 → 源码和测试为最短阅读路径；版本排期及签收以 A2 为准，不能以本契约全文代替版本范围决策。
+
+## 7. 通用 MCP Adapter 实施映射与验证界限（源码研究，尚待运行实证）
+
+以下是核对当前上游与 WEX 源码后的**实施方案**，不是宣称已存在的接口。先做开发期可用性实验，再以实际编译/集成测试结果冻结 TypeScript 签名；不为每个官方工具生成独立文件或类。
+
+### 7.1 确认的现有入口及技术限制
+
+| 位置 | 现有事实 | 对通用 GitHub 工具的影响 |
+| --- | --- | --- |
+| 官方 `pkg/github/tools.go` | `AllTools()` 返回工具清单；工具集、特性标志和部分互替工具改变实际目录 | 运行期以 `tools/list` 为准，不能按静态数字硬编码 |
+| 官方 `docs/server-configuration.md` | 本地 Stdio 支持 `--toolsets`、`--tools`、`--exclude-tools`、`--read-only`；省略配置只暴露默认工具集 | 开发验证先启用 `--toolsets=all`；取消旧代码固定的 `--tools=get_file_contents --read-only` 限制 |
+| `connections/src/config.ts` | `ConnectionConfig` 仅 `id/adapter/endpoint/credentialRef/enabled` | 连接器专属的工具集/运行参数不要无证据塞进公共固定配置结构 |
+| `connections/src/service.ts` | 公共客户端提供 `configs`、`operations`、`read`、`dispatch`、`stop` | 通用 MCP `discover/invoke` 应作为少量可组合的公开能力扩展，不取代已有端口 |
+| `configured-read.ts` / `configured-dispatch.ts` | 当前入口以 `target` 和 `read/write` 为中心；写派发走 Operation | 不能让多参数/多动作工具因旧文件语义被裁剪；复用配置、回执底座，不硬塞文件模型 |
+| `connections/github/src/index.ts` | 文件专用 Octokit 与 MCP 读取器；MCP 读取器每次启动 Stdio 并固定 `get_file_contents` | 新通用实现负责 MCP 会话、工具目录、任意工具调用和结果保真，旧路径迁移后退休 |
+| `app/src/foundations.ts` | 以 `createGitHubMcpFileReader` 或 Octokit 文件读写服务装配 GitHub | 新入口需由可信宿主注入并通过公共 Connections 提供给调用方；避免 UI 直接持有 SDK |
+| `tests/live-official-components.mjs` | 下载固定 v2.1.0 二进制，测试文件读取 | 这是文件级验收，不是官方完整能力验收 |
+
+### 7.2 建议的通用能力契约（接口形式待实测确定）
+
+- **会话控制**：按 Connection/凭证/运行配置建立、复用和关闭一个官方 MCP 客户端会话；Stdio `Client.connect(transport)` 建立协议连接，`close()` 释放资源。**不再每次读取必然新建进程**。
+- **发现**：`discover(connectionId)` 返回该连接实际 `tools/list` 所有页面的原始工具描述（name、description、inputSchema、可用注解等），不预筛成“文件工具”；同时提供目录刷新。
+- **调用**：`invoke(connectionId,toolName,arguments)` 由内部 `client.callTool({name,arguments})` 执行，原样保留 MCP `content`、`structuredContent`、`isError` 等结果；协议级异常另行报告，不把业务工具返回的 `isError` 当调用成功。
+- **连接宿主**：由 Connections 公开上述能力的必要通道；既有 `configs`、`operations`、`read`、`dispatch` 不取消。可先用模块内适配实验确定形态，再做唯一必要的公共接口改动。
+- **业务消费者**：Space 的工具关联仅保存选择事实（`SPACE-TOOL-001～003`）；普通对话、Context 对话、UI 等从统一公开入口获得工具目录并调用，不复制 GitHub 业务实现。
+- **缺口补足**：只有查证某个产品所需操作未在官方 MCP 暴露时才保留/新增 Octokit 专属适配；避免双份 GitHub 文件读写长期并行。
+
+示意数据流：`consumer → Connections.discover/invoke → GitHub Adapter → MCP Client → official server → MCP result → Connections → consumer`。这里的 `discover/invoke` 是**拟议职责名**，不是当前已存在的 `ConnectionClient` 方法；签名与回执关系在实际实现与测试后冻结。
+
+### 7.3 不应提前执行的删除与结构改造
+
+1. **不得删除** `@modelcontextprotocol/sdk`：这是 MCP 客户端库，和引入完整上游 Go Server 是两种职责。是否升级 v2 SDK 由兼容测试判断。
+2. **不得先删除** `createGitHubMcpFileReader`、`createGitHubFileAdapter` 等：`app/src/foundations.ts`、现有测试仍在调用。先将调用方迁移新通用 Adapter 后再清理。
+3. **不得假设** `Octokit` 必须长期保留：实际 MCP/REST 覆盖缺口确认后，只保留真实必要的补充路径；不复制已经由官方 Server 实现的业务 API。
+4. **不得引入** 第二套 Connection 配置、Operation 账本或独立的 GitHub 公共连接层，也不要求为全部工具创建一张独立 UI 页面。
+
+### 7.4 运行验证门槛
+
+- 源码子模块与官方 Windows/Linux 构建：目前只有 Gitlink 和检出脚本，尚未在 WEX 本次修改中实测编译；固定源码与旧二进制 v2.1.0 不可混为同一运行版本。
+- 工具清单：同一运行配置下完整读取 `tools/list`，记录真实条目数量、Schema、配置；默认工具集和 `all` 不能混淆。
+- 兼容：现用 `@modelcontextprotocol/sdk@1.26.0` 属客户端 v1 系列，官方 SDK 已推出 v2 客户端；**不以升级为先决条件**，先实测固定服务版本的 initialize/list/call，再决定迁移成本。
+- 多工具：至少跨仓库、PR、Actions 三类以同一个 `invoke` 路径返回真实或模拟可核验结果，证明不是单文件特例。
+- 宿主：Connections 公共入口能将工具目录与调用结果交给消费模块，原 `read/dispatch` 和文件用例回归不退化。
+- **目前仅完成源码与文档研究，未取得“全量工具已通”的运行证据**；不能据此删除旧源码、声称 Windows 兼容或签收 0.1.1。
+
+官方依据：[`github-mcp-server` 工具注册](https://github.com/github/github-mcp-server/blob/99d6d6503a7b2a133e2f8a595d6d0ba24b4086d3/pkg/github/tools.go)、[官方 Server 配置](https://github.com/github/github-mcp-server/blob/99d6d6503a7b2a133e2f8a595d6d0ba24b4086d3/docs/server-configuration.md)、[MCP TypeScript SDK v1 客户端文档](https://ts.sdk.modelcontextprotocol.io/client)。
