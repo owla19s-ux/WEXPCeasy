@@ -1,5 +1,5 @@
 import {encodeToolRound} from './continuation.js';
-import {resolveApiProtocol} from './protocols/index.js';
+import {resolveApiProtocol,matchesApiProbeAdapterVersion} from './protocols/index.js';
 import {resolvePreparationParameters} from './preparation-parameters.js';
 import {applyConfigMutation} from './config-mutations.js';
 import {reconcileTextProbeObservation} from './observation-reconciliation.js';
@@ -72,12 +72,10 @@ export function createApiService(store:Store,permission:PermissionReader,options
      const evidence=operation?.observations.find(row=>row.id==='api-probe-result'&&row.phase==='observed')?.value;
      const binding=operation?.connection;
      const scopeHash=createHash('sha256').update(canonical(probe.decision.scope)).digest('hex');
-     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!['openai-chat-probe-1','openai-chat-stream-probe-1','openai-chat-tool-probe-1','openai-chat-stream-tool-probe-1','anthropic-messages-probe-1','anthropic-messages-stream-probe-1'].includes(binding.adapterVersion)
+     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!matchesApiProbeAdapterVersion(connection.protocol,binding.adapterVersion,{stream:evidence?.stream===true,tools:evidence?.tools===true})
        ||binding.connectionId!==connection.id||binding.configRevision!==connection.revision||!connection.enabled
        ||!object(evidence)||evidence.source!=='probe'||typeof evidence.observedAt!=='string'||evidence.scopeHash!==scopeHash
        ||evidence.connectionId!==connection.id||evidence.connectionRevision!==connection.revision
-       ||(evidence.tools===true)!==(['openai-chat-tool-probe-1','openai-chat-stream-tool-probe-1'].includes(binding.adapterVersion))
-       ||(evidence.stream===true)!==(['openai-chat-stream-probe-1','openai-chat-stream-tool-probe-1','anthropic-messages-stream-probe-1'].includes(binding.adapterVersion))
        ||evidence.modelId!==item.id||evidence.modelRevision!==item.revision)
       fail('probe_evidence_mismatch','unavailable');
      verifyDependencies=()=>recheck(probe.request,probe.decision);
