@@ -72,12 +72,12 @@ export function createApiService(store:Store,permission:PermissionReader,options
      const evidence=operation?.observations.find(row=>row.id==='api-probe-result'&&row.phase==='observed')?.value;
      const binding=operation?.connection;
      const scopeHash=createHash('sha256').update(canonical(probe.decision.scope)).digest('hex');
-     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!['openai-chat-probe-1','openai-chat-stream-probe-1','openai-chat-tool-probe-1','openai-chat-stream-tool-probe-1'].includes(binding.adapterVersion)
+     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!['openai-chat-probe-1','openai-chat-stream-probe-1','openai-chat-tool-probe-1','openai-chat-stream-tool-probe-1','anthropic-messages-probe-1','anthropic-messages-stream-probe-1'].includes(binding.adapterVersion)
        ||binding.connectionId!==connection.id||binding.configRevision!==connection.revision||!connection.enabled
        ||!object(evidence)||evidence.source!=='probe'||typeof evidence.observedAt!=='string'||evidence.scopeHash!==scopeHash
        ||evidence.connectionId!==connection.id||evidence.connectionRevision!==connection.revision
        ||(evidence.tools===true)!==(['openai-chat-tool-probe-1','openai-chat-stream-tool-probe-1'].includes(binding.adapterVersion))
-       ||(evidence.stream===true)!==(['openai-chat-stream-probe-1','openai-chat-stream-tool-probe-1'].includes(binding.adapterVersion))
+       ||(evidence.stream===true)!==(['openai-chat-stream-probe-1','openai-chat-stream-tool-probe-1','anthropic-messages-stream-probe-1'].includes(binding.adapterVersion))
        ||evidence.modelId!==item.id||evidence.modelRevision!==item.revision)
       fail('probe_evidence_mismatch','unavailable');
      verifyDependencies=()=>recheck(probe.request,probe.decision);
@@ -92,7 +92,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
         {operationId:c.probeOperationId,observedAt:evidence.observedAt,...(evidence.stream===true?{stream:true}:{})}};
      }else observed={connectionId:connection.id,connectionRevision:connection.revision,modelId:item.modelId,
       source:'probe',sourceRevision:c.probeOperationId,observedAt:evidence.observedAt,
-      capabilities:{text:'supported',stream:evidence.stream===true?'supported':'unknown',tools:'unknown',image:'unknown',reasoning:'unknown'},parameters:{}};
+      capabilities:{text:'supported',stream:evidence.stream===true?'supported':'unknown',tools:'unknown',image:'unknown',reasoning:'unknown'},parameters:connection.protocol==='anthropic-messages'?{max_tokens:{type:'integer',minimum:1}}:{}};
     }else{
      if(!options.observer)fail('observer_unavailable','unavailable');
 
