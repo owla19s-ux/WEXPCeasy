@@ -134,3 +134,26 @@ test('idle server exit invalidates its status and catalog without reconnecting',
   await assert.rejects(adapter.callTool('actions_list',{}),{message:'github_mcp_unavailable'});
  }finally{await adapter.stop();}
 });
+
+test('cancelled startup cleans a temporary directory that finishes creating after stop',async()=>{
+ const fs=(await import('node:fs/promises')).default;
+ const {syncBuiltinESMExports}=await import('node:module');
+ const original=fs.mkdtemp;let directory,enter,release;
+ const entered=new Promise(r=>enter=r),wait=new Promise(r=>release=r);
+ fs.mkdtemp=async(...args)=>{directory=await original(...args);enter();await wait;return directory;};
+ syncBuiltinESMExports();
+ const {adapter,access}=setup(),controller=new AbortController();
+ try{
+  const pending=assert.rejects(adapter.start(connection,access,controller.signal),{message:'github_mcp_unavailable'});
+  await entered;controller.abort();await pending;await adapter.stop();release();
+  const until=Date.now()+500;
+  while(Date.now()<until){
+   try{await fs.stat(directory);}catch(error){if(error.code==='ENOENT')break;throw error;}
+   await new Promise(r=>setTimeout(r,10));
+  }
+  await assert.rejects(fs.stat(directory),{code:'ENOENT'});
+ }finally{
+  release();fs.mkdtemp=original;syncBuiltinESMExports();
+  await adapter.stop();if(directory)await fs.rm(directory,{recursive:true,force:true});
+ }
+});
