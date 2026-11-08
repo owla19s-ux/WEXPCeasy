@@ -21,7 +21,7 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 
 | 功能 | 目标摘要 | 当前判定 | 关键缺口 |
 |---|---|---|---|
-| API-01 Provider 配置 | 多连接、协议/URL、CRUD/复制/引用保护 | 部分实现 | 多协议和完整 UI 操作 |
+| API-01 Provider 配置 | 多连接、协议/URL、CRUD/复制/引用保护 | 配置 CRUD、两种协议 ID 与桌面连接协议选择已接线、待最新 SHA 运行验收 | 完整 UI 操作与真实厂商验收 |
 | API-02 模型能力目录 | 登记/刷新/探针、能力与限制 | 部分实现 | 多模态方向、来源/目录交互 |
 | API-03 凭证与诊断 | 安全 Key、轮换、分级真实测试 | 部分实现 | 多账户/真实厂商验收 |
 | API-04 请求与流式 | 非流式/SSE/取消/终态/错误 | Chat 已实现；Anthropic Messages 文本路径已接线、待本 SHA 验收 | 多模态、推理、完整真实厂商验收 |
@@ -62,7 +62,7 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 
 - 上级：[Connections](../README.md) 公共 Operation/受控调用；由可信宿主注入 Permissions、Credentials 与数据 Store。
 - 真实宿主装配：`app/tests/api.test.mjs`；业务使用者：AI、Conversations、App/desktop UI，均只通过公开能力接线。
-- 模块测试：`connections/api/tests/config.test.mjs`、`config-mutations.test.mjs`、`preparation.test.mjs`、`preparation-parameters.test.mjs`、`observation-reconciliation.test.mjs`、`endpoint-policy.test.mjs`、`protocol.test.mjs`、`protocol-registry.test.mjs`、`anthropic-messages.test.mjs`、`anthropic-transport.test.mjs`、`network-diagnostics.test.mjs`、`transport.test.mjs`、`tools.test.mjs`，及目录下其他测试。
+- 模块测试：`connections/api/tests/config.test.mjs`、`config-mutations.test.mjs`、`preparation.test.mjs`、`preparation-parameters.test.mjs`、`observation-reconciliation.test.mjs`、`endpoint-policy.test.mjs`、`protocol.test.mjs`、`protocol-registry.test.mjs`、`anthropic-messages.test.mjs`、`anthropic-transport.test.mjs`、`anthropic-probe-adoption.test.mjs`、`network-diagnostics.test.mjs`、`transport.test.mjs`、`tools.test.mjs`，及目录下其他测试。
 - 常用命令：`npm run test:api`、`npm run typecheck`、`npm test`、`npm run check:boundaries`；先确认当前 `package.json`，本次未执行这些命令。
 - CI 检查先查看 [Actions 全运行列表](https://github.com/owla19s-ux/WEXPCeasy/actions/runs)，核对实际提交 SHA、对应测试及日志；不能用以前 SHA 的绿灯签收新实现。
 
@@ -76,7 +76,7 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 
 ## 6. 协议研究与历史材料
 
-当前协议注册表有 `openai-chat` 与 `anthropic-messages` 两个入口。Service 的请求准备、Transport 的探针/目录/发送按 `resolveApiProtocol(connection.protocol)` 选择适配器，未知协议拒绝。Anthropic Messages 已实现原生文本发送、JSON/SSE 解码、基础用量转换、单页模型目录刷新及最小文本生成探针，通过原生 `/messages`、`/models` 与 `x-api-key` 请求；已采纳的原生探针可记录 `max_tokens` 参数要求。目录分页、工具调用、推理续接和多模态尚未接通，不得视为完整服务商功能。现有 `ApiProtocolAdapter` 仍是逐步完善的运行接口，未来需按真实协议能力分离可选操作而不是强迫各协议复用 Chat 工具语义。Gemini、Responses 等其他原生协议尚未实现。跨 Provider 请求/流式/工具/usage 应通过正式 Protocol Adapter 兼容机制扩展，不以任何单个 SDK 替换整个产品协议。
+当前协议注册表有 `openai-chat` 与 `anthropic-messages` 两个入口。桌面 API 设置页已增加协议选择与模型 `max_tokens` 编辑，并通过可信宿主白名单校验输入；是否实际通过 Windows UI 操作与最新 SHA 构建，仍依赖对应验收。Service 的请求准备、Transport 的探针/目录/发送按 `resolveApiProtocol(connection.protocol)` 选择适配器，未知协议拒绝。Anthropic Messages 已实现原生文本发送、JSON/SSE 解码、基础用量转换、单页模型目录刷新及最小文本生成探针，通过原生 `/messages`、`/models` 与 `x-api-key` 请求；已采纳的原生探针可记录 `max_tokens` 参数要求。目录分页、工具调用、推理续接和多模态尚未接通，不得视为完整服务商功能。现有 `ApiProtocolAdapter` 仍是逐步完善的运行接口，未来需按真实协议能力分离可选操作而不是强迫各协议复用 Chat 工具语义。Gemini、Responses 等其他原生协议尚未实现。跨 Provider 请求/流式/工具/usage 应通过正式 Protocol Adapter 兼容机制扩展，不以任何单个 SDK 替换整个产品协议。
 
 - 历史研究和 Pi AI 隔离实验仅在需要兼容证据时查阅：[A0 API 研究](../../docs/A0-产品构想与研究/方案与研究/既有研究/api/README.md)、[Pi AI 实验](../../experiments/pi-ai-compat/README.md)。
 - 长期功能以 A1 为准，0.1.1 的实际施工及签收以 A2 为准。历史研究不是独立施工命令。
