@@ -25,6 +25,7 @@ import type {LocalEntryOptions,LocalEntryClient} from './local-entries.js';
 import {createAiConfigurations,verifyModelWithApi,inspectAiConfigurationStore} from '../../AI/src/index.js';
 import {assemble} from './assembly.js';
 import {openDomainStore,closeStores} from './foundation-stores.js';
+import {createFoundationCredentialFacade} from './foundation-credential-access.js';
 import type {Host,ModuleDiagnostic} from './assembly.js';
 export type FoundationTechnicalDiagnostics=Pick<ReturnType<typeof createPersistedDiagnostics>,'read'>&{reportDesktopFailure():{status:'written'|'failed'}};
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
@@ -116,30 +117,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
     const use=credentialUses.get(request);
     return !!use&&use.reference.id===access.id&&use.binding.connectionId===access.binding.connectionId&&use.binding.endpoint===access.binding.endpoint&&use.binding.provider===access.binding.provider;
    });
-   const ready=(request:object,action:string,id:string)=>{
-    if(stopping||!credentialVault)return;
-    const decision=permission.evaluate(request);
-    if(decision.status!=='allow'||decision.scope.resource!=='credentials'||decision.scope.action!==action||decision.scope.target!=='credential:'+id||decision.scope.context!==null)return;
-    credentialManagement.set(request,decision);return credentialVault;
-   };
-   credentials=Object.freeze({
-    available(){try{return !stopping&&!!credentialVault&&options.credentials!.cipher.available()===true;}catch{return false;}},
-    put(request:object,input:Parameters<FoundationCredentials['put']>[1]){
-     if(stopping||!credentialVault)return {status:'unavailable' as const};
-     const vault=ready(request,'credential.write',input.id);if(!vault)return {status:'denied' as const};
-     try{return vault.put(request,input);}finally{credentialManagement.delete(request);}
-    },
-    query(request:object,input:Parameters<FoundationCredentials['query']>[1]){
-     if(stopping||!credentialVault)return {status:'unavailable' as const};
-     const vault=ready(request,'credential.receipt',input.id);if(!vault)return {status:'denied' as const};
-     try{return vault.query(request,input);}finally{credentialManagement.delete(request);}
-    },
-    revoke(request:object,input:Parameters<FoundationCredentials['revoke']>[1]){
-     if(stopping||!credentialVault)return {status:'unavailable' as const};
-     const vault=ready(request,'credential.revoke',input.id);if(!vault)return {status:'denied' as const};
-     try{return vault.revoke(request,input);}finally{credentialManagement.delete(request);}
-    }
-   });
+   credentials=createFoundationCredentialFacade(credentialVault,options.credentials!.cipher,permission,credentialManagement,()=>stopping);
    return {value:Object.freeze({available:true}),stop:async()=>{await closeStores(credentialStores);credentialVault=undefined;credentials=undefined;}};
   }catch(error){credentialVault=undefined;credentials=undefined;try{await closeStores(credentialStores);}catch{/* retained for host shutdown retry */}throw error;}
  }}]:[]),
