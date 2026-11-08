@@ -43,7 +43,9 @@ export function encodeAnthropicMessages(body:Record<string,unknown>):Json{
  const messages:{role:'user'|'assistant';content:string}[]=[],system:string[]=[];
  let previousSystem=true;
  for(const raw of body.messages){
-  const m=record(raw),role=m.role,content=text(m.content);
+  const m=record(raw);
+  if(Object.keys(m).some(key=>key!=='role'&&key!=='content'))throw Error('unsupported_anthropic_message');
+  const role=m.role,content=text(m.content);
   if(role==='system'){
    if(!previousSystem)throw Error('unsupported_anthropic_system_position');
    system.push(content);

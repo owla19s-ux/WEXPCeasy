@@ -178,6 +178,8 @@ export function createApiService(store:Store,permission:PermissionReader,options
    const wireTools=tools.map(t=>({type:'function',function:t}));
    const data={...(continuation?{toolContinuation:{reference:p.toolContinuation!,sourceRequestId:continuation.sourceRequestId}}:{}),...(tools.length?{tools}:{}),requestId:p.requestId,context:p.context,conversation:d.scope.conversation,connection:capture(connection),model:capture(model),url:url.href,body:{...values,model:model.modelId,messages:continuation?[...p.messages,...continuation.messages]:p.messages,stream:p.stream,...(tools.length?{tools:wireTools as unknown as Json}:{} )},parameterSources:sources,parameterSettings:Object.fromEntries([...settings].map(([name,row])=>[name,row.setting])),timeoutMs:p.timeoutMs,...(p.headersTimeoutMs===undefined?{}:{headersTimeoutMs:p.headersTimeoutMs}),...(p.idleTimeoutMs===undefined?{}:{idleTimeoutMs:p.idleTimeoutMs})};
    const encoded=canonical(data);if(Buffer.byteLength(encoded,'utf8')>maxBytes)fail('snapshot_too_large');
+   // A prepared snapshot must be encodable by its selected protocol, including continuations.
+   try{protocol.encodeBody(data.body);}catch{fail('unsupported_protocol_input');}
    recheck(cr.request,cr.decision);recheck(mr.request,mr.decision);recheck(request,d);
    return {status:'ok',snapshot:freeze({...data,fingerprint:createHash('sha256').update(encoded).digest('hex')})};
   }catch(e){return error(e,'prepare',true);}

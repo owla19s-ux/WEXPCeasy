@@ -203,7 +203,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const preparedDecision=permission.evaluate(prepareRequest);
    const sameActor=(a:Extract<Decision,{status:'allow'}>,b:Extract<Decision,{status:'allow'}>)=>['subject','entry','conversation','context','relationship','relationshipGeneration'].every(k=>a.scope[k as keyof typeof a.scope]===b.scope[k as keyof typeof b.scope]);
    if(preparedDecision.status!=='allow'||!sameActor(initial,preparedDecision))return blocked('prepare_actor_mismatch');
-   const prepared=api.prepare(prepareRequest,p);if(prepared.status!=='ok')return blocked('reason' in prepared&&prepared.reason==='timeout_out_of_range'?prepared.reason:'preparation_rejected');
+   const prepared=api.prepare(prepareRequest,p);if(prepared.status!=='ok')return blocked('reason' in prepared&&(prepared.reason==='timeout_out_of_range'||prepared.reason==='unsupported_protocol_input')?prepared.reason:'preparation_rejected');
    const snapshot=prepared.snapshot;
    const protocol=resolveApiProtocol(snapshot.connection.protocol);if(!protocol)return blocked('unsupported_protocol');
    let wireBody:unknown;
