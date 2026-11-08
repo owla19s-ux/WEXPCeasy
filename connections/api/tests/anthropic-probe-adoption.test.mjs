@@ -29,7 +29,11 @@ test('native Anthropic real probe can be adopted for an unverified manual model,
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  t.after(()=>{server.closeAllConnections();server.close();});
  let ledger;
- const f=fixture(t,{readProbeOperation:id=>ledger?.get(id)});
+ let simulateWrongProtocol=false;
+ const f=fixture(t,{readProbeOperation:id=>{
+  const operation=ledger?.get(id);
+  return simulateWrongProtocol&&operation?{...operation,connection:{...operation.connection,adapterVersion:'openai-chat-probe-1'}}:operation;
+ }});
  const connection=f.connection({name:'Anthropic native',provider:'anthropic',protocol:'anthropic-messages',
   endpoint:`http://127.0.0.1:${server.address().port}/v1`,credentialRef:null});
  const model=f.model(connection.id,{name:'Claude',modelId:'claude-test'});
@@ -48,6 +52,13 @@ test('native Anthropic real probe can be adopted for an unverified manual model,
   'native-probe',model.id,1,1,3000);
  assert.equal(probe.status,'ok');
  assert.equal(probe.observation.source,'probe');
+ simulateWrongProtocol=true;
+ const foreignEvidence=f.execute({kind:'model.observe',intent:'reject-cross-protocol',id:model.id,
+  expectedRevision:1,probeOperationId:probe.operationId});
+ assert.equal(foreignEvidence.status,'unavailable');
+ assert.equal(foreignEvidence.reason,'probe_evidence_mismatch');
+ assert.equal(f.query('model',model.id).value.observation,null);
+ simulateWrongProtocol=false;
  const accepted=f.execute({kind:'model.observe',intent:'accept-native-probe',id:model.id,
   expectedRevision:1,probeOperationId:probe.operationId});
  assert.equal(accepted.status,'committed');
