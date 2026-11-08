@@ -28,7 +28,8 @@ test('native Anthropic real probe can be adopted for an unverified manual model,
  });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  t.after(()=>{server.closeAllConnections();server.close();});
- const f=fixture(t);
+ let ledger;
+ const f=fixture(t,{readProbeOperation:id=>ledger?.get(id)});
  const connection=f.connection({name:'Anthropic native',provider:'anthropic',protocol:'anthropic-messages',
   endpoint:`http://127.0.0.1:${server.address().port}/v1`,credentialRef:null});
  const model=f.model(connection.id,{name:'Claude',modelId:'claude-test'});
@@ -36,7 +37,7 @@ test('native Anthropic real probe can be adopted for an unverified manual model,
  const dir=mkdtempSync(join(tmpdir(),'wex-anthropic-probe-'));
  const db=openSqliteStore(join(dir,'operations.sqlite'),'operations');
  t.after(()=>{db.close();rmSync(dir,{recursive:true,force:true});});
- const ledger=createOperationLedger(db);
+ ledger=createOperationLedger(db);
  const transport=createApiTransport(f.service,f.permission,ledger,{
   derivePrepareRequest:request=>{
    const decision=f.permission.evaluate(request);
