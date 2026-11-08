@@ -30,7 +30,7 @@ export interface ApiProtocolAdapter {
 }
 
 const openaiChat:ApiProtocolAdapter=Object.freeze({
- id:'openai-chat',supportsDirectory:true,supportsProbe:true,encodeBody:body=>body,
+ id:'openai-chat',supportsDirectory:true,supportsProbe:true,encodeBody:(body:Record<string,unknown>)=>body,
  route:chatRoute,probeBody:chatProbeBody,headers:chatHeaders,contentType:chatContentType,
  decode:decodeOpenAiChat,directory:decodeChatModelDirectory,responseIdentity:chatResponseIdentity,
  probeTool:toolProbeDeclaration,
@@ -43,13 +43,13 @@ const openaiChat:ApiProtocolAdapter=Object.freeze({
 const anthropicMessages:ApiProtocolAdapter=Object.freeze({
  id:'anthropic-messages',supportsDirectory:false,supportsProbe:false,
  encodeBody:encodeAnthropicMessages,
- route:(connection,kind)=>{
+ route:(connection:Pick<ApiConnection,'endpoint'|'endpointMode'>,kind:'models'|'completions')=>{
   if(kind!=='completions')throw Error('unsupported_anthropic_directory');
   return anthropicRoute(connection);
  },
  probeBody:()=>{throw Error('unsupported_anthropic_probe');},
- headers:(stream,token)=>anthropicHeaders(stream,token),
- contentType:stream=>stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i,
+ headers:(stream:boolean,token?:string)=>anthropicHeaders(stream,token),
+ contentType:(stream:boolean)=>stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i,
  decode:decodeAnthropicMessages,
  directory:()=>{throw Error('unsupported_anthropic_directory');},
  responseIdentity:chatResponseIdentity,
