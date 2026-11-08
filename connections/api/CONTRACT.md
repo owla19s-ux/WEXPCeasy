@@ -1,7 +1,7 @@
 # API 模块正式功能与接口契约
 
 > Owner：`connections/api`；需求来源：A1 `F04-001～F04-013`；适用：长期完整能力，不代表全部纳入 0.1.1。
-> 状态：2026-11-08 技术评估后建立的正式模块约束。既有已运行接口以源码与测试为准；新增协议/类型结构为实施方向，**不宣称已实现**。
+> 状态：2026-11-08 技术评估后建立的正式模块约束。既有已运行接口以源码与测试为准；新增协议以源码和对应 SHA 实测为准；未接通或未获真实厂商验收的能力**不宣称已实现**。
 > 施工入口：[README](README.md)；版本交付及验收：[A2 0.1.1 总表](../../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)。
 
 ## 1. 定位、Owner 与不变量
@@ -24,7 +24,7 @@ API 是独立的模型服务连接和协议适配模块：管理非秘密 Provid
 | API-01 Provider/连接 | F04-001 | 多连接、协议与 URL、复制、启停、修订、引用保护删除 | `service.ts`、`model.ts`、`config.test.mjs` | 协议配置扩展、UI 全部行为、真实验收 |
 | API-02 模型/能力目录 | F04-003/004 | 手工模型、远端列举、来源/时间、上下文及输入输出模态 | 模型 CRUD、刷新/探测、observation | 音视频文件与方向能力、可选目录导入 |
 | API-03 凭证与诊断 | F04-002/006 | 多 Key 引用/轮换、地址/认证/目录/生成/流/工具分级探测 | 可信凭证端口、目录及探针测试 | 多账户交互及真实厂商测试 |
-| API-04 模型调用 | F04-007 | 独立请求、非流/流式、取消、超时、结构化完成/unknown | `transport.ts`、`stream.ts`、`response.ts` | 原生协议、多模态、完整桌面验收 |
+| API-04 模型调用 | F04-007 | 独立请求、非流/流式、取消、超时、结构化完成/unknown | Chat 已有；`protocols/anthropic-messages.ts` 提供原生文本请求与 JSON/SSE，待最新 SHA 完整回归 | 其他原生协议、多模态、真实厂商和桌面 UI 验收 |
 | API-05 工具格式 | F04-008 | 描述映射、Schema、提议、受控工具结果回注 | `tools.ts`、`continuation.ts` | 跨协议工具格式及实际调用方闭环 |
 | API-06 用量/费用 | F04-010 | Provider usage、缓存/推理、估算/账单来源分离 | `usage.ts` | 费用、币种、价格时效及展示 |
 | API-07 本地 Provider | F04-013 | 本地兼容端点、模型/能力、服务状态 | localhost HTTP 允许；本地 HTTP 测试 | 本地运行时诊断；远期范围 |
@@ -51,7 +51,8 @@ API 是独立的模型服务连接和协议适配模块：管理非秘密 Provid
 - 保留现有 OpenAI Chat Completions 兼容请求、JSON/SSE、工具/usage 解码作为第一个正式适配实现；不能将其直接称为所有 Provider 的通用解析器。
 - 适配层按**真实协议**处理请求映射、鉴权约定、URL、流事件、工具参数、响应终态、usage 和 Provider 错误；网络传输层负责 fetch、取消、阶段性超时、响应限制，宿主边界负责 Operation。
 - Provider、Protocol、Connection、Model 必须独立表达；不要求为每个厂商复制全套 Adapter，也不默认把任何 SDK 当成完整 Provider 宿主。
-- 未来 OpenAI Responses、Anthropic Messages、Gemini 原生协议及 DeepSeek 特有语义按实际资料和隔离兼容测试接入；**当前未批准全部进入 0.1.1**。
+- 已有 `protocols/index.ts` 显式协议选择，以及 `openai-chat.ts`、`anthropic-messages.ts` 两份独立实现。Anthropic 原生文本发送、用量、SSE、单页目录与文本探针属于当前开发中的实码能力；工具调用、推理续接、多模态和目录分页均未完成。当前 Desktop API 创建连接仍固定 `openai-chat`，因此 UI 选择原生协议尚未接线。
+- OpenAI Responses、Gemini 原生协议及 DeepSeek 额外语义仍须按照实际官方协议与隔离测试分批实现；**不因长期目标自动纳入全部 0.1.1**。
 - 对未知模型能力不伪造“支持”。允许用户通过获准的探测路径获得证据；实际产品使用时对明确不支持的功能拒绝，对未知能力采用明确、可追踪的待验证处理，不得默默丢弃模态。
 - 多模态必须区分图片输入/生成、音频输入/输出、视频/文件、结构化输出及工具能力，不以单个 `image` 布尔状态替代全部能力；数据结构迁移须独立验证重启恢复。
 
@@ -81,7 +82,7 @@ API 是独立的模型服务连接和协议适配模块：管理非秘密 Provid
 | 公共入口 | `src/index.ts` | 保留对外导出稳定 |
 | 配置与查询 | `service.ts`、`model.ts` | 定向拆分独立函数，保持原语义 |
 | 模型能力与参数 | `model.ts`、`service.ts` | 能力/规则分离，旧数据迁移需验证 |
-| 协议适配 | `transport.ts`、`stream.ts`、`response.ts` | 先抽出 OpenAI Chat 专属处理，保留回归 |
+| 协议适配 | `protocols/index.ts`、`protocols/openai-chat.ts`、`protocols/anthropic-messages.ts`、`stream.ts`、`response.ts` | 按协议维护独立路由、编码、诊断版本和响应解析；注册表只做选择，保留旧 Chat 回归 |
 | 传输/诊断 | `transport.ts` | 分离 fetch/超时与模型目录/Probe |
 | 工具续接 | `tools.ts`、`continuation.ts` | 复用已验证实现，不搬入 Connections |
 | Usage | `usage.ts` | 保留真实计数，成本及来源后续补齐 |

@@ -1,5 +1,5 @@
 import {encodeToolRound} from './continuation.js';
-import {chatRoute} from './protocols/openai-chat.js';
+import {resolveApiProtocol} from './protocols/index.js';
 import {resolvePreparationParameters} from './preparation-parameters.js';
 import {applyConfigMutation} from './config-mutations.js';
 import {reconcileTextProbeObservation} from './observation-reconciliation.js';
@@ -72,12 +72,12 @@ export function createApiService(store:Store,permission:PermissionReader,options
      const evidence=operation?.observations.find(row=>row.id==='api-probe-result'&&row.phase==='observed')?.value;
      const binding=operation?.connection;
      const scopeHash=createHash('sha256').update(canonical(probe.decision.scope)).digest('hex');
-     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!['openai-chat-probe-1','openai-chat-stream-probe-1','openai-chat-tool-probe-1','openai-chat-stream-tool-probe-1'].includes(binding.adapterVersion)
+     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!['openai-chat-probe-1','openai-chat-stream-probe-1','openai-chat-tool-probe-1','openai-chat-stream-tool-probe-1','anthropic-messages-probe-1','anthropic-messages-stream-probe-1'].includes(binding.adapterVersion)
        ||binding.connectionId!==connection.id||binding.configRevision!==connection.revision||!connection.enabled
        ||!object(evidence)||evidence.source!=='probe'||typeof evidence.observedAt!=='string'||evidence.scopeHash!==scopeHash
        ||evidence.connectionId!==connection.id||evidence.connectionRevision!==connection.revision
        ||(evidence.tools===true)!==(['openai-chat-tool-probe-1','openai-chat-stream-tool-probe-1'].includes(binding.adapterVersion))
-       ||(evidence.stream===true)!==(['openai-chat-stream-probe-1','openai-chat-stream-tool-probe-1'].includes(binding.adapterVersion))
+       ||(evidence.stream===true)!==(['openai-chat-stream-probe-1','openai-chat-stream-tool-probe-1','anthropic-messages-stream-probe-1'].includes(binding.adapterVersion))
        ||evidence.modelId!==item.id||evidence.modelRevision!==item.revision)
       fail('probe_evidence_mismatch','unavailable');
      verifyDependencies=()=>recheck(probe.request,probe.decision);
@@ -92,7 +92,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
         {operationId:c.probeOperationId,observedAt:evidence.observedAt,...(evidence.stream===true?{stream:true}:{})}};
      }else observed={connectionId:connection.id,connectionRevision:connection.revision,modelId:item.modelId,
       source:'probe',sourceRevision:c.probeOperationId,observedAt:evidence.observedAt,
-      capabilities:{text:'supported',stream:evidence.stream===true?'supported':'unknown',tools:'unknown',image:'unknown',reasoning:'unknown'},parameters:{}};
+      capabilities:{text:'supported',stream:evidence.stream===true?'supported':'unknown',tools:'unknown',image:'unknown',reasoning:'unknown'},parameters:connection.protocol==='anthropic-messages'?{max_tokens:{type:'integer',minimum:1}}:{}};
     }else{
      if(!options.observer)fail('observer_unavailable','unavailable');
 
@@ -154,7 +154,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
    const {state}=snapshot(request,d);
    recheck(cr.request,cr.decision);recheck(mr.request,mr.decision);
    const connection=find(state.connections,p.connectionId),model=find(state.models,p.modelId);
-   if(connection.revision!==p.connectionRevision||model.revision!==p.modelRevision)fail('revision_conflict');if(model.connectionId!==connection.id)fail('model_connection_mismatch');if(!connection.enabled)fail('connection_disabled');if(connection.protocol!=='openai-chat')fail('unsupported_protocol');
+   if(connection.revision!==p.connectionRevision||model.revision!==p.modelRevision)fail('revision_conflict');if(model.connectionId!==connection.id)fail('model_connection_mismatch');if(!connection.enabled)fail('connection_disabled');const protocol=resolveApiProtocol(connection.protocol);if(!protocol)fail('unsupported_protocol');
    const observed=model.observation;if(!observed)fail('capability_unverified');if(observed.connectionRevision!==connection.revision)fail('capability_observation_stale');
    if(observed.capabilities.text!=='supported'||(p.stream&&observed.capabilities.stream!=='supported'))fail('capability_unsupported_or_unknown');
    if(tools.length&&observed.capabilities.tools!=='supported')fail('tool_capability_unverified');
@@ -167,7 +167,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
      if(typeof value==='number'&&value>outputLimit)fail('model_output_limit_exceeded');
     }
    }
-   const url=chatRoute(connection,'completions');
+   const url=protocol.route(connection,'completions');
    let continuation:ReturnType<typeof encodeToolRound>|undefined;
    if(p.toolContinuation!==undefined){
     if(!text(p.toolContinuation)||!options.readToolRound||observed.capabilities.tools!=='supported')

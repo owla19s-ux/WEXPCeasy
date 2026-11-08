@@ -7,6 +7,10 @@ on:
       - 'connections/tests/**'
       - 'app/src/foundations.ts'
       - 'app/tests/github-official-host.test.mjs'
+      - 'app/tests/desktop-github-tools.test.mjs'
+      - 'app/src/desktop-connections.ts'
+      - 'UI/src/**'
+      - 'UI/tests/github-tools.test.mjs'
       - '.github/workflows/github-generic-mcp.yml'
 permissions:
   contents: read
@@ -32,7 +36,7 @@ jobs:
         if: runner.os == 'Windows'
       - name: Windows GitHub adapter regression
         if: runner.os == 'Windows'
-        run: node --test --test-concurrency=2 --test-timeout=30000 connections/github/tests/*.test.mjs connections/tests/capabilities.test.mjs app/tests/github-official-host.test.mjs
+        run: node --test --test-concurrency=2 --test-timeout=30000 connections/github/tests/*.test.mjs connections/tests/capabilities.test.mjs app/tests/github-official-host.test.mjs app/tests/desktop-github-tools.test.mjs
       - run: npm run check:boundaries
         if: runner.os == 'Windows'
 

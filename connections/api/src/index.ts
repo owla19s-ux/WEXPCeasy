@@ -11,3 +11,6 @@ export type {ToolDefinition,ToolSchema,ToolProposal} from './model.js';
 export type {ChatUsage} from './usage.js';
 export type {ToolRound,ToolRoundReader} from './continuation.js';
 export type {ChatWireMessage} from './model.js';
+
+/** Explicitly supported API wire protocol IDs; does not imply full provider capabilities. */
+export {supportedApiProtocols} from './protocols/index.js';
