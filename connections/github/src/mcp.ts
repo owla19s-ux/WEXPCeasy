@@ -39,6 +39,7 @@ export function createGitHubMcpAdapter(options:GitHubMcpAdapterOptions){
  let connection:Readonly<ConnectionConfig>|undefined,authority:AdapterAccess|undefined;
  let server:Readonly<{name:string;version:string}>|undefined;
  let state:GitHubMcpAdapterStatus['state']='stopped';
+ const lateDirectories=new Set<string>();
  let tools:GitHubMcpTool[]=[];
  let credentialFingerprint:string|undefined;
  let lifetime=new AbortController(),stopping=false;
@@ -58,6 +59,9 @@ export function createGitHubMcpAdapter(options:GitHubMcpAdapterOptions){
   try{if(client){await client.close();client=undefined;}}catch{failed=true;}
   try{if(transport){await transport.close();transport=undefined;}}catch{failed=true;}
   try{if(directory){await rm(directory,{recursive:true,force:true});directory=undefined;}}catch{failed=true;}
+  for(const path of lateDirectories){
+   try{await rm(path,{recursive:true,force:true});lateDirectories.delete(path);}catch{failed=true;}
+  }
   tools=[];server=undefined;credentialFingerprint=undefined;
   if(failed)throw unavailable();
  }
@@ -132,8 +136,15 @@ export function createGitHubMcpAdapter(options:GitHubMcpAdapterOptions){
      ensure(combined);
      if(typeof token!=='string'||!token||/[\u0000-\u0020\u007f]/.test(token))throw unavailable();
      credentialFingerprint=createHash('sha256').update(token).digest('hex');
-     directory=await mkdtemp(join(tmpdir(),'wex-github-mcp-'));
-     ensure(combined);
+     const created=await mkdtemp(join(tmpdir(),'wex-github-mcp-'));
+     try{ensure(combined);}catch{
+      // Cancellation can win the race before filesystem creation finishes.
+      // Do not attach a late path to a stopped or subsequently restarted session.
+      lateDirectories.add(created);
+      try{await rm(created,{recursive:true,force:true});lateDirectories.delete(created);}catch{/* retained for stop retry */}
+      throw unavailable();
+     }
+     directory=created;
      transport=new StdioClientTransport({
       command:runtime.command,args:[...runtime.prefixArgs,'stdio','--toolsets=all'],
       cwd:directory,stderr:'ignore',
