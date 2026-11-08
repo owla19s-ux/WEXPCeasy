@@ -70,78 +70,108 @@ export function anthropicHeaders(stream:boolean,token?:string):Record<string,str
   'anthropic-version':'2023-06-01',...(token?{'x-api-key':token}:{})};
 }
 
+/** Decode native Messages JSON or incremental named SSE events. No tool/thinking claims until implemented. */
 export async function decodeAnthropicMessages(source:AsyncIterable<Uint8Array>,stream:boolean,options:ChatStreamOptions={}):Promise<ChatStreamResult>{
  const maxBytes=options.maxBytes??8*1024*1024,maxText=options.maxTextBytes??4*1024*1024;
- if(!Number.isSafeInteger(maxBytes)||maxBytes<=0||!Number.isSafeInteger(maxText)||maxText<=0)throw Error('invalid_stream_limit');
- const decoder=new TextDecoder('utf-8',{fatal:true});let input='',size=0;
- for await(const chunk of source){
-  if(options.signal?.aborted)throw Error('stream_cancelled');
-  if(!(chunk instanceof Uint8Array))throw Error('invalid_stream_bytes');
-  size+=chunk.byteLength;if(size>maxBytes)throw Error('stream_byte_limit');
-  input+=decoder.decode(chunk,{stream:true});
- }
- input+=decoder.decode();
- if(options.signal?.aborted)throw Error('stream_cancelled');
+ const maxFrame=options.maxFrameBytes??256*1024,maxFrames=options.maxFrames??100000;
+ if([maxBytes,maxText,maxFrame,maxFrames].some(n=>!Number.isSafeInteger(n)||n<=0))throw Error('invalid_stream_limit');
+ const decoder=new TextDecoder('utf-8',{fatal:true});
+ let size=0,output='',providerResponseId:string|undefined,providerModelId:string|undefined;
+ const check=()=>{if(options.signal?.aborted)throw Error('stream_cancelled');};
+ const append=(part:string)=>{
+  output+=part;if(Buffer.byteLength(output,'utf8')>maxText)throw Error('stream_text_limit');
+  check();if(stream&&part)options.onText?.(part);check();
+ };
  if(!stream){
-  const message=record(parseUniqueJson(input));
+  let data='';
+  for await(const chunk of source){
+   check();if(!(chunk instanceof Uint8Array))throw Error('invalid_stream_bytes');
+   size+=chunk.byteLength;if(size>maxBytes)throw Error('stream_byte_limit');
+   data+=decoder.decode(chunk,{stream:true});
+  }
+  data+=decoder.decode();check();
+  const message=record(parseUniqueJson(data));
   if(message.type!=='message'||message.role!=='assistant'||!Array.isArray(message.content))throw Error('invalid_anthropic_response');
   terminal(message.stop_reason);
-  let output='';
   for(const block of message.content){
-   const b=record(block);
-   if(b.type!=='text')throw Error('unsupported_anthropic_content');
-   output+=text(b.text);
-   if(Buffer.byteLength(output,'utf8')>maxText)throw Error('stream_text_limit');
+   const b=record(block);if(b.type!=='text')throw Error('unsupported_anthropic_content');
+   append(text(b.text));
   }
   return {text:output,usage:usage(message.usage),
    ...(typeof message.id==='string'?{providerResponseId:message.id}:{}),
    ...(typeof message.model==='string'?{providerModelId:message.model}:{})};
  }
- let started=false,finished=false,terminalReason:unknown,output='',tokensIn:unknown,tokensOut:unknown;
- let providerResponseId:string|undefined,providerModelId:string|undefined,openBlock=false;
+ let started=false,finished=false,openBlock=false,blockIndex=0,nextIndex=0;
+ let terminalReason:unknown,inputUsage:unknown,outputTokens:unknown;
+ let fragment='',eventName='',dataParts:string[]=[],frameBytes=0,frames=0;
  const feed=(name:string,raw:string)=>{
+  if(++frames>maxFrames)throw Error('stream_frame_limit');
   const event=record(parseUniqueJson(raw));
   if(event.type!==name)throw Error('invalid_anthropic_stream_event');
   if(name==='ping')return;
   if(name==='message_start'){
-   if(started)throw Error('duplicate_anthropic_message_start');
-   const m=record(event.message);if(m.role!=='assistant'||m.type!=='message')throw Error('invalid_anthropic_response');
+   if(started||finished)throw Error('duplicate_anthropic_message_start');
+   const m=record(event.message);
+   if(m.role!=='assistant'||m.type!=='message'||!Array.isArray(m.content)||m.content.length!==0)throw Error('invalid_anthropic_response');
    started=true;providerResponseId=typeof m.id==='string'?m.id:undefined;
    providerModelId=typeof m.model==='string'?m.model:undefined;
-   const u=record(m.usage);tokensIn=u;tokensOut=u.output_tokens;
-   return;
+   inputUsage=m.usage;outputTokens=record(m.usage).output_tokens;return;
   }
   if(!started||finished)throw Error('invalid_anthropic_stream_order');
   if(name==='content_block_start'){
-   if(openBlock||event.index!==0||record(event.content_block).type!=='text')throw Error('unsupported_anthropic_content');
-   openBlock=true;const initial=record(event.content_block).text;
-   if(typeof initial==='string'&&initial){output+=initial;options.onText?.(initial);}
+   const block=record(event.content_block);
+   if(openBlock||event.index!==nextIndex||block.type!=='text')throw Error('unsupported_anthropic_content');
+   openBlock=true;blockIndex=nextIndex;nextIndex++;
+   if(block.text!==undefined)append(text(block.text));
   }else if(name==='content_block_delta'){
-   if(!openBlock||event.index!==0)throw Error('invalid_anthropic_stream_order');
-   const delta=record(event.delta);if(delta.type!=='text_delta')throw Error('unsupported_anthropic_content');
-   const part=text(delta.text);output+=part;if(Buffer.byteLength(output,'utf8')>maxText)throw Error('stream_text_limit');
-   options.onText?.(part);
+   if(!openBlock||event.index!==blockIndex)throw Error('invalid_anthropic_stream_order');
+   const delta=record(event.delta);
+   if(delta.type!=='text_delta')throw Error('unsupported_anthropic_content');
+   append(text(delta.text));
   }else if(name==='content_block_stop'){
-   if(!openBlock||event.index!==0)throw Error('invalid_anthropic_stream_order');
+   if(!openBlock||event.index!==blockIndex)throw Error('invalid_anthropic_stream_order');
    openBlock=false;
   }else if(name==='message_delta'){
    if(openBlock)throw Error('invalid_anthropic_stream_order');
    terminalReason=record(event.delta).stop_reason;
-   if(event.usage!==undefined)tokensOut=record(event.usage).output_tokens;
+   if(event.usage!==undefined)outputTokens=record(event.usage).output_tokens;
   }else if(name==='message_stop'){
    if(openBlock||terminalReason===undefined)throw Error('incomplete_anthropic_stream');
    terminal(terminalReason);finished=true;
   }else throw Error('unsupported_anthropic_event');
  };
- let eventName='',data:string[]=[];
- for(const line of input.split(/\r?\n/)){
-  if(!line){
-   if(data.length){feed(eventName,data.join('\n'));eventName='';data=[];}
-  }else if(line.startsWith('event:'))eventName=line.slice(6).trim();
-  else if(line.startsWith('data:'))data.push(line.slice(5).trimStart());
-  else if(line.startsWith(':'))continue;
+ const finishEvent=()=>{
+  if(!dataParts.length){eventName='';frameBytes=0;return;}
+  if(!eventName)throw Error('invalid_anthropic_stream_event');
+  feed(eventName,dataParts.join('\n'));dataParts=[];eventName='';frameBytes=0;
+ };
+ const line=(value:string)=>{
+  if(value.endsWith('\r'))value=value.slice(0,-1);
+  if(value===''){finishEvent();return;}
+  if(value.startsWith(':'))return;
+  if(value.startsWith('event:'))eventName=value.slice(6).trim();
+  else if(value.startsWith('data:'))dataParts.push(value.slice(5).trimStart());
+ };
+ for await(const chunk of source){
+  check();if(!(chunk instanceof Uint8Array))throw Error('invalid_stream_bytes');
+  size+=chunk.byteLength;if(size>maxBytes)throw Error('stream_byte_limit');
+  fragment+=decoder.decode(chunk,{stream:true});
+  let split:number;
+  while((split=fragment.indexOf('\n'))!==-1){
+   const value=fragment.slice(0,split);fragment=fragment.slice(split+1);
+   frameBytes+=Buffer.byteLength(value,'utf8')+1;if(frameBytes>maxFrame)throw Error('stream_frame_limit');
+   line(value);check();
+  }
+  if(Buffer.byteLength(fragment,'utf8')+frameBytes>maxFrame)throw Error('stream_frame_limit');
  }
- if(data.length||!finished)throw Error('incomplete_anthropic_stream');
- const u=record(tokensIn),all=usage({...u,output_tokens:tokensOut});
+ fragment+=decoder.decode();check();
+ if(fragment.trim())throw Error('incomplete_anthropic_stream');
+ if(dataParts.length||!finished)throw Error('incomplete_anthropic_stream');
+ const u=record(inputUsage),all=usage({...u,output_tokens:outputTokens});
  return {text:output,usage:all,...(providerResponseId?{providerResponseId}:{}),...(providerModelId?{providerModelId}:{})};
+}
+
+export function anthropicResponseIdentity(result:ChatStreamResult){
+ return {...(result.providerResponseId===undefined?{}:{providerResponseId:result.providerResponseId}),
+  ...(result.providerModelId===undefined?{}:{providerModelId:result.providerModelId})};
 }
