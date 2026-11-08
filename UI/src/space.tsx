@@ -9,14 +9,14 @@ type Detail=Extract<DesktopSpaceReply,{view:'context'}>;
 type ResourcePreview=Extract<DesktopSpaceReply,{view:'file'|'directory'}>;
 export interface SpaceSections {contextId:string|null;resourcePreview:ReactNode|null;dismissResourcePreview:()=>void;toolbar:ReactNode;categories:ReactNode;structure:ReactNode;content:ReactNode;summary:ReactNode}
 export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sections:SpaceSections)=>ReactNode}){
- const openSequence=useRef(0),selectedContext=useRef<string|null>(null),fileDrafts=useRef<LocalDrafts>(new Map());
+ const epoch=useRef(0),running=useRef(false),openSequence=useRef(0),selectedContext=useRef<string|null>(null),fileDrafts=useRef<LocalDrafts>(new Map());
  const [resourcePreview,setResourcePreview]=useState<ResourcePreview>();
  const [data,setData]=useState<Snapshot>(),[detail,setDetail]=useState<Detail>(),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const [categoryFilter,setCategoryFilter]=useState(''),[categoryId,setCategoryId]=useState('');
  const [spaceId,setSpaceId]=useState(''),[groupId,setGroupId]=useState(''),[mode,setMode]=useState('space.create'),[name,setName]=useState(''),[description,setDescription]=useState('');
- useEffect(()=>bridge.onAccessChanged(()=>{openSequence.current++;selectedContext.current=null;fileDrafts.current.clear();setResourcePreview(undefined);setDetail(undefined);setData(undefined);setName('');setDescription('');setSpaceId('');setGroupId('');setCategoryId('');setCategoryFilter('');setMessage('授权已变更，请重新打开工作区。');}),[bridge]);
+ useEffect(()=>{const unsubscribe=bridge.onAccessChanged(()=>{epoch.current++;running.current=false;setBusy(false);openSequence.current++;selectedContext.current=null;fileDrafts.current.clear();setResourcePreview(undefined);setDetail(undefined);setData(undefined);setName('');setDescription('');setSpaceId('');setGroupId('');setCategoryId('');setCategoryFilter('');setMessage('授权已变更，请重新打开工作区。');});return ()=>{epoch.current++;openSequence.current++;selectedContext.current=null;running.current=false;unsubscribe();};},[bridge]);
  async function call(input:DesktopSpaceInput){
-  const reply=await bridge.space(input);if(!reply.ok)throw Error('桌面请求被拒绝');
+  const captured=epoch.current;const reply=await bridge.space(input);if(captured!==epoch.current)throw Error('stale_space_request');if(!reply.ok)throw Error('桌面请求被拒绝');
   const result=reply.value;
   if(result.status==='cancelled'){setMessage('操作已取消');return;}
   if(result.status==='unknown'){setMessage('结果未确认，请刷新核对；不要重复提交。');return;}
@@ -26,7 +26,7 @@ export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sectio
  async function refresh(){
   const result=await call({kind:'snapshot'});if(result?.status==='ok'&&result.view==='snapshot'){setData(result);if(!result.complete)setMessage('部分 Context 不可用，已保留登记信息。');}
  }
- async function run(work:()=>Promise<void>){if(busy)return;setBusy(true);setMessage('');try{await work();}catch(error){setDetail(undefined);setData(undefined);setMessage(error instanceof Error?error.message:'操作失败');}finally{setBusy(false);}}
+ async function run(work:()=>Promise<void>){if(running.current)return;const captured=epoch.current;running.current=true;setBusy(true);setMessage('');try{await work();}catch(error){if(captured===epoch.current){setDetail(undefined);setData(undefined);setMessage(error instanceof Error?error.message:'操作失败');}}finally{if(captured===epoch.current){running.current=false;setBusy(false);}}}
  async function open(id:string){const sequence=++openSequence.current;selectedContext.current=id;setResourcePreview(undefined);const result=await call({kind:'context.open',id});if(sequence!==openSequence.current)return;if(result?.status==='ok'&&result.view==='context'){setDetail(result);setName(result.context.name);setDescription(result.context.description);setMode('context.edit');}}
  async function submit(){
   let input:DesktopSpaceInput;
