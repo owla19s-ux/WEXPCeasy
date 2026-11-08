@@ -43,3 +43,26 @@ test('explicitly unsupported streaming cannot be silently replaced by probe evid
  const probe=base({capabilities:{text:'supported',stream:'supported',tools:'unknown',image:'unknown',reasoning:'unknown'},parameters:{},limits:undefined});
  assert.throws(()=>reconcileTextProbeObservation(probe,prior,1,'operation-4'),/probe_would_replace_verified_evidence/);
 });
+
+test('text probes preserve directional evidence even when legacy capabilities are unknown',()=>{
+ const capabilities={text:'supported',stream:'unknown',tools:'unknown',image:'unknown',reasoning:'unknown'};
+ const prior=base({capabilities,parameters:{},limits:undefined,
+  modalities:{text:{input:'supported',output:'supported'},image:{input:'supported'},audio:{output:'unsupported'}}});
+ const probe=base({capabilities,parameters:{},limits:undefined});
+ const out=reconcileTextProbeObservation(probe,prior,1,'operation-direction');
+ assert.deepEqual(out.modalities,prior.modalities);
+ assert.equal(out.sourceRevision,probe.sourceRevision);
+ assert.equal(probe.modalities,undefined);
+});
+
+test('text and streaming probes cannot replace explicitly unsupported text directions',()=>{
+ for(const direction of ['input','output']){
+  for(const stream of ['unknown','supported']){
+   const capabilities={text:'supported',stream:'unknown',tools:'unknown',image:'unknown',reasoning:'unknown'};
+   const prior=base({capabilities,parameters:{},limits:undefined,modalities:{text:{[direction]:'unsupported'}}});
+   const probe=base({capabilities:{...capabilities,stream},parameters:{},limits:undefined});
+   assert.throws(()=>reconcileTextProbeObservation(probe,prior,1,'operation-conflict'),/probe_would_replace_verified_evidence/);
+   assert.equal(prior.modalities.text[direction],'unsupported');
+  }
+ }
+});

@@ -8,6 +8,9 @@ export function reconcileTextProbeObservation(
  observed:ModelObservation,prior:ModelObservation|null,connectionRevision:number,probeOperationId:string
 ):ModelObservation{
  if(!prior||prior.connectionRevision!==connectionRevision)return observed;
+ if(prior.modalities?.text?.input==='unsupported'||prior.modalities?.text?.output==='unsupported'){
+  fail('probe_would_replace_verified_evidence');
+ }
  const losesCapability=(Object.keys(prior.capabilities) as Array<keyof typeof prior.capabilities>).some(key=>{
   const value=prior.capabilities[key];
   return (value==='supported'||value==='unsupported')&&observed.capabilities[key]!==value;
@@ -22,5 +25,5 @@ export function reconcileTextProbeObservation(
  if(losesCapability||Object.keys(prior.parameters).length||Object.keys(prior.limits??{}).length){
   fail('probe_would_replace_verified_evidence');
  }
- return observed;
+ return prior.modalities?{...observed,modalities:prior.modalities}:observed;
 }

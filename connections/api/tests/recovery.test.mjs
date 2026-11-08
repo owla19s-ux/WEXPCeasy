@@ -32,3 +32,26 @@ test('service stop inside the final permission recheck blocks the API business c
 test('unknown API aggregate versions are blocked without downgrade or blank reconstruction',t=>{
  const h=fixture(t);h.db.commit({intent:'future',expectedRevision:0,value:{format:99,domain:'api-configurations'}});assert.equal(h.connection().status,'unavailable');assert.throws(()=>h.reopen());assert.equal(h.db.read().value.format,99);
 });
+
+test('directional observation evidence survives SQLite reopen and still governs preparation',t=>{
+ for(const output of ['supported','unsupported','unknown','unverified']){
+  const modalities={text:{input:'supported',output},image:{input:'supported'},audio:{output:'unsupported'}};
+  const h=fixture(t,{observer:{resolve(_r,c,m){return {
+   connectionId:c.id,connectionRevision:c.revision,modelId:m.modelId,
+   source:'provider',sourceRevision:'directions-1',observedAt:'2026-11-08T00:00:00Z',
+   capabilities:{text:'supported',stream:'supported',tools:'unknown',image:'unknown',reasoning:'unknown'},
+   parameters:{},modalities
+  };}}});
+  const c=h.connection(),m=h.model(c.id);
+  assert.equal(h.execute({kind:'model.observe',intent:'directions',id:m.id,expectedRevision:1}).status,'committed');
+  const input={requestId:'recovered',connectionId:c.id,connectionRevision:1,modelId:m.id,modelRevision:2,
+   context:null,parameters:{},messages:[{role:'user',content:'hello'}],timeoutMs:1000,stream:false};
+  const before=h.service.prepare(h.request('request.prepare',`model:${m.id}`),input);
+  h.reopen();
+  assert.deepEqual(h.query('model',m.id).value.observation.modalities,modalities);
+  const after=h.service.prepare(h.request('request.prepare',`model:${m.id}`),input);
+  assert.deepEqual(after,before);
+  assert.equal(after.status,output==='supported'?'ok':'rejected');
+  if(after.status==='ok')assert.deepEqual(after.snapshot.body.messages,input.messages);
+ }
+});
