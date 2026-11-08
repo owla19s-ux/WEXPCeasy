@@ -1,6 +1,6 @@
 export {createApiService} from './service.js';
 export type {ApiService,ApiOptions,ApiDeletionGuard} from './service.js';
-export type {ApiConnection,ApiModel,ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,CredentialReference,Parameters,ParameterSetting,ParameterSpec,Capability,CapabilityState,ModelObservation,ModelObserver,Preparation,RequestSnapshot} from './model.js';
+export type {ApiConnection,ApiModel,ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,CredentialReference,Parameters,ParameterSetting,ParameterSpec,Capability,CapabilityState,ModelModality,ModalityDirection,DirectionalModalities,ModelObservation,ModelObserver,Preparation,RequestSnapshot} from './model.js';
 export {decodeChatStream} from './stream.js';
 export type {ChatStreamOptions,ChatStreamResult} from './stream.js';
 export {createApiTransport} from './transport.js';

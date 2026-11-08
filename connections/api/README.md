@@ -84,7 +84,26 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 
 每阶段记录实际提交 SHA、通过和失败的测试、未验证场景及公开接口影响。文档更新与源码施工分工保持既有规则。
 
-## 6. 协议研究与历史材料
+## 6. 本轮完整评估后的定向调整（2026-11-08，待施工）
+
+以下是依据 A1 F04-001～013、当前源码及现有测试用例形成的**调整方案**，不表示相应改动已经实施或通过最新 SHA 验收。总体判断：**基础完善 + 功能补齐 + 局部结构调整；不重写 API 模块，不立即批量扩展 Provider。**优先维护既有公开入口、配置格式、凭证引用及 Connections Operation。
+
+| 优先级 | 目标文件/调用边界 | 已观察到的事实 | 施工要求与完成依据 |
+|---|---|---|---|
+| P0 | `src/model.ts` / Observation | 现有 `Capability` 仅列 text/stream/tools/image/reasoning，`Preparation.messages` 仅文本消息；不足以表达 A1 完整输入输出模态 | 先设计且测试兼容扩展：图片输入/生成、音频输入/输出、视频/文件、结构化输出、工具/推理与上下文/输出限制；区分四值能力状态与证据来源。升级存储格式时验证旧配置/Observation 重启恢复；不直接改写旧证据为“支持” |
+| P0 | `src/protocols/index.ts` | `ApiProtocolAdapter` 以 `'models'/'completions'` 路由和统一 probe/decode 为共同接口，仍含 Chat 风格假设 | 以现有 Chat 与 Anthropic 两份真实实现为依据，评估按目录/探测/生成/工具等能力提供可选操作；保持注册表选择及不支持时显式拒绝，不强迫所有协议实现同形 Chat 方法；新签名须先验证 |
+| P0 | `src/service.ts` / `preparation-parameters.ts` | 配置/模型/单次请求的冲突参数现在明确拒绝；来源优先级未冻结 | 保留拒绝语义及参数来源/快照；对显式 0、false、默认、禁用和不支持添加回归；禁止未经 A1 确认擅自规定 Agent/会话/单轮覆盖顺序 |
+| P0 | `src/transport.ts` / Connections | 文件兼顾生成发送、目录/探针和传输；当前已使用统一 Operation | 只在可测试的职责重复处提取诊断/探针或纯传输辅助；保留 `createApiTransport`、共享 Operation/attempt/receipt 和超时/取消/unknown 语义，不建第二套传输或操作账本 |
+| P1 | `src/tools.ts` / `service.ts` | ToolSchema 当前是受限 JSON Schema 子集；`response_format` 存在捕获/校验，但请求准备仍依赖参数规格 | 增加结构化输出合法配置→准备→协议编码→响应校验正反例，确认实际缺口后再修；新增协议不得把 Chat 的工具片段格式当作通用工具语义 |
+| P1 | `src/protocols/anthropic-messages.ts` | 原生文本、JSON/SSE、单页目录与探针已有代码；工具、思考/多模态、目录分页尚未接通 | 底座收口后按真实协议补能力；目录分页、工具调用与 continuation 分别验收，未完成的能力继续明确拒绝 |
+| P1 | `src/usage.ts` / 桌面 API UI | 有 token/缓存/推理相关计数及部分配置 UI，费用与完整可见性不足 | 分离 Provider 实报、估算、价格版本/币种和真实账单；补充模型能力、凭证/诊断、参数来源的 UI 展示，不能以按钮存在算实现 |
+| 后续 | AI/Conversations 调用方 | 显式 Connection/Model 和快照已有基础；高级路由/切换未实现 | 保持 API 的能力与调用服务职责；候选策略属于 AI/上层，历史轮次属于 Conversations；故障切换、复杂自动策略按 A2 另定版本 |
+
+**连续施工顺序**：①核对当前 main SHA、运行记录、当前源码/已有测试并复现 P0；②补齐配置/能力/请求与受控传输底座，最小兼容调整；③完成本地 HTTP、App/AI/Conversations/UI 与恢复联调；④再按独立协议文件推进原生能力。每阶段保留原接口兼容、正反例、恢复与旧功能回归证据，不以单文件改动或单个 Commit 宣告完成。
+
+**已核对的静态依据**：`src/model.ts`、`service.ts`、`transport.ts`、`protocols/index.ts`、`protocols/anthropic-messages.ts`、`tools.ts`、`preparation-parameters.ts`、`UI/src/api-settings.tsx`、`tests/protocol-registry.test.mjs`、`tests/anthropic-transport.test.mjs`。**尚未取得**最新 HEAD 的完整 CI/实机签收；此处不写通过结论。风险较高的改动：持久化兼容、公开接口变化、广泛调用方迁移；一般风险：定向提取内部函数、文档和 UI 补齐。
+
+## 7. 协议研究与历史材料
 
 当前协议注册表有 `openai-chat` 与 `anthropic-messages` 两个入口。桌面 API 设置页已增加协议选择与模型 `max_tokens` 编辑，并通过可信宿主白名单校验输入；是否实际通过 Windows UI 操作与最新 SHA 构建，仍依赖对应验收。Service 的请求准备、Transport 的探针/目录/发送按 `resolveApiProtocol(connection.protocol)` 选择适配器，未知协议拒绝。Anthropic Messages 已实现原生文本发送、JSON/SSE 解码、基础用量转换、单页模型目录刷新及最小文本生成探针，通过原生 `/messages`、`/models` 与 `x-api-key` 请求；已采纳的原生探针可记录 `max_tokens` 参数要求。目录分页、工具调用、推理续接和多模态尚未接通，不得视为完整服务商功能。现有 `ApiProtocolAdapter` 仍是逐步完善的运行接口，未来需按真实协议能力分离可选操作而不是强迫各协议复用 Chat 工具语义。Gemini、Responses 等其他原生协议尚未实现。跨 Provider 请求/流式/工具/usage 应通过正式 Protocol Adapter 兼容机制扩展，不以任何单个 SDK 替换整个产品协议。
 
