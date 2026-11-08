@@ -95,7 +95,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: github-mcp-live-${{ runner.os }}-${{ github.sha }}
+          name: github-mcp-live-${{ runner.os }}-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             github-mcp-runtime-build.json
             github-mcp-official-catalog.json
