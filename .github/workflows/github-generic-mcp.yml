@@ -1,7 +1,10 @@
 name: GitHub generic MCP verification
 on:
   push:
-    branches: [codex/github-mcp-130431d-20261108]
+    branches: [main, codex/github-mcp-130431d-20261108]
+    paths:
+      - 'connections/github/**'
+      - '.github/workflows/github-generic-mcp.yml'
   pull_request:
     paths:
       - 'connections/github/**'
@@ -25,7 +28,12 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run test:github
-      - run: npm test
+      - name: Full suite on Linux
+        if: runner.os == 'Linux'
+        run: npm test
+      - name: Full suite with bounded Windows concurrency
+        if: runner.os == 'Windows'
+        run: node --test --test-concurrency=2 --test-timeout=30000 shared/tests/*.test.mjs permissions/tests/*.test.mjs app/tests/*.test.mjs connections/tests/*.test.mjs connections/github/tests/*.test.mjs connections/local/tests/*.test.mjs connections/api/tests/*.test.mjs tools/tests/*.test.mjs UI/tests/*.test.mjs space/tests/*.test.mjs AI/tests/*.test.mjs conversations/tests/*.test.mjs
       - run: npm run check:boundaries
   official-source:
     strategy:
