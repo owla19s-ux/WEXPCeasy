@@ -102,6 +102,13 @@ try{
   assert.notEqual(await run(installer,['/S','/D='+install]),0);
   assert.notEqual(await run(join(install,'Uninstall.exe'),['/S','_?='+install]),0);
   assert.equal(await exists(join(install,'WEXPCeasy.exe')),true);
+  // Earlier expected failures must remain distinguishable from the most recent rejection.
+  const log=await readFile(join(tmpdir(),'WEXPCeasy-install.log'),'utf8');
+  assert.match(log,/nonempty_unrecognized_directory\|/,'maintenance diagnostics overwrote the initial rejection');
+  assert.equal((log.match(/application_locked\|/g)??[]).length,2,'maintenance diagnostics lost a running-app rejection');
+  for(const match of log.matchAll(/application_locked\|[^\r\n]*\|win32=(\d+)/g)){
+   assert.ok([5,32,33].includes(Number(match[1])),'maintenance diagnostics did not capture the native file-open error: '+match[1]);
+  }
  });
  assert.equal(await run(installer,['/S','/D='+install]),0);
  await startAndClose([]);
