@@ -22,7 +22,7 @@ API 是独立的模型服务连接和协议适配模块：管理非秘密 Provid
 | 功能 | A1 | 目标行为 | 现有证据（静态审查） | 尚未交付/未签收 |
 |---|---|---|---|---|
 | API-01 Provider/连接 | F04-001 | 多连接、协议与 URL、复制、启停、修订、引用保护删除 | `service.ts`、`model.ts` 与 `app/src/desktop-api.ts` 已支持两种协议选择，最新 SHA 待验证 | UI 全部行为、真实厂商及 Windows 验收 |
-| API-02 模型/能力目录 | F04-003/004 | 手工模型、远端列举、来源/时间、上下文及输入输出模态 | 模型 CRUD、刷新/探测、observation | 音视频文件与方向能力、可选目录导入 |
+| API-02 模型/能力目录 | F04-003/004 | 手工模型、远端列举、来源/时间、上下文及输入输出模态 | 模型 CRUD、刷新/探测、observation；`ModelObservation.modalities` 已具备可选 `text/image/audio/video/file` 输入/输出方向及四态类型 | 实际音视频/文件请求与生成、目录导入、来源证据和真实 Provider 验收 |
 | API-03 凭证与诊断 | F04-002/006 | 多 Key 引用/轮换、地址/认证/目录/生成/流/工具分级探测 | 可信凭证端口、目录及探针测试 | 多账户交互及真实厂商测试 |
 | API-04 模型调用 | F04-007 | 独立请求、非流/流式、取消、超时、结构化完成/unknown | Chat 已有；`protocols/anthropic-messages.ts` 提供原生文本请求与 JSON/SSE，待最新 SHA 完整回归 | 其他原生协议、多模态、真实厂商和桌面 UI 验收 |
 | API-05 工具格式 | F04-008 | 描述映射、Schema、提议、受控工具结果回注 | `tools.ts`、`continuation.ts` | 跨协议工具格式及实际调用方闭环 |
@@ -106,7 +106,7 @@ API 是独立的模型服务连接和协议适配模块：管理非秘密 Provid
 ### 9.1 规范化输入与协议独立性
 
 - **确认的产品要求**：WEX 的模型调用必须能够表达文本、图片输入与生成、音频输入与输出、视频/文件、结构化输出、工具和推理；请求必须保留每项内容的作用、方向、顺序、来源、能力判断及不可变快照。不得把所有多模态映射为单个 `image` 能力，也不得静默舍弃不受支持的输入。
-- **已验证的源码事实（静态）**：现有 `model.ts` 的 `Capability` 只有 `text|stream|tools|image|reasoning`，`Preparation.messages` 仅支持文字；`ChatWireMessage` 包含 Chat 风格 tool call；`protocols/index.ts` 使用 `models|completions` 路由类型和共同探针方法。现有 Anthropic Adapter 的 `encodeAnthropicMessages` 仅转换有限文本输入并明确拒绝不支持的内容。
+- **已核实的源码事实（静态，2026-11-08）**：`model.ts` 的旧 `Capability` 仍为 `text|stream|tools|image|reasoning`，同时 `ModelObservation` 已增加可选 `modalities`，按 `text/image/audio/video/file`、`input/output` 与四态记录方向证据，旧格式观察可继续读取。`Preparation.messages` 仍仅支持文字；`ChatWireMessage` 包含 Chat 风格工具调用；`protocols/index.ts` 仍使用 `models|completions` 路由与共用探针形态。现有 Anthropic Adapter 的请求编码只覆盖有限文本输入，其他模态未由方向证据自动实现。
 - **确定的实施方向**：保持内部业务请求与具体 wire 协议分离，按真实协议独立文件维护请求编码、路由、鉴权、流/非流解析、错误/终态、工具与 usage 转换。注册表负责选择，不按 Provider 名称猜协议；目录、探针、工具等能力不得强制要求所有协议具有完全相同方法。
 - **待实验**：规范化内容块与增量事件的数据形状、可选 Adapter 操作/能力描述、旧请求兼容层是否必要。先在 OpenAI Chat 与 Anthropic 已有用例上验证，新增类型不能凭空当作已发布接口。
 
@@ -114,7 +114,7 @@ API 是独立的模型服务连接和协议适配模块：管理非秘密 Provid
 
 ### 9.2 模型能力、观察与持久化
 
-- 在现有四状态 `supported|unsupported|unknown|unverified` 基础上表达输入/输出方向与能力证据，不把官方声明、用户填写、模型目录和实际 probe 相互覆盖为同一种证据。
+- **方向类型已具基础实现，完整运行仍待验**：`ModelObservation.modalities` 已按输入/输出记录四态能力证据；下一步复验其解析、持久恢复、跨协议探针绑定与请求准备拒绝规则。方向观察不是实际多模态 wire 请求实现；官方声明、用户填写、模型目录和实际 probe 不得互相覆盖为同一种证据。
 - 记录 Connection/Model 修订、来源版本、时间、上下文/输出限制及适用范围；模型目录成功只证明目录可见，不代表可以文本生成或执行工具。
 - 当前 `State.format:1` 和 `ModelObservation` 已被使用。任何新增能力键、字段或格式升级，都须先证明旧数据反序列化行为，再采用兼容读取或明确迁移，并覆盖 SQLite 重启、旧快照、模型切换、部分失败和来源冲突。
 - 不因一次探针只验证文本或流式就清空已有其他能力观察；不凭模型名称推断未知能力。
