@@ -1,3 +1,4 @@
+import {writeFile} from 'node:fs/promises';
 import {Server} from '@modelcontextprotocol/sdk/server/index.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {ListToolsRequestSchema,CallToolRequestSchema} from '@modelcontextprotocol/sdk/types.js';
@@ -16,6 +17,7 @@ server.setRequestHandler(ListToolsRequestSchema,async request=>{
 server.setRequestHandler(CallToolRequestSchema,async request=>{
  calls++;
  if(mode==='exit')process.exit(1);
+ if(mode==='slow'&&process.argv[3]!=='stdio')await writeFile(process.argv[3],'dispatched');
  if(mode==='slow')await new Promise(r=>setTimeout(r,5000));
  return {content:[{type:'text',text:request.params.name}],structuredContent:{
   arguments:request.params.arguments,calls,pid:process.pid,cwd:process.cwd(),

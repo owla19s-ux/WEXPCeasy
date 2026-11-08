@@ -1,7 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {readFileSync,existsSync} from 'node:fs';
+import {readFileSync,existsSync,mkdtempSync,rmSync} from 'node:fs';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
 import {fileURLToPath} from 'node:url';
 import * as github from '../../../dist/connections/github/src/index.js';
 const command=process.execPath;
@@ -98,12 +100,17 @@ test('hash mismatch is rejected before credential lookup',async t=>{
  await assert.rejects(a.listTools(signal(),access()));assert.equal(calls,0);
 });
 test('cancellation of dispatched calls reports unconfirmed outcome and permits no replay',async t=>{
- const a=adapter('slow');t.after(()=>a.stop());
+ const dir=mkdtempSync(join(tmpdir(),'wex-mcp-cancel-')),marker=join(dir,'dispatched');
+ t.after(()=>rmSync(dir,{recursive:true,force:true}));
+ const a=adapter('slow',{runtime:{command,expectedSha256,prefixArgs:[fixture,'slow',marker]}});t.after(()=>a.stop());
  await a.listTools(signal(),access());
  const abort=new AbortController();
  const pending=a.callTool('get_repository',{},abort.signal,access());
- setTimeout(()=>abort.abort(),100);
- await assert.rejects(pending,{message:'github_mcp_outcome_unconfirmed'});
+ const outcome=assert.rejects(pending,{message:'github_mcp_outcome_unconfirmed'});
+ for(let n=0;n<500&&!existsSync(marker);n++)await new Promise(r=>setTimeout(r,10));
+ assert.equal(existsSync(marker),true,'server must receive tools/call before cancellation');
+ abort.abort();
+ await outcome;
  assert.equal(a.status().state,'disconnected');
 });
 test('disconnect after dispatch reports unknown outcome without automatic reconnect or retry',async t=>{

@@ -1,13 +1,13 @@
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {StdioClientTransport} from '@modelcontextprotocol/sdk/client/stdio.js';
-import type {Tool} from '@modelcontextprotocol/sdk/types.js';
 import {createHash} from 'node:crypto';
 import {createReadStream} from 'node:fs';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {isAbsolute,join} from 'node:path';
 import {tmpdir} from 'node:os';
 import type {AdapterAccess,ConnectionConfig} from '../../src/index.js';
-import type {GitHubMcpOptions} from './index.js';
+import type {GitHubMcpOptions} from './mcp-options.js';
+type Tool=Awaited<ReturnType<Client['listTools']>>['tools'][number];
 
 export type GitHubMcpToolResult=Awaited<ReturnType<Client['callTool']>>;
 export interface GitHubMcpAdapter {

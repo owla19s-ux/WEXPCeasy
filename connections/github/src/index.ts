@@ -1,3 +1,4 @@
+import type {GitHubMcpRuntime,GitHubMcpOptions} from './mcp-options.js';
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {StdioClientTransport} from '@modelcontextprotocol/sdk/client/stdio.js';
 import {createHash} from 'node:crypto';
@@ -185,14 +186,7 @@ export function createGitHubOfficialClientFactory(options:GitHubOfficialClientOp
 /** Produced by a trusted installation/verification path, never by Renderer/model input.
  * expectedSha256 is the installed executable hash from a verified official archive.
  * prefixArgs supports a trusted launcher; it is not a per-request command interface. */
-export interface GitHubMcpRuntime {
- command:string; expectedSha256:string; prefixArgs?:readonly string[];
-}
-export interface GitHubMcpOptions {
- runtime:Readonly<GitHubMcpRuntime>;
- resolveCredential:GitHubOfficialClientOptions['resolveCredential'];
- timeoutMs?:number;
-}
+export type {GitHubMcpRuntime,GitHubMcpOptions} from './mcp-options.js';
 const mcpVersion='2.1.0';
 const uriComponent=(value:string)=>encodeURIComponent(value).replace(/[!'()*]/g,
  char=>'%'+char.charCodeAt(0).toString(16).toUpperCase());
