@@ -40,3 +40,12 @@ test('desktop IPC does not serialize private exceptions',()=>{
  const gateway=createDesktopGateway({sender,url:frame.url,read(){throw Error('/secret/token');}});
  assert.deepEqual(gateway({sender,senderFrame:frame},{}),{ok:false,error:'host_unavailable'});
 });
+
+test('desktop IPC rejects throwing payload traps without exposing exceptions',()=>{
+ const frame={url:'file:///app/index.html'},sender={mainFrame:frame,isDestroyed:()=>false};
+ const gateway=createDesktopGateway({sender,url:frame.url,read:()=>({status:'ready'})});
+ const event={sender,senderFrame:frame};
+ for(const payload of [new Proxy({}, {getPrototypeOf(){throw Error('private payload');}}),new Proxy({}, {ownKeys(){throw Error('private keys');}})]){
+  assert.deepEqual(gateway(event,payload),{ok:false,error:'invalid_request'});
+ }
+});
