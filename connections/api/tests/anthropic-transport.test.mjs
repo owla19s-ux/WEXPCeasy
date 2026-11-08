@@ -94,16 +94,42 @@ test('native Anthropic SSE publishes text before terminal and retains usage',asy
  assert.equal(h.ledger.get('native-sse').phase,'observed');
 });
 
-test('native Anthropic unsupported directory, probe and tools fail without network dispatch',async t=>{
- let calls=0;const h=await setup(t,()=>{calls++;});
- const directory=await h.transport.refreshDirectory(h.f.request('directory.refresh',`connection:${h.connection.id}`),'native-dir',h.connection.id,1,1000);
- assert.equal(directory.status,'blocked');
- const probe=await h.transport.probeGeneration(h.f.request('model.probe',`model:${h.model.id}`),'native-probe',h.model.id,1,2,1000);
- assert.equal(probe.status,'blocked');
+test('native Anthropic directory and text probe use their own wire paths and keep tools blocked',async t=>{
+ let calls=0;
+ const h=await setup(t,(req,res)=>{
+  calls++;
+  if(req.url==='/v1/models'){
+   assert.equal(req.method,'GET');
+   res.writeHead(200,{'content-type':'application/json'});
+   res.end(JSON.stringify({data:[{id:'claude-test',type:'model'}],has_more:false}));
+  }else{
+   assert.equal(req.url,'/v1/messages');
+   assert.equal(req.method,'POST');
+   let received='';req.on('data',part=>received+=part);req.on('end',()=>{
+    const body=JSON.parse(received);
+    assert.equal(body.max_tokens,8);
+    assert.equal(body.stream,false);
+    res.writeHead(200,{'content-type':'application/json'});
+    res.end(JSON.stringify(response));
+   });
+  }
+ });
+ const directory=await h.transport.refreshDirectory(
+  h.f.request('directory.refresh',`connection:${h.connection.id}`),'native-dir',h.connection.id,1,1000);
+ assert.equal(directory.status,'ok');
+ assert.deepEqual(directory.observation.modelIds,['claude-test']);
+ const probe=await h.transport.probeGeneration(
+  h.f.request('model.probe',`model:${h.model.id}`),'native-probe',h.model.id,1,2,1000);
+ assert.equal(probe.status,'ok');
+ assert.equal(probe.observation.modelId,h.model.id);
+ assert.equal(h.ledger.get('native-probe').phase,'observed');
+ const toolProbe=await h.transport.probeGeneration(
+  h.f.request('model.probe',`model:${h.model.id}`),'native-tool-probe',h.model.id,1,2,1000,undefined,'tools');
+ assert.equal(toolProbe.status,'blocked');
  const tools=[{name:'read',parameters:{type:'object',properties:{},additionalProperties:false}}];
  const unsupported=await h.transport.send(h.sendRequest(),'native-tools',{...h.input,tools});
  assert.equal(unsupported.status,'blocked');
  assert.equal(unsupported.reason,'unsupported_protocol_input');
  assert.equal(h.ledger.get('native-tools'),undefined);
- assert.equal(calls,0);
+ assert.equal(calls,2);
 });
