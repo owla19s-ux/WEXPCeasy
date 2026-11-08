@@ -77,7 +77,7 @@ export function createConversationGeneration(
         return service.change(requests[kind], { conversationId, intent: intent + '-result',
           expectedRevision: latest.conversation.revision, change });
       } finally {
-        active.delete(key);
+        if (active.get(key) === controller) active.delete(key);
       }
     },
 
