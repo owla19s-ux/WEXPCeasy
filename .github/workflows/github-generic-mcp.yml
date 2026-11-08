@@ -11,6 +11,7 @@ on:
       - 'app/src/desktop-connections.ts'
       - 'UI/src/**'
       - 'UI/tests/github-tools.test.mjs'
+      - 'app/desktop/tests/github-tools.mjs'
       - '.github/workflows/github-generic-mcp.yml'
 permissions:
   contents: read
@@ -72,6 +73,19 @@ jobs:
           WEX_GITHUB_READ_TOKEN: ${{ github.token }}
           WEX_GITHUB_MCP_BINARY: ${{ steps.upstream.outputs.command }}
           WEX_GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+      - run: npm run build:desktop
+      - name: Official MCP tools in actual sandboxed Electron (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a node node_modules/electron/cli.js app/desktop/tests/github-tools.mjs
+        env:
+          WEX_GITHUB_READ_TOKEN: ${{ github.token }}
+          WEX_GITHUB_MCP_BINARY: ${{ steps.upstream.outputs.command }}
+      - name: Official MCP tools in actual Electron (Windows)
+        if: runner.os == 'Windows'
+        run: node node_modules/electron/cli.js app/desktop/tests/github-tools.mjs
+        env:
+          WEX_GITHUB_READ_TOKEN: ${{ github.token }}
+          WEX_GITHUB_MCP_BINARY: ${{ steps.upstream.outputs.command }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -80,4 +94,5 @@ jobs:
             github-mcp-runtime-build.json
             github-mcp-official-catalog.json
             github-mcp-live-evidence.json
+            desktop-acceptance/
           if-no-files-found: warn
