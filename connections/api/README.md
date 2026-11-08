@@ -1,5 +1,16 @@
 # connections/api — 模型 API 连接与协议适配
 
+## 2026-11-08｜最新 API 源码增量核对（高于下文早期评估状态）
+
+> 基线：`main@e9ff10c81dc4`；静态核对 `src/model.ts`、`src/protocols/index.ts` 及 2026-11-08 API 提交。未取得同 SHA 完整 CI / 真实 Provider 结果，**不宣称模块验收通过**。
+
+- **已落地的结构**：协议分文件注册，现有 `openai-chat`、`anthropic-messages` 两个 wire adapter；Provider 名称不直接决定协议；未知协议明确拒绝。公开 `resolveApiProtocol`、`supportedApiProtocols`、`matchesApiProbeAdapterVersion`，能力探测证据要绑定当前协议版本。旧 Chat 文本链与 Anthropic 原生文本路径不能被误标为“完全没有原生协议”。
+- **2026-11-08 新代码**：`ModelObservation` 已增加可选 `modalities`，方向为 `input/output`，模态为 `text/image/audio/video/file`，并保留旧格式 observation 的兼容读取；近期提交增补能力方向、协议探测证据、恢复和文本请求的拒绝路径测试。这是**观察/约束模型扩展**，不是已经具备多模态请求发送或各服务商原生能力。
+- **边界仍未改变**：`Preparation.messages` 目前仍是文本消息结构；协议抽象仍带 Chat 兼容的路由/探针形状。跨协议工具回注、目录分页、复杂多模态、成本展示和真实厂商验收仍须按独立能力证据逐项补齐。
+- **下一步**：先对 `service/model/transport/protocols` 做职责与公开接口回归，确认当前方向证据的持久化、恢复、拒绝和 legacy 测试；然后基于真实调用逐协议补能力。按协议独立源码文件，Provider 共用兼容协议时不复制实现；目前不将国内外厂商覆盖数量或自动故障切换作为底座完成的替代指标。
+
+
+
 > 维护 Owner：`connections/api`。Windows PC 优先。当前产品基线：OpenAI Chat Completions 兼容协议；长期完整需求不限定于此。
 >
 > 施工默认阅读：仓库根 README → 本 README → [正式 CONTRACT](CONTRACT.md) → 对应源码/测试。只有遇到需求、版本或历史争议时才定向参考 A1/A2/A0。
