@@ -6,10 +6,9 @@ import {createHash} from 'node:crypto';
 import type {PermissionReader,Decision} from '../../../permissions/src/index.js';
 import type {createOperationLedger} from '../../src/index.js';
 import type {ApiService} from './service.js';
-import type {CredentialReference,Preparation,ToolDefinition} from './model.js';
+import type {CredentialReference,Preparation} from './model.js';
 import {canonical,capture,object,text,revision} from './model.js';
-import {decodeChatStream} from './stream.js';
-import {decodeChatResponse} from './response.js';
+import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration} from './protocols/openai-chat.js';
 import type {ChatStreamResult} from './stream.js';
 function requestCorrelation(response:Response):{providerRequestId?:string}{
  const id=response.headers.get('x-request-id');
@@ -38,10 +37,6 @@ function networkFailure(error:unknown):string|undefined {
 function providerError(status:number):string {
  return status===401||status===403?'provider_authorization':status===429?'provider_rate_limited':status===404?'provider_endpoint_or_model_not_found':status>=300&&status<400?'redirect_refused':'provider_http_error';
 }
-const toolProbeDeclaration:ToolDefinition={
- name:'wex_probe',
- parameters:{type:'object',properties:{ok:{type:'boolean',enum:[true]}},required:['ok'],additionalProperties:false}
-};
 export type ApiDirectoryResult=
  | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;source:'provider';observedAt:string;modelIds:string[];providerRequestId?:string}}
  | {status:'blocked'|'unknown';operationId:string;reason:string};
@@ -98,10 +93,8 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(connection.revision!==expectedRevision||!connection.enabled)return blocked('configuration_changed_or_disabled');
    if(connection.protocol!=='openai-chat')return blocked('diagnostic_protocol_unsupported');
    if(!probe&&connection.endpointMode!=='base')return blocked('directory_route_unsupported');
-   const url=new URL(connection.endpoint);
-   if(connection.endpointMode==='base')url.pathname=url.pathname.replace(/\/$/,'')+(probe?'/chat/completions':'/models');
-   const probeBody=model?{model:model.modelId,messages:[{role:'user',content:probe?.tools?'Propose wex_probe with ok set to true.':'Reply with OK.'}],stream:probe?.stream===true,max_tokens:probe?.tools?64:8,
-    ...(probe?.tools?{tools:[{type:'function',function:toolProbeDeclaration}],tool_choice:{type:'function',function:{name:toolProbeDeclaration.name}}}:{})}:null;
+   const url=chatRoute(connection,probe?'completions':'models');
+   const probeBody=model?chatProbeBody(model,{stream:probe?.stream===true,tools:probe?.tools===true}):null;
    const current=()=>{
     if(stopped||controller.signal.aborted)return false;
     try{
@@ -135,13 +128,13 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    }
    timer=setTimeout(()=>{timedOut=true;abort();},timeoutMs);
    dispatched=true;
-   const response=await fetch(url,{method:probe?'POST':'GET',...(probeBody?{body:JSON.stringify(probeBody)}:{}),redirect:'manual',signal:controller.signal,headers:{accept:probe?.stream?'text/event-stream':'application/json',...(probeBody?{'content-type':'application/json'}:{}),...(token?{authorization:'Bearer '+token}:{})}});
+   const response=await fetch(url,{method:probe?'POST':'GET',...(probeBody?{body:JSON.stringify(probeBody)}:{}),redirect:'manual',signal:controller.signal,headers:chatHeaders(probe?.stream===true,token,!!probeBody)});
    if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
    receivedHeaders=true;
    const receivedCorrelation=requestCorrelation(response);
    if(!token||!JSON.stringify(receivedCorrelation).includes(token))correlation=receivedCorrelation;
    if(!response.ok){correlation={...correlation,...failureMetadata(response,token)};return unknown(providerError(response.status));}
-   const contentType=probe?.stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i;
+   const contentType=chatContentType(probe?.stream===true);
    if(!response.body||!contentType.test(response.headers.get('content-type')??''))return unknown('invalid_response_content_type');
    const reader=response.body.getReader(),decoder=new TextDecoder('utf-8',{fatal:true});
    let bytes=0,body='';
@@ -158,11 +151,10 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    }finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
    if(model){
     const bytes=new TextEncoder().encode(body);
-    const decode=probe?.stream?decodeChatStream:decodeChatResponse;
     const allowReasoning=connection.provider==='deepseek'
      &&model.observation?.connectionRevision===connection.revision
      &&model.observation.capabilities.reasoning==='supported';
-    const result=await decode((async function*(){yield bytes;})(),{signal:controller.signal,allowReasoning,...(probe?.tools?{tools:[toolProbeDeclaration]}:{})});
+    const result=await decodeOpenAiChat((async function*(){yield bytes;})(),probe?.stream===true,{signal:controller.signal,allowReasoning,...(probe?.tools?{tools:[toolProbeDeclaration]}:{})});
     if(probe?.tools&&result.toolCalls?.length!==1)return unknown('tool_probe_proposal_missing');
     if(!probe?.tools&&!result.text.trim())return unknown('empty_probe_response');
     if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
@@ -275,7 +267,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    timer=setTimeout(()=>{timedOut=true;controller?.abort();},snapshot.timeoutMs);
    startPhase(snapshot.headersTimeoutMs,'headers_timeout');
    dispatched=true;
-   const response=await fetch(snapshot.url,{method:'POST',redirect:'manual',headers:{'content-type':'application/json',accept:snapshot.body.stream?'text/event-stream':'application/json',...(token?{authorization:'Bearer '+token}:{})},body:JSON.stringify(snapshot.body),signal:controller.signal});
+   const response=await fetch(snapshot.url,{method:'POST',redirect:'manual',headers:chatHeaders(snapshot.body.stream,token),body:JSON.stringify(snapshot.body),signal:controller.signal});
    clearPhase();
    if(phaseTimeout)return unknown(phaseTimeout);
    if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
@@ -283,7 +275,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const receivedCorrelation=requestCorrelation(response);
    if(!token||!JSON.stringify(receivedCorrelation).includes(token))correlation=receivedCorrelation;
    if(!response.ok){correlation={...correlation,...failureMetadata(response,token)};return unknown(providerError(response.status));}
-   const contentType=snapshot.body.stream?/^text\/event-stream(?:\s*;|$)/i:/^application\/json(?:\s*;|$)/i;
+   const contentType=chatContentType(snapshot.body.stream);
    if(!contentType.test(response.headers.get('content-type')??'')||!response.body)return unknown('invalid_response_content_type');
    const stream=response.body,abortSignal=controller.signal;
    async function* chunks(){const reader=stream!.getReader();try{while(true){if(!current())throw Error('authorization_changed');startPhase(snapshot.idleTimeoutMs,'body_idle_timeout');const item=await reader.read();clearPhase();if(phaseTimeout)throw Error(phaseTimeout);if(!current())throw Error('authorization_changed');if(item.done)break;yield item.value;}}finally{await reader.cancel().catch(()=>{});reader.releaseLock();}}
@@ -302,7 +294,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    };
    const outputSchema=captureResponseFormat(snapshot.body.response_format);
    const allowReasoning=snapshot.connection.provider==='deepseek'&&snapshot.model.observation?.capabilities.reasoning==='supported';
-   const result=await (snapshot.body.stream?decodeChatStream(chunks(),{signal:abortSignal,allowReasoning,...(onText&&outputSchema===undefined?{onText:publish}:{}),...(snapshot.tools?{tools:snapshot.tools}:{})}):decodeChatResponse(chunks(),{signal:abortSignal,allowReasoning,...(snapshot.tools?{tools:snapshot.tools}:{})}));
+   const result=await decodeOpenAiChat(chunks(),snapshot.body.stream,{signal:abortSignal,allowReasoning,...(snapshot.body.stream&&onText&&outputSchema===undefined?{onText:publish}:{}),...(snapshot.tools?{tools:snapshot.tools}:{})});
    if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
    if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
    if(outputSchema!==undefined&&!result.toolCalls?.length){
