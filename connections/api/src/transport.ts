@@ -64,7 +64,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const connectionId=connection.id;
    if(probe&&model?.revision!==probe.modelRevision)return blocked('model_revision_changed');
    if(connection.revision!==expectedRevision||!connection.enabled)return blocked('configuration_changed_or_disabled');
-   const protocol=resolveApiProtocol(connection.protocol);if(!protocol)return blocked('diagnostic_protocol_unsupported');
+   const protocol=resolveApiProtocol(connection.protocol);if(!protocol||(!probe&&!protocol.supportsDirectory)||(!!probe&&!protocol.supportsProbe))return blocked('diagnostic_protocol_unsupported');
    if(!probe&&connection.endpointMode!=='base')return blocked('directory_route_unsupported');
    const url=protocol.route(connection,probe?'completions':'models');
    const probeBody=model?protocol.probeBody(model,{stream:probe?.stream===true,tools:probe?.tools===true}):null;
@@ -206,6 +206,8 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const prepared=api.prepare(prepareRequest,p);if(prepared.status!=='ok')return blocked('reason' in prepared&&prepared.reason==='timeout_out_of_range'?prepared.reason:'preparation_rejected');
    const snapshot=prepared.snapshot;
    const protocol=resolveApiProtocol(snapshot.connection.protocol);if(!protocol)return blocked('unsupported_protocol');
+   let wireBody:unknown;
+   try{wireBody=protocol.encodeBody(snapshot.body);}catch{return blocked('unsupported_protocol_input');}
    const current=()=>{if(!allowed())return false;const next=api.prepare(prepareRequest,p);return next.status==='ok'&&next.snapshot.fingerprint===snapshot.fingerprint;};
    const fingerprint=createHash('sha256').update(canonical({scope:initial.scope,snapshot:snapshot.fingerprint})).digest('hex');
    if(ledger.get(operationId))return blocked('already_recorded_no_automatic_retry');
@@ -236,7 +238,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    timer=setTimeout(()=>{timedOut=true;controller?.abort();},snapshot.timeoutMs);
    startPhase(snapshot.headersTimeoutMs,'headers_timeout');
    dispatched=true;
-   const response=await fetch(snapshot.url,{method:'POST',redirect:'manual',headers:protocol.headers(snapshot.body.stream,token),body:JSON.stringify(snapshot.body),signal:controller.signal});
+   const response=await fetch(snapshot.url,{method:'POST',redirect:'manual',headers:protocol.headers(snapshot.body.stream,token),body:JSON.stringify(wireBody),signal:controller.signal});
    clearPhase();
    if(phaseTimeout)return unknown(phaseTimeout);
    if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
