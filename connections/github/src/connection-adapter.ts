@@ -11,7 +11,7 @@ export function createGitHubMcpConnectionAdapter(options:GitHubMcpAdapterOptions
  const first=createGitHubMcpAdapter(options);let unused:Session|undefined=first;
  const sessions=new Map<string,{core:Session;connection:Readonly<ConnectionConfig>;tail:Promise<unknown>}>();
  let stopping=false;
- function run<T>(connection:Readonly<ConnectionConfig>,access:AdapterAccess,work:(core:Session)=>Promise<T>):Promise<T>{
+ function run(connection:Readonly<ConnectionConfig>,access:AdapterAccess,work:(core:Session)=>Promise<unknown>):Promise<Json>{
   const captured=Object.freeze({...connection});
   if(stopping||!access.check())return Promise.reject(Error('github_mcp_unavailable'));
   let session=sessions.get(captured.id);
@@ -30,7 +30,7 @@ export function createGitHubMcpConnectionAdapter(options:GitHubMcpAdapterOptions
    // MCP is JSON; retain all protocol fields without narrowing to file-shaped results.
    return JSON.parse(JSON.stringify(value)) as Json;
   });
-  slot.tail=job.catch(()=>{});return job as Promise<T>;
+  slot.tail=job.catch(()=>{});return job;
  }
  return Object.freeze({
   id:'github',version:'0.1.1',
