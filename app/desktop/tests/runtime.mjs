@@ -71,7 +71,7 @@ try{
   await waitFor("(()=>{const b="+button+";return !!b&&!b.disabled;})()");
   return wc.executeJavaScript("(()=>{const b="+button+";const d=b.closest('details');if(d&&!d.open)d.querySelector('summary').click();b.click();return true;})()");
  };
- const waitFor=async expression=>{const end=Date.now()+10000;while(!await wc.executeJavaScript(expression)){if(Date.now()>end){console.error('RENDERER_WAIT',expression,await wc.executeJavaScript("({dragging:document.querySelector('[data-workbench]')?.dataset.dragging,layout:localStorage.getItem('wex.workbench.layout.v2')})"));throw Error('renderer_wait_timeout');}await new Promise(r=>setTimeout(r,25));}};
+ const waitFor=async expression=>{const end=Date.now()+10000;while(!await wc.executeJavaScript(expression)){if(Date.now()>end){console.error('RENDERER_WAIT',expression,await wc.executeJavaScript("({dragging:document.querySelector('[data-workbench]')?.dataset.dragging,layout:localStorage.getItem('wex.workbench.layout.v2'),statuses:[...document.querySelectorAll('[role=status]')].map(x=>x.textContent),disabledForms:[...document.querySelectorAll('form')].map(f=>({label:f.getAttribute('aria-label'),disabled:f.querySelectorAll(':disabled').length}))})"));throw Error('renderer_wait_timeout');}await new Promise(r=>setTimeout(r,25));}};
  await waitFor("!!document.querySelector('[data-workbench]')");
  await wc.executeJavaScript("document.querySelector('[aria-label=\"折叠导航\"]').click();true");
  await waitFor("document.querySelector('[data-column=\"navigation\"]').getBoundingClientRect().width===56");
@@ -126,7 +126,9 @@ try{
  const checked=await invoke({kind:'snapshot'});assert.equal(checked.spaces.length,1);assert.equal(checked.organizations[0].groupId,group.id);
  
 // Category and address controls are exercised in the actual Renderer.
- const choose=async(selector,value)=>wc.executeJavaScript(`(()=>{const field=document.querySelector(${JSON.stringify(selector)});if(!field)throw Error('field_missing '+${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(field.tagName==='SELECT'?HTMLSelectElement.prototype:field.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set.call(field,${JSON.stringify(value)});field.dispatchEvent(new Event(field.tagName==='SELECT'?'change':'input',{bubbles:true}));return true;})()`);
+ const choose=async(selector,value)=>{
+  await waitFor("(()=>{const f=document.querySelector("+JSON.stringify(selector)+");return !!f&&!f.disabled;})()");
+  return wc.executeJavaScript(`(()=>{const field=document.querySelector(${JSON.stringify(selector)});if(!field)throw Error('field_missing '+${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(field.tagName==='SELECT'?HTMLSelectElement.prototype:field.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set.call(field,${JSON.stringify(value)});field.dispatchEvent(new Event(field.tagName==='SELECT'?'change':'input',{bubbles:true}));return true;})()`);};
  await choose('form select','category.create');await choose('form input','Desktop category');await new Promise(r=>setTimeout(r,25));
  await wc.executeJavaScript("document.querySelector('form').requestSubmit();true");
  await waitFor("[...document.querySelectorAll('[data-categories] button')].some(x=>x.textContent==='Desktop category')");
