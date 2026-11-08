@@ -5,8 +5,11 @@ import {resolveApiProtocol,supportedApiProtocols} from '../../../dist/connection
 test('protocol selection depends on explicit protocol ID, never the Provider name',()=>{
  assert.deepEqual(supportedApiProtocols(),['openai-chat','anthropic-messages']);
  const native=resolveApiProtocol('anthropic-messages');
- assert.equal(native?.supportsDirectory,false);
- assert.equal(native?.supportsProbe,false);
+ assert.equal(native?.supportsDirectory,true);
+ assert.equal(native?.supportsProbe,true);
+ assert.equal(native?.supportsToolProbe,false);
+ assert.equal(native?.diagnosticVersion(),'anthropic-messages-models-1');
+ assert.equal(native?.diagnosticVersion({stream:false,tools:false}),'anthropic-messages-probe-1');
  assert.equal(native?.generationVersion,'anthropic-messages-text-1');
  const adapter=resolveApiProtocol('openai-chat');
  assert.equal(adapter?.id,'openai-chat');
