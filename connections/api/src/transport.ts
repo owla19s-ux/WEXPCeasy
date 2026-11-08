@@ -64,7 +64,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const connectionId=connection.id;
    if(probe&&model?.revision!==probe.modelRevision)return blocked('model_revision_changed');
    if(connection.revision!==expectedRevision||!connection.enabled)return blocked('configuration_changed_or_disabled');
-   const protocol=resolveApiProtocol(connection.protocol);if(!protocol||(!probe&&!protocol.supportsDirectory)||(!!probe&&!protocol.supportsProbe)||(!!probe&&probe.tools&&!protocol.supportsToolProbe))return blocked('diagnostic_protocol_unsupported');
+   const protocol=resolveApiProtocol(connection.protocol);if(!protocol||(!probe&&!protocol.supportsDirectory)||(!!probe&&!protocol.supportsProbe)||(!!probe&&probe.tools&&(!protocol.supportsToolProbe||!protocol.probeTool)))return blocked('diagnostic_protocol_unsupported');
    if(!probe&&connection.endpointMode!=='base')return blocked('directory_route_unsupported');
    const url=protocol.route(connection,probe?'completions':'models');
    const probeBody=model?protocol.probeBody(model,{stream:probe?.stream===true,tools:probe?.tools===true}):null;
@@ -127,7 +127,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     const allowReasoning=connection.provider==='deepseek'
      &&model.observation?.connectionRevision===connection.revision
      &&model.observation.capabilities.reasoning==='supported';
-    const result=await protocol.decode((async function*(){yield bytes;})(),probe?.stream===true,{signal:controller.signal,allowReasoning,...(probe?.tools?{tools:[protocol.probeTool]}:{})});
+    const result=await protocol.decode((async function*(){yield bytes;})(),probe?.stream===true,{signal:controller.signal,allowReasoning,...(probe?.tools?{tools:[protocol.probeTool!]}:{})});
     if(probe?.tools&&result.toolCalls?.length!==1)return unknown('tool_probe_proposal_missing');
     if(!probe?.tools&&!result.text.trim())return unknown('empty_probe_response');
     if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
