@@ -24,7 +24,7 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 | API-01 Provider 配置 | 多连接、协议/URL、CRUD/复制/引用保护 | 部分实现 | 多协议和完整 UI 操作 |
 | API-02 模型能力目录 | 登记/刷新/探针、能力与限制 | 部分实现 | 多模态方向、来源/目录交互 |
 | API-03 凭证与诊断 | 安全 Key、轮换、分级真实测试 | 部分实现 | 多账户/真实厂商验收 |
-| API-04 请求与流式 | 非流式/SSE/取消/终态/错误 | 基础实现 | 其他原生协议、完整集成 |
+| API-04 请求与流式 | 非流式/SSE/取消/终态/错误 | Chat 已实现；Anthropic Messages 文本路径已接线、待本 SHA 验收 | 多模态、推理、完整真实厂商验收 |
 | API-05 工具调用 | Schema/提议/续接 | 部分实现 | 跨协议及真实受控工具轮次 |
 | API-06 用量与成本 | token/缓存/推理、费用及来源 | 部分实现 | 价格、估算与用户展示 |
 | API-07 本地 Provider | 本地服务兼容端点 | 部分实现 | 运行时诊断；远期完善 |
@@ -47,8 +47,9 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 | `src/preparation-parameters.ts` | 参数来源合并、能力规格校验 | 未冻结来源优先级，冲突仍显式拒绝 |
 | `src/observation-reconciliation.ts` | 探针结果与既有能力证据合并 | 防止文本/流探测清空已验证能力 |
 | `src/transport.ts` | HTTP 派发、凭证、诊断/探针、取消与接收 | 保留公开发送入口和受控 Operation |
-| `src/protocols/index.ts` | 显式协议 ID 注册、选择与拒绝未知协议 | 当前仅注册 `openai-chat`；后续原生协议按需独立文件实现 |
-| `src/protocols/openai-chat.ts` | Chat 路由、探针、目录解码、响应格式与身份 | 现有协议适配第一步，不等于多协议已实现 |
+| `src/protocols/index.ts` | 显式协议 ID 注册与选择 | 当前注册 `openai-chat` 和 `anthropic-messages`；按能力拒绝未实现的目录/探针 |
+| `src/protocols/openai-chat.ts` | Chat 路由、探针、目录解码、响应格式与身份 | 旧实现兼容、仍需回归 |
+| `src/protocols/anthropic-messages.ts` | Anthropic 原生文本请求、Header、非流及增量 SSE 解码 | 模型目录、探针、工具、思考/多模态未开放；不推断完整 Provider 支持 |
 | `src/network-diagnostics.ts` | HTTP 状态、网络错误及响应头安全摘要 | 通用传输诊断，不管理 Provider 协议 |
 | `src/stream.ts` / `response.ts` | OpenAI Chat SSE / JSON 解码 | 保留成熟实现，不误标为通用 Provider |
 | `src/tools.ts` / `continuation.ts` | Schema、工具片段/续接 | 保留既有防重复/来源校验 |
@@ -61,7 +62,7 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 
 - 上级：[Connections](../README.md) 公共 Operation/受控调用；由可信宿主注入 Permissions、Credentials 与数据 Store。
 - 真实宿主装配：`app/tests/api.test.mjs`；业务使用者：AI、Conversations、App/desktop UI，均只通过公开能力接线。
-- 模块测试：`connections/api/tests/config.test.mjs`、`config-mutations.test.mjs`、`preparation.test.mjs`、`preparation-parameters.test.mjs`、`observation-reconciliation.test.mjs`、`endpoint-policy.test.mjs`、`protocol.test.mjs`、`protocol-registry.test.mjs`、`network-diagnostics.test.mjs`、`transport.test.mjs`、`tools.test.mjs`，及目录下其他测试。
+- 模块测试：`connections/api/tests/config.test.mjs`、`config-mutations.test.mjs`、`preparation.test.mjs`、`preparation-parameters.test.mjs`、`observation-reconciliation.test.mjs`、`endpoint-policy.test.mjs`、`protocol.test.mjs`、`protocol-registry.test.mjs`、`anthropic-messages.test.mjs`、`anthropic-transport.test.mjs`、`network-diagnostics.test.mjs`、`transport.test.mjs`、`tools.test.mjs`，及目录下其他测试。
 - 常用命令：`npm run test:api`、`npm run typecheck`、`npm test`、`npm run check:boundaries`；先确认当前 `package.json`，本次未执行这些命令。
 - CI 检查先查看 [Actions 全运行列表](https://github.com/owla19s-ux/WEXPCeasy/actions/runs)，核对实际提交 SHA、对应测试及日志；不能用以前 SHA 的绿灯签收新实现。
 
@@ -75,7 +76,7 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 
 ## 6. 协议研究与历史材料
 
-当前实际请求基线为 `openai-chat`；Service 的请求准备、Transport 的探针/目录/发送均经 `resolveApiProtocol(connection.protocol)` 选择真实已注册协议，未知协议拒绝。Provider 名称可填不代表 Anthropic、Gemini、Responses 等原生协议支持。现有 `ApiProtocolAdapter` 是 Chat 兼容调用的最小运行接口，添加第一个真正不同的原生协议时须基于真实消息/流/工具语义扩展规范化接口，而不能迫使所有原生协议套用 Chat Completions 的请求与解码格式。跨 Provider 请求/流式/工具/usage 应通过正式 Protocol Adapter 兼容机制扩展，不以任何单个 SDK 替换整个产品协议。
+当前协议注册表有 `openai-chat` 与 `anthropic-messages` 两个入口。Service 的请求准备、Transport 的探针/目录/发送按 `resolveApiProtocol(connection.protocol)` 选择适配器，未知协议拒绝。Anthropic Messages 目前仅支持可验证的原生文本发送、JSON/SSE 解码、基本用量转换，使用原生 `/messages` 与 `x-api-key`；文本模型的 `max_tokens` 必须显式通过已观察的参数规格。Anthropic 目录刷新、生成探针、工具调用、推理续接和多模态尚未接通，不得视为完整服务商功能。现有 `ApiProtocolAdapter` 仍是逐步完善的运行接口，未来需按真实协议能力分离可选操作而不是强迫各协议复用 Chat 工具语义。Gemini、Responses 等其他原生协议尚未实现。跨 Provider 请求/流式/工具/usage 应通过正式 Protocol Adapter 兼容机制扩展，不以任何单个 SDK 替换整个产品协议。
 
 - 历史研究和 Pi AI 隔离实验仅在需要兼容证据时查阅：[A0 API 研究](../../docs/A0-产品构想与研究/方案与研究/既有研究/api/README.md)、[Pi AI 实验](../../experiments/pi-ai-compat/README.md)。
 - 长期功能以 A1 为准，0.1.1 的实际施工及签收以 A2 为准。历史研究不是独立施工命令。
