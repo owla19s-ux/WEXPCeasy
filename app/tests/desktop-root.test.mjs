@@ -61,5 +61,7 @@ test('Windows native root picker script parses and its folder dialog can be cons
  const {desktopRootPickerScript}=await import('../../dist/app/src/desktop-root-picker.js');
  const code="$ErrorActionPreference='Stop';$source=[Console]::In.ReadToEnd();$tokens=$null;$errors=$null;[void][Management.Automation.Language.Parser]::ParseInput($source,[ref]$tokens,[ref]$errors);if($errors.Count){throw 'picker_script_parse_failed'};Add-Type -AssemblyName System.Windows.Forms;$picker=New-Object Windows.Forms.FolderBrowserDialog;$picker.ShowNewFolderButton=$true;$picker.Dispose()";
  const result=spawnSync(join(process.env.SystemRoot,'System32/WindowsPowerShell/v1.0/powershell.exe'),['-NoProfile','-NonInteractive','-STA','-EncodedCommand',Buffer.from(code,'utf16le').toString('base64')],{input:desktopRootPickerScript,encoding:'utf8',windowsHide:true,timeout:20000});
+ assert.ifError(result.error);
+ assert.equal(result.signal,null,result.stderr);
  assert.equal(result.status,0,result.stderr);
 });

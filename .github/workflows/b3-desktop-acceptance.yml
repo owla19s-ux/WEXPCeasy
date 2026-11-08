@@ -21,7 +21,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build:desktop
-      - run: node --test app/tests/desktop-host.test.mjs app/tests/desktop-root.test.mjs app/tests/desktop-space.test.mjs app/tests/desktop-credentials.test.mjs shared/tests/credentials.test.mjs tools/tests/boundaries.test.mjs
+      - name: Verify native root initialization before parallel domain suites
+        run: node --test app/tests/desktop-root.test.mjs
+      - run: node --test app/tests/desktop-host.test.mjs app/tests/desktop-space.test.mjs app/tests/desktop-credentials.test.mjs shared/tests/credentials.test.mjs tools/tests/boundaries.test.mjs
       - name: Install CJK fonts for Chinese UI evidence
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
