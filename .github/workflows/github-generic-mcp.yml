@@ -50,6 +50,15 @@ jobs:
         run: git rev-parse HEAD
       - run: npm run typecheck
       - run: npm run build
+      - name: Diagnose Windows GitHub host startup before combined regression
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          foreach ($probe in 1..10) {
+            Write-Output "GitHub host startup probe $probe"
+            node --test --test-name-pattern="GitHub app read refuses a disabled connection" app/tests/github-files.test.mjs
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
       - name: Full regression
         run: node --test --test-concurrency=2 --test-timeout=60000 shared/tests/*.test.mjs permissions/tests/*.test.mjs app/tests/*.test.mjs connections/tests/*.test.mjs connections/github/tests/*.test.mjs connections/local/tests/*.test.mjs connections/api/tests/*.test.mjs tools/tests/*.test.mjs UI/tests/*.test.mjs space/tests/*.test.mjs AI/tests/*.test.mjs conversations/tests/*.test.mjs
       - run: npm run check:boundaries
