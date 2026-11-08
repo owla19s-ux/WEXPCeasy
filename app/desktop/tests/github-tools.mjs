@@ -8,12 +8,13 @@ import {createHash,randomBytes,createCipheriv,createDecipheriv} from 'node:crypt
 import {runDesktop} from '../../../dist/app/src/desktop-runtime.js';
 import {startFoundations} from '../../../dist/app/src/index.js';
 
+async function verify(){
 app.enableSandbox();if(process.platform==='linux')app.disableHardwareAcceleration();
 const token=process.env.WEX_GITHUB_READ_TOKEN;assert.ok(token);
 const [owner,repo]=process.env.GITHUB_REPOSITORY.split('/');
 const command=resolve(process.env.WEX_GITHUB_MCP_BINARY);
 const expectedSha256=createHash('sha256').update(await readFile(command)).digest('hex');
-const root=await mkdtemp(join(tmpdir(),'wex-github-tool-ui-')),id='github-tool-ui';
+const root=process.env.WEX_GITHUB_UI_ROOT,id='github-tool-ui';assert.ok(root,'parent-owned desktop fixture root missing');
 await writeFile(join(root,'.wex-root.json'),JSON.stringify({format:1,id}));
 await mkdir(join(root,'user'));await mkdir(join(root,'session'));
 app.setPath('userData',join(root,'user'));app.setPath('sessionData',join(root,'session'));
@@ -21,7 +22,7 @@ const key=randomBytes(32);
 const cipher={available:()=>true,seal(value){const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',key,iv);return Buffer.concat([iv,c.update(value,'utf8'),c.final(),c.getAuthTag()]).toString('base64');},
  unseal(value){const b=Buffer.from(value,'base64'),d=createDecipheriv('aes-256-gcm',key,b.subarray(0,12));d.setAuthTag(b.subarray(-16));return Buffer.concat([d.update(b.subarray(12,-16)),d.final()]).toString('utf8');}};
 let nativeAllowed=true,runtime,host,stage='startup';const prompts=[];
-const timer=setTimeout(()=>{console.error('github_tool_ui_timeout');app.exit(1);},120000);
+const timer=setTimeout(()=>{console.error('github_tool_ui_timeout '+stage);app.exit(1);},120000);
 try{
  runtime=await runDesktop({url:pathToFileURL(resolve('desktop-dist/index.html')).href,preload:resolve('desktop-dist/preload.cjs'),show:true,spaceRootId:id,
   spacePlatform:{confirm:async summary=>{prompts.push(summary);return nativeAllowed;},chooseDirectory:async()=>undefined},
@@ -98,9 +99,12 @@ try{
    'actual official Actions read through IPC and WEX adapter','observed Operation result rendered','foreign WebContents rejected','revocation clears catalog and result','no automatic replay','sandbox retained','runtime cleanup confirmed'],
   fixtures:['scripted native confirmation','ephemeral AES credential cipher'],limitations:['runtime supplied by trusted test host','no installer or manual desktop acceptance']},null,2));
  console.info('Official MCP desktop tool UI acceptance passed; tool count: '+toolCount+'; remote mutations: 0.');
- clearTimeout(timer);await rm(root,{recursive:true,force:true});app.quit();
+ clearTimeout(timer);app.quit();
 }catch(error){
  console.error('github_tool_ui_stage '+stage+' '+String(error?.message??'unknown').split(token).join('[redacted]'));
  try{await runtime?.lifecycle.stop();}catch{}
  clearTimeout(timer);console.error('github_tool_ui_acceptance_failed');app.exit(1);
 }
+
+}
+void verify().catch(()=>{console.error('github_tool_ui_startup_failed');app.exit(1);});

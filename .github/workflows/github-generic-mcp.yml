@@ -12,6 +12,7 @@ on:
       - 'UI/src/**'
       - 'UI/tests/github-tools.test.mjs'
       - 'app/desktop/tests/github-tools.mjs'
+      - 'app/desktop/tests/run-github-tools.mjs'
       - '.github/workflows/github-generic-mcp.yml'
 permissions:
   contents: read
@@ -76,13 +77,13 @@ jobs:
       - run: npm run build:desktop
       - name: Official MCP tools in actual sandboxed Electron (Linux)
         if: runner.os == 'Linux'
-        run: xvfb-run -a node node_modules/electron/cli.js app/desktop/tests/github-tools.mjs
+        run: xvfb-run -a node app/desktop/tests/run-github-tools.mjs
         env:
           WEX_GITHUB_READ_TOKEN: ${{ github.token }}
           WEX_GITHUB_MCP_BINARY: ${{ steps.upstream.outputs.command }}
       - name: Official MCP tools in actual Electron (Windows)
         if: runner.os == 'Windows'
-        run: node node_modules/electron/cli.js app/desktop/tests/github-tools.mjs
+        run: node app/desktop/tests/run-github-tools.mjs
         env:
           WEX_GITHUB_READ_TOKEN: ${{ github.token }}
           WEX_GITHUB_MCP_BINARY: ${{ steps.upstream.outputs.command }}
