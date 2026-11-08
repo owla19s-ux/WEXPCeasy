@@ -553,3 +553,76 @@ test('verified streaming probe preserves existing parameter evidence and records
  assert.equal(observation.capabilities.stream,'supported');
  assert.equal(observation.streamProbe.operationId,'stream-evidence');
 });
+
+test('generation records no-dispatch evidence when the final permission recheck throws',async t=>{
+ const h=await setup(t,()=>{});
+ const operationId='recheck-throws-before-http';
+ const original=h.f.permission.recheck.bind(h.f.permission);
+ h.f.permission.recheck=(request,prior)=>{
+  if(h.ledger.get(operationId)?.phase==='dispatched')throw Error('permission backend offline');
+  return original(request,prior);
+ };
+ const result=await h.transport.send(h.request(),operationId,h.input);
+ assert.deepEqual(result,{status:'blocked',operationId,reason:'authorization_or_configuration_changed'});
+ const operation=h.ledger.get(operationId);
+ assert.equal(operation.phase,'observed');
+ assert.deepEqual(operation.observations,[{id:'api-not-dispatched',phase:'observed',value:{externalDispatched:false}}]);
+ assert.equal(h.calls(),0);
+ h.f.permission.recheck=original;
+ assert.equal((await h.transport.send(h.request(),operationId,h.input)).reason,'already_recorded_no_automatic_retry');
+ assert.equal(h.calls(),0);
+});
+
+test('diagnostic cancellation inside the final recheck never invokes fetch',async t=>{
+ for(const kind of ['directory','probe']){
+  await t.test(kind,async t=>{
+   const h=await setup(t,()=>{}),controller=new AbortController(),operationId='cancel-final-'+kind;
+   const original=h.f.permission.recheck.bind(h.f.permission);
+   h.f.permission.recheck=(request,prior)=>{
+    const decision=original(request,prior);
+    if(h.ledger.get(operationId)?.phase==='dispatched')controller.abort();
+    return decision;
+   };
+   let fetchCalls=0;
+   t.mock.method(globalThis,'fetch',async()=>{fetchCalls++;throw Error('unexpected HTTP dispatch');});
+   const result=kind==='directory'
+    ?await h.transport.refreshDirectory(h.f.request('directory.refresh',`connection:${h.c.id}`),operationId,h.c.id,1,1000,controller.signal)
+    :await h.transport.probeGeneration(h.f.request('model.probe',`model:${h.m.id}`),operationId,h.m.id,1,2,1000,controller.signal);
+   assert.equal(result.status,'blocked');
+   assert.equal(fetchCalls,0);
+   assert.equal(h.ledger.get(operationId).phase,'observed');
+   assert.deepEqual(h.ledger.get(operationId).observations,[{id:'api-not-dispatched',phase:'observed',value:{externalDispatched:false}}]);
+  });
+ }
+});
+
+test('unconfirmed no-dispatch receipts return unknown and retain the operation reservation',async t=>{
+ for(const kind of ['generation','directory','probe']){
+  for(const failure of ['throw','unknown']){
+   await t.test(kind+' '+failure,async t=>{
+    const h=await setup(t,()=>{}),operationId='no-dispatch-receipt-'+kind+'-'+failure;
+    const ledger={...h.ledger,
+     markDispatched(id){const result=h.ledger.markDispatched(id);h.f.revoke();return result;},
+     observe(){if(failure==='throw')throw Error('receipt store offline');return {status:'unknown',reason:'lost_ack'};}
+    };
+    const transport=createApiTransport(h.f.service,h.f.permission,ledger,{
+     derivePrepareRequest:()=>h.f.request('request.prepare',`model:${h.m.id}`)
+    });
+    const invoke=()=>kind==='generation'
+     ?transport.send(h.request(),operationId,h.input)
+     :kind==='directory'
+      ?transport.refreshDirectory(h.f.request('directory.refresh',`connection:${h.c.id}`),operationId,h.c.id,1,1000)
+      :transport.probeGeneration(h.f.request('model.probe',`model:${h.m.id}`),operationId,h.m.id,1,2,1000);
+    const result=await invoke();
+    assert.deepEqual(result,{status:'unknown',operationId,reason:'blocked_receipt_unconfirmed'});
+    assert.equal(h.ledger.get(operationId).phase,'dispatched');
+    assert.equal(h.ledger.get(operationId).attempts,1);
+    assert.equal(h.calls(),0);
+    h.f.allow();
+    assert.equal((await invoke()).reason,'already_recorded_no_automatic_retry');
+    assert.equal(h.calls(),0);
+    await transport.stop();
+   });
+  }
+ }
+});
