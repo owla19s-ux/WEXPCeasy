@@ -317,3 +317,6 @@ export function githubCredentialTarget(connection:Readonly<ConnectionConfig>):{
    binding:Object.freeze({connectionId:current.id,endpoint:current.endpoint,provider:'github'})});
  }catch{return;}
 }
+
+export {createGitHubMcpAdapter} from './mcp.js';
+export type {GitHubMcpAdapterOptions,GitHubMcpAdapterStatus,GitHubMcpTool,GitHubMcpToolResult} from './mcp.js';
