@@ -75,6 +75,7 @@ Function ValidateInstallDirectory
  Return
  invalid:
  FileOpen $R8 "$TEMP\WEXPCeasy-install.log" a
+ FileSeek $R8 0 END
  FileWrite $R8 "$R9|$INSTDIR|attributes=$0|reparse=$1$\r$\n"
  FileClose $R8
  IfSilent +2
