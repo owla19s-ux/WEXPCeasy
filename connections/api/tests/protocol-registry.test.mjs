@@ -3,10 +3,14 @@ import assert from 'node:assert/strict';
 import {resolveApiProtocol,supportedApiProtocols} from '../../../dist/connections/api/src/protocols/index.js';
 
 test('protocol selection depends on explicit protocol ID, never the Provider name',()=>{
- assert.deepEqual(supportedApiProtocols(),['openai-chat']);
+ assert.deepEqual(supportedApiProtocols(),['openai-chat','anthropic-messages']);
+ const native=resolveApiProtocol('anthropic-messages');
+ assert.equal(native?.supportsDirectory,false);
+ assert.equal(native?.supportsProbe,false);
+ assert.equal(native?.generationVersion,'anthropic-messages-text-1');
  const adapter=resolveApiProtocol('openai-chat');
  assert.equal(adapter?.id,'openai-chat');
- assert.equal(resolveApiProtocol('anthropic-messages'),undefined);
+ assert.equal(resolveApiProtocol('anthropic-message'),undefined);
  assert.equal(resolveApiProtocol('deepseek'),undefined);
  assert.equal(resolveApiProtocol('OpenAI'),undefined);
  assert.equal(resolveApiProtocol('toString'),undefined);
