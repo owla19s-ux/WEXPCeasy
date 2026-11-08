@@ -72,7 +72,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
      const evidence=operation?.observations.find(row=>row.id==='api-probe-result'&&row.phase==='observed')?.value;
      const binding=operation?.connection;
      const scopeHash=createHash('sha256').update(canonical(probe.decision.scope)).digest('hex');
-     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!matchesApiProbeAdapterVersion(connection.protocol,binding.adapterVersion,{stream:evidence?.stream===true,tools:evidence?.tools===true})
+     if(operation?.phase!=='observed'||binding?.adapterId!=='connections/api'||!matchesApiProbeAdapterVersion(connection.protocol,binding.adapterVersion,{stream:object(evidence)&&evidence.stream===true,tools:object(evidence)&&evidence.tools===true})
        ||binding.connectionId!==connection.id||binding.configRevision!==connection.revision||!connection.enabled
        ||!object(evidence)||evidence.source!=='probe'||typeof evidence.observedAt!=='string'||evidence.scopeHash!==scopeHash
        ||evidence.connectionId!==connection.id||evidence.connectionRevision!==connection.revision
