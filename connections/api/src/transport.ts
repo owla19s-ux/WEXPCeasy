@@ -1,4 +1,3 @@
-import {parseUniqueJson} from './json.js';
 import {captureResponseFormat,validateStructuredOutput} from './tools.js';
 import {ProviderTerminalError} from './terminal.js';
 import type {Json} from '../../../shared/src/index.js';
@@ -8,7 +7,7 @@ import type {createOperationLedger} from '../../src/index.js';
 import type {ApiService} from './service.js';
 import type {CredentialReference,Preparation} from './model.js';
 import {canonical,capture,object,text,revision} from './model.js';
-import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration,chatResponseIdentity} from './protocols/openai-chat.js';
+import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration,chatResponseIdentity,decodeChatModelDirectory} from './protocols/openai-chat.js';
 import type {ChatStreamResult} from './stream.js';
 import {requestCorrelation,failureMetadata,networkFailure,providerError} from './network-diagnostics.js';
 export type ApiDirectoryResult=
@@ -139,16 +138,11 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
     return {status:'ok',operationId,observation};
    }
-   let decoded:unknown;
-   try{decoded=parseUniqueJson(body);}catch{return unknown('invalid_model_directory');}
-   if(!object(decoded)||!Array.isArray(decoded.data)||decoded.data.length>4096)return unknown('invalid_model_directory');
-   if(decoded.has_more===true)return unknown('model_directory_incomplete');
-   const ids=new Set<string>();
-   for(const row of decoded.data){
-    if(!object(row)||!text(row.id)||ids.has(row.id))return unknown('invalid_model_directory');
-    ids.add(row.id);
+   let modelIds:string[];
+   try{modelIds=decodeChatModelDirectory(body);}catch(error){
+    return unknown(error instanceof Error&&error.message==='model_directory_incomplete'?'model_directory_incomplete':'invalid_model_directory');
    }
-   const observation={connectionId,connectionRevision:expectedRevision,source:'provider' as const,observedAt:new Date().toISOString(),modelIds:[...ids],...correlation};
+   const observation={connectionId,connectionRevision:expectedRevision,source:'provider' as const,observedAt:new Date().toISOString(),modelIds,...correlation};
    if(token&&JSON.stringify(observation).includes(token))return unknown('credential_echoed');
    if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
    if(ledger.observe(operationId,receiptId,observation,'observed').status!=='ok')
