@@ -26,7 +26,15 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
   const unsubscribe=bridge.onAccessChanged(()=>{epoch.current++;running.current=false;setBusy(false);setBackend(false);setConnections([]);setModels([]);setSelected(undefined);setModel(undefined);setName('');setProvider('Custom');setProtocol('openai-chat');setEndpoint('https://api.openai.com/v1');setModelName('');setModelId('');setTemperature('');setMaxTokens('');setMessage('授权已变更，请重新读取配置。');});
   return ()=>{epoch.current++;running.current=false;unsubscribe();};
  },[bridge]);
- const params=():ApiCommonParameters=>({temperature:temperature.trim()?{mode:'value',value:Number(temperature)}:{mode:'provider-default'},...(maxTokens.trim()?{max_tokens:{mode:'value' as const,value:Number(maxTokens)}}:{})});
+ const params=():ApiCommonParameters=>{
+  const patch:ApiCommonParameters={};
+  const priorTemperature=model?.parameters.temperature,priorLimit=model?.parameters.max_tokens;
+  const savedTemperature=priorTemperature?.mode==='value'?String(priorTemperature.value):'';
+  const savedLimit=priorLimit?.mode==='value'?String(priorLimit.value):'';
+  if(!model||temperature!==savedTemperature)patch.temperature=temperature.trim()?{mode:'value',value:Number(temperature)}:{mode:'provider-default'};
+  if(maxTokens!==savedLimit)patch.max_tokens=maxTokens.trim()?{mode:'value',value:Number(maxTokens)}:{mode:'provider-default'};
+  return patch;
+ };
  return <div data-api-settings><h3>API 与模型</h3><p>配置保存在 API 模块。凭证仅在独立安全窗口中录入；测试会发送真实请求。</p>
  <button disabled={busy} onClick={()=>void run(refresh)}>读取 API 配置</button>
  <p role="status">{message}</p>
@@ -57,7 +65,7 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  <label>模型名称<input required disabled={busy} value={modelName} onChange={e=>setModelName(e.target.value)}/></label>
  <label>服务端模型 ID<input required disabled={busy||!!model} value={modelId} onChange={e=>setModelId(e.target.value)}/></label>
  <label>Temperature（留空使用服务端默认）<input type="number" step="any" disabled={busy} value={temperature} onChange={e=>setTemperature(e.target.value)}/></label>
- <label>最大输出 Tokens（Anthropic 文本调用必须配置）<input type="number" min={1} step={1} disabled={busy} value={maxTokens} onChange={e=>setMaxTokens(e.target.value)}/></label>
+ <label>最大输出 Tokens（清空恢复服务端默认；Anthropic 文本调用必须配置）<input type="number" min={1} step={1} disabled={busy} value={maxTokens} onChange={e=>setMaxTokens(e.target.value)}/></label>
  <button disabled={busy} type="submit">保存模型</button></form>
  {model&&<button disabled={busy} onClick={()=>void run(async()=>{const r=await call({kind:'model.probe',id:model.id,expectedRevision:model.revision,stream:true});setMessage('模型测试：'+r.status);setModel(undefined);await listModels(selected.id);})}>测试并保存模型观测</button>}
  </>}

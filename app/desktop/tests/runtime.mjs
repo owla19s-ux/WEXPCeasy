@@ -194,6 +194,27 @@ try{
  await new Promise(r=>setTimeout(r,25));
  await wc.executeJavaScript("document.querySelector('form[aria-label=\"模型配置\"]').requestSubmit();true");
  await waitFor("[...document.querySelectorAll('[data-api-settings] li button')].some(b=>b.textContent==='Desktop Model')");
+ // Editing an existing model must preserve untouched settings and explicitly clear a numeric limit.
+ const apiConnections=await wc.executeJavaScript("window.wexHost.api({kind:'snapshot'})");
+ const apiConnection=apiConnections.value.connections.find(c=>c.name==='Desktop Provider');assert.ok(apiConnection);
+ const readDesktopModel=async()=>{
+  const reply=await wc.executeJavaScript('window.wexHost.api('+JSON.stringify({kind:'models',connectionId:apiConnection.id})+')');
+  assert.equal(reply.ok,true);return reply.value.models.find(m=>m.name==='Desktop Model');
+ };
+ const initialModel=await readDesktopModel();assert.ok(initialModel);
+ const seedParameters=await wc.executeJavaScript('window.wexHost.api('+JSON.stringify({kind:'model.edit',id:initialModel.id,expectedRevision:initialModel.revision,parameters:{temperature:{mode:'disabled'},top_p:{mode:'value',value:0.25},max_tokens:{mode:'value',value:64}}})+')');
+ assert.equal(seedParameters.value.status,'committed');
+ await click('读取已配置模型');await click('Desktop Model');
+ await waitFor("document.querySelector('form[aria-label=\"模型配置\"] input[min=\"1\"]').value==='64'");
+ await choose('form[aria-label="模型配置"] input[min="1"]','');
+ await click('保存模型');
+ await waitFor("!document.querySelector('form[aria-label=\"模型配置\"] input').disabled");
+ const editedModel=await readDesktopModel();
+ assert.deepEqual(editedModel.parameters,{temperature:{mode:'disabled'},top_p:{mode:'value',value:0.25},max_tokens:{mode:'provider-default'}},'UI edits must preserve untouched modes/parameters and clear an explicit limit');
+ // The following generation fixture probes text/stream only; it does not claim top_p capability.
+ const restoreProbeParameters=await wc.executeJavaScript('window.wexHost.api('+JSON.stringify({kind:'model.edit',id:editedModel.id,expectedRevision:editedModel.revision,parameters:{top_p:{mode:'provider-default'}}})+')');
+ assert.equal(restoreProbeParameters.value.status,'committed');
+ await click('读取已配置模型');
  await click('Desktop Model');await click('测试并保存模型观测');
  await waitFor("document.querySelector('[data-api-settings] [role=\"status\"]').textContent.includes('committed')");
  await click('Agent 与角色');await click('读取 AI 配置');
