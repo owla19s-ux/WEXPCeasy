@@ -27,7 +27,7 @@ import type {LocalEntryOptions,LocalEntryClient} from './local-entries.js';
 import {createAiConfigurations,verifyModelWithApi,inspectAiConfigurationStore} from '../../AI/src/index.js';
 import {assemble} from './assembly.js';
 import type {Host,ModuleDiagnostic} from './assembly.js';
-export type FoundationTechnicalDiagnostics=Pick<ReturnType<typeof createPersistedDiagnostics>,'read'>;
+export type FoundationTechnicalDiagnostics=Pick<ReturnType<typeof createPersistedDiagnostics>,'read'>&{reportDesktopFailure():{status:'written'|'failed'}};
 export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'resolve'>&Pick<ReturnType<typeof createApiTransport>,'send'|'refreshDirectory'|'probeGeneration'>;
 export type FoundationLocalFiles=Pick<ReturnType<typeof createLocalFileBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationLocalDirectories=Pick<ReturnType<typeof createLocalDirectoryBindings>,'register'>&ReturnType<typeof createReadBoundary>;
@@ -91,7 +91,12 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
   return {status:'incomplete' as const,failed:[failed]};
  };
  const technicalDiagnostics:FoundationTechnicalDiagnostics|undefined=technicalLog?Object.freeze({
-  read(){return stopping||!technicalLog?{status:'unavailable' as const}:technicalLog.read();}
+  read(){return stopping||!technicalLog?{status:'unavailable' as const}:technicalLog.read();},
+  reportDesktopFailure(){
+   if(stopping||!technicalLog)return {status:'failed' as const};
+   const result=technicalLog.emit({module:'app',level:'error',code:'renderer_unavailable'});
+   if(result.status==='failed')noteDiagnostic('diagnostic_write_failed');return result;
+  }
  }):undefined;
  const trust:TrustPort={
   current(request){if(stopping)return;if(local?.owns(request))return local.current(request);const facts=options.trust.current(request);return local&&facts?.kind==='local'?undefined:facts;},
