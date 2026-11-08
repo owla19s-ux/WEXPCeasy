@@ -412,7 +412,9 @@ test('trusted tool continuation binds the round and sends matching tool results'
   sourceRequestId:'earlier-request',connectionId:h.c.id,connectionRevision:1,modelId:h.m.id,modelRevision:2,
   assistantText:'',calls:[{id:'call-1',name:'lookup',arguments:{key:'x'}}],results:[{id:'call-1',content:'result from receipt'}]
  };
- const input={...h.input,toolContinuation:'round-a'};
+ // This case verifies continuation binding and withdrawal, not a one-second network deadline.
+ // Keep the explicit short-deadline cases separate; Windows parallel SQLite/HTTP setup can consume that budget.
+ const input={...h.input,timeoutMs:10000,toolContinuation:'round-a'};
  assert.equal(h.f.service.prepare(prepare,{...input,requestId:'earlier-request'}).reason,'tool_continuation_binding_mismatch');
  assert.equal(h.f.service.prepare(prepare,{...input,toolContinuation:'unknown'}).reason,'tool_continuation_unavailable');
  const foreign=h.f.request('request.prepare',target,null,{conversation:'chat-2'});
@@ -437,6 +439,7 @@ test('trusted tool continuation binds the round and sends matching tool results'
  withdraw=true;
  const withdrawn=await h.transport.send(send,'withdrawn-round',{...input,requestId:'second-followup'});
  assert.equal(withdrawn.status,'unknown');
+ assert.equal(withdrawn.reason,'authorization_or_configuration_changed');
  assert.equal(h.ledger.get('withdrawn-round').phase,'unknown');
  assert.equal(h.calls(),3);
 });
