@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import type {DesktopBridge,DesktopApiInput,ApiConnectionView,ApiModelView,ApiCommonParameters} from './index.js';
 export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  const [connections,setConnections]=useState<ApiConnectionView[]>([]),[models,setModels]=useState<ApiModelView[]>([]);
@@ -6,8 +6,12 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  const [name,setName]=useState(''),[provider,setProvider]=useState('Custom'),[protocol,setProtocol]=useState('openai-chat'),[endpoint,setEndpoint]=useState('https://api.openai.com/v1');
  const [modelName,setModelName]=useState(''),[modelId,setModelId]=useState(''),[temperature,setTemperature]=useState(''),[maxTokens,setMaxTokens]=useState('');
  const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[backend,setBackend]=useState(false);
+ const epoch=useRef(0),running=useRef(false);
  async function call(input:DesktopApiInput){
-  const reply=await bridge.api(input);if(!reply.ok)throw Error(reply.error);
+  const captured=epoch.current;
+  const reply=await bridge.api(input);
+  if(captured!==epoch.current)throw Error('stale_api_settings_request');
+  if(!reply.ok)throw Error(reply.error);
   const r=reply.value;
   if(r.status==='cancelled')throw Error('操作已取消');
   if(r.status==='unknown')throw Error('结果未知，请刷新核对；Operation：'+(r.operationId??r.intent));
@@ -16,9 +20,12 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  }
  async function refresh(){const r=await call({kind:'snapshot'});if(r.status==='ok'&&r.view==='connections'){setConnections(r.connections);setBackend(r.credentialBackend);if(selected)setSelected(r.connections.find(c=>c.id===selected.id));}}
  async function listModels(id:string){const r=await call({kind:'models',connectionId:id});if(r.status==='ok'&&r.view==='models')setModels(r.models);}
- async function run(work:()=>Promise<void>){if(busy)return;setBusy(true);setMessage('');try{await work();}catch(e){setConnections([]);setModels([]);setMessage(e instanceof Error?e.message:'操作不可用');}finally{setBusy(false);}}
+ async function run(work:()=>Promise<void>){if(running.current)return;const captured=epoch.current;running.current=true;setBusy(true);setMessage('');try{await work();}catch(e){if(captured===epoch.current){setConnections([]);setModels([]);setMessage(e instanceof Error?e.message:'操作不可用');}}finally{if(captured===epoch.current){running.current=false;setBusy(false);}}}
  function choose(c:ApiConnectionView){setSelected(c);setName(c.name);setProvider(c.provider);setProtocol(c.protocol);setEndpoint(c.endpoint);setModels([]);setModel(undefined);}
- useEffect(()=>bridge.onAccessChanged(()=>{setConnections([]);setModels([]);setSelected(undefined);setModel(undefined);setName('');setProvider('Custom');setProtocol('openai-chat');setEndpoint('https://api.openai.com/v1');setModelName('');setModelId('');setTemperature('');setMaxTokens('');setMessage('授权已变更，请重新读取配置。');}),[bridge]);
+ useEffect(()=>{
+  const unsubscribe=bridge.onAccessChanged(()=>{epoch.current++;running.current=false;setBusy(false);setBackend(false);setConnections([]);setModels([]);setSelected(undefined);setModel(undefined);setName('');setProvider('Custom');setProtocol('openai-chat');setEndpoint('https://api.openai.com/v1');setModelName('');setModelId('');setTemperature('');setMaxTokens('');setMessage('授权已变更，请重新读取配置。');});
+  return ()=>{epoch.current++;running.current=false;unsubscribe();};
+ },[bridge]);
  const params=():ApiCommonParameters=>({temperature:temperature.trim()?{mode:'value',value:Number(temperature)}:{mode:'provider-default'},...(maxTokens.trim()?{max_tokens:{mode:'value' as const,value:Number(maxTokens)}}:{})});
  return <div data-api-settings><h3>API 与模型</h3><p>配置保存在 API 模块。凭证仅在独立安全窗口中录入；测试会发送真实请求。</p>
  <button disabled={busy} onClick={()=>void run(refresh)}>读取 API 配置</button>
