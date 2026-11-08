@@ -1,3 +1,5 @@
+import type { Segment } from './model.js';
+
 export const id = (value: unknown): value is string =>
   typeof value === 'string' && /^[a-zA-Z0-9_-]{1,120}$/.test(value);
 
