@@ -1,3 +1,4 @@
+import {validateApiEndpoint} from './endpoint-policy.js';
 import type {Json} from '../../../shared/src/index.js';
 export type ToolSchema=({type:'object';properties:Record<string,ToolSchema>;required?:string[];additionalProperties:false}|{type:'array';items:ToolSchema}|{type:'string'|'number'|'integer'|'boolean'|'null';enum?:Json[]})&{description?:string};
 export interface ToolDefinition {name:string;description?:string;parameters:ToolSchema}
@@ -62,10 +63,9 @@ export function parameters(input:unknown):input is Parameters {
 function validJson(value:unknown):boolean{try{canonical(value);return true;}catch{return false;}}
 function credential(value:unknown):boolean{return value===null||(closed(value,['id','revision'])&&text(value['id'])&&revision(value['revision']));}
 export function endpoint(value:string,mode:'base'|'request'):string {
- let url:URL;try{url=new URL(value);}catch{return fail('invalid_endpoint');}
- if(url.username||url.password||url.search||url.hash||!['https:','http:'].includes(url.protocol)||(url.protocol==='http:'&&!['localhost','127.0.0.1','[::1]'].includes(url.hostname)))return fail('invalid_endpoint');
- if(mode==='base'&&url.pathname.replace(/\/$/,'').endsWith('/chat/completions'))return fail('ambiguous_endpoint');
- return url.href;
+ const checked=validateApiEndpoint(value,mode);
+ if(checked.status!=='ok')return fail(checked.status);
+ return checked.url;
 }
 function connection(value:unknown):value is ApiConnection {
  if(!closed(value,['id','revision','name','provider','protocol','endpoint','endpointMode','credentialRef','enabled','parameters'])||!['id','name','provider','protocol','endpoint'].every(k=>text(value[k]))||!revision(value['revision'])||!['base','request'].includes(String(value['endpointMode']))||!credential(value['credentialRef'])||typeof value['enabled']!=='boolean'||!parameters(value['parameters']))return false;

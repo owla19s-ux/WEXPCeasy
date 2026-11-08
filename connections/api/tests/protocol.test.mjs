@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration} from '../../../dist/connections/api/src/protocols/openai-chat.js';
+import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration,chatResponseIdentity,decodeChatModelDirectory} from '../../../dist/connections/api/src/protocols/openai-chat.js';
 
 const base={endpoint:'https://api.example.test/v1',endpointMode:'base'};
 test('OpenAI Chat routes only append on base endpoints and preserve request-mode URLs',()=>{
@@ -39,4 +39,20 @@ test('OpenAI Chat adapter dispatches to original nonstream and SSE terminal vali
  const sse='data: '+json.replace('"message":{"role":"assistant","content":"hello"}','"delta":{"role":"assistant","content":"hello"}')+'\n\ndata: [DONE]\n\n';
  assert.equal((await decodeOpenAiChat(bytes(sse),true,{})).text,'hello');
  await assert.rejects(decodeOpenAiChat(bytes('data: [DONE]\n\n'),true,{}));
+});
+
+test('Chat provider identity projection retains only validated response identifiers',()=>{
+ assert.deepEqual(chatResponseIdentity({text:'hello',usage:null}),{});
+ assert.deepEqual(chatResponseIdentity({text:'hello',usage:null,providerResponseId:'res-1',providerModelId:'model-1'}),
+  {providerResponseId:'res-1',providerModelId:'model-1'});
+});
+
+test('OpenAI Chat model directory decoding is strict and does not register unknown models',()=>{
+ assert.deepEqual(decodeChatModelDirectory(JSON.stringify({data:[{id:'model-a'},{id:'model-b'}]})),['model-a','model-b']);
+ assert.deepEqual(decodeChatModelDirectory('{"data":[]}'),[]);
+ assert.throws(()=>decodeChatModelDirectory('{"data":[{"id":"dup"},{"id":"dup"}]}'),/invalid_model_directory/);
+ assert.throws(()=>decodeChatModelDirectory('{"data":[{"id":"a"}],"has_more":true}'),/model_directory_incomplete/);
+ assert.throws(()=>decodeChatModelDirectory('{"data":[],"data":[{"id":"injected"}]}'),/invalid_model_directory/);
+ assert.throws(()=>decodeChatModelDirectory('{"data":[{"id":""}]}'),/invalid_model_directory/);
+ assert.throws(()=>decodeChatModelDirectory('{"data":null}'),/invalid_model_directory/);
 });

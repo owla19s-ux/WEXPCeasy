@@ -41,8 +41,14 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 | 源码 | 当前职责 | 审查/施工关注 |
 |---|---|---|
 | `src/service.ts` | 配置写读、权限复核、模型观察、请求准备 | 保留统一服务入口；内部定向拆职责 |
-| `src/model.ts` | 实体/类型、输入和参数验证、状态解码 | 分离独立规则；谨慎迁移持久化 |
-| `src/transport.ts` | HTTP、凭证、目录/探针、派发/取消/接收 | 优先区分通用传输与 Chat 协议实现 |
+| `src/model.ts` | 领域类型、参数/能力规则、状态解码与兼容校验入口 | 后续只按真实职责和数据迁移证据拆分 |
+| `src/endpoint-policy.ts` | 端点 URL / 本地回环 HTTP / Base 与 Request 模式校验 | 纯规则，保持既有 `endpoint()` 公开调用语义 |
+| `src/config-mutations.ts` | Connection / Model 的纯内存配置变更 | 权限、删除租约和两阶段存储提交仍归 Service |
+| `src/preparation-parameters.ts` | 参数来源合并、能力规格校验 | 未冻结来源优先级，冲突仍显式拒绝 |
+| `src/observation-reconciliation.ts` | 探针结果与既有能力证据合并 | 防止文本/流探测清空已验证能力 |
+| `src/transport.ts` | HTTP 派发、凭证、诊断/探针、取消与接收 | 保留公开发送入口和受控 Operation |
+| `src/protocols/openai-chat.ts` | Chat 路由、探针、目录解码、响应格式与身份 | 现有协议适配第一步，不等于多协议已实现 |
+| `src/network-diagnostics.ts` | HTTP 状态、网络错误及响应头安全摘要 | 通用传输诊断，不管理 Provider 协议 |
 | `src/stream.ts` / `response.ts` | OpenAI Chat SSE / JSON 解码 | 保留成熟实现，不误标为通用 Provider |
 | `src/tools.ts` / `continuation.ts` | Schema、工具片段/续接 | 保留既有防重复/来源校验 |
 | `src/usage.ts` | Provider Token/缓存/推理用量 | 成本来源仍待补充 |
@@ -54,7 +60,7 @@ API 是可独立完成单次模型调用的连接器，管理非秘密 Provider/
 
 - 上级：[Connections](../README.md) 公共 Operation/受控调用；由可信宿主注入 Permissions、Credentials 与数据 Store。
 - 真实宿主装配：`app/tests/api.test.mjs`；业务使用者：AI、Conversations、App/desktop UI，均只通过公开能力接线。
-- 模块测试：`connections/api/tests/config.test.mjs`、`preparation.test.mjs`、`transport.test.mjs`、`tools.test.mjs`，及目录下其他测试。
+- 模块测试：`connections/api/tests/config.test.mjs`、`config-mutations.test.mjs`、`preparation.test.mjs`、`preparation-parameters.test.mjs`、`observation-reconciliation.test.mjs`、`endpoint-policy.test.mjs`、`protocol.test.mjs`、`network-diagnostics.test.mjs`、`transport.test.mjs`、`tools.test.mjs`，及目录下其他测试。
 - 常用命令：`npm run test:api`、`npm run typecheck`、`npm test`、`npm run check:boundaries`；先确认当前 `package.json`，本次未执行这些命令。
 - CI 检查先查看 [Actions 全运行列表](https://github.com/owla19s-ux/WEXPCeasy/actions/runs)，核对实际提交 SHA、对应测试及日志；不能用以前 SHA 的绿灯签收新实现。
 

@@ -35,3 +35,45 @@ jobs:
         run: node --test --test-concurrency=2 --test-timeout=30000 connections/github/tests/*.test.mjs connections/tests/capabilities.test.mjs app/tests/github-official-host.test.mjs
       - run: npm run check:boundaries
         if: runner.os == 'Windows'
+
+  official-runtime:
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - run: npm ci
+      - run: npm run build
+      - name: Build pinned unmodified official MCP from source archive
+        id: upstream
+        run: node connections/github/tests/build-official-runtime.mjs
+      - name: Official MCP through WEX host and public Connections
+        run: node connections/github/tests/live-mcp-adapter.mjs
+        env:
+          WEX_GITHUB_READ_TOKEN: ${{ github.token }}
+          WEX_GITHUB_MCP_BINARY: ${{ steps.upstream.outputs.command }}
+          WEX_GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: github-mcp-live-${{ runner.os }}-${{ github.sha }}
+          path: |
+            github-mcp-runtime-build.json
+            github-mcp-official-catalog.json
+            github-mcp-live-evidence.json
+          if-no-files-found: warn

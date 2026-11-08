@@ -1,13 +1,16 @@
 import {encodeToolRound} from './continuation.js';
 import {chatRoute} from './protocols/openai-chat.js';
+import {resolvePreparationParameters} from './preparation-parameters.js';
+import {applyConfigMutation} from './config-mutations.js';
+import {reconcileTextProbeObservation} from './observation-reconciliation.js';
 import type {ToolRoundReader} from './continuation.js';
 import type {Operation} from '../../src/index.js';
 import {captureTools,captureResponseFormat} from './tools.js';
 import {createHash,randomUUID} from 'node:crypto';
 import type {Store,Json} from '../../../shared/src/index.js';
 import type {PermissionReader,Decision,Scope} from '../../../permissions/src/index.js';
-import {Failure,fail,text,revision,closed,object,capture,canonical,freeze,parameters,parameterValue,endpoint,observation,decode,command} from './model.js';
-import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,ModelObservation,ModelObserver,State,Intent,Preparation,RequestSnapshot,Parameters} from './model.js';
+import {Failure,fail,text,revision,closed,object,capture,canonical,freeze,parameters,observation,decode,command} from './model.js';
+import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,ModelObservation,ModelObserver,State,Intent,Preparation,RequestSnapshot} from './model.js';
 interface Projection {action:string;target:string;context:string|null}
 export interface ApiDeletionGuard {
  /** The trusted host must block new references until release and confirm existing references are absent. */
@@ -61,33 +64,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
   if(prior){if(prior.command!==fingerprint)fail('intent_conflict');verifyDependencies();recheck(request,d);const proof=prior.phase==='committed'?store.query(key+':apply'):undefined;verifyDependencies();recheck(request,d);if(!proof)return {status:'unknown',intent:c.intent,id:prior.id};return {status:'committed',id:prior.id,revision:prior.revision};}
   const next=capture(state);let result:{id:string;revision:number};
   switch(c.kind){
-   case 'connection.create':{const item:ApiConnection={id:id(next),revision:1,name:c.name,provider:c.provider,protocol:c.protocol,endpoint:endpoint(c.endpoint,c.endpointMode),endpointMode:c.endpointMode,credentialRef:c.credentialRef,enabled:c.enabled,parameters:c.parameters};next.connections.push(item);result=item;break;}
-   case 'connection.edit':{const item=find(next.connections,c.id);expected(item,c.expectedRevision);for(const field of ['name','provider','protocol','endpoint','endpointMode','credentialRef','enabled','parameters'] as const)if(Object.hasOwn(c,field))Object.assign(item,{[field]:c[field]});item.endpoint=endpoint(item.endpoint,item.endpointMode);item.revision++;result=item;break;}
-   case 'connection.copy':{
-    const source=find(next.connections,c.id);
-    if(source.revision!==c.expectedRevision)fail('revision_conflict');
-    const copy:ApiConnection={...source,id:id(next),revision:1,name:c.name,credentialRef:null,enabled:false};
-    next.connections.push(copy);
-    result=copy;
-    break;
-   }
-   case 'connection.delete':{
-    const item=find(next.connections,c.id);
-    expected(item,c.expectedRevision);
-    if(next.models.some(model=>model.connectionId===item.id))fail('resource_referenced');
-    next.connections=next.connections.filter(connection=>connection.id!==item.id);
-    result={id:item.id,revision:item.revision+1};
-    break;
-   }
-   case 'model.delete':{
-    const item=find(next.models,c.id);
-    expected(item,c.expectedRevision);
-    next.models=next.models.filter(model=>model.id!==item.id);
-    result={id:item.id,revision:item.revision+1};
-    break;
-   }
-   case 'model.create':{find(next.connections,c.connectionId);if(next.models.some(m=>m.connectionId===c.connectionId&&m.modelId===c.modelId))fail('duplicate_model_unsupported');const item:ApiModel={id:id(next),revision:1,connectionId:c.connectionId,name:c.name,modelId:c.modelId,parameters:c.parameters,observation:null};next.models.push(item);result=item;break;}
-   case 'model.edit':{const item=find(next.models,c.id);expected(item,c.expectedRevision);if(c.name!==undefined)item.name=c.name;if(c.parameters!==undefined)item.parameters=c.parameters;item.revision++;result=item;break;}
+   default:{result=applyConfigMutation(next,c,()=>id(next));break;}
    case 'model.observe':{const item=find(next.models,c.id);expected(item,c.expectedRevision);const connection=find(next.connections,item.connectionId);let observed:ModelObservation|undefined,toolProbe=false;
     if(c.probeOperationId){
      const probe=derived(request,d,{action:'model.probe',target:`model:${item.id}`,context:null});
@@ -122,22 +99,8 @@ export function createApiService(store:Store,permission:PermissionReader,options
     try{observed=capture(options.observer.resolve(request,freeze(capture(connection)),freeze(capture(item))));}catch{return fail('observation_unavailable','unavailable');}
     }
     if(!observation(observed)||observed.connectionId!==connection.id||observed.connectionRevision!==connection.revision||observed.modelId!==item.modelId)fail('observation_identity_mismatch','unavailable');
-    const priorEvidence=item.observation;
-    if(c.probeOperationId&&!toolProbe&&priorEvidence?.connectionRevision===connection.revision){
-     const probeCapabilities=observed.capabilities;
-     const losesCapability=(Object.keys(priorEvidence.capabilities) as Array<keyof typeof priorEvidence.capabilities>).some(key=>{
-      const prior=priorEvidence.capabilities[key];
-      return (prior==='supported'||prior==='unsupported')&&probeCapabilities[key]!==prior;
-     });
-     const confirmsStream=observed.capabilities.stream==='supported'
-      &&priorEvidence.capabilities.stream!=='unsupported'
-      &&priorEvidence.capabilities.text!=='unsupported';
-     if(confirmsStream){
-      observed={...priorEvidence,capabilities:{...priorEvidence.capabilities,text:'supported',stream:'supported'},
-       streamProbe:{operationId:c.probeOperationId,observedAt:observed.observedAt}};
-     }else if(losesCapability||Object.keys(priorEvidence.parameters).length||Object.keys(priorEvidence.limits??{}).length){
-      fail('probe_would_replace_verified_evidence');
-     }
+    if(c.probeOperationId&&!toolProbe){
+     observed=reconcileTextProbeObservation(observed,item.observation,connection.revision,c.probeOperationId);
     }
     item.observation=observed;item.revision++;result=item;break;}
   }
@@ -195,11 +158,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
    const observed=model.observation;if(!observed)fail('capability_unverified');if(observed.connectionRevision!==connection.revision)fail('capability_observation_stale');
    if(observed.capabilities.text!=='supported'||(p.stream&&observed.capabilities.stream!=='supported'))fail('capability_unsupported_or_unknown');
    if(tools.length&&observed.capabilities.tools!=='supported')fail('tool_capability_unverified');
-   const values:Record<string,Json>={},sources:Record<string,string[]>={},settings=new Map<string,{setting:Parameters[string];sources:string[]}>();
-   for(const [source,params] of [['connection',connection.parameters],['model',model.parameters],['request',p.parameters]] as const)for(const [name,setting] of Object.entries(params)){
-    const prior=settings.get(name);if(prior){if(canonical(prior.setting)!==canonical(setting))fail('parameter_conflict');prior.sources.push(source);}else settings.set(name,{setting,sources:[source]});
-   }
-   for(const [name,row] of settings){sources[name]=row.sources;if(row.setting.mode!=='value')continue;const spec=observed.parameters[name];if(!spec)fail('parameter_unsupported');if(!parameterValue(row.setting.value,spec))fail('parameter_invalid');values[name]=row.setting.value;}
+   const {values,sources,settings}=resolvePreparationParameters(connection.parameters,model.parameters,p.parameters,observed);
    try{captureResponseFormat(values.response_format);}catch{fail('invalid_response_format');}
    const outputLimit=observed.limits?.maxOutputTokens;
    if(outputLimit!==undefined){

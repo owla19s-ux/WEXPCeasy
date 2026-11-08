@@ -1,4 +1,6 @@
 import type {ApiConnection,ApiModel,ToolDefinition} from '../model.js';
+import {object,text} from '../model.js';
+import {parseUniqueJson} from '../json.js';
 import type {ChatStreamOptions,ChatStreamResult} from '../stream.js';
 import {decodeChatStream} from '../stream.js';
 import {decodeChatResponse} from '../response.js';
@@ -34,4 +36,26 @@ export function chatContentType(stream:boolean):RegExp {
 /** Decoding is protocol-specific; network access and authorization remain with Transport. */
 export function decodeOpenAiChat(source:AsyncIterable<Uint8Array>,stream:boolean,options:ChatStreamOptions):Promise<ChatStreamResult>{
  return stream?decodeChatStream(source,options):decodeChatResponse(source,options);
+}
+
+/** Provider response identifiers are taken from the validated Chat result, not HTTP body guesses. */
+export function chatResponseIdentity(result:ChatStreamResult){
+ return {
+  ...(result.providerResponseId===undefined?{}:{providerResponseId:result.providerResponseId}),
+  ...(result.providerModelId===undefined?{}:{providerModelId:result.providerModelId})
+ };
+}
+
+/** Decode the OpenAI-compatible /models directory, without registering or verifying a model. */
+export function decodeChatModelDirectory(body:string):string[]{
+ let decoded:unknown;
+ try{decoded=parseUniqueJson(body);}catch{throw Error('invalid_model_directory');}
+ if(!object(decoded)||!Array.isArray(decoded.data)||decoded.data.length>4096)throw Error('invalid_model_directory');
+ if(decoded.has_more===true)throw Error('model_directory_incomplete');
+ const ids=new Set<string>();
+ for(const row of decoded.data){
+  if(!object(row)||!text(row.id)||ids.has(row.id))throw Error('invalid_model_directory');
+  ids.add(row.id);
+ }
+ return [...ids];
 }

@@ -1,4 +1,3 @@
-import {parseUniqueJson} from './json.js';
 import {captureResponseFormat,validateStructuredOutput} from './tools.js';
 import {ProviderTerminalError} from './terminal.js';
 import type {Json} from '../../../shared/src/index.js';
@@ -8,35 +7,9 @@ import type {createOperationLedger} from '../../src/index.js';
 import type {ApiService} from './service.js';
 import type {CredentialReference,Preparation} from './model.js';
 import {canonical,capture,object,text,revision} from './model.js';
-import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration} from './protocols/openai-chat.js';
+import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration,chatResponseIdentity,decodeChatModelDirectory} from './protocols/openai-chat.js';
 import type {ChatStreamResult} from './stream.js';
-function requestCorrelation(response:Response):{providerRequestId?:string}{
- const id=response.headers.get('x-request-id');
- return id&&/^[-a-zA-Z0-9_.:]{1,256}$/.test(id)?{providerRequestId:id}:{};
-}
-function failureMetadata(response:Response,token?:string):{httpStatus:number;retryAfterSeconds?:number}{
- const value=response.headers.get('retry-after');
- const seconds=value&&(!token||!value.includes(token))&&/^\d{1,10}$/.test(value)?Number(value):undefined;
- return {httpStatus:response.status,...(seconds===undefined?{}:{retryAfterSeconds:seconds})};
-}
-function responseIdentity(result:ChatStreamResult){
- return {
-  ...(result.providerResponseId===undefined?{}:{providerResponseId:result.providerResponseId}),
-  ...(result.providerModelId===undefined?{}:{providerModelId:result.providerModelId})
- };
-}
-function networkFailure(error:unknown):string|undefined {
- if(!(error instanceof TypeError)||!object(error.cause)&&!(error.cause instanceof Error))return;
- const code=(error.cause as {code?:unknown}).code;
- if(typeof code!=='string')return;
- if(['ENOTFOUND','EAI_AGAIN'].includes(code))return 'provider_dns_failed';
- if(['ECONNREFUSED','ENETUNREACH','EHOSTUNREACH'].includes(code))return 'provider_unreachable';
- if(['CERT_HAS_EXPIRED','DEPTH_ZERO_SELF_SIGNED_CERT','SELF_SIGNED_CERT_IN_CHAIN','UNABLE_TO_VERIFY_LEAF_SIGNATURE','UNABLE_TO_GET_ISSUER_CERT_LOCALLY','ERR_TLS_CERT_ALTNAME_INVALID'].includes(code))return 'provider_tls_failed';
- if(code==='UND_ERR_CONNECT_TIMEOUT')return 'provider_connect_timeout';
-}
-function providerError(status:number):string {
- return status===401||status===403?'provider_authorization':status===429?'provider_rate_limited':status===404?'provider_endpoint_or_model_not_found':status>=300&&status<400?'redirect_refused':'provider_http_error';
-}
+import {requestCorrelation,failureMetadata,networkFailure,providerError} from './network-diagnostics.js';
 export type ApiDirectoryResult=
  | {status:'ok';operationId:string;observation:{connectionId:string;connectionRevision:number;source:'provider';observedAt:string;modelIds:string[];providerRequestId?:string}}
  | {status:'blocked'|'unknown';operationId:string;reason:string};
@@ -158,23 +131,18 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     if(probe?.tools&&result.toolCalls?.length!==1)return unknown('tool_probe_proposal_missing');
     if(!probe?.tools&&!result.text.trim())return unknown('empty_probe_response');
     if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
-    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,...(probe?.tools?{tools:true as const}:{}),...(probe?.stream?{stream:true as const}:{}),observedAt:new Date().toISOString(),usage:result.usage,...responseIdentity(result),...correlation};
+    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,...(probe?.tools?{tools:true as const}:{}),...(probe?.stream?{stream:true as const}:{}),observedAt:new Date().toISOString(),usage:result.usage,...chatResponseIdentity(result),...correlation};
     if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
     if(ledger.observe(operationId,receiptId,{...observation,scopeHash:createHash('sha256').update(canonical(decision.scope)).digest('hex')},'observed').status!=='ok')
      return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
     if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
     return {status:'ok',operationId,observation};
    }
-   let decoded:unknown;
-   try{decoded=parseUniqueJson(body);}catch{return unknown('invalid_model_directory');}
-   if(!object(decoded)||!Array.isArray(decoded.data)||decoded.data.length>4096)return unknown('invalid_model_directory');
-   if(decoded.has_more===true)return unknown('model_directory_incomplete');
-   const ids=new Set<string>();
-   for(const row of decoded.data){
-    if(!object(row)||!text(row.id)||ids.has(row.id))return unknown('invalid_model_directory');
-    ids.add(row.id);
+   let modelIds:string[];
+   try{modelIds=decodeChatModelDirectory(body);}catch(error){
+    return unknown(error instanceof Error&&error.message==='model_directory_incomplete'?'model_directory_incomplete':'invalid_model_directory');
    }
-   const observation={connectionId,connectionRevision:expectedRevision,source:'provider' as const,observedAt:new Date().toISOString(),modelIds:[...ids],...correlation};
+   const observation={connectionId,connectionRevision:expectedRevision,source:'provider' as const,observedAt:new Date().toISOString(),modelIds,...correlation};
    if(token&&JSON.stringify(observation).includes(token))return unknown('credential_echoed');
    if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
    if(ledger.observe(operationId,receiptId,observation,'observed').status!=='ok')
@@ -305,7 +273,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const receipt=ledger.observe(operationId,'api-result',{
     requestId:snapshot.requestId,
     ...(snapshot.toolContinuation?{sourceRequestId:snapshot.toolContinuation.sourceRequestId}:{}),
-    text:result.text,usage:result.usage,...responseIdentity(result),...(result.reasoning?{reasoning:result.reasoning}:{}),...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
+    text:result.text,usage:result.usage,...chatResponseIdentity(result),...(result.reasoning?{reasoning:result.reasoning}:{}),...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
    if(receipt.status!=='ok')return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
    return {status:'ok',operationId,result:{...result,...correlation}};
