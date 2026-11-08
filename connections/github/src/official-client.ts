@@ -1,6 +1,6 @@
 import {Octokit} from 'octokit';
 import type {ConnectionConfig,AdapterAccess} from '../../src/index.js';
-import type {GitHubClientFactory} from './index.js';
+import type {GitHubClientFactory,GitHubOfficialClient} from './index.js';
 
 function capture(connection:Readonly<ConnectionConfig>):Readonly<ConnectionConfig> {
  if(connection.adapter!=='github'||connection.endpoint!=='https://api.github.com'||!connection.enabled)throw Error('github_connection_unavailable');
