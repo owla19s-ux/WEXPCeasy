@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {anthropicRoute,anthropicHeaders,encodeAnthropicMessages,decodeAnthropicMessages} from '../../../dist/connections/api/src/protocols/anthropic-messages.js';
+import {anthropicRoute,anthropicHeaders,encodeAnthropicMessages,decodeAnthropicMessages,decodeAnthropicDirectory,anthropicProbeBody} from '../../../dist/connections/api/src/protocols/anthropic-messages.js';
 
 async function* bytes(value){yield new TextEncoder().encode(value);}
 const response={id:'msg_123',type:'message',role:'assistant',model:'claude-test',content:[{type:'text',text:'Hello'}],stop_reason:'end_turn',usage:{input_tokens:3,output_tokens:2}};
@@ -43,4 +43,17 @@ test('Anthropic SSE normalizes terminal text and token counts without accepting 
  assert.deepEqual(deltas,['Hello']);
  assert.deepEqual(result.usage,{inputTokens:3,outputTokens:2,totalTokens:5});
  await assert.rejects(decodeAnthropicMessages(bytes(raw.replace(event('message_stop',{}),'')),true),/incomplete_anthropic_stream/);
+});
+
+test('native model directory rejects incomplete pages and duplicate model IDs',()=>{
+ assert.deepEqual(decodeAnthropicDirectory(JSON.stringify({data:[{id:'claude-test',type:'model'}],has_more:false})),['claude-test']);
+ assert.throws(()=>decodeAnthropicDirectory(JSON.stringify({data:[{id:'one'},{id:'one'}],has_more:false})),/invalid_model_directory/);
+ assert.throws(()=>decodeAnthropicDirectory(JSON.stringify({data:[{id:'one'}],has_more:true})),/model_directory_incomplete/);
+ assert.throws(()=>decodeAnthropicDirectory('{"data":[],"data":[{"id":"injected"}]}'),/invalid_model_directory/);
+});
+
+test('native probe is a fixed small text request, not a tool capability probe',()=>{
+ assert.deepEqual(anthropicProbeBody({modelId:'claude-test'},{stream:false,tools:false}),
+  {model:'claude-test',max_tokens:8,stream:false,messages:[{role:'user',content:'Reply with OK.'}]});
+ assert.throws(()=>anthropicProbeBody({modelId:'claude-test'},{stream:true,tools:true}),/unsupported_anthropic_tool_probe/);
 });
