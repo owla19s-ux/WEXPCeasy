@@ -1,13 +1,14 @@
 import {encodeToolRound} from './continuation.js';
 import {chatRoute} from './protocols/openai-chat.js';
+import {resolvePreparationParameters} from './preparation-parameters.js';
 import type {ToolRoundReader} from './continuation.js';
 import type {Operation} from '../../src/index.js';
 import {captureTools,captureResponseFormat} from './tools.js';
 import {createHash,randomUUID} from 'node:crypto';
-import type {Store,Json} from '../../../shared/src/index.js';
+import type {Store} from '../../../shared/src/index.js';
 import type {PermissionReader,Decision,Scope} from '../../../permissions/src/index.js';
-import {Failure,fail,text,revision,closed,object,capture,canonical,freeze,parameters,parameterValue,endpoint,observation,decode,command} from './model.js';
-import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,ModelObservation,ModelObserver,State,Intent,Preparation,RequestSnapshot,Parameters} from './model.js';
+import {Failure,fail,text,revision,closed,object,capture,canonical,freeze,parameters,endpoint,observation,decode,command} from './model.js';
+import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,ModelObservation,ModelObserver,State,Intent,Preparation,RequestSnapshot} from './model.js';
 interface Projection {action:string;target:string;context:string|null}
 export interface ApiDeletionGuard {
  /** The trusted host must block new references until release and confirm existing references are absent. */
@@ -195,11 +196,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
    const observed=model.observation;if(!observed)fail('capability_unverified');if(observed.connectionRevision!==connection.revision)fail('capability_observation_stale');
    if(observed.capabilities.text!=='supported'||(p.stream&&observed.capabilities.stream!=='supported'))fail('capability_unsupported_or_unknown');
    if(tools.length&&observed.capabilities.tools!=='supported')fail('tool_capability_unverified');
-   const values:Record<string,Json>={},sources:Record<string,string[]>={},settings=new Map<string,{setting:Parameters[string];sources:string[]}>();
-   for(const [source,params] of [['connection',connection.parameters],['model',model.parameters],['request',p.parameters]] as const)for(const [name,setting] of Object.entries(params)){
-    const prior=settings.get(name);if(prior){if(canonical(prior.setting)!==canonical(setting))fail('parameter_conflict');prior.sources.push(source);}else settings.set(name,{setting,sources:[source]});
-   }
-   for(const [name,row] of settings){sources[name]=row.sources;if(row.setting.mode!=='value')continue;const spec=observed.parameters[name];if(!spec)fail('parameter_unsupported');if(!parameterValue(row.setting.value,spec))fail('parameter_invalid');values[name]=row.setting.value;}
+   const {values,sources,settings}=resolvePreparationParameters(connection.parameters,model.parameters,p.parameters,observed);
    try{captureResponseFormat(values.response_format);}catch{fail('invalid_response_format');}
    const outputLimit=observed.limits?.maxOutputTokens;
    if(outputLimit!==undefined){
