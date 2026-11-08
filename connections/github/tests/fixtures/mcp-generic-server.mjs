@@ -8,6 +8,7 @@ const tool=name=>({name,description:'fixture',annotations:{readOnlyHint:true},in
 server.setRequestHandler(ListToolsRequestSchema,async request=>{
  const next=request.params?.cursor;
  if(mode==='cycle')return {tools:[tool(next?'pull_request_read':'get_file_contents')],nextCursor:'same'};
+ if(next&&mode==='idle-exit')setTimeout(()=>process.exit(1),500);
  if(next)return {tools:[tool(mode==='duplicate'?'get_file_contents':'pull_request_read'),tool('actions_list')]};
  return {tools:[tool('get_file_contents')],nextCursor:'next'};
 });

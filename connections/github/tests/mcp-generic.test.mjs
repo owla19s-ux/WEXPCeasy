@@ -122,3 +122,15 @@ test('revocation while receiving a response withholds the response',async()=>{
   await assert.rejects(pending,{message:'github_mcp_unavailable'});
  }finally{await adapter.stop();}
 });
+
+test('idle server exit invalidates its status and catalog without reconnecting',async()=>{
+ const {adapter,access}=setup('idle-exit');
+ try{
+  await adapter.start(connection,access);
+  const until=Date.now()+3000;
+  while(adapter.status().state==='connected'&&Date.now()<until)await new Promise(r=>setTimeout(r,25));
+  assert.equal(adapter.status().state,'error');
+  assert.equal(adapter.status().toolCount,0);
+  await assert.rejects(adapter.callTool('actions_list',{}),{message:'github_mcp_unavailable'});
+ }finally{await adapter.stop();}
+});
