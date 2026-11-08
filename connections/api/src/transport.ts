@@ -7,7 +7,7 @@ import type {createOperationLedger} from '../../src/index.js';
 import type {ApiService} from './service.js';
 import type {CredentialReference,Preparation} from './model.js';
 import {canonical,capture,object,text,revision} from './model.js';
-import {chatRoute,chatProbeBody,chatHeaders,chatContentType,decodeOpenAiChat,toolProbeDeclaration,chatResponseIdentity,decodeChatModelDirectory} from './protocols/openai-chat.js';
+import {resolveApiProtocol} from './protocols/index.js';
 import type {ChatStreamResult} from './stream.js';
 import {requestCorrelation,failureMetadata,networkFailure,providerError} from './network-diagnostics.js';
 export type ApiDirectoryResult=
@@ -64,10 +64,10 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const connectionId=connection.id;
    if(probe&&model?.revision!==probe.modelRevision)return blocked('model_revision_changed');
    if(connection.revision!==expectedRevision||!connection.enabled)return blocked('configuration_changed_or_disabled');
-   if(connection.protocol!=='openai-chat')return blocked('diagnostic_protocol_unsupported');
+   const protocol=resolveApiProtocol(connection.protocol);if(!protocol)return blocked('diagnostic_protocol_unsupported');
    if(!probe&&connection.endpointMode!=='base')return blocked('directory_route_unsupported');
-   const url=chatRoute(connection,probe?'completions':'models');
-   const probeBody=model?chatProbeBody(model,{stream:probe?.stream===true,tools:probe?.tools===true}):null;
+   const url=protocol.route(connection,probe?'completions':'models');
+   const probeBody=model?protocol.probeBody(model,{stream:probe?.stream===true,tools:probe?.tools===true}):null;
    const current=()=>{
     if(stopped||controller.signal.aborted)return false;
     try{
@@ -91,7 +91,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    }
    if(!current())return blocked('authorization_or_configuration_changed');
    const fingerprint=createHash('sha256').update(canonical({scope:decision.scope,connection,model:model??null,probeBody,url:url.href,timeoutMs})).digest('hex');
-   if(ledger.prepare(operationId,fingerprint,{connectionId,configRevision:expectedRevision,adapterId:'connections/api',adapterVersion:probe?(probe.tools?(probe.stream?'openai-chat-stream-tool-probe-1':'openai-chat-tool-probe-1'):probe.stream?'openai-chat-stream-probe-1':'openai-chat-probe-1'):'openai-chat-models-1',endpoint:url.href}).status!=='ok')
+   if(ledger.prepare(operationId,fingerprint,{connectionId,configRevision:expectedRevision,adapterId:'connections/api',adapterVersion:protocol.diagnosticVersion(probe),endpoint:url.href}).status!=='ok')
     return {status:'unknown',operationId,reason:'prepare_unconfirmed'};
    if(!current())return blocked('authorization_or_configuration_changed');
    if(ledger.markDispatched(operationId).status!=='ok')return {status:'unknown',operationId,reason:'dispatch_record_unconfirmed'};
@@ -101,13 +101,13 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    }
    timer=setTimeout(()=>{timedOut=true;abort();},timeoutMs);
    dispatched=true;
-   const response=await fetch(url,{method:probe?'POST':'GET',...(probeBody?{body:JSON.stringify(probeBody)}:{}),redirect:'manual',signal:controller.signal,headers:chatHeaders(probe?.stream===true,token,!!probeBody)});
+   const response=await fetch(url,{method:probe?'POST':'GET',...(probeBody?{body:JSON.stringify(probeBody)}:{}),redirect:'manual',signal:controller.signal,headers:protocol.headers(probe?.stream===true,token,!!probeBody)});
    if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
    receivedHeaders=true;
    const receivedCorrelation=requestCorrelation(response);
    if(!token||!JSON.stringify(receivedCorrelation).includes(token))correlation=receivedCorrelation;
    if(!response.ok){correlation={...correlation,...failureMetadata(response,token)};return unknown(providerError(response.status));}
-   const contentType=chatContentType(probe?.stream===true);
+   const contentType=protocol.contentType(probe?.stream===true);
    if(!response.body||!contentType.test(response.headers.get('content-type')??''))return unknown('invalid_response_content_type');
    const reader=response.body.getReader(),decoder=new TextDecoder('utf-8',{fatal:true});
    let bytes=0,body='';
@@ -127,11 +127,11 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     const allowReasoning=connection.provider==='deepseek'
      &&model.observation?.connectionRevision===connection.revision
      &&model.observation.capabilities.reasoning==='supported';
-    const result=await decodeOpenAiChat((async function*(){yield bytes;})(),probe?.stream===true,{signal:controller.signal,allowReasoning,...(probe?.tools?{tools:[toolProbeDeclaration]}:{})});
+    const result=await protocol.decode((async function*(){yield bytes;})(),probe?.stream===true,{signal:controller.signal,allowReasoning,...(probe?.tools?{tools:[protocol.probeTool]}:{})});
     if(probe?.tools&&result.toolCalls?.length!==1)return unknown('tool_probe_proposal_missing');
     if(!probe?.tools&&!result.text.trim())return unknown('empty_probe_response');
     if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
-    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,...(probe?.tools?{tools:true as const}:{}),...(probe?.stream?{stream:true as const}:{}),observedAt:new Date().toISOString(),usage:result.usage,...chatResponseIdentity(result),...correlation};
+    const observation={connectionId,connectionRevision:expectedRevision,modelId:model.id,modelRevision:model.revision,source:'probe' as const,...(probe?.tools?{tools:true as const}:{}),...(probe?.stream?{stream:true as const}:{}),observedAt:new Date().toISOString(),usage:result.usage,...protocol.responseIdentity(result),...correlation};
     if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
     if(ledger.observe(operationId,receiptId,{...observation,scopeHash:createHash('sha256').update(canonical(decision.scope)).digest('hex')},'observed').status!=='ok')
      return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
@@ -139,7 +139,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     return {status:'ok',operationId,observation};
    }
    let modelIds:string[];
-   try{modelIds=decodeChatModelDirectory(body);}catch(error){
+   try{modelIds=protocol.directory(body);}catch(error){
     return unknown(error instanceof Error&&error.message==='model_directory_incomplete'?'model_directory_incomplete':'invalid_model_directory');
    }
    const observation={connectionId,connectionRevision:expectedRevision,source:'provider' as const,observedAt:new Date().toISOString(),modelIds,...correlation};
@@ -205,6 +205,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    if(preparedDecision.status!=='allow'||!sameActor(initial,preparedDecision))return blocked('prepare_actor_mismatch');
    const prepared=api.prepare(prepareRequest,p);if(prepared.status!=='ok')return blocked('reason' in prepared&&prepared.reason==='timeout_out_of_range'?prepared.reason:'preparation_rejected');
    const snapshot=prepared.snapshot;
+   const protocol=resolveApiProtocol(snapshot.connection.protocol);if(!protocol)return blocked('unsupported_protocol');
    const current=()=>{if(!allowed())return false;const next=api.prepare(prepareRequest,p);return next.status==='ok'&&next.snapshot.fingerprint===snapshot.fingerprint;};
    const fingerprint=createHash('sha256').update(canonical({scope:initial.scope,snapshot:snapshot.fingerprint})).digest('hex');
    if(ledger.get(operationId))return blocked('already_recorded_no_automatic_retry');
@@ -223,7 +224,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
     if(typeof token!=='string'||token.length>8192||!/^[-a-zA-Z0-9._~+/]+=*$/.test(token))return blocked('credential_unavailable');
     if(!current())return blocked('authorization_or_configuration_changed');
    }
-   const reserved=ledger.prepare(operationId,fingerprint,{connectionId:snapshot.connection.id,configRevision:snapshot.connection.revision,adapterId:'connections/api',adapterVersion:'openai-chat-text-1',endpoint:snapshot.url});
+   const reserved=ledger.prepare(operationId,fingerprint,{connectionId:snapshot.connection.id,configRevision:snapshot.connection.revision,adapterId:'connections/api',adapterVersion:protocol.generationVersion,endpoint:snapshot.url});
    if(reserved.status!=='ok')return {status:'unknown',operationId,reason:'prepare_unconfirmed'};
    if(!current())return blocked('authorization_or_configuration_changed');
    const marked=ledger.markDispatched(operationId);if(marked.status!=='ok')return {status:'unknown',operationId,reason:'dispatch_record_unconfirmed'};
@@ -235,7 +236,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    timer=setTimeout(()=>{timedOut=true;controller?.abort();},snapshot.timeoutMs);
    startPhase(snapshot.headersTimeoutMs,'headers_timeout');
    dispatched=true;
-   const response=await fetch(snapshot.url,{method:'POST',redirect:'manual',headers:chatHeaders(snapshot.body.stream,token),body:JSON.stringify(snapshot.body),signal:controller.signal});
+   const response=await fetch(snapshot.url,{method:'POST',redirect:'manual',headers:protocol.headers(snapshot.body.stream,token),body:JSON.stringify(snapshot.body),signal:controller.signal});
    clearPhase();
    if(phaseTimeout)return unknown(phaseTimeout);
    if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
@@ -243,7 +244,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const receivedCorrelation=requestCorrelation(response);
    if(!token||!JSON.stringify(receivedCorrelation).includes(token))correlation=receivedCorrelation;
    if(!response.ok){correlation={...correlation,...failureMetadata(response,token)};return unknown(providerError(response.status));}
-   const contentType=chatContentType(snapshot.body.stream);
+   const contentType=protocol.contentType(snapshot.body.stream);
    if(!contentType.test(response.headers.get('content-type')??'')||!response.body)return unknown('invalid_response_content_type');
    const stream=response.body,abortSignal=controller.signal;
    async function* chunks(){const reader=stream!.getReader();try{while(true){if(!current())throw Error('authorization_changed');startPhase(snapshot.idleTimeoutMs,'body_idle_timeout');const item=await reader.read();clearPhase();if(phaseTimeout)throw Error(phaseTimeout);if(!current())throw Error('authorization_changed');if(item.done)break;yield item.value;}}finally{await reader.cancel().catch(()=>{});reader.releaseLock();}}
@@ -262,7 +263,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    };
    const outputSchema=captureResponseFormat(snapshot.body.response_format);
    const allowReasoning=snapshot.connection.provider==='deepseek'&&snapshot.model.observation?.capabilities.reasoning==='supported';
-   const result=await decodeOpenAiChat(chunks(),snapshot.body.stream,{signal:abortSignal,allowReasoning,...(snapshot.body.stream&&onText&&outputSchema===undefined?{onText:publish}:{}),...(snapshot.tools?{tools:snapshot.tools}:{})});
+   const result=await protocol.decode(chunks(),snapshot.body.stream,{signal:abortSignal,allowReasoning,...(snapshot.body.stream&&onText&&outputSchema===undefined?{onText:publish}:{}),...(snapshot.tools?{tools:snapshot.tools}:{})});
    if(!current())return unknown(interruption()??'authorization_or_configuration_changed');
    if(token&&JSON.stringify(result).includes(token))return unknown('credential_echoed');
    if(outputSchema!==undefined&&!result.toolCalls?.length){
@@ -273,7 +274,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const receipt=ledger.observe(operationId,'api-result',{
     requestId:snapshot.requestId,
     ...(snapshot.toolContinuation?{sourceRequestId:snapshot.toolContinuation.sourceRequestId}:{}),
-    text:result.text,usage:result.usage,...chatResponseIdentity(result),...(result.reasoning?{reasoning:result.reasoning}:{}),...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
+    text:result.text,usage:result.usage,...protocol.responseIdentity(result),...(result.reasoning?{reasoning:result.reasoning}:{}),...correlation,...(result.toolCalls?{toolCalls:result.toolCalls as unknown as Json}:{})},'observed');
    if(receipt.status!=='ok')return {status:'unknown',operationId,reason:'result_persistence_unconfirmed'};
    if(!current())return {status:'unknown',operationId,reason:'authorization_or_configuration_changed'};
    return {status:'ok',operationId,result:{...result,...correlation}};
