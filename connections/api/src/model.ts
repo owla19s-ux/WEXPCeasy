@@ -9,8 +9,12 @@ export interface CredentialReference {id:string;revision:number}
 export interface ApiConnection {id:string;revision:number;name:string;provider:string;protocol:string;endpoint:string;endpointMode:'base'|'request';credentialRef:CredentialReference|null;enabled:boolean;parameters:Parameters}
 export type Capability='text'|'stream'|'tools'|'image'|'reasoning';
 export type CapabilityState='supported'|'unsupported'|'unknown'|'unverified';
+/** Optional directional evidence. Legacy observations with only capabilities remain readable. */
+export type ModelModality='text'|'image'|'audio'|'video'|'file';
+export type ModalityDirection='input'|'output';
+export type DirectionalModalities=Partial<Record<ModelModality,Partial<Record<ModalityDirection,CapabilityState>>>>;
 export interface ParameterSpec {type:'number'|'integer'|'boolean'|'string'|'object'|'array'|'null';minimum?:number;maximum?:number;enum?:Json[]}
-export interface ModelObservation {connectionId:string;connectionRevision:number;modelId:string;source:'provider'|'probe';sourceRevision:string;observedAt:string;capabilities:Record<Capability,CapabilityState>;parameters:Record<string,ParameterSpec>;streamProbe?:{operationId:string;observedAt:string};toolProbe?:{operationId:string;observedAt:string;stream?:true};limits?:{contextWindow?:number;maxOutputTokens?:number}}
+export interface ModelObservation {connectionId:string;connectionRevision:number;modelId:string;source:'provider'|'probe';sourceRevision:string;observedAt:string;capabilities:Record<Capability,CapabilityState>;parameters:Record<string,ParameterSpec>;modalities?:DirectionalModalities;streamProbe?:{operationId:string;observedAt:string};toolProbe?:{operationId:string;observedAt:string;stream?:true};limits?:{contextWindow?:number;maxOutputTokens?:number}}
 export interface ApiModel {id:string;revision:number;connectionId:string;name:string;modelId:string;parameters:Parameters;observation:ModelObservation|null}
 /** Returns existing verified observations; network probes require their own controlled operation. */
 export interface ModelObserver {resolve(request:object,connection:Readonly<ApiConnection>,model:Readonly<ApiModel>):ModelObservation|undefined}
@@ -91,8 +95,17 @@ function observationLimits(value:unknown):boolean {
  return value===undefined||(closed(value,[],['contextWindow','maxOutputTokens'])&&Object.values(value).every(revision)
   &&!(typeof value.contextWindow==='number'&&typeof value.maxOutputTokens==='number'&&value.maxOutputTokens>value.contextWindow));
 }
+function directionalModalities(value:unknown):boolean {
+ if(!object(value))return false;
+ const allowed=new Set<ModelModality>(['text','image','audio','video','file']);
+ const states=new Set<CapabilityState>(['supported','unsupported','unknown','unverified']);
+ return Object.entries(value).every(([modality,directions])=>
+  allowed.has(modality as ModelModality)&&object(directions)&&
+  Object.keys(directions).length>0&&Object.entries(directions).every(([direction,state])=>
+   (direction==='input'||direction==='output')&&states.has(state as CapabilityState)));
+}
 export function observation(value:unknown):value is ModelObservation {
- return closed(value,['connectionId','connectionRevision','modelId','source','sourceRevision','observedAt','capabilities','parameters'],['limits','toolProbe','streamProbe'])&&(value.streamProbe===undefined||closed(value.streamProbe,['operationId','observedAt'])&&toolProbeEvidence(value.streamProbe))&&toolProbeEvidence(value.toolProbe)&&observationLimits(value.limits)&&text(value['connectionId'])&&revision(value['connectionRevision'])&&text(value['modelId'])&&['provider','probe'].includes(String(value['source']))&&text(value['sourceRevision'])&&typeof value['observedAt']==='string'&&Number.isFinite(Date.parse(value['observedAt']))&&closed(value['capabilities'],['text','stream','tools','image','reasoning'])&&Object.values(value['capabilities']).every(v=>['supported','unsupported','unknown','unverified'].includes(String(v)))&&specs(value['parameters']);
+ return closed(value,['connectionId','connectionRevision','modelId','source','sourceRevision','observedAt','capabilities','parameters'],['limits','toolProbe','streamProbe','modalities'])&&(value.modalities===undefined||directionalModalities(value.modalities))&&(value.streamProbe===undefined||closed(value.streamProbe,['operationId','observedAt'])&&toolProbeEvidence(value.streamProbe))&&toolProbeEvidence(value.toolProbe)&&observationLimits(value.limits)&&text(value['connectionId'])&&revision(value['connectionRevision'])&&text(value['modelId'])&&['provider','probe'].includes(String(value['source']))&&text(value['sourceRevision'])&&typeof value['observedAt']==='string'&&Number.isFinite(Date.parse(value['observedAt']))&&closed(value['capabilities'],['text','stream','tools','image','reasoning'])&&Object.values(value['capabilities']).every(v=>['supported','unsupported','unknown','unverified'].includes(String(v)))&&specs(value['parameters']);
 }
 function model(value:unknown):value is ApiModel{return closed(value,['id','revision','connectionId','name','modelId','parameters','observation'])&&['id','connectionId','name','modelId'].every(k=>text(value[k]))&&revision(value['revision'])&&parameters(value['parameters'])&&(value['observation']===null||observation(value['observation']));}
 export function decode(value:Json):State {
