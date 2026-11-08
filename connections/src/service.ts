@@ -31,13 +31,13 @@ export function createConnectionService(permission:PermissionReader,configStore:
  const released=new Set<ConfiguredCapabilityAdapter>();let closing:Promise<{status:'stopped'|'incomplete'}>|undefined;
  async function releaseCapabilities():Promise<{status:'stopped'|'incomplete'}>{
   if(closing)return closing;
-  const job=(async()=>{
+  const job=Promise.resolve().then(async()=>{
    let failed=false;
    for(const adapter of capabilities)if(!released.has(adapter)){
     try{await adapter.stop();released.add(adapter);}catch{failed=true;}
    }
    return {status:failed?'incomplete' as const:'stopped' as const};
-  })();
+  });
   closing=job;
   try{return await job;}finally{if(closing===job)closing=undefined;}
  }
@@ -86,11 +86,15 @@ export function createConnectionService(permission:PermissionReader,configStore:
  return Object.freeze({...client,
   async stop():Promise<{status:'stopped'|'incomplete'}>{
    stopping=true;
-   if(!pending.size)return releaseCapabilities();
    let timer:ReturnType<typeof setTimeout>|undefined;
+   const drained=(async()=>{
+    if(pending.size)await Promise.all([...pending]);
+    return releaseCapabilities();
+   })();
    try{
-    await Promise.race([Promise.all([...pending]),new Promise<void>(resolve=>{timer=setTimeout(resolve,timeout);})]);
-    return pending.size?{status:'incomplete'}:await releaseCapabilities();
+    return await Promise.race([drained,new Promise<{status:'incomplete'}>(resolve=>{
+     timer=setTimeout(()=>resolve({status:'incomplete'}),timeout);
+    })]);
    }finally{if(timer)clearTimeout(timer);}
   }
  });

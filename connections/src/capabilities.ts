@@ -46,7 +46,7 @@ export function createConfiguredCapabilityBoundary(permission:PermissionReader,l
    try{
     const target=connectionToolsTarget(connectionId);
     return await createConfiguredReadBoundary(permission,configs,{
-     id:adapter.id,version:adapter.version,
+     get id(){return adapter.id;},get version(){return adapter.version;},
      async read(connection,actual,cancellation,access){
       if(actual!==connectionToolsTarget(connection.id)||!access)throw Error('invalid_capability_target');
       return adapter.discover(connection,cancellation,access);
@@ -59,7 +59,7 @@ export function createConfiguredCapabilityBoundary(permission:PermissionReader,l
     // Bind the same immutable arguments to authorization, intent fingerprint and adapter call.
     const captured=structuredClone(args),target=connectionToolTarget(connectionId,toolName,captured);
     return await createConfiguredDispatchBoundary(permission,ledger,configs,{
-     id:adapter.id,version:adapter.version,
+     get id(){return adapter.id;},get version(){return adapter.version;},
      async execute(connection,actual,payload,access){
       if(!access||!payload||typeof payload!=='object'||Array.isArray(payload))throw Error('invalid_capability_call');
       const name=payload['toolName'],values=payload['arguments'];

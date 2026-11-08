@@ -11,7 +11,7 @@ export function createGitHubMcpConnectionAdapter(options:GitHubMcpAdapterOptions
  const first=createGitHubMcpAdapter(options);let unused:Session|undefined=first;
  const sessions=new Map<string,{core:Session;connection:Readonly<ConnectionConfig>;tail:Promise<unknown>}>();
  let stopping=false;
- function run(connection:Readonly<ConnectionConfig>,access:AdapterAccess,work:(core:Session)=>Promise<unknown>):Promise<Json>{
+ function run(connection:Readonly<ConnectionConfig>,access:AdapterAccess,work:(core:Session)=>Promise<unknown>,signal?:AbortSignal):Promise<Json>{
   const captured=Object.freeze({...connection});
   if(stopping||!access.check())return Promise.reject(Error('github_mcp_unavailable'));
   let session=sessions.get(captured.id);
@@ -24,7 +24,7 @@ export function createGitHubMcpConnectionAdapter(options:GitHubMcpAdapterOptions
    if(stopping||!access.check())throw Error('github_mcp_unavailable');
    if(slot.core.status().state==='error'||JSON.stringify(slot.connection)!==JSON.stringify(captured))
     await slot.core.stop();
-   await slot.core.start(captured,access);slot.connection=captured;
+   await slot.core.start(captured,access,signal);slot.connection=captured;
    const value=await work(slot.core);
    if(!access.check())throw Error('github_mcp_unavailable');
    // MCP is JSON; retain all protocol fields without narrowing to file-shaped results.
@@ -35,7 +35,7 @@ export function createGitHubMcpConnectionAdapter(options:GitHubMcpAdapterOptions
  return Object.freeze({
   id:'github',version:'0.1.1',
   discover(connection:Readonly<ConnectionConfig>,signal:AbortSignal,access:AdapterAccess):Promise<Json>{
-   return run(connection,access,core=>core.listTools(signal));
+   return run(connection,access,core=>core.listTools(signal),signal);
   },
   invoke(connection:Readonly<ConnectionConfig>,name:string,args:Readonly<Record<string,Json>>,access:AdapterAccess):Promise<Json>{
    const captured=structuredClone(args);
