@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createDesktopLifecycle} from '../../dist/app/src/desktop-lifecycle.js';
-import {createDesktopGateway} from '../../dist/app/src/desktop-gateway.js';
+import {createDesktopGateway,createDesktopBusinessGate} from '../../dist/app/src/desktop-gateway.js';
 test('desktop startup is single flight; quit waits for pending provider',async()=>{
  let resolve,calls=0,stops=0;const pending=new Promise(r=>resolve=r);
  const life=createDesktopLifecycle(()=>{calls++;return pending;});
@@ -58,4 +58,22 @@ test('desktop IPC rejects malformed events before accessing host state',()=>{
  const hostile={get senderFrame(){throw Error('secret frame');},sender};
  assert.deepEqual(gateway(hostile,{}),{ok:false,error:'untrusted_sender'});
  assert.equal(reads,0);
+});
+
+test('business IPC admission rejects non-live phases without evaluating business payload',()=>{
+ const frame={url:'file:///app/index.html'},sender={mainFrame:frame,isDestroyed:()=>false};
+ let phase='starting',calls=0;
+ const gate=createDesktopBusinessGate({sender,url:frame.url,isReady:()=>{calls++;return phase==='ready'||phase==='degraded';}});
+ const event={sender,senderFrame:frame};
+ assert.deepEqual(gate(event),{ok:false,error:'host_unavailable'});
+ phase='ready';assert.deepEqual(gate(event),{ok:true,value:true});
+ phase='degraded';assert.deepEqual(gate(event),{ok:true,value:true});
+ phase='stopping';assert.deepEqual(gate(event),{ok:false,error:'host_unavailable'});
+ assert.deepEqual(gate({sender:{},senderFrame:frame}),{ok:false,error:'untrusted_sender'});
+ assert.equal(calls,4,'untrusted sender must not reach host phase');
+});
+test('business IPC admission fails closed if host phase inspection fails',()=>{
+ const frame={url:'file:///app/index.html'},sender={mainFrame:frame,isDestroyed:()=>false};
+ const gate=createDesktopBusinessGate({sender,url:frame.url,isReady(){throw Error('private phase');}});
+ assert.deepEqual(gate({sender,senderFrame:frame}),{ok:false,error:'host_unavailable'});
 });
