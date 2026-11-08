@@ -21,7 +21,7 @@ API 是独立的模型服务连接和协议适配模块：管理非秘密 Provid
 
 | 功能 | A1 | 目标行为 | 现有证据（静态审查） | 尚未交付/未签收 |
 |---|---|---|---|---|
-| API-01 Provider/连接 | F04-001 | 多连接、协议与 URL、复制、启停、修订、引用保护删除 | `service.ts`、`model.ts`、`config.test.mjs` | 协议配置扩展、UI 全部行为、真实验收 |
+| API-01 Provider/连接 | F04-001 | 多连接、协议与 URL、复制、启停、修订、引用保护删除 | `service.ts`、`model.ts` 与 `app/src/desktop-api.ts` 已支持两种协议选择，最新 SHA 待验证 | UI 全部行为、真实厂商及 Windows 验收 |
 | API-02 模型/能力目录 | F04-003/004 | 手工模型、远端列举、来源/时间、上下文及输入输出模态 | 模型 CRUD、刷新/探测、observation | 音视频文件与方向能力、可选目录导入 |
 | API-03 凭证与诊断 | F04-002/006 | 多 Key 引用/轮换、地址/认证/目录/生成/流/工具分级探测 | 可信凭证端口、目录及探针测试 | 多账户交互及真实厂商测试 |
 | API-04 模型调用 | F04-007 | 独立请求、非流/流式、取消、超时、结构化完成/unknown | Chat 已有；`protocols/anthropic-messages.ts` 提供原生文本请求与 JSON/SSE，待最新 SHA 完整回归 | 其他原生协议、多模态、真实厂商和桌面 UI 验收 |
@@ -51,7 +51,7 @@ API 是独立的模型服务连接和协议适配模块：管理非秘密 Provid
 - 保留现有 OpenAI Chat Completions 兼容请求、JSON/SSE、工具/usage 解码作为第一个正式适配实现；不能将其直接称为所有 Provider 的通用解析器。
 - 适配层按**真实协议**处理请求映射、鉴权约定、URL、流事件、工具参数、响应终态、usage 和 Provider 错误；网络传输层负责 fetch、取消、阶段性超时、响应限制，宿主边界负责 Operation。
 - Provider、Protocol、Connection、Model 必须独立表达；不要求为每个厂商复制全套 Adapter，也不默认把任何 SDK 当成完整 Provider 宿主。
-- 已有 `protocols/index.ts` 显式协议选择，以及 `openai-chat.ts`、`anthropic-messages.ts` 两份独立实现。Anthropic 原生文本发送、用量、SSE、单页目录与文本探针属于当前开发中的实码能力；工具调用、推理续接、多模态和目录分页均未完成。当前 Desktop API 创建连接仍固定 `openai-chat`，因此 UI 选择原生协议尚未接线。
+- 已有 `protocols/index.ts` 显式协议选择，以及 `openai-chat.ts`、`anthropic-messages.ts` 两份独立实现。Anthropic 原生文本发送、用量、SSE、单页目录与文本探针属于当前开发中的实码能力；工具调用、推理续接、多模态和目录分页均未完成。Desktop API 已提供显式协议选择、旧调用默认 `openai-chat`，UI 已提供协议和 `max_tokens` 设置；对应最新 SHA 的 Windows 人机操作验收仍待确认。
 - OpenAI Responses、Gemini 原生协议及 DeepSeek 额外语义仍须按照实际官方协议与隔离测试分批实现；**不因长期目标自动纳入全部 0.1.1**。
 - 对未知模型能力不伪造“支持”。允许用户通过获准的探测路径获得证据；实际产品使用时对明确不支持的功能拒绝，对未知能力采用明确、可追踪的待验证处理，不得默默丢弃模态。
 - 多模态必须区分图片输入/生成、音频输入/输出、视频/文件、结构化输出及工具能力，不以单个 `image` 布尔状态替代全部能力；数据结构迁移须独立验证重启恢复。
