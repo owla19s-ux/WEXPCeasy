@@ -297,6 +297,9 @@ export function createConversationGeneration(
       const requests = { ...input.requests };
       if (systemPrompt !== undefined && (typeof systemPrompt !== 'string' || systemPrompt.length === 0 || systemPrompt.length > 32000)) return { status: 'invalid' } as const;
       if (!id(replyId) || !id(intent) || intent.length > 110) return { status: 'invalid' } as const;
+      let copiedPreparation: Omit<Preparation, 'messages'>;
+      try { copiedPreparation = structuredClone(input.preparation); }
+      catch { return { status: 'invalid' } as const; }
       const observed = service.read(requests.read, conversationId);
       if (observed.status !== 'ok') return observed;
       const { conversation } = observed;
@@ -311,7 +314,7 @@ export function createConversationGeneration(
         role: item.role, content: item.segments.map(segment => segment.text).join('\n'),
       }));
       if (systemPrompt !== undefined) messages.unshift({ role: 'system', content: systemPrompt });
-      const preparation: Preparation = { ...structuredClone(input.preparation), messages };
+      const preparation: Preparation = { ...copiedPreparation, messages };
       const claimed = service.change(requests.dispatch, { conversationId, intent, expectedRevision,
         change: { kind: 'dispatch', generationId, operationId, requestId: preparation.requestId, replyId } });
       if (claimed.status !== 'committed') return claimed;
