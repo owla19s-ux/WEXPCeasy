@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {spawn,execFileSync} from 'node:child_process';
-import {mkdtemp,mkdir,writeFile,readFile,rm,readdir,lstat,rename} from 'node:fs/promises';
+import {mkdtemp,mkdir,writeFile,readFile,rm,readdir,lstat,rename,chmod} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
@@ -36,6 +36,7 @@ async function installerLogs(){
  }catch{}
  for(const directory of locations){
   try{logs.push({directory,text:(await readFile(join(directory,'WEXPCeasy-install.log'),'utf8')).slice(0,65536)});}catch{}
+  try{logs.push({directory,file:'WEXPCeasy-install-utf16.log',encoding:'utf16le',text:(await readFile(join(directory,'WEXPCeasy-install-utf16.log'),'utf16le')).replace(/^\uFEFF/,'').slice(0,65536)});}catch{}
  }
  return logs;
 }
@@ -142,13 +143,26 @@ try{
  await writeFile(installMarker,preflightMarker);
  try{
   await withExclusivePayloadFile(installedGitHub.mcpRuntime.command,async()=>{
-   assert.notEqual(await run(installer,['/S','/D='+install]),0,'installer overwrote an occupied MCP runtime');
+   assert.notEqual(await run(installer,['/S','/D='+install]),0,'installer accepted maintenance with an occupied MCP runtime');
    assert.deepEqual(await readFile(installMarker),preflightMarker,'occupied payload was only discovered after installation files changed');
    assert.notEqual(await run(join(install,'Uninstall.exe'),['/S','_?='+install]),0,'uninstaller ignored an occupied owned payload');
    assert.deepEqual(await readFile(installMarker),preflightMarker,'uninstall changed files before checking the occupied payload');
    assert.equal(await exists(join(install,'WEXPCeasy.exe')),true);
-   assert.match(await readFile(join(tmpdir(),'WEXPCeasy-install.log'),'utf8'),/file=resources\\github-mcp\\github-mcp-server\.exe\|win32=(5|32|33)/,'owned file rejection lost its path or native error');
+   assert.match(await readFile(join(tmpdir(),'WEXPCeasy-install.log'),'utf8'),/application_locked\|[^\r\n]*\|win32=(5|32|33)\|file=resources\\github-mcp\\github-mcp-server\.exe(?:\r?\n|$)/,'owned file rejection lost its path or native error');
+   const wide=await readFile(join(tmpdir(),'WEXPCeasy-install-utf16.log'),'utf16le');
+   assert.ok(wide.includes('application_locked|'+install+'|win32='),'Unicode diagnostic lost the actual installation path');
+   assert.equal((wide.match(/\uFEFF/g)??[]).length,1,'appending Unicode diagnostics repeated or lost the BOM');
   });
+  const mode=(await lstat(installedGitHub.mcpRuntime.command)).mode&0o777;
+  await chmod(installedGitHub.mcpRuntime.command,0o444);
+  try{
+   assert.notEqual(await run(installer,['/S','/D='+install]),0,'installer accepted an unwritable owned payload');
+   assert.deepEqual(await readFile(installMarker),preflightMarker,'unwritable payload was detected after installation changed files');
+   assert.notEqual(await run(join(install,'Uninstall.exe'),['/S','_?='+install]),0,'uninstaller accepted an unwritable owned payload');
+   assert.deepEqual(await readFile(installMarker),preflightMarker);
+   assert.equal(await exists(join(install,'WEXPCeasy.exe')),true);
+   assert.match(await readFile(join(tmpdir(),'WEXPCeasy-install.log'),'utf8'),/application_locked\|[^\r\n]*\|win32=5\|file=resources\\github-mcp\\github-mcp-server\.exe(?:\r?\n|$)/,'unwritable owned file lost its native access error');
+  }finally{await chmod(installedGitHub.mcpRuntime.command,mode);}
  }finally{await writeFile(installMarker,originalMarker);}
  assert.equal(await run(installer,['/S','/D='+install]),0);
  await startAndClose([]);

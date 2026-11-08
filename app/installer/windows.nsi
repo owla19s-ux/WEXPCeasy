@@ -78,6 +78,12 @@ Function ValidateInstallDirectory
  FileSeek $R8 0 END
  FileWrite $R8 "$R9|$INSTDIR|attributes=$0|reparse=$1$\r$\n"
  FileClose $R8
+ FileOpen $R8 "$TEMP\WEXPCeasy-install-utf16.log" a
+ FileSeek $R8 0 END $R6
+ IntCmp $R6 0 0 +2 +2
+ FileWriteWord $R8 0xFEFF
+ FileWriteUTF16LE $R8 "$R9|$INSTDIR|attributes=$0|reparse=$1$\r$\n"
+ FileClose $R8
  IfSilent +2
  MessageBox MB_OK|MB_ICONSTOP "请选择空的程序安装目录，或已有的 WEXPCeasy 安装目录。不可安装到数据目录、磁盘根目录或重解析目录；更换安装位置前请先卸载旧程序。"
  SetErrorLevel 2

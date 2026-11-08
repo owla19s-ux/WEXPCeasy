@@ -38,9 +38,40 @@ const verify=[payload,...dirs,...files].map(path=>{
 }).join('\n');
 const installer=join(output,'WEXPCeasy-'+version+'-Setup.exe');
 let script=await readFile('app/installer/windows.nsi','utf8');
-// Re-probe a bounded, side-effect-free precondition: Electron descendants/scanners can briefly retain the image after main exits.
+// Re-probe a bounded, side-effect-free precondition: Other processes/scanners can retain owned payload files after the main app exits.
 // Never replace/delete a payload while the exact exclusive writable-open check still fails.
-const stopped=" IfFileExists \"$INSTDIR\\WEXPCeasy.exe\" 0 stopped\n StrCpy $R7 20\n probe:\n System::Call 'kernel32::CreateFileW(w \"$INSTDIR\\WEXPCeasy.exe\", i 0x40000000, i 0, p 0, i 3, i 0, p 0) p .r0 ?e'\n Pop $1\n IntCmp $0 -1 occupied\n System::Call 'kernel32::CloseHandle(p r0)'\n Goto stopped\n occupied:\n IntOp $R7 $R7 - 1\n IntCmp $R7 0 running\n Sleep 100\n Goto probe\n running:\n FileOpen $R8 \"$TEMP\\WEXPCeasy-install.log\" a\n FileSeek $R8 0 END\n FileWrite $R8 \"application_locked|$INSTDIR|win32=$1$\\r$\\n\"\n FileClose $R8\n IfSilent +2\n MessageBox MB_OK|MB_ICONSTOP \"请先退出 WEXPCeasy，再安装、重装或卸载。\"\n SetErrorLevel 3\n Abort\n stopped:\n Return";
+const stopped=files.map((path,index)=>{
+ const file=escape(rel(path));
+ return ` IfFileExists "$INSTDIR\\${file}" 0 stopped_${index}
+ StrCpy $R7 20
+ probe_${index}:
+ System::Call 'kernel32::CreateFileW(w "$INSTDIR\\${file}", i 0x40000000, i 0, p 0, i 3, i 0, p 0) p .r0 ?e'
+ Pop $1
+ IntCmp $0 -1 occupied_${index}
+ System::Call 'kernel32::CloseHandle(p r0)'
+ Goto stopped_${index}
+ occupied_${index}:
+ IntOp $R7 $R7 - 1
+ IntCmp $R7 0 running_${index}
+ Sleep 100
+ Goto probe_${index}
+ running_${index}:
+ FileOpen $R8 "$TEMP\\WEXPCeasy-install.log" a
+ FileSeek $R8 0 END
+ FileWrite $R8 "application_locked|$INSTDIR|win32=$1|file=${file}$\\r$\\n"
+ FileClose $R8
+ FileOpen $R8 "$TEMP\\WEXPCeasy-install-utf16.log" a
+ FileSeek $R8 0 END $R6
+ IntCmp $R6 0 0 +2 +2
+ FileWriteWord $R8 0xFEFF
+ FileWriteUTF16LE $R8 "application_locked|$INSTDIR|win32=$1|file=${file}$\\r$\\n"
+ FileClose $R8
+ IfSilent +2
+ MessageBox MB_OK|MB_ICONSTOP "程序文件被占用或不可写。请退出 WEXPCeasy 及相关进程，检查权限后重试。"
+ SetErrorLevel 3
+ Abort
+ stopped_${index}:`;
+}).join('\n')+'\n Return';
 script=script.replaceAll('@@VERIFY_STOPPED@@',stopped).replaceAll('@@OUTPUT@@',escape(installer)).replaceAll('@@VERIFY_PATHS@@',verify).replaceAll('@@INSTALL_FILES@@',install).replaceAll('@@REMOVE_FILES@@',remove);
 if(script.includes('@@'))throw Error('unrendered_installer_template');
 const scriptPath=join(output,'installer.nsi');await writeFile(scriptPath,script);
