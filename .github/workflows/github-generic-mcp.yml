@@ -1,0 +1,104 @@
+name: GitHub generic MCP adapter
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'connections/github/**'
+      - 'connections/src/**'
+      - 'connections/tests/**'
+      - 'app/src/foundations.ts'
+      - 'app/tests/github-official-host.test.mjs'
+      - 'app/tests/desktop-github-tools.test.mjs'
+      - 'app/src/desktop-connections.ts'
+      - 'UI/src/**'
+      - 'UI/tests/github-tools.test.mjs'
+      - 'app/desktop/tests/github-tools.mjs'
+      - 'app/desktop/tests/run-github-tools.mjs'
+      - '.github/workflows/github-generic-mcp.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Record verified checkout
+        run: git rev-parse HEAD
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Full regression
+        run: node --test --test-concurrency=2 --test-timeout=60000 shared/tests/*.test.mjs permissions/tests/*.test.mjs app/tests/*.test.mjs connections/tests/*.test.mjs connections/github/tests/*.test.mjs connections/local/tests/*.test.mjs connections/api/tests/*.test.mjs tools/tests/*.test.mjs UI/tests/*.test.mjs space/tests/*.test.mjs AI/tests/*.test.mjs conversations/tests/*.test.mjs
+      - run: npm run check:boundaries
+
+  official-runtime:
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - run: npm ci
+      - run: npm run build
+      - name: Build pinned unmodified official MCP from source archive
+        id: upstream
+        run: node connections/github/tests/build-official-runtime.mjs
+      - name: Official MCP through WEX host and public Connections
+        run: node connections/github/tests/live-mcp-adapter.mjs
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          WEX_GITHUB_READ_TOKEN: ${{ github.token }}
+          WEX_GITHUB_MCP_BINARY: ${{ steps.upstream.outputs.command }}
+          WEX_GITHUB_PR_NUMBER: ${{ github.event.pull_request.number || 3 }}
+      - run: npm run build:desktop
+      - name: Official MCP tools in actual sandboxed Electron (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a node app/desktop/tests/run-github-tools.mjs
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          WEX_GITHUB_READ_TOKEN: ${{ github.token }}
+          WEX_GITHUB_MCP_BINARY: ${{ steps.upstream.outputs.command }}
+      - name: Official MCP tools in actual Electron (Windows)
+        if: runner.os == 'Windows'
+        run: node app/desktop/tests/run-github-tools.mjs
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          WEX_GITHUB_READ_TOKEN: ${{ github.token }}
+          WEX_GITHUB_MCP_BINARY: ${{ steps.upstream.outputs.command }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: github-mcp-live-${{ runner.os }}-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            github-mcp-runtime-build.json
+            github-mcp-official-catalog.json
+            github-mcp-live-evidence.json
+            desktop-acceptance/
+          if-no-files-found: warn

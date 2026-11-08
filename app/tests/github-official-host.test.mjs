@@ -121,3 +121,24 @@ test('host rejects ambiguous legacy and official GitHub assembly instead of choo
  const h=await setup(t,{}, {githubFiles:{client:async()=>{throw Error('must not resolve');}}});
  assert.equal(h.host.status,'degraded');assert.equal(h.host.connections,undefined);assert.equal(h.counts.unseal,0);
 });
+
+test('official GitHub host exposes generic MCP capabilities through Connections',async t=>{
+ const ports=await import('../../dist/connections/src/index.js');
+ const command=process.execPath,expectedSha256=createHash('sha256').update(readFileSync(command)).digest('hex');
+ const fixture=fileURLToPath(new URL('../../connections/github/tests/fixtures/mcp-generic-server.mjs',import.meta.url));
+ const h=await setup(t,{mcpRuntime:{command,expectedSha256,prefixArgs:[fixture,'ok']},fetch:async()=>{throw Error('generic MCP must not use Octokit');}});
+ assert.equal(h.save().status,'committed');assert.equal(h.host.connections.configs.put(h.config(),0,'config').status,'ok');
+ assert.equal(typeof h.host.connections.discover,'function');
+ const listed=await h.host.connections.discover('github',h.request('github','read',ports.capabilityDiscoveryTarget('github','gh')),'gh',1);
+ assert.equal(listed.status,'ok');assert.equal(listed.value.length,3);
+ const pids=[];
+ for(const [index,name] of ['pull_request_read','actions_list'].entries()){
+  const args={owner:'owner',repo:'repo',method:'list'},r=h.request('github','write',ports.capabilityInvocationTarget('github','gh',name,args));
+  assert.equal((await h.host.connections.invoke('github',r,'tool-'+index,'gh',1,name,args,'intent-'+index)).status,'observed');
+  pids.push(h.host.connections.operations.get('tool-'+index).observations[0].value.structuredContent.pid);
+ }
+ assert.equal(new Set(pids).size,1);
+ await h.reopen();
+ const args={method:'list'},r=h.request('github','write',ports.capabilityInvocationTarget('github','gh','actions_list',args));
+ assert.equal((await h.host.connections.invoke('github',r,'after-restart','gh',1,'actions_list',args,'after-restart')).status,'observed');
+});

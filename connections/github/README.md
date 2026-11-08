@@ -5,18 +5,20 @@
 ## 职责与实现结构
 
 - 官方能力来源：`upstream/github-mcp-server/` Git submodule，固定上游提交 `99d6d6503a7b2a133e2f8a595d6d0ba24b4086d3`；`npm run setup:github-upstream` 只检出开发源码，不等于已安装可运行 Windows 二进制。官方 Server 不应由 WEX 重写。
-- `src/index.ts`：现有 Octokit 文件读写及限定 MCP 文件读取能力、GitHub 专属 target/凭证绑定。当前文件级读取是 UTF-8/1 MiB 的兼容路径，**不是官方工具集的能力上限**。
-- `tests/`：专属边界、文件读写和官方集成用例。专属 UI 归 `UI/`；桌面公共设置与实际业务页面归顶层 UI。
-- 公共配置、discover/invoke（合入后）、Operation/Receipt 归 [Connections](../README.md)；权限归 permissions、凭证归 shared、可信进程/IPC 归 app、Context 工具引用归 space，模型工具消费归 Conversations/AI，本机 Git 工作树归 Local。
+- `src/index.ts`：只做公开导出，保留全部既有工厂和类型。
+- `src/mcp-options.ts`：唯一 MCP 运行配置类型；`mcp.ts`：初始化、分页目录、任意调用、身份/哈希校验、逐次凭证解析、会话失效与资源释放。
+- `src/mcp-connections.ts`：按 Connection 捕获配置、替换及关闭 MCP Adapter；这是唯一通用会话装配路径，不保存权限或 Operation。
+- `src/mcp-file-reader.ts`：既有 v2.1.0、UTF-8/1 MiB、固定提交文件只读兼容路径，保持原行为，不代表通用 MCP 的上限。
+- `src/file-target.ts`、`file-adapters.ts`、`official-client.ts`：文件 target、文件兼容适配与 Octokit 补充；`credentials.ts`：凭证引用/绑定，不保管秘密。
+- 配置、read/dispatch/discover/invoke、Operation 归 Connections；权限归 permissions；秘密归 shared；可信运行时、Native 与 IPC 归 App；UI 只消费 DesktopBridge。
 
-## 当前源码状态（2026-11-08）
+## 源码与验证边界
 
-| 层次 | main 状态 | 验证与缺口 |
-|---|---|---|
-| 文件级 Octokit/专用 MCP 路径 | 已有实际源码及调用方 | 保留兼容；真实写入/回读、权限、异常恢复尚需当前 SHA 验收 |
-| 官方完整 `tools/list` 和通用 `tools/call` | **当前 main 未确认实现**：读取不到 `connections/github/src/mcp.ts`、`mcp-connections.ts` | [PR #4](https://github.com/owla19s-ux/WEXPCeasy/pull/4) 有 discover/invoke、官方目录及仓库/PR/Actions 只读证据，**PR 证据不能直接标为 main 已合入** |
-| 可信桌面任意工具调用 | `app/src/desktop-connections.ts` 当前仅确认文件级动作；未含 `github.tools/github.invoke` | [PR #3](https://github.com/owla19s-ux/WEXPCeasy/pull/3) 有独立双平台与桌面证据，须先确认合并状态及重叠 |
-| Context/AI/对话、远端写入、Windows 分发 | 未获得可签收的 main 完整链证据 | 分别验证，不能由 tools/list 成功推定全部功能可用 |
+通用 MCP 与公共 capability 实现已在施工基线 main 中存在；历史 PR #4 对应核心文件与其 HEAD 相同。此次保留该底座，复用 PR #3 的 App/IPC/UI 手动入口并适配当前签名，未引入旧的 `connection-adapter.ts` 或第二套公共接口。
+
+本地定向回归覆盖分页/Schema、原始参数与 MCP 结果、逐次凭证检查、轮换、撤权、取消、初始化清理、传输失败 unknown、IPC 拒绝伪造字段及 Native 拒绝。Fixture 子进程不是官方服务实测。双平台官方源码构建、仓库/PR/Actions 只读与真实 Electron 用例由 `github-generic-mcp.yml` 单独执行，结果须核对运行 SHA 和产物。
+
+未签收：真实远端业务写入/回读、完整官方工具逐项执行、Windows 手工安装验收、正式二进制分发与默认桌面运行时装配、AI/Context/对话工具消费。工具可见或只读注解均不授予执行权限。
 
 ## 继续施工与源码调整
 
@@ -26,4 +28,4 @@
 4. 按职责最小拆分 GitHub 源码：MCP 会话/调用、现有文件兼容层、必要 Octokit 补充和凭证绑定；文件名和签名由代码/测试确定，不机械预建目录。旧导出须在调用方迁移和回归通过后才可删除。
 5. 验收分别覆盖官方构建/初始化、目录与 Schema、多类真实工具、公共端口、可信 IPC/UI、凭证轮换/撤权、unknown/重启、远端写入回读和 Windows 安装。记录同 SHA CI、真实/模拟来源与未测项。
 
-**本次文档状态：** main 静态核对；没有重跑当前 HEAD 的 CI 或 Windows E4，不对完整 GitHub 模块签收。
+本页描述源码能力与验收边界；当前提交测试及 Actions 证据见集成 PR 与 A2，不对完整 GitHub 模块或 Windows E4 签收。

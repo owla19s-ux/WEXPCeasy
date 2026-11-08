@@ -1,13 +1,15 @@
+import {capabilityDiscoveryTarget,capabilityInvocationTarget,captureCapabilityArguments} from '../../connections/src/index.js';
 import {randomUUID,createHash} from 'node:crypto';
 import type {FoundationHost} from './foundations.js';
 import type {DesktopAuthority} from './desktop-authority.js';
 import type {CredentialTarget} from './credential-prompt.js';
 import {githubFileTarget,githubCredentialRef,githubCredentialTarget} from '../../connections/github/src/index.js';
-import type {DesktopConnectionsInput,DesktopConnectionsReply} from '../../UI/src/index.js';
+import type {DesktopConnectionsInput,DesktopConnectionsReply,DesktopGitHubTool,ApiJson} from '../../UI/src/index.js';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
 const fields:Record<string,string[]>={
  snapshot:['kind'],toggle:['kind','id','expectedRevision','enabled'],
  'github.create':['kind','expectedRevision'],'credential.set':['kind','id','expectedRevision'],'credential.revoke':['kind','id','expectedRevision'],
+ 'github.tools':['kind','id','expectedRevision'],'github.invoke':['kind','id','expectedRevision','toolName','arguments'],
  'github.read':['kind','id','expectedRevision','file'],'github.write':['kind','id','expectedRevision','file','expectedSha','content','message']
 };
 function capture(raw:unknown):DesktopConnectionsInput|undefined{
@@ -22,6 +24,13 @@ function capture(raw:unknown):DesktopConnectionsInput|undefined{
  if(raw.kind==='github.read'||raw.kind==='github.write'){
   const file=raw.file;if(!object(file)||Reflect.ownKeys(file).length!==4||!['owner','repo','ref','path'].every(k=>Object.hasOwn(file,k)))return;
   try{githubFileTarget(raw.file as unknown as import('../../connections/github/src/index.js').GitHubFile);}catch{return;}
+ }
+ if(raw.kind==='github.invoke'){
+  if(typeof raw.toolName!=='string'||!raw.toolName.trim()||raw.toolName.length>256||!object(raw.arguments))return;
+  try{
+   captureCapabilityArguments(raw.arguments as Record<string,ApiJson>);
+   if(Buffer.byteLength(JSON.stringify(raw.arguments),'utf8')>1024*1024)return;
+  }catch{return;}
  }
  if(raw.kind==='github.write'&&(
   typeof raw.expectedSha!=='string'||!/^([0-9a-f]{40}|[0-9a-f]{64})$/.test(raw.expectedSha)||
@@ -40,6 +49,8 @@ export function createDesktopConnections(options:{authority:DesktopAuthority;con
    try{return await a.run(async():Promise<DesktopConnectionsReply>=>{
     const file='file'in input?input.file:undefined;
     const summary=input.kind==='snapshot'?'查看本数据根的连接配置及脱敏 Operation 摘要。不读取外部资源或凭证。':
+     input.kind==='github.tools'?'读取连接 '+input.id+' 的 GitHub 官方 MCP 工具目录。发现工具不授予调用权限。':
+     input.kind==='github.invoke'?'调用 GitHub 官方 MCP 工具\n连接：'+input.id+'\n工具：'+input.toolName+'\n参数：'+JSON.stringify(input.arguments,null,2)+'\n工具可能修改远端资源。仅执行一次；结果未知时请核对原 Operation 和远端状态。':
      input.kind==='github.create'?'登记 GitHub 官方 API 连接。不会自动联网或授予仓库权限。':
      input.kind==='toggle'?'设置连接 '+input.id+' 为'+(input.enabled?'启用':'停用')+'。启用不授予资源访问或执行权限。':
      input.kind==='credential.set'?'通过独立安全窗口配置 GitHub 凭证；秘密只由主进程加密保管。':
@@ -47,7 +58,7 @@ export function createDesktopConnections(options:{authority:DesktopAuthority;con
      (input.kind==='github.read'?'读取 GitHub 文件':'向 GitHub 提交文件修改')+'\nhttps://github.com/'+file!.owner+'/'+file!.repo+'\n分支/修订：'+file!.ref+'\n文件：'+file!.path+
      (input.kind==='github.write'?'\n基于文件 SHA：'+input.expectedSha+'\n提交说明：'+input.message+'\n内容 '+Buffer.byteLength(input.content,'utf8')+' 字节；摘要 '+createHash('sha256').update(input.content).digest('hex')+'\n将执行一次真实远端写入。结果未知不会自动重试。':'\n将执行真实网络读取。');
     if(!await a.confirm(options.confirm,summary)||closed)return {status:'cancelled'};
-    const configScope=scope(input.kind==='snapshot'||input.kind==='github.read'||input.kind==='github.write'?'configuration.read':'configuration.write',input.kind==='snapshot'?'connections:configurations':input.kind==='github.create'?'connections:configurations':'connection:'+input.id);
+    const configScope=scope(input.kind==='snapshot'||input.kind==='github.read'||input.kind==='github.write'||input.kind==='github.tools'||input.kind==='github.invoke'?'configuration.read':'configuration.write',input.kind==='snapshot'?'connections:configurations':input.kind==='github.create'?'connections:configurations':'connection:'+input.id);
     a.permit(configScope);const request=a.bind(configScope)!,decision=host!.permissions!.evaluate(request);
     if(decision.status!=='allow')return {status:'rejected',reason:'permission_unavailable'};
     const service=host!.connections!;
@@ -58,7 +69,7 @@ export function createDesktopConnections(options:{authority:DesktopAuthority;con
      const operations=service.operations.read().operations.map(o=>({id:o.id,phase:o.phase,attempts:o.attempts,connectionId:o.connection?.connectionId??null,adapter:o.connection?.adapterId??null}));
      if(host!.permissions!.recheck(hr,before).status!=='allow'||host!.permissions!.evaluate(request).status!=='allow')return {status:'rejected',reason:'authorization_changed'};
      return {status:'ok',revision:snapshot.revision,connections:snapshot.items.map(c=>({id:c.id,adapter:c.adapter,endpoint:c.endpoint,enabled:c.enabled,hasCredential:c.credentialRef!==null})),operations,
-      localFiles:!!host!.localFiles,localDirectories:!!host!.localDirectories&&['linux','win32'].includes(process.platform),credentialBackend:host!.credentials?.available()??false};
+      localFiles:!!host!.localFiles,localDirectories:!!host!.localDirectories&&['linux','win32'].includes(process.platform),credentialBackend:host!.credentials?.available()??false,githubMcpConfigured:service.capabilities().some(c=>c.id==='github')};
     }
     const snapshot=service.configs.read();
     if(snapshot.revision!==input.expectedRevision)return {status:'conflict',reason:'revision_conflict'};
@@ -95,6 +106,29 @@ export function createDesktopConnections(options:{authority:DesktopAuthority;con
      if(linked.status!=='committed'){revoke(stored.reference);return linked;}
      if(prior&&revoke(prior).status!=='committed')return {...linked,notice:'previous_credential_cleanup_unconfirmed'};
      return linked;
+    }
+    if(input.kind==='github.tools'||input.kind==='github.invoke'){
+     if(!service.capabilities().some(c=>c.id==='github'))return {status:'unavailable',reason:'github_mcp_not_configured'};
+     const target=input.kind==='github.tools'?capabilityDiscoveryTarget('github',input.id):capabilityInvocationTarget('github',input.id,input.toolName,input.arguments);
+     const operation=scope(input.kind==='github.tools'?'read':'write',target,'github');a.permit(operation);
+     const resourceRequest=a.bind(operation)!,before=host!.permissions!.evaluate(resourceRequest);
+     if(before.status!=='allow')return {status:'rejected',reason:'permission_unavailable'};
+     if(input.kind==='github.tools'){
+      const result=await service.discover('github',resourceRequest,input.id,input.expectedRevision);
+      if(closed||host!.permissions!.recheck(resourceRequest,before).status!=='allow')return {status:'rejected',reason:'authorization_changed'};
+      if(result.status!=='ok')return {status:result.status==='cancelled'?'cancelled':'unavailable',reason:result.reason};
+      if(!Array.isArray(result.value)||result.value.some(t=>!object(t)||typeof t.name!=='string'||!object(t.inputSchema)))
+       return {status:'unavailable',reason:'invalid_tool_catalog'};
+      return {status:'tools',tools:result.value as DesktopGitHubTool[]};
+     }
+     const operationId=randomUUID();
+     const result=await service.invoke('github',resourceRequest,operationId,input.id,input.expectedRevision,input.toolName,input.arguments,
+      createHash('sha256').update(JSON.stringify(input)).digest('hex'));
+     if(result.status!=='observed')return {status:result.status==='unknown'?'unknown':'rejected',reason:result.reason,operationId};
+     if(closed||host!.permissions!.recheck(resourceRequest,before).status!=='allow')return {status:'unknown',reason:'authorization_changed_after_dispatch',operationId};
+     const receipt=service.operations.get(operationId)?.observations.find(o=>o.id==='result')?.value;
+     if(!object(receipt)||!Array.isArray(receipt.content))return {status:'unknown',reason:'tool_result_unavailable',operationId};
+     return {status:'tool-result',toolName:input.toolName,result:receipt,operationId};
     }
     const target=githubFileTarget(input.file),operation=scope(input.kind==='github.read'?'read':'write',target,'github');a.permit(operation);
     const resourceRequest=a.bind(operation)!,before=host!.permissions!.evaluate(resourceRequest);

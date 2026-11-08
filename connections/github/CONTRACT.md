@@ -40,7 +40,7 @@ GitHub **官方 MCP Server 是完整功能提供者**。WEX 维护自己的 Conn
 
 `connections/src/index.ts` 当前公开 `ConnectionConfig`、`ConfiguredReadAdapter`、`ConfiguredDispatchAdapter`、`createConnectionService`、`OperationLedger` 等。已具备连接配置、受控读写、Operation 和关闭收口，不应重建第二套连接系统。
 
-当前局限：`ConnectionService` 主要按 `read/dispatch`、`target` 和 `read/write` 形态调用；官方 MCP 是多工具、动态 Schema 的通用调用模型。**先实施 GitHub 模块内的通用发现/调用适配并验证**，再决定是否在 Connections 增加一条最小的通用 Capability invoke 公开入口。不得把 PR、Actions、Issues 等操作强行压成“文件读取”或通过删除工具解决接口不匹配。
+历史接口局限（现已通过增量 capability 解决）：`ConnectionService` 原按 `read/dispatch`、`target` 和 `read/write` 形态调用；官方 MCP 是多工具、动态 Schema 的通用调用模型。**先实施 GitHub 模块内的通用发现/调用适配并验证**，再决定是否在 Connections 增加一条最小的通用 Capability invoke 公开入口。不得把 PR、Actions、Issues 等操作强行压成“文件读取”或通过删除工具解决接口不匹配。
 
 对跨模块调用方公开的是 **Connection + Capability（工具）引用及调用结果**，不是官方进程、SDK 对象或凭证。Space/Context 负责工具选择和关联，Conversations/AI 负责会话候选及 AI 调用，UI 负责呈现和触发；它们不得直接 import GitHub Adapter 的私有实现。
 
@@ -85,18 +85,17 @@ GitHub **官方 MCP Server 是完整功能提供者**。WEX 维护自己的 Conn
 
 **测试状态不可互相代替**：上游源码已引用 ≠ 官方进程已运行 ≠ 工具全量发现 ≠ 通用调用可用 ≠ UI/AI 已接入 ≠ GitHub 真实操作验收。
 
-## 6. 当前 main 源码现状（区分独立 PR 证据）
+## 6. 当前源码现状与公开接口
 
-- `connections/github/src/index.ts` 现有 Octokit 文件读写和 `createGitHubMcpFileReader` 单文件只读适配；MCP 启动参数固定只开放 `get_file_contents`。
-- MCP 测试主要基于模拟子进程、固定文件返回形状、版本与拒绝行为；没有证明完整官方工具可用。
-- `app/src/foundations.ts` 装配的 GitHub 官方路径仍是现有读取/文件写入接口，尚无全工具通用调用端口。
-- 上游源码已作为 submodule 被引用并有检出脚本，**Windows 构建与分发、官方多工具调用、真实运行兼容与产品入口验收仍未完成**。
+- `index.ts` 只公开导出；文件兼容、Octokit、凭证绑定与通用 MCP 各有独立职责，见 README。
+- `createGitHubMcpAdapter(connection, options)` 提供 `start/listTools/callTool/status/stop`；`createGitHubMcpCapabilityAdapter(options)` 实现 Connections 的 `ConfiguredCapabilityAdapter`。两者不授予权限、不重派 Operation。
+- Connections 的 `discover(adapterId,request,connectionId,revision,signal?)` 与 `invoke(adapterId,request,operationId,connectionId,revision,name,args,fingerprint,signal?)` 已存在。调用目标使用公共 `capabilityDiscoveryTarget/capabilityInvocationTarget`，参数使用 `captureCapabilityArguments`，不新增 GitHub 专属公共权限模型。
+- App 将可信 runtime 与 vault resolver 装配至此端口；Desktop IPC 仅接受工具 intent 和 JSON 参数，Native 确认后绑定权限。既有 read/dispatch、文件及 Octokit 入口保留。
+- Windows 正式分发、真实业务写入与完整产品验收仍未完成；Fixture、官方只读实测、静态核对须分别记录。
 
-施工以 [README](README.md) → 本契约 → 源码和测试为最短阅读路径；版本排期及签收以 A2 为准，不能以本契约全文代替版本范围决策。
+## 7. 历史方案：通用 MCP Adapter 实施映射与验证界限
 
-## 7. 通用 MCP Adapter 实施映射与验证界限（源码研究，尚待运行实证）
-
-以下是核对当前上游与 WEX 源码后的**实施方案**，不是宣称已存在的接口。先做开发期可用性实验，再以实际编译/集成测试结果冻结 TypeScript 签名；不为每个官方工具生成独立文件或类。
+以下保留为前期方案溯源；表内“当前/拟议/未取得”均指方案形成时点，现行接口与源码状态以第 6 节及 README 为准。先做开发期可用性实验，再以实际编译/集成测试结果冻结 TypeScript 签名；不为每个官方工具生成独立文件或类。
 
 ### 7.1 确认的现有入口及技术限制
 
