@@ -5,7 +5,7 @@ import {createReadStream} from 'node:fs';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {isAbsolute,join} from 'node:path';
 import {tmpdir} from 'node:os';
-import type {ConnectionConfig,ConfiguredDispatchAdapter,ReadAdapter,AdapterAccess,ConfiguredReadAdapter} from '../../src/index.js';
+import type {ConnectionConfig,AdapterAccess,ConfiguredReadAdapter} from '../../src/index.js';
 import type {Json} from '../../../shared/src/index.js';
 
 /** Structural subset of Octokit's official REST client; credentials and retry policy belong to the trusted host.
