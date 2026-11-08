@@ -1,5 +1,16 @@
 # AI｜Agent、角色与岗位配置模块
 
+## 2026-11-08｜AI 源码与文档最新一致性核对
+
+> 本轮静态代码基线：`main@e9ff10c81dc4`；最新 AI 文档提交已重建 CONTRACT/模块边界，本段只补实有代码证据，不把文档设计视为已施工。
+
+- **当前实际公开入口**：`AI/src/index.ts` 中 `Configuration` 分为 `role`（name/prompt）、`position`（name/responsibility）与 `agent`（name/roleId/positionId/model）三类；`ModelReference` 使用 `connectionId + modelId`，`VerifyModel` 由调用方提供。
+- **现有实现证据**：配置带稳定 ID、revision；存储状态与收据有格式校验，损坏记录/非法引用不静默修复。Agent 只能引用存在的 Role/Position；这不表示角色/岗位就是权限主体，也不是独立 Agent 推理引擎。
+- **待施工或待证实**：`src/index.ts` 仍集中配置类型、校验、持久化/服务逻辑；`configuration.ts`、`storage.ts`、`service.ts`、`model-reference.ts` 属**候选拆分**，不能在 README 中标为已创建。需复核 Context 绑定、模型失效、配置修订、UI/Conversations 正式消费和重启恢复。
+- **验收原则**：按现有公开接口兼容迁移、定向回归与跨模块组合证据更新状态，不新建本版未授权的记忆/调度/Agent runtime。
+
+
+
 > 当前代码审查基线：`main@4ec86a84f83aad2e6b6ef46a1fc0db103fc015a1`（2026-11-08）。本页为模块施工入口；正式行为和边界见 [CONTRACT.md](CONTRACT.md)。此基线为只读源码核对，**不是**该 SHA 的 CI、真实 Provider 或 Windows 实机验收。
 
 ## 1. 定位与范围
