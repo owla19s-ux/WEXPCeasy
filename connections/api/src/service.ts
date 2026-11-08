@@ -1,4 +1,5 @@
 import {encodeToolRound} from './continuation.js';
+import {chatRoute} from './protocols/openai-chat.js';
 import type {ToolRoundReader} from './continuation.js';
 import type {Operation} from '../../src/index.js';
 import {captureTools,captureResponseFormat} from './tools.js';
@@ -207,7 +208,7 @@ export function createApiService(store:Store,permission:PermissionReader,options
      if(typeof value==='number'&&value>outputLimit)fail('model_output_limit_exceeded');
     }
    }
-   const url=new URL(connection.endpoint);if(connection.endpointMode==='base')url.pathname=url.pathname.replace(/\/$/,'')+'/chat/completions';
+   const url=chatRoute(connection,'completions');
    let continuation:ReturnType<typeof encodeToolRound>|undefined;
    if(p.toolContinuation!==undefined){
     if(!text(p.toolContinuation)||!options.readToolRound||observed.capabilities.tools!=='supported')
