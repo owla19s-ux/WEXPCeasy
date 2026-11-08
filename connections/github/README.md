@@ -73,3 +73,48 @@
 **最小可验顺序**：官方源码检出与构建 → `--toolsets=all` 下完整 `tools/list`（含分页/Schema）→ 同一通用 `tools/call` 接口测试仓库、PR、Actions 等不同类别 → 经 Connections 公共调用入口触发 → 切换宿主装配 → 删除冗余专用路径。工具因账号权限不可执行与 Adapter 根本无法转发是两种不同结果。
 
 详细接口映射和未决运行事项见 [CONTRACT 第 7 节](CONTRACT.md#7-通用-mcp-adapter-实施映射与验证界限)。
+
+## 7. 模块完整评估后的调整方案（2026-11-08，待源码施工）
+
+> **状态与授权**：本节是只读源码、A1/A2 和测试文件核对形成的**拟实施方案**，不代表已实施或已运行通过；本次仅更新 README，不修改源码、CONTRACT、A1/A2 或运行 CI。是否纳入当前版本，以 A2 已批准范围为准；GH-01～12 的长期完整目标不能因本版较小而删除。执行前重新核对最新 main 及已发生的变更，避免重复施工。本节与第 6 节、CONTRACT 第 7 节相互补充，不另建第二套契约。
+
+### 7.1 总评及功能差距
+
+**结论：保留现有 GitHub 模块及 Connections 基座，补齐官方 MCP 通用 Adapter，定向拆分源码和迁移调用方；禁止推翻重写。** 现有 Octokit 文件读写、SDK/MCP 依赖、上游 submodule、权限/凭证绑定、公共 Operation、文件级独立测试均有价值。当前官方工具完整发现、任意工具调用及多个消费入口的实际闭环**未实现或未获实测证据**。
+
+| 产品锚点 | 静态源码核对结果 | 仍需补齐或证明 |
+| --- | --- | --- |
+| GH-01/02 连接及仓库文件 | 配置、凭证引用、限定 UTF-8 文件读取已有实现和测试 | 仓库元数据、目录及不同资源的通用工具可访问性 |
+| GH-03/05 分支、HEAD、Commit | 现有文件目标含 ref/SHA；无通用 Git 操作入口 | 通过官方工具发现、查询及可用操作 |
+| GH-04 文件写入 | Octokit expected-SHA 的 put/Commit 路径、冲突与防重放测试存在 | 新通道兼容、远端写入/回读及回执实测 |
+| GH-06 PR、GH-07/08 Actions | 官方能力目标已列于契约，现有产品 Adapter 尚无通用执行入口 | 同一通道发现并调用 PR、Actions 等工具，含日志/运行结果 |
+| GH-09/11 回执与证据 | 文件写入复用公共 Operation，保留文件/Commit SHA | 任意工具的结果保真、外部引用、未知结果与查询 |
+| GH-10/12 错误、版本及生命周期 | 文件调用有取消/撤权/超时；MCP 每次读取新进程且硬编码 2.1.0 | 多工具状态、版本兼容、会话启动/复用/关闭及断连处理 |
+| Issues、Projects、Discussions、Notifications、Security 等 | 属官方工具目录覆盖目标，不能按文件操作成功认定实现 | 以实际运行的 tools/list、工具集及 Schema 统计可转发覆盖率 |
+
+状态口径：**“代码和测试存在”不等于“本轮测试通过”；“上游提供”不等于“WEX 已接入”；“适配可转发”不等于“账号有权执行”；“可被调用”不等于“UI/AI 已连通”。** 当前部分能力为部分实现，完整通用调用尚未实现，真实全工具与 Windows 验收仍待验证。
+
+### 7.2 代码职责和拆分边界
+
+- `src/index.ts` 现混有文件目标解析、Octokit 读写与工厂、MCP Stdio 会话/发现/限定调用、凭证引用与取消/异常处理；按**独立职责及测试影响**定向拆分，不按文件长度或美观机械建目录。
+- **优先候选**：`src/mcp.ts`（通用会话、tools/list、tools/call、资源清理）、`src/files.ts`（现有文件专用兼容接口）、`src/credentials.ts`（GitHub 专属凭证引用/连接绑定）、`src/octokit.ts`（必要 REST 补充）；`src/index.ts` 保留清晰公开出口。文件名是候选而非冻结签名；不产生空文件、重复抽象或 100+ 工具专属实现。
+- `createGitHubMcpFileReader` 现固定 `--tools=get_file_contents --read-only`、精确 Commit 的文件目标、返回形状和每调用一个 Stdio 进程。它只能作为旧专用读取路径，**不能用它的 UTF-8/1 MiB、文件 ref 和返回规则作为通用 MCP 工具上限**。
+- `createGitHubFileAdapter`、`createGitHubFileReader` 和 `createGitHubOfficialClientFactory` 已有调用方与回归测试；先保留。MCP 通用路径与公共接线跑通后，依据**实际未覆盖的 REST/GraphQL 能力与调用方迁移证据**决定保留、兼容封装或删除，不先移除 Octokit。
+- 不改写官方 Go Server，也不创建第二套配置、权限、Operation、GitHub 服务总管；GitHub 负责协议和能力，Connections 负责配置、公共调用和账本，App 负责可信进程/IPC，Space 保存工具选择关联，Conversations/AI 负责会话中的工具使用，本地 Git 工作树归 Local。
+
+### 7.3 通用调用与公共层的最小调整
+
+1. **GitHub 内先验证**：固定上游真实二进制 initialize；完整翻页的 `tools/list`（工具名、描述、inputSchema、注解），`tools/call(name, arguments)` 适用于所有已发现工具；保留 MCP 的 `content`、`structuredContent`、`isError` 等真实结果，不强行压缩成文件文本。记录工具集、只读标志、服务版本和能力差异；以运行结果为准，不能硬编码工具总数。
+2. **会话生命周期**：验证 Connection/凭证/运行配置绑定、启动、按需复用、断连恢复和关闭；撤权和取消要阻止后续未授权派发，但本地进程终止不能虚称外部副作用回滚。不要将现有 `mcpVersion='2.1.0'` 的精确版本假设直接照搬；先核实固定上游与现有 SDK v1 的实际兼容性，只有实测需要才考虑 SDK 升级。
+3. **Connections 只作必要扩展**：现有 `configs/operations/read/dispatch` 及生命周期不取消。若现有 target/read/write 不适合任意 `toolName + arguments`，以独立测试为证据增补**少量通用 capability 发现/调用端口**（如 discover/invoke，实际名称和 TypeScript 签名以实验为准），不可把所有官方工具强塞文件 target，不逐工具另建公共路由。
+4. **权限和结果边界**：发现、可用、授权、派发、外部观察分开；复用 Permissions 和 Operation，保留失败、取消、unknown、真实副作用证据。不因重试、重发、重连或取消而自动重复 GitHub 写入。公共调用不能绕过可信授权入口或把凭证交给 Renderer/模型。
+5. **正式调用方接线**：`app/src/foundations.ts` 负责统一装配；`app/src/desktop-connections.ts` 与 `UI/src/connection-settings.tsx` 已有 `github.create/read/write` 文件入口，可保留为阶段性 UI，但不应对每个官方工具增加一个 App 专用业务分支。后续由 Conversations、AI、Space/Context、UI 经 Connections 公共能力接口复用同一 GitHub Adapter。无需给每个工具开发专属页面。
+
+### 7.4 连续施工顺序和退出条件
+
+1. **模块内部能力**：先运行现有独立测试并记录真实基线；核验官方 submodule 对应版本的构建、MCP 初始化、不同工具集下完整发现；同一通用接口调用至少仓库/PR/Actions 三类不同工具，读与写按账号能力分开验证。
+2. **公共层接线**：在 GitHub 内验证调用形态后，提出有源码/测试证据的最小 Connections 改动；继续复用既有账本、权限、连接配置和停机排空。公共接口修改属于跨 owner 较高风险，需先确认明确施工授权范围，不以本 README 自动授权改动。
+3. **兼容迁移**：先添加新实现，兼容旧文件操作，再迁移 App/消费端，执行原文件读写、冲突、unknown、撤权、恢复回归。只有**所有已知调用方已迁移且实测无不可替代缺口**，才删除对应旧导出和冗余代码。
+4. **验收收口**：记录独立单测、跨模块测试、真实/模拟工具结果、Windows 安装及重启恢复；覆盖分页/Schema、不同工具、凭证隔离、版本不兼容、取消、断连、结果未知、停止时在途资源、远端回读。先查 Actions 总运行列表与 SHA，避免盲目触发；没有真实调用或 Windows 证据时明确标“未验证”。测试与源码回执完成后，由文档维护方同步 README/CONTRACT 的实现事实及 A2 状态，避免文档先行宣称验收。
+
+**高风险变更**：Connections 公开端口、会话复用与授权、旧路径移除、Windows 进程和远端写副作用。**一般变更**：模块内部职责拆分、接口整理、测试及文档状态修订。任何公共层调整须以实证为前提，禁止因 GitHub 单模块需求而重构整个 WEX。
