@@ -13,7 +13,7 @@ async function fixture(t){
  const dir=await mkdtemp(join(tmpdir(),'wex-b2-')),root=join(dir,'public'),a=join(dir,'context-a'),b=join(dir,'context-b'),file=join(dir,'reference.txt');
  for(const [path,id] of [[root,'public-root'],[a,'context-a-root'],[b,'context-b-root']]){await mkdir(path);await writeFile(join(path,'.wex-root.json'),JSON.stringify({format:1,id}));}
  await writeFile(file,'selected reference');
- const calls=[];let mode='normal',arrive;
+ const calls=[];let mode='normal',arrive,completeResponse;let conversationReadHook=()=>{};
  const frame=(text,terminal=null)=>'data: '+JSON.stringify({choices:[{index:0,delta:text===undefined?{}:{content:text},finish_reason:terminal}]})+'\n\n';
  const server=createServer(async(req,res)=>{
   try{
@@ -21,7 +21,7 @@ async function fixture(t){
    const input=JSON.parse(Buffer.concat(chunks).toString());calls.push(input);
    if(mode==='error'){res.writeHead(503);res.end('private-provider-error');return;}
    const last=input.messages.findLast(m=>m.role==='user').content,answer='answer: '+last;
-   if(input.stream){res.writeHead(200,{'content-type':'text/event-stream'});res.write(frame(answer.slice(0,8)));if(mode==='wait'){arrive?.();return;}res.end(frame(answer.slice(8))+frame(undefined,'stop')+'data: [DONE]\n\n');}
+   if(input.stream){res.writeHead(200,{'content-type':'text/event-stream'});res.write(frame(answer.slice(0,8)));if(mode==='wait'){completeResponse=()=>res.end(frame(answer.slice(8))+frame(undefined,'stop')+'data: [DONE]\n\n');arrive?.();return;}res.end(frame(answer.slice(8))+frame(undefined,'stop')+'data: [DONE]\n\n');}
    else{res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({choices:[{index:0,message:{role:'assistant',content:answer},finish_reason:'stop'}]}));}
   }catch{res.destroy();}
  });
@@ -51,7 +51,7 @@ async function fixture(t){
   const revision=target.owner==='AI'?value.entry.revision:value.value.revision;
   return {status:'available',...target,sourceRevision:String(revision),observedAt:new Date().toISOString()};
  }};
- const options={dataRoot:root,trust:{current:()=>undefined,canManage:c=>approved.has(c),canReadHistory:r=>r===historyRequest},
+ const options={dataRoot:root,openStore(path,namespace){const db=openSqliteStore(path,namespace);return namespace==='conversations'?{...db,read(){const snapshot=db.read();conversationReadHook();return snapshot;}}:db;},trust:{current:()=>undefined,canManage:c=>approved.has(c),canReadHistory:r=>r===historyRequest},
   local:{current:r=>sources.get(r)},space:{owner},api:{},ai:{bindRead(_parent,scope){return bind(scope);}},conversations:true,localFiles:{},technicalDiagnostics:{}};
  host=await startFoundations(options);hosts.push(host);
  t.after(async()=>{for(const h of hosts)await h.stop();server.closeAllConnections();server.close();await rm(dir,{recursive:true,force:true});});
@@ -119,7 +119,7 @@ async function fixture(t){
   return {...selected,other,workspace,groupB,fileTarget,inputText};
  }
  return {root,file,op,bind,request,apiRequest,chatRequest,chat,change,view,space,selection,sendInput,setup,calls,get host(){return host;},
-  setMode(value){mode=value;},waitForRequest(){return new Promise(r=>{arrive=r;});},
+  onConversationRead(hook){conversationReadHook=hook;},finishResponse(){assert.equal(typeof completeResponse,'function');completeResponse();completeResponse=undefined;},setMode(value){mode=value;},waitForRequest(){return new Promise(r=>{arrive=r;});},
   revoke:operation=>manage('revoke',operation),
   async restart(){const old=host;assert.equal((await old.stop()).status,'stopped');sources.delete(source);source={};identity={...identity,relationshipGeneration:identity.relationshipGeneration+1};sources.set(source,identity);granted.clear();host=await startFoundations(options);hosts.push(host);return old;}
  };
@@ -183,4 +183,66 @@ test('B2-02/03/06/08 a real successful API receipt recovers a full-chain logical
  assert.equal(f.host.conversations.generation.recover(requests,'chat','gen','recover').status,'committed');
  assert.equal(f.chat(ctx).conversation.messages[1].segments[0].text,'answer: '+state.inputText);assert.equal(f.calls.length,count);assert.equal(f.host.connections.operations.get('generation').attempts,1);
  assert.equal((await f.view(ctx)).value.id,ctx);
+});
+
+test('B2-03/05 generation fixes its request identity and parameters before reading real conversation storage',async t=>{
+ const f=await fixture(t),state=await f.setup(),input=f.sendInput(state);
+ input.preparation.parameters={temperature:0.25};
+ let once=true;
+ f.onConversationRead(()=>{if(once){once=false;input.preparation.requestId='retargeted';input.preparation.parameters.temperature=0.9;}});
+ assert.equal((await f.host.conversations.generation.send(input)).status,'committed');
+ assert.equal(f.calls.at(-1).temperature,0.25);
+ const generation=f.chat(state.context.id).conversation.generations[0];
+ assert.equal(generation.requestId,'request');
+ assert.equal(f.host.connections.operations.get('generation').observations.find(o=>o.id==='api-result').value.requestId,'request');
+});
+
+test('B2-03/05/06 revoked streaming permission withholds the remaining reply and survives restart without replay',async t=>{
+ const f=await fixture(t),state=await f.setup(),ctx=state.context.id,input=f.sendInput(state),deltas=[];
+ f.setMode('wait');
+ let firstText;const visible=new Promise(r=>firstText=r);
+ input.onText=text=>{deltas.push(text);firstText();};
+ const arrived=f.waitForRequest(),pending=f.host.conversations.generation.send(input);
+ await arrived;await visible;
+ f.revoke(f.op('connections/api','request.send','model:'+state.model.id,ctx));
+ const visibleBefore=[...deltas];f.finishResponse();
+ assert.equal((await pending).status,'committed');
+ assert.deepEqual(deltas,visibleBefore);
+ const before=f.chat(ctx).conversation;
+ assert.equal(before.generations[0].status,'unknown');assert.equal(before.messages.length,1);
+ const operation=f.host.connections.operations.get('generation');
+ assert.equal(operation.phase,'unknown');assert.equal(operation.attempts,1);
+ const requests=f.calls.length;
+ await f.restart();
+ assert.deepEqual(f.chat(ctx).conversation,before);
+ const recover={read:f.chatRequest('read',ctx),finish:f.chatRequest('finish',ctx),receipt:f.request(f.op('conversations','receipt.read','operation:generation',ctx))};
+ assert.equal(f.host.conversations.generation.recover(recover,'chat','gen','recover').status,'unavailable');
+ const same=f.sendInput(state);
+ assert.equal((await f.host.conversations.generation.send(same)).status,'invalid_transition');
+ assert.equal(f.calls.length,requests);assert.deepEqual(f.host.connections.operations.get('generation'),operation);
+ f.setMode('normal');
+ assert.equal(f.change(ctx,'explicit-resend',{kind:'resend',messageId:'explicit',replaces:'input',generationId:'next',segments:[{id:'p',text:'explicit new question'}]}).status,'committed');
+ const next=f.sendInput(state,{generationId:'next',operationId:'next-operation',replyId:'next-reply',requestId:'next-request'});
+ assert.equal((await f.host.conversations.generation.send(next)).status,'committed');
+ assert.equal(f.calls.length,requests+1);
+ assert.equal(f.calls.at(-1).messages.at(-1).content,'explicit new question');
+ assert.deepEqual(f.chat(ctx).conversation.messages.map(m=>m.id),['input','explicit','next-reply']);
+});
+
+test('B2-05/06 receipt access revocation blocks recovery until a fresh grant without another Provider call',async t=>{
+ const f=await fixture(t),state=await f.setup(),ctx=state.context.id,input=f.sendInput(state);
+ f.revoke(f.op('conversations','finish','conversation:chat',ctx));
+ assert.equal((await f.host.conversations.generation.send(input)).status,'denied');
+ const count=f.calls.length;
+ await f.restart();
+ const receiptScope=f.op('conversations','receipt.read','operation:generation',ctx);
+ const requests={read:f.chatRequest('read',ctx),finish:f.chatRequest('finish',ctx),receipt:f.request(receiptScope)};
+ const before=f.chat(ctx).conversation;
+ f.revoke(receiptScope);
+ assert.equal(f.host.conversations.generation.recover(requests,'chat','gen','recover').status,'unavailable');
+ assert.deepEqual(f.chat(ctx).conversation,before);assert.equal(f.calls.length,count);
+ requests.receipt=f.request(receiptScope);
+ assert.equal(f.host.conversations.generation.recover(requests,'chat','gen','recover').status,'committed');
+ assert.equal(f.calls.length,count);assert.equal(f.host.connections.operations.get('generation').attempts,1);
+ assert.equal(f.chat(ctx).conversation.messages[1].segments[0].text,'answer: '+state.inputText);
 });

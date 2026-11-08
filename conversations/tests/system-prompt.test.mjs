@@ -31,3 +31,10 @@ test('invalid system prompts are rejected before dispatch reservation or API cal
   assert.equal(calls,0);assert.deepEqual(f.db.read(),before);
  }
 });
+
+test('uncloneable preparation is invalid before conversation reads, reservation or API calls',async t=>{
+ const f=fixture(t),before=f.db.read();let calls=0;
+ const generation=createConversationGeneration(f.service,{async send(){calls++;throw Error('must not send');}});
+ const result=await generation.send({...f.input,preparation:{...f.input.preparation,parameters:{unsafe:()=>true}}});
+ assert.deepEqual(result,{status:'invalid'});assert.equal(calls,0);assert.deepEqual(f.db.read(),before);
+});
