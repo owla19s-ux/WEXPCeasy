@@ -5,7 +5,7 @@ import type {ToolRoundReader} from './continuation.js';
 import type {Operation} from '../../src/index.js';
 import {captureTools,captureResponseFormat} from './tools.js';
 import {createHash,randomUUID} from 'node:crypto';
-import type {Store} from '../../../shared/src/index.js';
+import type {Store,Json} from '../../../shared/src/index.js';
 import type {PermissionReader,Decision,Scope} from '../../../permissions/src/index.js';
 import {Failure,fail,text,revision,closed,object,capture,canonical,freeze,parameters,endpoint,observation,decode,command} from './model.js';
 import type {ApiCommand,ApiMutation,ApiQuery,ApiQueryResult,ApiConnection,ApiModel,ModelObservation,ModelObserver,State,Intent,Preparation,RequestSnapshot} from './model.js';
