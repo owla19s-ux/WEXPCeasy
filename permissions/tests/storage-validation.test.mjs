@@ -11,12 +11,21 @@ const trust={current:()=>({...scope,kind:'conversation',moduleEnabled:true,globa
 function fixture(t){
  const dir=mkdtempSync(join(tmpdir(),'wex-permission-validation-')),file=join(dir,'permissions.sqlite');
  t.after(()=>rmSync(dir,{recursive:true,force:true}));
- let db=openSqliteStore(file,'permissions');const p=api.createPermissions(db,trust);
- for(const [index,kind] of ['grant','revoke','grant'].entries())assert.equal(p[kind]({intent:'event-'+index,expectedRevision:index,scope}).status,'committed');
+ let selected=file;
+ let db=openSqliteStore(file,'permissions');const p=api.createPermissions(db,trust),snapshots=[];
+ for(const [index,kind] of ['grant','revoke','grant'].entries()){
+  assert.equal(p[kind]({intent:'event-'+index,expectedRevision:index,scope}).status,'committed');snapshots.push(db.read().value);
+ }
  assert.equal(p.evaluate({}).status,'allow');db.close();
- return {open:()=>openSqliteStore(file,'permissions'),damage(change){
-  const raw=new DatabaseSync(file);
-  try{const row=raw.prepare('SELECT body FROM snapshots WHERE ns=?').get('permissions');const value=JSON.parse(row.body);change(value);raw.prepare('UPDATE snapshots SET body=? WHERE ns=?').run(JSON.stringify(value),'permissions');}finally{raw.close();}
+ return {open:()=>openSqliteStore(selected,'permissions'),path:()=>selected,damage(change){
+  // Keep the technical Store/receipt history valid so these cases exercise Permissions' own decoder.
+  // Raw SQLite damage is tested separately below, where the storage layer must reject it first.
+  const value=structuredClone(snapshots[2]);change(value);selected=join(dir,'invalid-domain.sqlite');
+  const seeded=openSqliteStore(selected,'permissions');
+  try{
+   for(let index=0;index<3;index++)assert.equal(seeded.commit({intent:'event-'+index,expectedRevision:index,value:index===2?value:snapshots[index]}).status,'committed');
+  }finally{seeded.close();}
+
  }};
 }
 for(const [label,damage] of [
@@ -57,4 +66,22 @@ test('permission inspection reports unavailable without changing future or null 
   const db=openSqliteStore(':memory:','permissions');
   try{db.commit({intent:'damage',expectedRevision:0,value});const before=db.read();assert.deepEqual(api.inspectPermissionStore(db),{status:'unavailable'});assert.deepEqual(db.read(),before);}finally{db.close();}
  }
+});
+
+test('raw permission snapshot corruption is blocked by Store and Permissions without rewriting either proof',t=>{
+ const f=fixture(t),raw=new DatabaseSync(f.path());
+ try{
+  raw.prepare('UPDATE snapshots SET body=? WHERE ns=?').run('{"forged":true}','permissions');
+  const before=raw.prepare('SELECT revision,body FROM snapshots WHERE ns=?').get('permissions');
+  const receipts=raw.prepare('SELECT id,request,revision FROM intents WHERE ns=? ORDER BY revision').all('permissions');
+  const db=f.open();
+  try{
+   assert.throws(()=>db.read());assert.throws(()=>db.query('event-2'));
+   const p=api.createPermissions(db,trust);
+   assert.equal(p.evaluate({}).status,'indeterminate');assert.equal(p.history({}).status,'unavailable');
+   assert.notEqual(p.grant({intent:'repair',expectedRevision:3,scope}).status,'committed');
+   assert.deepEqual(raw.prepare('SELECT revision,body FROM snapshots WHERE ns=?').get('permissions'),before);
+   assert.deepEqual(raw.prepare('SELECT id,request,revision FROM intents WHERE ns=? ORDER BY revision').all('permissions'),receipts);
+  }finally{db.close();}
+ }finally{raw.close();}
 });
