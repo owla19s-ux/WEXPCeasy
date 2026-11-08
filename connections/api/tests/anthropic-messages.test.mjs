@@ -26,7 +26,7 @@ test('Anthropic native request moves initial system role to top level and requir
 test('Anthropic JSON normalizes response and rejects truncation and native tool blocks',async()=>{
  const result=await decodeAnthropicMessages(bytes(JSON.stringify(response)),false);
  assert.deepEqual(result,{text:'Hello',usage:{inputTokens:3,outputTokens:2,totalTokens:5},providerResponseId:'msg_123',providerModelId:'claude-test'});
- await assert.rejects(decodeAnthropicMessages(bytes(JSON.stringify({...response,stop_reason:'max_tokens'})),false),/provider_length_truncated/);
+ await assert.rejects(decodeAnthropicMessages(bytes(JSON.stringify({...response,stop_reason:'max_tokens'})),false),/provider_output_truncated/);
  await assert.rejects(decodeAnthropicMessages(bytes(JSON.stringify({...response,content:[{type:'tool_use',id:'tool',name:'read',input:{}}],stop_reason:'tool_use'})),false));
 });
 
