@@ -31,7 +31,7 @@
 
 ## 3. 与通用工作流的边界
 
-专业模式描述专业对象、关系规则、默认配置和建议视图；workflows/runtime拥有Workflow定义、Task、执行轮次、等待和验收。专业关系、资源映射、视图映射和执行依赖是四种不同关系，不自动转换。实例化只生成可编辑草案和关系建议；逐个调用对象owner提交，部分成功逐项回执。更新/移除模式不删除Task、权限、Context、文件或Evidence。真实文件/Git读取写入仍走connections及permissions。
+专业模式描述专业对象、关系规则、默认配置和建议视图；`workflows/` 维护 Workflow 定义、Task、任务轮次和验收业务记录，`scheduler/` 负责执行调度及协调状态，`connections/` 维护外部 Operation/尝试及回执。`workflows/runtime/` 是历史研究目录，不是当前独立业务 Owner。专业关系、资源映射、视图映射和执行依赖是四种不同关系，不自动转换。实例化只生成可编辑草案和关系建议；逐个调用对象owner提交，部分成功逐项回执。更新/移除模式不删除Task、权限、Context、文件或Evidence。真实文件/Git读取写入仍走connections及permissions。
 
 ## 4. 验收样例
 
