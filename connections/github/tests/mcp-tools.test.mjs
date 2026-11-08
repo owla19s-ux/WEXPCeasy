@@ -126,3 +126,18 @@ test('stop cancels in-flight discovery and drains queued invocations',async()=>{
  assert.deepEqual((await settled).map(x=>x.status),['rejected','rejected']);
  assert.equal(a.status().state,'stopped');
 });
+
+test('trusted runtime configuration selects toolsets and read-only mode',async t=>{
+ const a=adapter('ok',{toolsets:['repos','pull_requests'],readOnly:true});t.after(()=>a.stop());
+ const result=await a.callTool('get_repository',{},signal(),access());
+ assert.equal(result.structuredContent.allTools,false);
+ assert.equal(result.structuredContent.readOnly,true);
+ assert.deepEqual(result.structuredContent.toolsets,['--toolsets=repos,pull_requests']);
+});
+test('runtime toolset configuration is captured rather than mutated by its caller',async t=>{
+ const toolsets=['repos'];
+ const a=adapter('ok',{toolsets,readOnly:true});t.after(()=>a.stop());
+ toolsets.push('actions');
+ const result=await a.callTool('get_repository',{},signal(),access());
+ assert.deepEqual(result.structuredContent.toolsets,['--toolsets=repos']);
+});

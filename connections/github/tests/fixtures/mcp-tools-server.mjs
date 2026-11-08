@@ -22,6 +22,7 @@ server.setRequestHandler(CallToolRequestSchema,async request=>{
  return {content:[{type:'text',text:request.params.name}],structuredContent:{
   arguments:request.params.arguments,calls,pid:process.pid,cwd:process.cwd(),
   allTools:process.argv.includes('--toolsets=all'),
+  toolsets:process.argv.filter(arg=>arg.startsWith('--toolsets=')),
   readOnly:process.argv.includes('--read-only')
  },...(request.params.arguments?.fail?{isError:true}:{})};
 });
