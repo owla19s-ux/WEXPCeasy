@@ -64,3 +64,15 @@ export function resolveApiProtocol(id:string):ApiProtocolAdapter|undefined{
 export function supportedApiProtocols():readonly string[]{
  return Object.freeze([...adapters.keys()]);
 }
+
+/**
+ * Probe evidence must have been produced by the active wire protocol.
+ * The diagnostic version alone cannot authorize an observation from another protocol.
+ */
+export function matchesApiProbeAdapterVersion(
+ protocolId:string,version:string,probe:{stream:boolean;tools:boolean}
+):boolean{
+ const adapter=resolveApiProtocol(protocolId);
+ if(!adapter||!adapter.supportsProbe||(probe.tools&&!adapter.supportsToolProbe))return false;
+ try{return adapter.diagnosticVersion(probe)===version;}catch{return false;}
+}
