@@ -51,7 +51,7 @@ export function createConnectionService(permission:PermissionReader,configStore:
    const token=new Promise<void>(resolve=>{finish=resolve;});pending.add(token);
    try{
     return await createConfiguredReadBoundary(permission,configs,{
-     id:adapter.id,version:adapter.version,
+     get id(){return adapter.id;},get version(){return adapter.version;},
      async read(connection,_target,currentSignal,access){
       if(!access)throw Error('capability_access_unavailable');
       return adapter.discover(connection,currentSignal,access);
@@ -76,12 +76,15 @@ export function createConnectionService(permission:PermissionReader,configStore:
    const token=new Promise<void>(resolve=>{finish=resolve;});pending.add(token);
    try{
     return await createConfiguredDispatchBoundary(permission,ledger,configs,{
-     id:adapter.id,version:adapter.version,
+     get id(){return adapter.id;},get version(){return adapter.version;},
      async execute(connection,_target,payload,access){
       if(!access||combined.aborted||stopping)throw Error('capability_access_unavailable');
       const scoped:AdapterAccess=Object.freeze({request:access.request,check:()=>!stopping&&!combined.aborted&&access.check()});
       const call=payload as {name:string;args:Record<string,Json>};
-      return adapter.invoke(connection,call.name,call.args,combined,scoped);
+      if(!scoped.check())throw Error('capability_access_unavailable');
+      const result=await adapter.invoke(connection,call.name,call.args,combined,scoped);
+      if(!scoped.check())throw Error('capability_access_unavailable');
+      return result;
      },
     }).dispatch(request,id,connectionId,revision,target,fingerprint,{name,args:captured});
    }finally{pending.delete(token);finish();}
