@@ -9,16 +9,7 @@ import type {ConnectionConfig,AdapterAccess,ConfiguredReadAdapter} from '../../s
 import type {Json} from '../../../shared/src/index.js';
 import type {GitHubOfficialClientOptions} from './official-client.js';
 
-/** Structural subset of Octokit's official REST client; credentials and retry policy belong to the trusted host.
- * Supply a client bound to this exact connection, with automatic mutation retries disabled.
- * This module never accepts an SDK instance or credentials from a Renderer request. */
-export interface GitHubOfficialClient {
- rest:{repos:{
-  getContent?:(input:{owner:string;repo:string;ref:string;path:string;request:{signal:AbortSignal}})=>Promise<{data:unknown}>;
-  createOrUpdateFileContents?:(input:{owner:string;repo:string;branch:string;path:string;message:string;content:string;sha?:string})=>Promise<{data:unknown}>;
- }};
-}
-export type GitHubClientFactory=(connection:Readonly<ConnectionConfig>,access?:AdapterAccess,signal?:AbortSignal)=>GitHubOfficialClient|Promise<GitHubOfficialClient>;
+export type {GitHubOfficialClient,GitHubClientFactory} from './official-client.js';
 const limit=1024*1024;
 const object=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype;
 const sha=(value:unknown):value is string=>typeof value==='string'&&/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/.test(value);

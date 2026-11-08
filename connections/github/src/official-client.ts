@@ -1,6 +1,15 @@
 import {Octokit} from 'octokit';
 import type {ConnectionConfig,AdapterAccess} from '../../src/index.js';
-import type {GitHubClientFactory,GitHubOfficialClient} from './index.js';
+/** Structural subset of Octokit's official REST client; credentials and retry policy belong to the trusted host.
+ * Supply a client bound to this exact connection, with automatic mutation retries disabled.
+ * This module never accepts an SDK instance or credentials from a Renderer request. */
+export interface GitHubOfficialClient {
+ rest:{repos:{
+  getContent?:(input:{owner:string;repo:string;ref:string;path:string;request:{signal:AbortSignal}})=>Promise<{data:unknown}>;
+  createOrUpdateFileContents?:(input:{owner:string;repo:string;branch:string;path:string;message:string;content:string;sha?:string})=>Promise<{data:unknown}>;
+ }};
+}
+export type GitHubClientFactory=(connection:Readonly<ConnectionConfig>,access?:AdapterAccess,signal?:AbortSignal)=>GitHubOfficialClient|Promise<GitHubOfficialClient>;
 
 function capture(connection:Readonly<ConnectionConfig>):Readonly<ConnectionConfig> {
  if(connection.adapter!=='github'||connection.endpoint!=='https://api.github.com'||!connection.enabled)throw Error('github_connection_unavailable');
