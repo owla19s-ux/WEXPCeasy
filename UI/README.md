@@ -16,7 +16,7 @@
 | `src/interaction-dock.tsx` | 形象/交互栏基础显示及位置管理；真实角色素材/完整交互未交付 |
 | `src/index.ts`、`tests/` | UI/桌面桥类型、状态回归和测试；权限与 OS 事实仍在可信宿主 |
 
-早期“只有 Space 页面”“全部对话为占位”“只有只读预览”“无文件编辑器”均不是当前状态，不得继续按这些旧结论重造组件。GitHub main 目前确认文件级交互；通用官方 MCP UI 的独立 [PR #3](https://github.com/owla19s-ux/WEXPCeasy/pull/3) 证据不能直接冒充主分支已交付。
+早期“只有 Space 页面”“全部对话为占位”“只有只读预览”“无文件编辑器”均不是当前状态，不得继续按这些旧结论重造组件。`github-tools.tsx` 提供官方目录、Schema、JSON 参数及 Operation 结果展示，经 DesktopBridge 手动触发；撤权、连接/配置切换清理目录与旧结果。此入口要求可信宿主装配 MCP runtime，不代表默认安装包已提供运行时或所有官方工具已验收。
 
 ## 产品约束
 

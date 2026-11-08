@@ -6,7 +6,7 @@
 
 `src/index.ts` 与 `foundations.ts` 负责可信模块装配与启动/停止；`src/desktop-main.ts`、`desktop-runtime.ts`、preload 负责 Electron/React 宿主；`desktop-space.ts`、`desktop-api.ts`、`desktop-connections.ts` 等负责各领域的窄 IPC；`desktop-authority.ts`、`desktop-credentials.ts` 处理可信确认、授权与秘密隔离。另有 Windows NSIS 安装/数据根选择与恢复相关实现、`desktop-failure.ts` 的 Renderer 失效封锁/恢复机制以及桌面测试。
 
-**当前不是仅有 headless 宿主或仅 Space/API 占位 IPC。** `desktop-connections.ts` 当前读取到的请求白名单包含配置、凭证及 `github.read/write`，但不包含通用 `github.tools/github.invoke`；后者的双平台成果见独立 [PR #3](https://github.com/owla19s-ux/WEXPCeasy/pull/3)，不能在未确认合并时记作 main 实现。
+`desktop-connections.ts` 保留配置/凭证及文件动作，并提供 `github.tools/github.invoke`：通过 Connections 公共 capability 端口、配置 revision、精确工具/参数目标及 Native 确认执行。`foundations.ts` 仅负责可信 runtime/vault 装配，不复制授权或 Operation。运行时未装配时明确返回不可用；默认分发尚不自动提供官方二进制。
 
 ## Owner 不变量
 

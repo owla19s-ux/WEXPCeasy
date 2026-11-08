@@ -6,9 +6,9 @@
 
 | Owner | 职责 | 当前状态 |
 |---|---|---|
-| `connections/src/` | 连接配置、受控 read/dispatch、Operation/attempt/Receipt、生命周期及公共调用契约 | 代码与测试已存在，完整跨模块组合未签收 |
+| `connections/src/` | 连接配置、受控 read/dispatch/discover/invoke、Operation/attempt/Receipt、生命周期及公共调用契约 | 代码与测试已存在，完整跨模块组合未签收 |
 | [API](api/README.md) | 模型连接、协议、请求和结果 | 两种协议路径与基础调用已存在，真实服务待核 |
-| [GitHub](github/README.md) | 官方 MCP 能力适配、GitHub 文件兼容 | main 有文件级入口；完整通用工具调用尚不能标记为 main 已合入 |
+| [GitHub](github/README.md) | 官方 MCP 能力适配、GitHub 文件兼容 | 已有文件兼容与通用 MCP Adapter；产品完整验收仍待完成 |
 | [Local](local/README.md) | 受控本机文件/目录及以后批准的 OS 执行适配 | 文件读写、版本绑定、编辑 UI 已有，Windows 实机待核 |
 | `dsh/`、`search/` | 外部 Agent 与搜索候选 | 非 0.1.1 默认交付，不因目录存在宣称实现 |
 | [environments](../environments/README.md) | 独立环境管理业务 owner | **不是连接器**，当前只有职责 README |
@@ -19,7 +19,9 @@ Permissions 决定授权，Shared 保管秘密和技术存储，App 提供可信
 
 `connections/src/index.ts` 已导出 `createConnectionConfigs`、`createReadBoundary`、`createConfiguredReadBoundary`、`createDispatchBoundary`、`createConfiguredDispatchBoundary`、`createOperationLedger`、`createConnectionService` 及公开类型。配置修订、目标精确绑定、撤权复核、attempt 和 unknown 原操作回查应复用现有能力。
 
-**当前 main 没有证实通用 discover/invoke**：核对时 `connections/src/capabilities.ts` 不存在，`src/index.ts` 也未导出通用能力接口。[PR #4](https://github.com/owla19s-ux/WEXPCeasy/pull/4) 提供相应独立实现及 Linux/Windows 验证；[PR #3](https://github.com/owla19s-ux/WEXPCeasy/pull/3) 提供桌面接线。必须先核对 PR 是否合入及当前 SHA，不能以 PR 测试绿灯代替 main 实现或签收。
+通用能力已存在：`capabilities.ts` 定义 `ConfiguredCapabilityAdapter`、`capabilityDiscoveryTarget`、`capabilityInvocationTarget` 与 `captureCapabilityArguments`；`ConnectionService.discover/invoke` 复用原配置、受控读取/派发及 Operation 账本。`ConnectionClient` 保留旧形状，`ConnectionCapabilityClient` 为增量端口。发现用 read 授权，任意工具执行用精确参数绑定的 write 授权；`isError` 保留为工具结果，observed 不等于业务成功。
+
+历史 PR #4 的底座已由源码逐文件确认吸收；PR #3 的另一套公共目标与 Session Manager 不引入。App 以当前公开端口装配 GitHub 能力，DesktopBridge 提供经 Native 确认的手动目录与调用。运行时必须由可信宿主提供；默认桌面分发尚未自动装配官方二进制。
 
 ## 施工规则与验收
 
