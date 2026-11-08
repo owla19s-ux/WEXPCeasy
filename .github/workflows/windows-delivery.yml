@@ -7,14 +7,22 @@ permissions:
   contents: read
 jobs:
   delivery:
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: npm
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.3'
+          cache: false
       - run: npm ci
       - name: Ensure NSIS compiler
         shell: pwsh
@@ -30,6 +38,9 @@ jobs:
       - run: node --test app/tests/desktop-root.test.mjs
       - name: Verify actual installation, native launch and data recovery
         run: node tools/verify-windows-installation.mjs
+        env:
+          WEX_GITHUB_READ_TOKEN: ${{ github.token }}
+          WEX_GITHUB_PR_NUMBER: '3'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -37,5 +48,8 @@ jobs:
           path: |
             release/windows/*-Setup.exe
             release/windows/manifest.json
+            github-mcp-runtime-build.json
+            github-mcp-live-evidence.json
+            github-mcp-official-catalog.json
             windows-delivery-acceptance/
           if-no-files-found: warn

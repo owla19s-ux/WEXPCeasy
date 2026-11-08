@@ -89,6 +89,18 @@ test('official GitHub host selects the connector MCP runtime while keeping crede
  assert.equal(result.status,'ok');assert.equal(result.value.content,'hello');assert.ok(!JSON.stringify(result).includes('fixture-token'));
  assert.equal(h.counts.unseal,1);
 });
+test('packaged profile retains official SDK file reads alongside generic MCP tools',async t=>{
+ const command=process.execPath,expectedSha256=createHash('sha256').update(readFileSync(command)).digest('hex');
+ const fixture=fileURLToPath(new URL('../../connections/github/tests/fixtures/mcp-generic-server.mjs',import.meta.url));
+ let calls=0;
+ const h=await setup(t,{mcpRuntime:{command,expectedSha256,prefixArgs:[fixture,'ok']},fileReader:'sdk',fetch:async()=>{calls++;return body();}});
+ assert.equal(h.save().status,'committed');assert.equal(h.host.connections.configs.put(h.config(),0,'config').status,'ok');
+ const read=await h.host.connections.read('github',h.request('github','read',target),'gh',1,target);
+ assert.equal(read.status,'ok');assert.equal(read.value.content,'hello');assert.equal(calls,1);
+ const {capabilityDiscoveryTarget}=await import('../../dist/connections/src/index.js');
+ const tools=await h.host.connections.discover('github',h.request('github','read',capabilityDiscoveryTarget('github','gh')),'gh',1);
+ assert.equal(tools.status,'ok');assert.equal(tools.value.length,3);assert.equal(calls,1);
+});
 test('official GitHub host retains its root while an admitted SDK read drains during stop',async t=>{
  let entered,finish;const started=new Promise(r=>{entered=r;}),released=new Promise(r=>{finish=r;});
  const h=await setup(t,{fetch:async()=>{entered();await released;return body();}},{connections:{adapters:[],shutdownTimeoutMs:20}});

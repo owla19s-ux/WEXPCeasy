@@ -10,6 +10,7 @@ import {createDesktopAuthority} from '../dist/app/src/desktop-authority.js';
 import {createDesktopApi} from '../dist/app/src/desktop-api.js';
 import {createDesktopAi} from '../dist/app/src/desktop-ai.js';
 import {createDesktopConversations} from '../dist/app/src/desktop-conversations.js';
+import {desktopGitHubOptions,BUNDLED_GITHUB_MCP_SOURCE} from '../dist/app/src/desktop-github-runtime.js';
 if(process.platform!=='win32')throw Error('windows_installer_verification_required');
 await mkdir('windows-delivery-acceptance',{recursive:true});
 const installer=resolve('release/windows/WEXPCeasy-0.1.1-Setup.exe'),manifest=JSON.parse(await readFile('release/windows/manifest.json','utf8'));
@@ -87,6 +88,16 @@ try{
  if(installCode!==0){try{console.error('INSTALLER_DIAGNOSTIC',await readFile(join(tmpdir(),'WEXPCeasy-install.log'),'utf8'));}catch{}}
  assert.equal(installCode,0);assert.equal(registered(),true);
  for(const file of manifest.files)assert.equal(hash(await readFile(join(install,...file.path.split('/')))),file.sha256,file.path);
+ const installedGitHub=desktopGitHubOptions({packaged:true,resourcesPath:join(install,'resources')});
+ assert.equal(installedGitHub.mcpRuntime.command,join(install,'resources/github-mcp/github-mcp-server.exe'));
+ assert.equal(installedGitHub.mcpRuntime.expectedSha256,manifest.githubRuntime.binarySha256);
+ assert.equal(manifest.githubRuntime.sourceCommit,BUNDLED_GITHUB_MCP_SOURCE);
+ if(process.env.GITHUB_ACTIONS==='true')assert.ok(process.env.WEX_GITHUB_READ_TOKEN,'installed MCP read-only acceptance token missing');
+ if(process.env.WEX_GITHUB_READ_TOKEN){
+  // Exercise the installed Unicode path and the same default profile as desktop-main, not the build directory.
+  execFileSync(process.execPath,[resolve('connections/github/tests/live-mcp-adapter.mjs')],{
+   env:{...process.env,WEX_GITHUB_MCP_RESOURCES:join(install,'resources')},stdio:'inherit',timeout:180000});
+ }
  await mkdir(data);
  const root=selectDesktopRoot({args:[],installationRoot:install,choose:()=>({path:data,create:true})});assert.ok(root);
  await writeFile(join(data,'keep-user.txt'),'user data outside installation');

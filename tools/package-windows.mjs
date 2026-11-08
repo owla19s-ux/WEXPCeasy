@@ -3,6 +3,7 @@ import {cp,mkdir,readFile,writeFile,rm,rename,readdir,lstat,access} from 'node:f
 import {resolve,join,relative,dirname,sep} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
+import {stageGitHubRuntime} from './stage-github-runtime.mjs';
 if(process.platform!=='win32'||process.arch!=='x64')throw Error('windows_x64_packaging_required');
 const output=resolve('release/windows'),payload=join(output,'WEXPCeasy'),version='0.1.1';
 await rm(output,{recursive:true,force:true});await mkdir(output,{recursive:true});
@@ -15,6 +16,10 @@ const app=join(payload,'resources/app');await mkdir(join(app,'dist/app/src'),{re
 await writeFile(join(app,'package.json'),JSON.stringify({name:'wexpc-easy',productName:'WEXPCeasy',version,type:'module',main:'dist/app/src/desktop-main.js'},null,2));
 await build({entryPoints:['app/src/desktop-main.ts'],bundle:true,platform:'node',format:'esm',target:'node24',external:['electron'],outfile:join(app,'dist/app/src/desktop-main.js'),banner:{js:"import {createRequire as __wexCreateRequire} from 'node:module'; const require=__wexCreateRequire(import.meta.url);"}});
 await cp(resolve('desktop-dist'),join(app,'desktop-dist'),{recursive:true});
+// Reuse the existing fixed, unmodified official source builder. The installed app never downloads tools.
+execFileSync(process.execPath,[resolve('connections/github/tests/build-official-runtime.mjs')],{
+ env:{...process.env,GITHUB_OUTPUT:join(output,'github-runtime-output.txt')},stdio:'inherit'});
+const githubRuntime=await stageGitHubRuntime({buildPath:resolve('github-mcp-runtime-build.json'),resourcesPath:join(payload,'resources')});
 await writeFile(join(payload,'.wex-install.ini'),'[WEX]\r\nProduct=WEXPCeasy\r\nFormat=1\r\nVersion='+version+'\r\n');
 await writeFile(join(app,'provenance.json'),JSON.stringify({product:'WEXPCeasy',version,sourceSha:process.env.GITHUB_SHA??'local-build',electron:'45.2.1',architecture:'x64',signed:false},null,2));
 const files=[],dirs=[];
@@ -42,6 +47,6 @@ const scriptPath=join(output,'installer.nsi');await writeFile(scriptPath,script)
 const compiler=process.env.WEX_MAKENSIS??'C:\\Program Files (x86)\\NSIS\\makensis.exe';
 execFileSync(compiler,['/V2',scriptPath],{stdio:'inherit'});
 const sha256=bytes=>createHash('sha256').update(bytes).digest('hex');
-const manifest={product:'WEXPCeasy',version,sourceSha:process.env.GITHUB_SHA??'local-build',installer:{file:'WEXPCeasy-'+version+'-Setup.exe',sha256:sha256(await readFile(installer))},files:await Promise.all(files.map(async path=>({path:rel(path).replaceAll('\\','/'),sha256:sha256(await readFile(path))})))};
+const manifest={product:'WEXPCeasy',version,sourceSha:process.env.GITHUB_SHA??'local-build',githubRuntime,installer:{file:'WEXPCeasy-'+version+'-Setup.exe',sha256:sha256(await readFile(installer))},files:await Promise.all(files.map(async path=>({path:rel(path).replaceAll('\\','/'),sha256:sha256(await readFile(path))})))};
 await writeFile(join(output,'manifest.json'),JSON.stringify(manifest,null,2));
 console.log(JSON.stringify({installer,sourceSha:manifest.sourceSha,sha256:manifest.installer.sha256,files:files.length}));

@@ -4,8 +4,9 @@ import {mkdtemp,readFile,writeFile,rm,appendFile} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 import {startFoundations} from '../../../dist/app/src/index.js';
-import {createGitHubMcpAdapter,githubCredentialRef} from '../../../dist/connections/github/src/index.js';
+import {createGitHubMcpAdapter,githubCredentialRef,githubFileTarget} from '../../../dist/connections/github/src/index.js';
 import {capabilityDiscoveryTarget,capabilityInvocationTarget} from '../../../dist/connections/src/index.js';
+import {desktopGitHubOptions} from '../../../dist/app/src/desktop-github-runtime.js';
 
 const upstream='99d6d6503a7b2a133e2f8a595d6d0ba24b4086d3';
 const token=process.env.WEX_GITHUB_READ_TOKEN;
@@ -17,14 +18,18 @@ assert.ok(Number.isSafeInteger(pr)&&pr>0,'pull request number missing');
 assert.match(process.env.GITHUB_SHA??'',/^[0-9a-f]{40}$/);
 const build=JSON.parse(await readFile('github-mcp-runtime-build.json','utf8'));
 assert.equal(build.sourceCommit,upstream);assert.equal(build.sourceModified,false);
-const command=resolve(process.env.WEX_GITHUB_MCP_BINARY??'');
-assert.equal(command,build.command);
+const bundled=process.env.WEX_GITHUB_MCP_RESOURCES;
+const bundledRuntime=bundled?desktopGitHubOptions({packaged:true,resourcesPath:resolve(bundled)}).mcpRuntime:undefined;
+const command=bundledRuntime?.command??resolve(process.env.WEX_GITHUB_MCP_BINARY??'');
+if(!bundled)assert.equal(command,build.command);
 const expectedSha256=createHash('sha256').update(await readFile(command)).digest('hex');
 assert.equal(expectedSha256,build.binarySha256,'compiled executable changed');
+if(bundledRuntime)assert.equal(expectedSha256,bundledRuntime.expectedSha256,'packaged runtime differs from source build');
 const runtime={command,expectedSha256};
 const root=await mkdtemp(join(tmpdir(),'wex-live-mcp-host-'));
 await writeFile(join(root,'.wex-root.json'),JSON.stringify({format:1,id:'official-mcp-live'}));
 const evidence={sha:process.env.GITHUB_SHA,pr,sourceCommit:upstream,binarySha256:expectedSha256,
+ runtimeSource:bundled?'packaged fixed desktop runtime':'explicit test runtime',
  platform:process.platform,node:process.version,remoteMutations:0,checks:[],status:'incomplete',
  limitations:['Read-only CI identity','Only repository file, PR read and workflow listing are executed',
   'Full catalog discovery does not prove every tool or write operation','No desktop UI or installer acceptance']};
@@ -51,7 +56,7 @@ function contains(value,predicate){
  return Object.values(value).some(child=>contains(child,predicate));
 }
 try{
- host=await startFoundations({dataRoot:root,credentials:{cipher},githubOfficial:{mcpRuntime:runtime,timeoutMs:60000},
+ host=await startFoundations({dataRoot:root,credentials:{cipher},githubOfficial:{...(bundled?desktopGitHubOptions({packaged:true,resourcesPath:resolve(bundled)}):{mcpRuntime:runtime}),timeoutMs:60000},
   trust:{current:r=>facts.get(r),canManage:c=>approved.has(c),canReadHistory:r=>r===history}});
  assert.equal(host.status,'ready','WEX host unavailable');
  const saved=host.credentials.put(request('credentials','credential.write','credential:ci-key'),{
@@ -61,6 +66,13 @@ try{
  const config={id:'github-ci',adapter:'github',endpoint:'https://api.github.com',
   credentialRef:githubCredentialRef({id:'ci-key',revision:1}),enabled:true};
  assert.equal(host.connections.configs.put(config,0,'create-ci-connection').status,'ok');
+ if(bundled){
+  const target=githubFileTarget({owner,repo,ref:process.env.GITHUB_SHA,path:'package.json'});
+  const read=await host.connections.read('github',request('github','read',target),config.id,1,target);
+  assert.equal(read.status,'ok','packaged profile lost its SDK file compatibility');
+  assert.deepEqual(JSON.parse(read.value.content),JSON.parse(await readFile('package.json','utf8')));
+  evidence.checks.push({domain:'sdk-file-compatibility',path:'package.json',ref:read.value.ref});
+ }
  // Observe the actual negotiated server identity with the same WEX protocol adapter.
  probe=createGitHubMcpAdapter(config,{runtime,timeoutMs:60000,resolveCredential:async()=>token});
  await probe.start(new AbortController().signal,{request:{},check:()=>true});
@@ -114,7 +126,7 @@ try{
    isError:value.isError??false,contentTypes:value.content.map(block=>block.type),
    structuredContent:!!value.structuredContent,resultSha256:createHash('sha256').update(serialized).digest('hex')});
  }
- assert.equal(unseals,4,'each public invocation must revalidate vault credentials');
+ assert.equal(unseals,bundled?5:4,'each public invocation must revalidate vault credentials');
  evidence.credentialResolutions=unseals;
  const stopped=await host.stop();assert.equal(stopped.status,'stopped','official runtime did not stop');host=undefined;
  evidence.status='passed';

@@ -32,7 +32,7 @@ export type FoundationApiClient=Pick<ApiService,'execute'|'query'|'prepare'|'res
 export type FoundationLocalFiles=Pick<ReturnType<typeof createLocalFileBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationLocalDirectories=Pick<ReturnType<typeof createLocalDirectoryBindings>,'register'>&ReturnType<typeof createReadBoundary>;
 export type FoundationCredentials=Pick<ReturnType<typeof createCredentialVault>,'put'|'revoke'|'query'>&{available():boolean};
-export interface FoundationOptions {githubOfficial?:{mcpRuntime?:Readonly<GitHubMcpRuntime>;fetch?:typeof globalThis.fetch;timeoutMs?:number};credentials?:{cipher:CredentialCipher};technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions&{coordinateWrites?:boolean};conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];capabilityAdapters?:readonly ConfiguredCapabilityAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
+export interface FoundationOptions {githubOfficial?:{mcpRuntime?:Readonly<GitHubMcpRuntime>;fileReader?:'sdk'|'mcp';fetch?:typeof globalThis.fetch;timeoutMs?:number};credentials?:{cipher:CredentialCipher};technicalDiagnostics?:PersistedDiagnosticOptions;localDirectories?:LocalDirectoryReadOptions;githubFiles?:{client:GitHubClientFactory};localFiles?:LocalFileBindingOptions&{coordinateWrites?:boolean};conversations?:boolean;ai?:{bindRead(parent:object,scope:{resource:string;action:string;target:string;context:string|null}):object|undefined};api?:ApiOptions&{credentials?:ApiCredentialPort};dataRoot:string;expectedRootId?:string;trust:TrustPort;lock?:RootLock;openStore?:(path:string,namespace:string)=>ManagedStore;connections?:{adapters:readonly ConfiguredDispatchAdapter[];readAdapters?:readonly ConfiguredReadAdapter[];capabilityAdapters?:readonly ConfiguredCapabilityAdapter[];shutdownTimeoutMs?:number};local?:LocalEntryOptions;space?:Pick<SpaceOptions,'owner'|'deriveRequest'|'id'>}
 export interface FoundationHost extends Host {readonly credentials?:FoundationCredentials;readonly technicalDiagnostics?:FoundationTechnicalDiagnostics;readonly localDirectories?:FoundationLocalDirectories;readonly localFiles?:FoundationLocalFiles;readonly conversations?:{service:ReturnType<typeof createConversations>;generation?:ReturnType<typeof createConversationGeneration>};readonly ai?:ReturnType<typeof createAiConfigurations>;readonly api?:FoundationApiClient;readonly permissions?:Permissions;readonly connections?:ConnectionClient&ConnectionCapabilityClient&{capabilities():readonly {id:string;version:string}[]};readonly space?:SpaceService;readonly local?:LocalEntryClient}
 /** No business registry is exposed; callers are trusted main-process code, not Renderer/IPC. */
 export async function startFoundations(options:FoundationOptions):Promise<FoundationHost>{
@@ -147,6 +147,8 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
    directories=options.localDirectories?createLocalDirectoryBindings(permission):undefined;
    const directoryReader=directories?createLocalDirectoryReader(directories.resolve,options.localDirectories):undefined;
    if(options.githubOfficial&&options.githubFiles)throw Error('ambiguous_github_profile');
+   if(options.githubOfficial?.fileReader!==undefined&&!['sdk','mcp'].includes(options.githubOfficial.fileReader))throw Error('invalid_github_file_reader');
+   if(options.githubOfficial?.fileReader==='mcp'&&!options.githubOfficial.mcpRuntime)throw Error('github_mcp_runtime_required');
    const resolveCredential:GitHubOfficialClientOptions['resolveCredential']=async(connection,access)=>{
     if(stopping||!credentialVault||!access.check())return;
     const decision=permission.evaluate(access.request);
@@ -168,7 +170,7 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
     ...(options.githubOfficial.timeoutMs!==undefined?{timeoutMs:options.githubOfficial.timeoutMs}:{}),
    }):undefined;
    const githubClient=official??options.githubFiles?.client;
-   const githubReader=options.githubOfficial?.mcpRuntime?createGitHubMcpFileReader({
+   const githubReader=options.githubOfficial?.mcpRuntime&&options.githubOfficial.fileReader!=='sdk'?createGitHubMcpFileReader({
     runtime:options.githubOfficial.mcpRuntime,resolveCredential,
     ...(options.githubOfficial.timeoutMs!==undefined?{timeoutMs:options.githubOfficial.timeoutMs}:{}),
    }):githubClient?createGitHubConfiguredFileReader(githubClient):undefined;
