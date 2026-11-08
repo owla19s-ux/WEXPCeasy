@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resolveApiProtocol,supportedApiProtocols} from '../../../dist/connections/api/src/protocols/index.js';
+import {resolveApiProtocol,supportedApiProtocols,matchesApiProbeAdapterVersion} from '../../../dist/connections/api/src/protocols/index.js';
 import {supportedApiProtocols as publicSupportedProtocols} from '../../../dist/connections/api/src/index.js';
 
 test('protocol selection depends on explicit protocol ID, never the Provider name',()=>{
@@ -49,4 +49,14 @@ test('Chat adapter validates both JSON and SSE through selected protocol',async(
  const sse='data: {"choices":[{"index":0,"delta":{"role":"assistant","content":"ok"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n';
  assert.equal((await adapter.decode(bytes(sse),true,{})).text,'ok');
  await assert.rejects(adapter.decode(bytes('data: [DONE]\n\n'),true,{}));
+});
+
+test('probe receipts are usable only for their matching protocol and probe mode',()=>{
+ assert.equal(matchesApiProbeAdapterVersion('openai-chat','openai-chat-probe-1',{stream:false,tools:false}),true);
+ assert.equal(matchesApiProbeAdapterVersion('anthropic-messages','anthropic-messages-stream-probe-1',{stream:true,tools:false}),true);
+ assert.equal(matchesApiProbeAdapterVersion('anthropic-messages','openai-chat-probe-1',{stream:false,tools:false}),false);
+ assert.equal(matchesApiProbeAdapterVersion('openai-chat','anthropic-messages-probe-1',{stream:false,tools:false}),false);
+ assert.equal(matchesApiProbeAdapterVersion('anthropic-messages','anthropic-messages-probe-1',{stream:true,tools:false}),false);
+ assert.equal(matchesApiProbeAdapterVersion('anthropic-messages','openai-chat-tool-probe-1',{stream:false,tools:true}),false);
+ assert.equal(matchesApiProbeAdapterVersion('__proto__','openai-chat-probe-1',{stream:false,tools:false}),false);
 });
