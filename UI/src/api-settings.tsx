@@ -4,7 +4,7 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  const [connections,setConnections]=useState<ApiConnectionView[]>([]),[models,setModels]=useState<ApiModelView[]>([]);
  const [selected,setSelected]=useState<ApiConnectionView>(),[model,setModel]=useState<ApiModelView>();
  const [name,setName]=useState(''),[provider,setProvider]=useState('Custom'),[protocol,setProtocol]=useState('openai-chat'),[endpoint,setEndpoint]=useState('https://api.openai.com/v1');
- const [modelName,setModelName]=useState(''),[modelId,setModelId]=useState(''),[temperature,setTemperature]=useState('');
+ const [modelName,setModelName]=useState(''),[modelId,setModelId]=useState(''),[temperature,setTemperature]=useState(''),[maxTokens,setMaxTokens]=useState('');
  const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[backend,setBackend]=useState(false);
  async function call(input:DesktopApiInput){
   const reply=await bridge.api(input);if(!reply.ok)throw Error(reply.error);
@@ -18,8 +18,8 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  async function listModels(id:string){const r=await call({kind:'models',connectionId:id});if(r.status==='ok'&&r.view==='models')setModels(r.models);}
  async function run(work:()=>Promise<void>){if(busy)return;setBusy(true);setMessage('');try{await work();}catch(e){setConnections([]);setModels([]);setMessage(e instanceof Error?e.message:'操作不可用');}finally{setBusy(false);}}
  function choose(c:ApiConnectionView){setSelected(c);setName(c.name);setProvider(c.provider);setProtocol(c.protocol);setEndpoint(c.endpoint);setModels([]);setModel(undefined);}
- useEffect(()=>bridge.onAccessChanged(()=>{setConnections([]);setModels([]);setSelected(undefined);setModel(undefined);setName('');setProvider('Custom');setProtocol('openai-chat');setEndpoint('https://api.openai.com/v1');setModelName('');setModelId('');setTemperature('');setMessage('授权已变更，请重新读取配置。');}),[bridge]);
- const params=():ApiCommonParameters=>({temperature:temperature.trim()?{mode:'value',value:Number(temperature)}:{mode:'provider-default'}});
+ useEffect(()=>bridge.onAccessChanged(()=>{setConnections([]);setModels([]);setSelected(undefined);setModel(undefined);setName('');setProvider('Custom');setProtocol('openai-chat');setEndpoint('https://api.openai.com/v1');setModelName('');setModelId('');setTemperature('');setMaxTokens('');setMessage('授权已变更，请重新读取配置。');}),[bridge]);
+ const params=():ApiCommonParameters=>({temperature:temperature.trim()?{mode:'value',value:Number(temperature)}:{mode:'provider-default'},...(maxTokens.trim()?{max_tokens:{mode:'value' as const,value:Number(maxTokens)}}:{})});
  return <div data-api-settings><h3>API 与模型</h3><p>配置保存在 API 模块。凭证仅在独立安全窗口中录入；测试会发送真实请求。</p>
  <button disabled={busy} onClick={()=>void run(refresh)}>读取 API 配置</button>
  <p role="status">{message}</p>
@@ -41,8 +41,8 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  <button disabled={busy} onClick={()=>void run(async()=>{await call({kind:'credential.revoke',connectionId:selected.id,expectedRevision:selected.revision});await refresh();})}>撤销凭证并停用</button>
  <button disabled={busy} onClick={()=>void run(async()=>{const r=await call({kind:'connection.refresh',id:selected.id,expectedRevision:selected.revision});if(r.status==='ok'&&r.view==='directory')setMessage('服务端模型：'+r.modelIds.join('、'));})}>读取服务端模型目录</button>
  <button disabled={busy} onClick={()=>void run(()=>listModels(selected.id))}>读取已配置模型</button>
- <ul>{models.map(m=><li key={m.id}><button disabled={busy} onClick={()=>{setModel(m);setModelName(m.name);setModelId(m.modelId);const p=m.parameters.temperature;setTemperature(p?.mode==='value'?String(p.value):'');}}>{m.name}</button> · {m.observation?.capabilities.text??'未验证'}</li>)}</ul>
- <button disabled={busy} onClick={()=>{setModel(undefined);setModelName('');setModelId('');setTemperature('');}}>新增模型</button>
+ <ul>{models.map(m=><li key={m.id}><button disabled={busy} onClick={()=>{setModel(m);setModelName(m.name);setModelId(m.modelId);const p=m.parameters.temperature;setTemperature(p?.mode==='value'?String(p.value):'');const limit=m.parameters.max_tokens;setMaxTokens(limit?.mode==='value'?String(limit.value):'');}}>{m.name}</button> · {m.observation?.capabilities.text??'未验证'}</li>)}</ul>
+ <button disabled={busy} onClick={()=>{setModel(undefined);setModelName('');setModelId('');setTemperature('');setMaxTokens('');}}>新增模型</button>
  <form aria-label="模型配置" onSubmit={e=>{e.preventDefault();void run(async()=>{
   const r=await call(model?{kind:'model.edit',id:model.id,expectedRevision:model.revision,name:modelName,parameters:params()}:{kind:'model.create',connectionId:selected.id,name:modelName,modelId,parameters:params()});
   if(r.status==='committed'){setMessage('模型已保存');setModel(undefined);await listModels(selected.id);}
@@ -50,6 +50,7 @@ export function ApiSettings({bridge}:{bridge:DesktopBridge}){
  <label>模型名称<input required disabled={busy} value={modelName} onChange={e=>setModelName(e.target.value)}/></label>
  <label>服务端模型 ID<input required disabled={busy||!!model} value={modelId} onChange={e=>setModelId(e.target.value)}/></label>
  <label>Temperature（留空使用服务端默认）<input type="number" step="any" disabled={busy} value={temperature} onChange={e=>setTemperature(e.target.value)}/></label>
+ <label>最大输出 Tokens（Anthropic 文本调用必须配置）<input type="number" min={1} step={1} disabled={busy} value={maxTokens} onChange={e=>setMaxTokens(e.target.value)}/></label>
  <button disabled={busy} type="submit">保存模型</button></form>
  {model&&<button disabled={busy} onClick={()=>void run(async()=>{const r=await call({kind:'model.probe',id:model.id,expectedRevision:model.revision,stream:true});setMessage('模型测试：'+r.status);setModel(undefined);await listModels(selected.id);})}>测试并保存模型观测</button>}
  </>}
