@@ -59,3 +59,10 @@ export function decodeChatModelDirectory(body:string):string[]{
  }
  return [...ids];
 }
+
+export const chatGenerationVersion='openai-chat-text-1';
+export function chatDiagnosticVersion(probe?:{stream:boolean;tools:boolean}):string{
+ if(!probe)return 'openai-chat-models-1';
+ if(probe.tools)return probe.stream?'openai-chat-stream-tool-probe-1':'openai-chat-tool-probe-1';
+ return probe.stream?'openai-chat-stream-probe-1':'openai-chat-probe-1';
+}
