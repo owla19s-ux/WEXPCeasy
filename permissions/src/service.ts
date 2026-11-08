@@ -62,24 +62,31 @@ export function createPermissions(store:Store,trust:TrustPort):Permissions{
  }catch{return {status:'indeterminate',reason:'dependency_unavailable'};}
  };
  const mutate=(kind:'grant'|'revoke',change:Change):Mutation=>{
+ let captured:Change|undefined;
  try{
- if(!trust.canManage(change))return {status:'denied',reason:'management_not_authorized'};
- if(!valid(change.scope)||!change.intent||!Number.isSafeInteger(change.expectedRevision)||change.expectedRevision<0)return {status:'denied',reason:'invalid_scope'};
+ // Keep the original request identity for TrustPort, but never let a dependency
+ // substitute the command whose exact scope and intent are being approved.
+ captured={intent:change.intent,expectedRevision:change.expectedRevision,scope:scopeOf(change.scope)};
+ const c=captured;
+ const unchanged=()=>change.intent===c.intent&&change.expectedRevision===c.expectedRevision&&same(change.scope,c.scope);
+ const authorized=()=>trust.canManage(change)&&unchanged();
+ if(!authorized())return {status:'denied',reason:'management_not_authorized'};
+ if(!valid(c.scope)||typeof c.intent!=='string'||!c.intent||c.intent.length>256||!Number.isSafeInteger(c.expectedRevision)||c.expectedRevision<0)return {status:'denied',reason:'invalid_scope'};
  const snap=store.read(),state=decode(snap.value,snap.revision);
- if(!trust.canManage(change))return {status:'denied',reason:'management_not_authorized'};
- const scope=scopeOf(change.scope);const command=JSON.stringify({kind,expectedRevision:change.expectedRevision,scope});
- const prior=state.events.find(e=>e.intent===change.intent);
+ if(!authorized())return {status:'denied',reason:'management_not_authorized'};
+ const scope=c.scope;const command=JSON.stringify({kind,expectedRevision:c.expectedRevision,scope});
+ const prior=state.events.find(e=>e.intent===c.intent);
  if(prior){
  if(prior.command!==command)return {status:'not_committed',reason:'intent_conflict'};
- const result=store.query(change.intent)??{status:'unknown' as const,intent:change.intent};
- if(!trust.canManage(change))return {status:'denied',reason:'management_not_authorized'};
+ const result=store.query(c.intent)??{status:'unknown' as const,intent:c.intent};
+ if(!authorized())return {status:'denied',reason:'management_not_authorized'};
  return result;
  }
- if(snap.revision!==change.expectedRevision)return {status:'not_committed',reason:'revision_conflict'};
- const event:Event={intent:change.intent,kind,scope,generation:state.generation+1,command};
+ if(snap.revision!==c.expectedRevision)return {status:'not_committed',reason:'revision_conflict'};
+ const event:Event={intent:c.intent,kind,scope,generation:state.generation+1,command};
  const next:State={format:1,generation:event.generation,events:[...state.events,event]};
- return store.commit({intent:change.intent,expectedRevision:change.expectedRevision,value:next as unknown as Json});
- }catch{return {status:'unknown',intent:change.intent};}
+ return store.commit({intent:c.intent,expectedRevision:c.expectedRevision,value:next as unknown as Json});
+ }catch{return {status:'unknown',intent:captured?.intent??change.intent};}
  };
  return Object.freeze({evaluate,
  recheck(request:object,prior:Decision):Decision{
