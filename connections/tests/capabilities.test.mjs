@@ -16,12 +16,12 @@ function fixture(t,overrides={}){
   async invoke(c,name,args,signal,access){assert.equal(access.check(),true);return {content:[{type:'text',text:name}],structuredContent:args,isError:true};},
   async stop(){},...overrides};
  const configStore={read(){reads++;return configs.read();},commit:value=>configs.commit(value)};
- const create=()=>api.createConnectionService(permission,configStore,operations,[],{capabilityAdapters:[adapter],shutdownTimeoutMs:30});
+ const create=(operationStore=operations)=>api.createConnectionService(permission,configStore,operationStore,[],{capabilityAdapters:[adapter],shutdownTimeoutMs:30});
  const service=create();
  service.configs.put({id:'c',adapter:'fixture',endpoint:'fixture:original',credentialRef:null,enabled:true},0,'config');
  const discover=()=>{assert.equal(typeof service.discover,'function','Connections must expose discover');return service.discover('fixture',scope(api.capabilityDiscoveryTarget('fixture','c'),'read'),'c',1);};
  const invoke=(id='op',args={value:1},signal)=>{assert.equal(typeof service.invoke,'function','Connections must expose invoke');return service.invoke('fixture',scope(api.capabilityInvocationTarget('fixture','c','tool',args),'write'),id,'c',1,'tool',args,'intent',signal);};
- return {service,adapter,create,configs,operations,scope,discover,invoke,deny(){allowed=false;},resetReads(){reads=0;},get reads(){return reads;}};
+ return {service,adapter,create,configs,operations,permission,scope,discover,invoke,deny(){allowed=false;},resetReads(){reads=0;},get reads(){return reads;}};
 }
 test('public capability targets bind connection, tool and canonical full arguments',()=>{
  assert.equal(typeof api.capabilityInvocationTarget,'function','public invocation target required');
@@ -118,3 +118,51 @@ test('revocation during a generic tool call cannot be journaled as an observed r
  assert.equal((await f.invoke()).status,'unknown');
  assert.equal(f.service.operations.get('op').phase,'unknown');
 });
+
+// Keep the real SQLite ledger. Inject cancellation only at its public Store boundary;
+// losing a receipt acknowledgement must never enable another external dispatch.
+for(const stage of ['prepare','authorization-recheck','dispatch-record','receipt-confirmed','receipt-unknown-committed','receipt-unknown-absent']){
+ test('generic cancellation at '+stage+' preserves durable facts without replay',async t=>{
+  let calls=0,injected=false;
+  const cancel=new AbortController(),receipt={content:[{type:'text',text:'remote-result'}],isError:true};
+  const f=fixture(t,{async invoke(){calls++;return receipt;}});
+  await f.service.stop();
+  const ledger=api.createOperationLedger(f.operations);
+  if(stage==='authorization-recheck')f.permission.recheck=request=>{
+   if(ledger.get('op')?.phase==='prepared'){injected=true;cancel.abort();}
+   return f.permission.evaluate(request);
+  };
+  const store={read:()=>f.operations.read(),commit(command){
+   const isResult=command.value.operations.some(op=>op.id==='op'&&op.observations.some(o=>o.id==='result'));
+   const selected=stage==='prepare'?command.intent==='operation:prepare:op':
+    stage==='dispatch-record'?command.intent==='operation:dispatch:op':stage.startsWith('receipt-')&&isResult;
+   if(!selected)return f.operations.commit(command);
+   assert.equal(injected,false,'fault boundary reached more than once');injected=true;cancel.abort();
+   if(stage==='receipt-unknown-absent')return {status:'unknown',intent:command.intent};
+   const committed=f.operations.commit(command);assert.equal(committed.status,'committed');
+   return stage==='receipt-unknown-committed'?{status:'unknown',intent:command.intent}:committed;
+  }};
+  const service=f.create(store);t.after(()=>service.stop());
+  const request=f.scope(api.capabilityInvocationTarget('fixture','c','tool',{value:1}),'write');
+  const invoke=(client,signal)=>client.invoke('fixture',request,'op','c',1,'tool',{value:1},'intent',signal);
+  const result=await invoke(service,cancel.signal);
+  assert.equal(injected,true);assert.equal(cancel.signal.aborted,true);
+  const afterCall=service.operations.get('op');
+  assert.equal(afterCall.attempts,1);
+  if(stage.startsWith('receipt-')){
+   assert.equal(calls,1);
+   assert.equal(result.status,stage==='receipt-confirmed'?'observed':'unknown');
+   assert.equal(afterCall.phase,stage==='receipt-unknown-absent'?'dispatched':'observed');
+   if(stage!=='receipt-unknown-absent')assert.deepEqual(afterCall.observations[0].value,receipt);
+   // A confirmed response may remain an observation even after local cancellation;
+   // isError stays a business error and an unconfirmed save stays unknown to callers.
+  }else{
+   assert.equal(calls,0);assert.equal(result.status,'unknown');assert.equal(afterCall.phase,'unknown');
+  }
+  await service.stop();
+  const restored=f.create();t.after(()=>restored.stop());
+  assert.deepEqual(restored.operations.get('op'),afterCall);
+  assert.equal((await invoke(restored)).reason,'already_recorded_no_automatic_retry');
+  assert.equal(calls,stage.startsWith('receipt-')?1:0);
+ });
+}

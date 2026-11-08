@@ -1,6 +1,15 @@
 name: GitHub generic MCP adapter
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'connections/**'
+      - 'app/**'
+      - 'UI/**'
+      - 'package*.json'
+      - 'tools/verify-desktop.mjs'
+      - '.github/workflows/github-generic-mcp.yml'
   pull_request:
     paths:
       - 'connections/github/**'
@@ -14,6 +23,9 @@ on:
       - 'UI/tests/github-tools.test.mjs'
       - 'app/desktop/tests/github-tools.mjs'
       - 'app/desktop/tests/run-github-tools.mjs'
+      - 'app/desktop/tests/github-tools-state.mjs'
+      - 'UI/tests/fixtures/github-tools-state.mjs'
+      - 'tools/verify-desktop.mjs'
       - '.github/workflows/github-generic-mcp.yml'
 permissions:
   contents: read
