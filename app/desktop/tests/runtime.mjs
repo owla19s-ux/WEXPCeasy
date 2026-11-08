@@ -189,7 +189,7 @@ try{
  await click('Desktop Provider');
  await choose('form[aria-label="模型配置"] input','Desktop Model');
  await choose('form[aria-label="模型配置"] input:nth-of-type(1)','Desktop Model');
- const modelFields=await wc.executeJavaScript("document.querySelectorAll('form[aria-label=\"模型配置\"] input').length");assert.equal(modelFields,3);
+ const modelFields=await wc.executeJavaScript("([...document.querySelectorAll('form[aria-label=\"模型配置\"] input')].map(input=>({type:input.type,step:input.step})))");assert.equal(modelFields.length,4);assert.deepEqual(modelFields.map(x=>x.type),['text','text','number','number']);assert.equal(modelFields[3].step,'1');
  await wc.executeJavaScript("(()=>{const f=document.querySelectorAll('form[aria-label=\"模型配置\"] input')[1];Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(f,'test-model');f.dispatchEvent(new Event('input',{bubbles:true}));return true;})()");
  await new Promise(r=>setTimeout(r,25));
  await wc.executeJavaScript("document.querySelector('form[aria-label=\"模型配置\"]').requestSubmit();true");
