@@ -64,7 +64,7 @@ export function createApiTransport(api:ApiService,permission:PermissionReader,le
    const connectionId=connection.id;
    if(probe&&model?.revision!==probe.modelRevision)return blocked('model_revision_changed');
    if(connection.revision!==expectedRevision||!connection.enabled)return blocked('configuration_changed_or_disabled');
-   const protocol=resolveApiProtocol(connection.protocol);if(!protocol||(!probe&&!protocol.supportsDirectory)||(!!probe&&!protocol.supportsProbe))return blocked('diagnostic_protocol_unsupported');
+   const protocol=resolveApiProtocol(connection.protocol);if(!protocol||(!probe&&!protocol.supportsDirectory)||(!!probe&&!protocol.supportsProbe)||(!!probe&&probe.tools&&!protocol.supportsToolProbe))return blocked('diagnostic_protocol_unsupported');
    if(!probe&&connection.endpointMode!=='base')return blocked('directory_route_unsupported');
    const url=protocol.route(connection,probe?'completions':'models');
    const probeBody=model?protocol.probeBody(model,{stream:probe?.stream===true,tools:probe?.tools===true}):null;
