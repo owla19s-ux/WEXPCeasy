@@ -1,5 +1,15 @@
 # conversations — 独立对话与生成业务
 
+## 2026-11-08｜已接正式对话 UI，旧“尚未接线”状态作废
+
+> 静态核对 `main` 的 `UI/src/conversation.tsx` 和现有 Conversations 领域入口；未执行当前 SHA 全链 CI 或真实 Provider 验收。
+
+- **已落地**：Conversations 领域具有会话、段落、生成状态和恢复基础；正式 `ConversationPanel` 已包含历史、新建、Agent 选择、段落引用、历史输入编辑重发、发送、生成状态、原结果核对和取消等待按钮。顶部 2026-11-07 “正式会话页面尚未接线”的描述是**历史快照，不再作为施工结论**。
+- **待验证**：正式宿主挂载/IPC、真实 API 请求到 UI 流片段与最终消息、撤权和迟到事件隔离、取消与 unknown 查询、重启恢复及用户操作。段落选择/重发不等同于复杂分支、采纳/拒绝或生成期间追加队列已完成。
+- **接下来**：优先跑当前源码对应的 Conversations/桌面联调与同 SHA 测试；仅修真实失败，不重复创建对话领域或整个前端面板。消息权威归 Conversations，真实 Provider、工具授权与 Operation 分别归 API/Permissions/Connections。
+
+
+
 > **当前代码事实（2026-11-07，`main bd72dfea`）**：已有 `conversations/src/index.ts` 与独立 `conversations/tests/`，包括消息/会话、保存恢复、生成授权、系统提示及损坏拒绝等测试。基础领域实现已存在，但正式会话业务页面尚未在 `UI/src/workbench.tsx` 中接线；`renderer.tsx` 只挂载 `Workbench`，不可据此判断对话领域无实现。
 
 > **当前模块施工状态（文档整理，2026-11-03）**：有业务设计；正式产品实现与测试待核验。此状态是文档审查结论，开工时必须以最新源码及测试核实；**不等于本轮已验收**。
