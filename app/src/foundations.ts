@@ -345,7 +345,9 @@ export async function startFoundations(options:FoundationOptions):Promise<Founda
  for(const diagnostic of host.diagnostics)emitTechnical(diagnostic.reason==='release_failed'?'release_failed':'module_unavailable');
  let stopPromise:ReturnType<Host['stop']>|undefined;
  const stop=()=>{
- stopping=true;local?.stop();apiService?.stop();void apiTransport?.stop();
+ stopping=true;local?.stop();apiService?.stop();
+ // Eagerly signal cancellation, but let the owned module's awaited stop report release failure.
+ void apiTransport?.stop().catch(()=>{});
  if(stopPromise)return stopPromise;
  const job=(async()=>{
  const result=await host.stop();
