@@ -34,8 +34,8 @@ export type ApiCommonParameters=Partial<Record<'temperature'|'top_p'|'max_tokens
 export interface ApiConnectionView {id:string;revision:number;name:string;provider:string;protocol:string;endpoint:string;endpointMode:'base'|'request';credentialRef:{id:string;revision:number}|null;enabled:boolean;parameters:Record<string,ApiParameter>}
 export interface ApiModelView {id:string;revision:number;connectionId:string;name:string;modelId:string;parameters:Record<string,ApiParameter>;observation:null|{source:'provider'|'probe';sourceRevision:string;observedAt:string;capabilities:Record<'text'|'stream'|'tools'|'image'|'reasoning','supported'|'unsupported'|'unknown'|'unverified'>;parameters:Record<string,{type:string;minimum?:number;maximum?:number;enum?:ApiJson[]}>}}
 export type DesktopApiInput={kind:'snapshot'}|{kind:'models';connectionId:string}|
- {kind:'connection.create';name:string;provider:string;endpoint:string;endpointMode:'base'|'request';enabled:boolean;parameters?:ApiCommonParameters}|
- {kind:'connection.edit';id:string;expectedRevision:number;name?:string;provider?:string;endpoint?:string;endpointMode?:'base'|'request';enabled?:boolean;parameters?:ApiCommonParameters}|
+ {kind:'connection.create';name:string;provider:string;protocol?:string;endpoint:string;endpointMode:'base'|'request';enabled:boolean;parameters?:ApiCommonParameters}|
+ {kind:'connection.edit';id:string;expectedRevision:number;name?:string;provider?:string;protocol?:string;endpoint?:string;endpointMode?:'base'|'request';enabled?:boolean;parameters?:ApiCommonParameters}|
  {kind:'connection.delete';id:string;expectedRevision:number}|
  {kind:'connection.refresh';id:string;expectedRevision:number}|
  {kind:'model.create';connectionId:string;name:string;modelId:string;parameters?:ApiCommonParameters}|
