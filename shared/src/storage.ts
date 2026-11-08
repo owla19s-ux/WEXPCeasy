@@ -12,6 +12,8 @@ export interface SqlitePort {
  readonly isTransaction?:boolean;
  exec(sql:string):void; prepare(sql:string):{get(...args:(string|number)[]):unknown;run(...args:(string|number)[]):unknown};close():void
 }
+// Transaction ownership and quarantine belong to the connection, across all namespace wrappers.
+const quarantinedConnections=new WeakSet<SqlitePort>(),busyConnections=new WeakSet<SqlitePort>();
 function plain(value:unknown):value is Record<string,unknown>{
  return !!value&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype;
 }
@@ -67,10 +69,10 @@ export function createSqliteStore(db:SqlitePort,namespace:string):ManagedStore{
  // This index changes no stored domain data; an old read-only database remains readable without it.
  try{db.exec('CREATE INDEX IF NOT EXISTS intents_namespace_revision ON intents(ns,revision)');}
  catch(error){const code=(error as {errcode?:unknown}).errcode;if(typeof code!=='number'||(code&255)!==8)throw error;}
- let quarantined=false,closed=false,busy=false;
+ let closed=false;
  const transactionState=():boolean|undefined=>{try{return typeof db.isTransaction==='boolean'?db.isTransaction:undefined;}catch{return undefined;}};
  function ready(){
-  if(closed||quarantined||busy||transactionState()===true)throw Error('storage_unavailable');
+  if(closed||quarantinedConnections.has(db)||busyConnections.has(db)||transactionState()===true)throw Error('storage_unavailable');
  }
  const columns='s.revision,s.body,h.receiptCount,h.distinctRevisions,h.firstRevision,h.lastRevision,h.invalidRevisions,latest.request AS latestRequest,latest.id AS latestIntentId';
  const source=" FROM (SELECT 1) seed LEFT JOIN snapshots s ON s.ns=? CROSS JOIN (SELECT COUNT(*) AS receiptCount,COUNT(DISTINCT revision) AS distinctRevisions,MIN(revision) AS firstRevision,MAX(revision) AS lastRevision,COALESCE(SUM(CASE WHEN typeof(revision)<>'integer' OR revision<1 OR revision>9007199254740991 THEN 1 ELSE 0 END),0) AS invalidRevisions FROM intents WHERE ns=?) h LEFT JOIN intents latest ON latest.ns=? AND latest.revision=s.revision";
@@ -117,7 +119,7 @@ export function createSqliteStore(db:SqlitePort,namespace:string):ManagedStore{
     request='{"expectedRevision":'+expectedRevision+',"value":'+body+'}';
    }catch{return {status:'not_committed',reason:'invalid_request'};}
    try{ready();}catch{return {status:'not_committed',reason:'storage_unavailable'};}
-   let committing=false;busy=true;
+   let committing=false;busyConnections.add(db);
    try{
     db.exec('BEGIN IMMEDIATE');
     const result=row(intent),snapshot=checkedHead(result),old=checkedReceipt(result,snapshot,intent);
@@ -132,12 +134,12 @@ export function createSqliteStore(db:SqlitePort,namespace:string):ManagedStore{
    }catch{
     try{db.exec('ROLLBACK');}catch{
      // A live/unverifiable transaction can show uncommitted rows. Never report those as durable receipts.
-     if(transactionState()!==false)quarantined=true;
+     if(transactionState()!==false)quarantinedConnections.add(db);
     }
     return committing?{status:'unknown',intent}:{status:'not_committed',reason:'storage_unavailable'};
-   }finally{busy=false;}
+   }finally{busyConnections.delete(db);}
   },
-  close(){if(closed)return;if(busy)throw Error('storage_busy');db.close();closed=true;}
+  close(){if(closed)return;if(busyConnections.has(db))throw Error('storage_busy');db.close();closed=true;}
  });
 }
 export function openSqliteStore(path:string,namespace:string):ManagedStore{

@@ -101,3 +101,24 @@ test('an unobservable transaction state requires reopen after uncertain rollback
  const reopened=openSqliteStore(path,'no-state');
  try{assert.equal(reopened.query('durable').revision,1);assert.equal(reopened.read().value,'kept');}finally{reopened.close();}
 });
+
+test('quarantine cannot be bypassed through another Store wrapper on the same connection',t=>{
+ const {raw}=fixture(t);
+ const port={prepare:s=>raw.prepare(s),close(){},exec(sql){if(sql==='COMMIT'||sql==='ROLLBACK')throw Error('uncertain');raw.exec(sql);}};
+ const first=createSqliteStore(port,'aliases'),second=createSqliteStore(port,'aliases');
+ assert.equal(first.commit({intent:'pending',expectedRevision:0,value:'not durable'}).status,'unknown');
+ assert.throws(()=>second.query('pending'));assert.throws(()=>second.read());
+ assert.equal(second.commit({intent:'next',expectedRevision:1,value:'must not commit'}).status,'not_committed');
+ raw.exec('ROLLBACK');
+});
+test('reentrant namespace writers cannot roll back another Store transaction on the same connection',t=>{
+ const {raw}=fixture(t);let nested,once=true,second;
+ const port={prepare:s=>raw.prepare(s),close(){},exec(sql){
+  raw.exec(sql);
+  if(sql==='BEGIN IMMEDIATE'&&once){once=false;nested=second.commit({intent:'nested',expectedRevision:0,value:2});}
+ }};
+ const first=createSqliteStore(port,'first'),other=createSqliteStore(port,'second');second=other;
+ assert.equal(first.commit({intent:'outer',expectedRevision:0,value:1}).status,'committed');
+ assert.deepEqual(nested,{status:'not_committed',reason:'storage_unavailable'});
+ assert.deepEqual(first.read(),{revision:1,value:1});assert.deepEqual(other.read(),{revision:0,value:null});
+});
