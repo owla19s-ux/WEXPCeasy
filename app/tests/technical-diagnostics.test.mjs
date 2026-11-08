@@ -99,3 +99,13 @@ test('partial resource close failure reports diagnostic write failure when the p
  const reopened=await f.start({technicalDiagnostics:{}});
  assert.deepEqual(reopened.technicalDiagnostics.read().records.map(r=>r.entry.code),['module_unavailable']);
 });
+
+test('desktop fault reporting persists one sanitized code and is closed with the host',async t=>{
+ const f=await fixture(t),host=await f.start({technicalDiagnostics:{}});
+ assert.equal(host.technicalDiagnostics.reportDesktopFailure().status,'written');
+ const before=host.technicalDiagnostics.read();
+ assert.deepEqual(before.records[0].entry,{kind:'technical',module:'app',level:'error',code:'renderer_unavailable'});
+ assert.equal((await host.stop()).status,'stopped');
+ assert.equal(host.technicalDiagnostics.reportDesktopFailure().status,'failed');
+ const reopened=await f.start({technicalDiagnostics:{}});assert.deepEqual(reopened.technicalDiagnostics.read(),before);
+});
