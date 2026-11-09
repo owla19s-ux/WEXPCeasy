@@ -4,24 +4,25 @@ import type {DesktopAuthority} from './desktop-authority.js';
 import type {LocalOperation} from './local-entries.js';
 import type {ConversationChange,Conversation} from '../../conversations/src/index.js';
 import type {ApiConnection,ApiModel} from '../../connections/api/src/index.js';
-import type {DesktopConversationInput,DesktopConversationReply,ConversationText} from '../../UI/src/index.js';
+import type {DesktopConversationInput,DesktopConversationReply,ConversationText,ConversationFileReference,DesktopSpaceReply} from '../../UI/src/index.js';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
 const id=(v:unknown):v is string=>typeof v==='string'&&/^[a-zA-Z0-9_-]{1,120}$/.test(v);
 function capture(raw:unknown):DesktopConversationInput|undefined{
  if(!object(raw)||typeof raw.kind!=='string')return;
  const fields:Record<string,string[]>={snapshot:['kind'],create:['kind'],open:['kind','id'],append:['kind','id','expectedRevision','text'],send:['kind','id','expectedRevision','agentId','text'],resend:['kind','id','expectedRevision','agentId','text','replaces'],select:['kind','id','expectedRevision','messageId','segmentIds'],recover:['kind','id','generationId']};
- const keys=Object.hasOwn(fields,raw.kind)?fields[raw.kind]:undefined;
+ const keys=Object.hasOwn(fields,raw.kind)?[...fields[raw.kind]!,...(['send','resend','append'].includes(raw.kind)&&Object.hasOwn(raw,'attachments')?['attachments']:[])]:undefined;
  if(!keys||Reflect.ownKeys(raw).length!==keys.length||!keys.every(k=>Object.hasOwn(raw,k)))return;
  for(const [k,v] of Object.entries(raw)){
   if(k==='kind')continue;
-  if(k==='expectedRevision'){if(!Number.isSafeInteger(v)||Number(v)<1)return;}
+  if(k==='attachments'){if(!Array.isArray(v)||v.length>8||v.some(source=>!object(source)||Object.keys(source).sort().join(',')!=='addressId,contextId,kind,mime,version'||source.kind!=='local-reference'||source.mime!=='text/plain'||!id(source.contextId)||!id(source.addressId)||typeof source.version!=='string'||!/^[a-f0-9]{64}$/.test(source.version)))return;}
+  else if(k==='expectedRevision'){if(!Number.isSafeInteger(v)||Number(v)<1)return;}
   else if(k==='text'){if(typeof v!=='string'||!v.trim()||v.length>32000)return;}
   else if(k==='segmentIds'){if(!Array.isArray(v)||v.length>256||!v.every(id)||new Set(v).size!==v.length)return;}
   else if(!id(v))return;
  }
  return structuredClone(raw) as unknown as DesktopConversationInput;
 }
-export function createDesktopConversations(options:{authority:DesktopAuthority;confirm:(summary:string)=>Promise<boolean>;onText?:(event:ConversationText)=>void}){
+export function createDesktopConversations(options:{authority:DesktopAuthority;confirm:(summary:string)=>Promise<boolean>;onText?:(event:ConversationText)=>void;readAttachment?:(source:ConversationFileReference)=>Promise<DesktopSpaceReply>}){
  const a=options.authority;
  let host:FoundationHost|undefined,closed=false,active:{id:string;generationId:string;cancel:object;revision:number;cancelledRevision?:number}|undefined;
  const op=(resource:string,action:string,target:string):LocalOperation=>({resource,action,target,context:null});
@@ -66,7 +67,8 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
    return host!.conversations!.generation!.recover({read:grant(chat('read',input.id)),receipt:grant(op('conversations','receipt.read','operation:'+generation.operationId)),finish:grant(chat('finish',input.id))},input.id,input.generationId,randomUUID());
   }
   if(current.revision!==input.expectedRevision)return {status:'revision_conflict'};
-  if(input.kind==='append')return change(input.id,input.expectedRevision,{kind:'append',messageId:randomUUID(),segments:[{id:'text',text:input.text}]});
+  const segments='text'in input?[{id:'text',text:input.text},...('attachments'in input?input.attachments??[]:[]).map((source,index)=>({id:'file-'+index,text:'文件引用（正文未发送）',source}))]:[];
+  if(input.kind==='append')return change(input.id,input.expectedRevision,{kind:'append',messageId:randomUUID(),segments});
   if(input.kind==='select')return change(input.id,input.expectedRevision,{kind:'select',messageId:input.messageId,segmentIds:input.segmentIds});
   if(!host?.api||!host.ai||!host.conversations?.generation)return {status:'unavailable',reason:'generation_unavailable'};
   const agent=ai('agent',input.agentId);if(agent.kind!=='agent')return {status:'reference_unavailable'};
@@ -82,9 +84,9 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
   const cancel=grant(chat('cancel',input.id));grant(chat('append',input.id));grant(chat(input.kind==='resend'?'resend':'begin',input.id));
   const generationId=randomUUID(),messageId=randomUUID();
   let r;
-  if(input.kind==='resend')r=change(input.id,current.revision,{kind:'resend',replaces:input.replaces!,messageId,generationId,segments:[{id:'text',text:input.text}]});
+  if(input.kind==='resend')r=change(input.id,current.revision,{kind:'resend',replaces:input.replaces!,messageId,generationId,segments});
   else{
-   r=change(input.id,current.revision,{kind:'append',messageId,segments:[{id:'text',text:input.text}]});
+   r=change(input.id,current.revision,{kind:'append',messageId,segments});
    if(r.status==='committed')r=change(input.id,r.revision,{kind:'begin',generationId,inputMessageId:messageId});
   }
   if(r.status!=='committed')return r;
@@ -106,7 +108,16 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
   async request(raw:unknown):Promise<DesktopConversationReply>{
    const input=capture(raw);if(!input)return {status:'rejected',reason:'invalid_request'};
    if(closed||!host?.conversations)return {status:'unavailable',reason:'conversations_unavailable'};
-   try{return await a.run(()=>perform(input))??{status:'unavailable',reason:'operation_in_progress'};}catch{return {status:'unavailable',reason:'conversation_operation_unavailable'};}
+   try{
+    if('attachments'in input&&input.attachments?.length){
+     if(!options.readAttachment)return {status:'unavailable',reason:'attachment_reader_unavailable'};
+     for(const source of input.attachments){const observed=await options.readAttachment(source);
+      if(closed)return {status:'unavailable',reason:'session_closed'};
+      if(observed.status==='cancelled')return {status:'cancelled'};
+      if(observed.status!=='ok'||observed.view!=='file'||observed.contextId!==source.contextId||observed.addressId!==source.addressId||observed.version!==source.version)return {status:'rejected',reason:'attachment_changed_or_unavailable'};
+     }
+    }
+    return await a.run(()=>perform(input))??{status:'unavailable',reason:'operation_in_progress'};}catch{return {status:'unavailable',reason:'conversation_operation_unavailable'};}
   },close(){cancel();closed=true;}
  });
 }

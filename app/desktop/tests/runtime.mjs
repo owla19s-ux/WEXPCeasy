@@ -273,6 +273,21 @@ try{
  await click('停止本轮等待');heldResponse?.end();providerMode='normal';
  await waitFor("document.querySelector('[data-conversations]').textContent.includes('轮次：cancelled')");
  await waitFor("!document.querySelector('form[aria-label=\"普通对话输入\"] textarea').disabled");
+ // Basic attachment reference uses existing Space/Local public IPC and never uploads the preview body.
+ const beforeAttachment=providerCalls.length;
+ await click('读取附件来源');await waitFor("document.querySelectorAll('[data-conversation-files] select')[0].options.length>1");
+ await choose('[data-conversation-files] select',created.id);await click('读取来源文件引用');
+ await waitFor("document.querySelectorAll('[data-conversation-files] select')[1].options.length>1");
+ await choose('[data-conversation-files] label:nth-of-type(2) select',linked.id);await click('授权读取附件预览');
+ await waitFor("!!document.querySelector('[aria-label=\"附件预览\"]')");
+ assert.equal(await wc.executeJavaScript("document.querySelector('[aria-label=\"附件预览\"]').textContent"),'Desktop merged draft');
+ await click('加入本轮文件引用');await click('移除此文件引用');
+ assert.equal(await wc.executeJavaScript("[...document.querySelectorAll('button')].some(b=>b.textContent==='移除此文件引用')"),false);
+ await click('授权读取附件预览');await waitFor("!!document.querySelector('[aria-label=\"附件预览\"]')");await click('加入本轮文件引用');
+ await choose('form[aria-label="普通对话输入"] textarea','File reference only');await click('仅追加到历史');
+ await waitFor("document.querySelector('[data-conversations] [role=status]').textContent.includes('已追加到历史')");
+ assert.equal(providerCalls.length,beforeAttachment);
+ assert.equal(await wc.executeJavaScript("document.querySelector('[data-conversations]').textContent.includes('文件来源')"),true);
  await capture('-conversation');
  await click('读取对话历史');await waitFor("document.querySelectorAll('nav[aria-label=\"普通对话历史\"] button').length===1");
  await click('设置');await click('当前窗口授权');await click('读取当前窗口授权');
@@ -334,7 +349,7 @@ try{
  await click('返回工作区');await click('普通对话');await click('读取对话历史');
  await waitFor("document.querySelectorAll('nav[aria-label=\"普通对话历史\"] button').length===1");
  await wc.executeJavaScript("document.querySelector('nav[aria-label=\"普通对话历史\"] button').click();true");
- await waitFor("document.querySelectorAll('[data-conversations] article').length===5");
+ await waitFor("document.querySelectorAll('[data-conversations] article').length===6");
  assert.equal(providerCalls.length,networkBeforeReload.provider);assert.equal(githubCalls.length,networkBeforeReload.github);assert.equal(await readFile(previewFile,'utf8'),'Desktop merged draft');
  await capture('-recovery');
  await click('设置');

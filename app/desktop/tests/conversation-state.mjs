@@ -20,7 +20,7 @@ try{
  await window.loadFile(join(directory,'index.html'));
  const evidence=await window.webContents.executeJavaScript('globalThis.conversationStateResult');
  assert.equal(evidence?.ok,true,evidence?.error??'renderer test did not start');
- assert.equal(evidence.checks.length,6);
+ assert.equal(evidence.checks.length,7);
  assert.equal(window.webContents.getLastWebPreferences().sandbox,true);
  await mkdir('desktop-acceptance',{recursive:true});
  await writeFile('desktop-acceptance/conversation-state-'+process.platform+'.json',JSON.stringify({sha:process.env.GITHUB_SHA,platform:process.platform,...evidence},null,2));

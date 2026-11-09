@@ -1,0 +1,19 @@
+import {useEffect,useRef,useState} from 'react';
+import type {DesktopBridge,DesktopSpaceInput,ContextItem,AddressItem,ConversationFileReference} from './index.js';
+/** File references only. Preview is an authorized Local read; file bodies never enter the chat request. */
+export function ConversationFiles({bridge,disabled,onAdd}:{bridge:DesktopBridge;disabled:boolean;onAdd:(source:ConversationFileReference)=>void}){
+ const [contexts,setContexts]=useState<ContextItem[]>([]),[contextId,setContextId]=useState(''),[resources,setResources]=useState<AddressItem[]>([]),[addressId,setAddressId]=useState('');
+ const [preview,setPreview]=useState<{source:ConversationFileReference;content:string}>(),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
+ const epoch=useRef(0),running=useRef(false);
+ useEffect(()=>{const off=bridge.onAccessChanged(()=>{epoch.current++;running.current=false;setBusy(false);setContexts([]);setResources([]);setPreview(undefined);setContextId('');setAddressId('');setMessage('授权已变更，请重新选择附件来源。');});return ()=>{epoch.current++;off();};},[bridge]);
+ async function call(input:DesktopSpaceInput){const captured=epoch.current,reply=await bridge.space(input);if(captured!==epoch.current)throw Error('stale_attachment_read');if(!reply.ok)throw Error(reply.error);return reply.value;}
+ async function run(work:()=>Promise<void>){if(running.current)return;const captured=epoch.current;running.current=true;setBusy(true);setMessage('');try{await work();}catch(error){if(captured===epoch.current){setPreview(undefined);setMessage(error instanceof Error?error.message:'附件读取不可用');}}finally{if(captured===epoch.current){running.current=false;setBusy(false);}}}
+ return <fieldset disabled={disabled||busy} data-conversation-files><legend>基础文件引用</legend><p>选择已有 Context 文件引用；预览需单独授权。只保存来源和版本，正文不会自动上传，也不会导入为长期资料。</p>
+ <button type="button" onClick={()=>void run(async()=>{const r=await call({kind:'snapshot'});if(r.status!=='ok'||r.view!=='snapshot')throw Error(r.status);setContexts(r.contexts);setResources([]);setPreview(undefined);setContextId('');setAddressId('');})}>读取附件来源</button>
+ <label>附件 Context<select value={contextId} onChange={e=>{setContextId(e.target.value);setResources([]);setPreview(undefined);setAddressId('');}}><option value="">请选择</option>{contexts.map(c=><option key={c.id} value={c.id} disabled={c.status!=='available'}>{c.status==='available'?c.name:'来源不可用'}</option>)}</select></label>
+ <button type="button" disabled={!contextId} onClick={()=>void run(async()=>{const r=await call({kind:'context.open',id:contextId});if(r.status!=='ok'||r.view!=='context')throw Error(r.status);setResources(r.resources.filter(a=>a.address.startsWith('file:')));setPreview(undefined);setAddressId('');})}>读取来源文件引用</button>
+ <label>附件文件<select value={addressId} onChange={e=>{setAddressId(e.target.value);setPreview(undefined);}}><option value="">请选择</option>{resources.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
+ <button type="button" disabled={!contextId||!addressId} onClick={()=>void run(async()=>{setPreview(undefined);const r=await call({kind:'resource.read',contextId,id:addressId,mode:'file'});if(r.status!=='ok'||r.view!=='file')throw Error(r.status);setPreview({source:{kind:'local-reference',contextId:r.contextId,addressId:r.addressId,version:r.version,mime:'text/plain'},content:r.content});})}>授权读取附件预览</button>
+ {preview&&<><pre aria-label="附件预览">{preview.content}</pre><small>来源 {preview.source.contextId} / {preview.source.addressId} · text/plain · 版本 {preview.source.version}</small><button type="button" onClick={()=>{onAdd(preview.source);setPreview(undefined);setMessage('已加入本轮引用；正文未加入输入。');}}>加入本轮文件引用</button><button type="button" onClick={()=>setPreview(undefined)}>关闭附件预览</button></>}
+ <p role="status">{message}</p></fieldset>;
+}

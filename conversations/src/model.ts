@@ -1,4 +1,5 @@
-export type Segment = { id: string; text: string };
+export type FileReference = {kind:'local-reference';contextId:string;addressId:string;version:string;mime:'text/plain'};
+export type Segment = { id: string; text: string; source?:FileReference };
 export type Message = { id: string; role: 'user' | 'assistant'; segments: Segment[]; replaces?: string };
 export type Generation = {
   id: string; inputMessageId: string; outputMessageId?: string;

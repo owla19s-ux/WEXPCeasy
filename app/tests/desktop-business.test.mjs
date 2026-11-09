@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,writeFile,rm,mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {createServer} from 'node:http';
 import {startFoundations} from '../../dist/app/src/index.js';
 import {createDesktopAuthority} from '../../dist/app/src/desktop-authority.js';
 import {createDesktopApi} from '../../dist/app/src/desktop-api.js';
-async function fixture(t){
+async function fixture(t,withFiles=false){
  const {createDesktopAi}=await import('../../dist/app/src/desktop-ai.js');
  const {createDesktopConversations}=await import('../../dist/app/src/desktop-conversations.js');
  const root=await mkdtemp(join(tmpdir(),'wex-desktop-business-'));
@@ -24,11 +24,14 @@ async function fixture(t){
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const authority=createDesktopAuthority(),confirm=async()=>consent;
  const api=createDesktopApi({authority,confirm,requestCredential:async()=>undefined,cancelCredential(){}});
- const ai=createDesktopAi({authority,confirm}),chat=createDesktopConversations({authority,confirm,onText:v=>deltas.push(v)});
- const options={dataRoot:root,...authority.policy,api:{deriveRequest:api.derive},ai:{bindRead:ai.bindRead},conversations:true};
- const host=await startFoundations(options);api.attach(host);ai.attach(host);chat.attach(host);
- t.after(async()=>{release?.();chat.close();ai.close();api.close();await host.stop();server.closeAllConnections();server.close();await rm(root,{recursive:true,force:true});});
- return {root,host,authority,api,ai,chat,calls,deltas,endpoint:'http://127.0.0.1:'+server.address().port+'/v1',deny(){consent=false;},allow(){consent=true;},wait(){mode='wait';return new Promise(r=>arrived=r);},release(){release?.();}};
+ const {createDesktopSpace}=await import('../../dist/app/src/desktop-space.js');
+ const contextDirectory=join(root,'attachment-context');if(withFiles){await mkdir(contextDirectory);await writeFile(join(contextDirectory,'.wex-root.json'),JSON.stringify({format:1,id:'attachment-context'}));}
+ const space=withFiles?createDesktopSpace({authority,rootId:'business',confirm,chooseDirectory:async()=>contextDirectory}):undefined;
+ const ai=createDesktopAi({authority,confirm}),chat=createDesktopConversations({authority,confirm,onText:v=>deltas.push(v),readAttachment:space?input=>space.request({kind:'resource.read',contextId:input.contextId,id:input.addressId,mode:'file'}):undefined});
+ const options={dataRoot:root,...authority.policy,api:{deriveRequest:api.derive},ai:{bindRead:ai.bindRead},conversations:true,...(withFiles?{space:{},localFiles:{coordinateWrites:true}}:{})};
+ const host=await startFoundations(options);api.attach(host);ai.attach(host);chat.attach(host);space?.attach(host);
+ t.after(async()=>{release?.();chat.close();space?.close();ai.close();api.close();await host.stop();server.closeAllConnections();server.close();await rm(root,{recursive:true,force:true});});
+ return {root,host,authority,api,ai,chat,space,calls,deltas,endpoint:'http://127.0.0.1:'+server.address().port+'/v1',deny(){consent=false;},allow(){consent=true;},wait(){mode='wait';return new Promise(r=>arrived=r);},release(){release?.();}};
 }
 async function configured(f){
  const c=await f.api.request({kind:'connection.create',name:'Loopback',provider:'fixture',endpoint:f.endpoint,endpointMode:'base',enabled:true});assert.equal(c.status,'committed');
@@ -182,4 +185,19 @@ test('desktop append saves a user message without a model or network and respect
  assert.equal((await f.chat.request({kind:'append',id,expectedRevision:1,text:'stale'})).status,'revision_conflict');
  assert.equal((await f.chat.request({kind:'append',id,expectedRevision:2,text:'unsafe',agentId:'admin'})).status,'rejected');
  opened=await f.chat.request({kind:'open',id});assert.equal(opened.conversation.messages.length,1);
+});
+
+test('desktop file references require a current authorized Local observation and preserve metadata without generating',async t=>{
+ const f=await fixture(t,true);
+ const {pathToFileURL}=await import('node:url');
+ const path=join(f.root,'input.txt');await writeFile(path,'private file body');
+ const context=await f.space.request({kind:'context.create',name:'Attachment source'});
+ const address=await f.space.request({kind:'address.add',contextId:context.id,name:'Input',address:pathToFileURL(path).href,purpose:['reference']});
+ const read=await f.space.request({kind:'resource.read',contextId:context.id,id:address.id,mode:'file'});assert.equal(read.status,'ok');
+ const created=await f.chat.request({kind:'create'}),attachments=[{kind:'local-reference',contextId:context.id,addressId:address.id,version:read.version,mime:'text/plain'}];
+ assert.equal((await f.chat.request({kind:'append',id:created.id,expectedRevision:1,text:'see reference',attachments})).status,'committed');
+ const opened=await f.chat.request({kind:'open',id:created.id});assert.deepEqual(opened.conversation.messages[0].segments[1].source,attachments[0]);assert.equal(JSON.stringify(opened).includes('private file body'),false);assert.equal(f.calls.length,0);
+ await writeFile(path,'changed externally');
+ assert.equal((await f.chat.request({kind:'append',id:created.id,expectedRevision:2,text:'stale',attachments})).status,'rejected');
+ assert.equal((await f.chat.request({kind:'open',id:created.id})).conversation.messages.length,1);
 });

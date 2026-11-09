@@ -81,7 +81,7 @@ export async function runDesktop(options:{url:string;preload:string;start:(polic
  api=createDesktopApi({authority,confirm:nativeConfirm,requestCredential:target=>credential!.request(target),cancelCredential:()=>credential?.cancel()});
  connections=createDesktopConnections({authority,confirm:nativeConfirm,requestCredential:target=>credential!.request(target),cancelCredential:()=>credential?.cancel()});
  ai=createDesktopAi({authority,confirm:nativeConfirm});
- conversations=createDesktopConversations({authority,confirm:nativeConfirm,onText:event=>{if(!window!.isDestroyed())window!.webContents.send('wex:desktop:conversation-text',event);}});
+ conversations=createDesktopConversations({authority,confirm:nativeConfirm,readAttachment:source=>access?access.request({kind:'resource.read',contextId:source.contextId,id:source.addressId,mode:'file'}):Promise.resolve({status:'unavailable',reason:'space_unavailable'}),onText:event=>{if(!window!.isDestroyed())window!.webContents.send('wex:desktop:conversation-text',event);}});
  if(options.spaceRootId)access=createDesktopSpace({authority,rootId:options.spaceRootId,
   confirm:nativeConfirm,
   chooseDirectory:options.spacePlatform?.chooseDirectory??(async()=>{const result=await dialog.showOpenDialog(window!,{title:'选择目录（Context 自身记录需已有 WEX 数据根）',properties:['openDirectory']});return result.canceled?undefined:result.filePaths[0];})

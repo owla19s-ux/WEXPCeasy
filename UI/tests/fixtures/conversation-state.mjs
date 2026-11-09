@@ -22,11 +22,13 @@ async function fixture(){
 }
 async function verify(){
  const checks=[];
- for(const scenario of ['idle','old-round','unknown','revoked','unmount','append']){
+ for(const scenario of ['idle','old-round','unknown','revoked','unmount','append','selection']){
   const f=await fixture();
   try{
    if(scenario==='idle'){await f.delta('old','LATE-PRIVATE');check(!f.container.textContent.includes('LATE-PRIVATE'),'idle panel accepted a completed round delta');}
-   else if(scenario==='append'){
+   else if(scenario==='selection'){
+    await f.click('选择此段');check(f.pending[0]?.input.kind==='select'&&f.pending[0].input.segmentIds[0]==='text','segment selection missing');await f.settle({status:'committed',revision:6});await f.settle({status:'ok',conversation:{...conversation(),revision:6,selections:[{messageId:'user',segmentIds:['text']}]}});check(f.container.querySelector('button[aria-pressed=true]')?.textContent==='取消选择此段','selection not visible');await f.click('取消选择此段');check(f.pending[0].input.segmentIds.length===0,'selection cannot be cleared');await f.settle({status:'committed',revision:7});await f.settle({status:'ok',conversation:conversation()});
+   }else if(scenario==='append'){
     await f.input('append only');await f.click('仅追加到历史');check(f.pending[0]?.input.kind==='append'&&f.pending[0].input.text==='append only','append UI did not call its public entry');await f.settle({status:'committed',revision:6});await f.settle({status:'ok',conversation:conversation()});check(f.container.querySelector('textarea').value==='','append did not clear committed draft');
    }else{
     await f.send();check(f.pending[0]?.input.kind==='send','send missing');
