@@ -23,6 +23,8 @@
 
 ## 产品约束
 
+0.1.1 新增明确的最小入口：从当前 Context 打开一个由所选主 AI 服务、能够保存恢复的基础会话；独立普通对话入口继续保留。当前 `ConversationPanel` 仍是独立入口，**此接线尚未实施**，不可将有普通对话页当作已经完成 Context 内对话。不能将一个 Context 的未完成流、草稿或会话错误呈现在另一个 Context 中。
+
 当前界面只有 `context` / `structure` 两类工作视图：它们是基础标签和按需预览，不是长期专业多视图引擎。`src/space.tsx` 的类别按钮目前纵列渲染，且导航只有折叠态，与 A1 三个横排窄高类别按钮及完全隐藏能力仍有差距。形象与交互栏现分属 [`avatar/`](avatar/README.md) 和 [`interaction-bar/`](interaction-bar/README.md)，由 `src/interaction-dock.tsx` 维持现有联动/位置与旧导出兼容；AI/秘书/Context 对象入口尚未接线，底部输出也不是交互栏。虚拟形象未来可映射 AI/Agent/秘书的显示身份与状态，但 AI 配置和会话事实仍由各自模块负责，UI 不能凭形象点击直接授权或执行。
 
 
@@ -34,6 +36,8 @@
 ## 2026-11-09 新增交互变更核对
 
 已通过 main 提交差异核到 API/AI/Permissions/Space 设置页的撤权后迟到响应隔离、发现模型 ID 选择（不隐式注册），以及 Context 工具引用、对话文件引用、Operation 回执相关组件与桌面测试修改。对应 A2 最新记录的基线为 `a91aacf3`；当前同 SHA CI 和完整真实 UI 验收未核实。不能据代码提交推断这些交互已独立签收。
+
+补齐该最小 Context 对话入口时复用既有 `UI/src/conversation.tsx` 与 DesktopBridge，不另建第二个对话编辑器；允许从 Context 切入并返回原视图，保留 per-Context 状态，复杂多会话/专业多视图/工作流留后续版本。
 
 ## 剩余施工与验收
 
