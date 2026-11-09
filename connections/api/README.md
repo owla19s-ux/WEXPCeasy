@@ -22,7 +22,7 @@ API 独立管理非秘密 Provider/Connection/Model、模型能力观察、请�
 
 上述“已有”仅表示源码/测试存在，**不等于最新 SHA CI 或真实厂商签收**。
 
-**跨版本参考——Context 内对话接线（非自动列入 0.1.1）**：API 请求准备可接收 context，但 desktop-conversations 当前统一传 context:null。原 0.1.1 B2-02/B2-03 要求基础 Context→Agent/模型与 API→Conversations 组合；完整 Context 内会话配置自动继承和覆盖规则版本待定。未来可信调用方需从获准 Context 引用/配置选择得出 connection/model/参数及来源修订，API 负责校验真实连接、模型、协议、修订和请求，不保存第二份 Context 引用、Conversation 历史或密钥；来源不可用、禁用、冲突或失权时必须显式拒绝或标未知，不擅自采用未确认的默认优先级。
+**版本修订（2026-11-09）：0.1.1 最小 Context 主 AI 基础对话已批准**：API 请求准备可接收 context，但 desktop-conversations 当前统一传 context:null。原 0.1.1 B2-02/B2-03 要求基础 Context→Agent/模型与 API→Conversations 组合；完整 Context 内会话配置自动继承和覆盖规则版本待定。未来可信调用方需从获准 Context 引用/配置选择得出 connection/model/参数及来源修订，API 负责校验真实连接、模型、协议、修订和请求，不保存第二份 Context 引用、Conversation 历史或密钥；来源不可用、禁用、冲突或失权时必须显式拒绝或标未知，不擅自采用未确认的默认优先级。
 
 ## 公开入口与源码职责
 
@@ -37,6 +37,8 @@ API 独立管理非秘密 Provider/Connection/Model、模型能力观察、请�
 | `src/endpoint-policy.ts`、`src/tools.ts`、`src/usage.ts`、`src/preparation-parameters.ts` | 端点策略、工具格式、用量与参数来源/冲突处理 |
 
 `Preparation.messages` 仍为文本结构；不能因 observation 有 image/audio/video/file 而宣称这些模态可发送。近期能力方向及跨协议探测证据提交应在当前 SHA 回归后再更新验证状态。
+
+本版仅需要从可信消费方接收已获准 Context 的真实 ID、当前主 Agent 绑定模型及配置修订快照；`prepare` 现有 context 字段可复用，`app/src/desktop-conversations.ts` 目前固定 `context:null`，需在受控 Context 会话路径修正。独立普通对话仍传 null；复杂默认模型选择、自动切换与参数继承规则后置。
 
 ## 下一步调整与验收
 
