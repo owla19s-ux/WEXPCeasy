@@ -20,6 +20,7 @@
 ## 职责
 
 - 本域拥有工作流定义、Task/任务交接与轮次、工作流业务进展记录、产物引用、验证与验收记录；`scheduler/` 独立拥有实际调度决策与执行协调状态，`connections` 拥有 Operation/尝试及回执。本域通过引用消费后两者的事实，不双写同一执行或操作真相。外部 Agent 的自报状态不能替代 WEX 权威记录。
+- 多层自由格子是广义 Context/多视图交互结构，不由 `workflows/editor` 独占；此目录的画布编辑只负责**工作流语义**的编辑与依赖。Context 内模板可引用可选工作流，但模板本体不归 Workflows。
 - 执行工作流与**非执行**的需求树、架构树、进度图是不同概念；广义视图体系的研究归 [views/](../views/README.md)，不把所有专业视图强塞进调度器。
 - 简单连线不代表执行可靠：未来须研究断连/重试/结果未知、并发配额、文件资源冲突、重启恢复与跨 Context 的任务一致性。关闭编辑器窗口不应自动等于取消任务。
 - 调度/运行语义与 UI 节点显示分开，使用哪个 Agent/连接器由 WEX 控制，具体通信在 [connections/](../connections/README.md)。
@@ -87,7 +88,3 @@
 Task/工作轮次/Requirement/Artifact/Review/Verification/Acceptance 由本域维护；Task 引用输入资料与 Operation，不复制文件正文或 Operation 状态。Task 检查点必须能让新 Conversation、模型或执行者在读取最新修订、核对资源和原 Operation、重新判权后安全接续。检查点不是聊天总结，也不保证 Agent 或进程仍在运行。
 
 见[基础能力落地映射](../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
-
-## 97 项对账｜自由格子与执行工作流的界线（2026-11-09）
-
-UIX-13～17 是跨专业多视图、多层自由格子、引用组织及模板组合的长期产品方向，**不等于执行工作流编辑器**。WORKFLOWS-EDITOR 只负责工作流语义的编辑行为，不能因历史 prototype 路径占有通用画布所有职责。Workflows 拥有定义/执行依赖/Task 与验收领域事实，Views 负责布局/投影，Space 维护 Context 与资源引用。视觉线不生成自动执行关系；Context 内的模板可以组合可选工作流而非必须；Workflows 不拥有 Context 模板配置。原型不是可运行调度器，不随 0.1.1 UI 基础功能提前施工。
