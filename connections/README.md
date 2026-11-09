@@ -25,16 +25,12 @@ Permissions 决定授权，Shared 保管秘密和技术存储，App 提供可信
 
 ## 施工规则与验收
 
+操作验收区分工具发现、精确参数与动作授权、实际派发、attempt、原 Operation 读取、unknown 和停止排空；UI 读取回执不建立第二份账本。工具列表可见、`isError`、observed 与远端业务成功必须分别表述。
+
+
 - 先读根 README、本模块 README、目标子连接器 README、源码与测试。仅跨域接口冲突才追查其他模块。沿公开入口协作，不互相导入业务私库。
 - 保留现有 read/dispatch 与配置/账本行为。若新官方工具不能由文件 target 表达，可最小增补通用 discover/invoke；必须验证 connection/tool/arguments 精确绑定、权限、结果保真、停止排空、取消和 unknown。
 - 模型建议、发现工具或工具注解不能授予调用权限；外部调用结果失败、业务错误、取消和未知状态必须区分，不能自动重发可能发生副作用的操作。
 - 验证层次：模块单测 → 公共 Connections 组合 → 真实适配器 → App IPC → UI/AI/Conversations/Space → Windows 实机。每层单独标注 commit SHA、运行结果及证据，不将跨域任务改造成单模块权威。
 
 本 README 不维护历史研究批次或固定实施顺序；旧资料仅按需追溯。
-
-## 97 项对账｜公共 Operation 与 UI 观察（2026-11-09）
-
-- 第三批 F05 操作检查点分别核对 capability 发现（工具名/Schema/来源/版本）、受控 invoke（connection+toolName+原始参数）、attempt/Operation、按原 ID 读取回执、取消/unknown 与 stop 排空；不把 observed 或 MCP isError 当外部业务完成。
-- GitHub 文件版本写入、官方 MCP 通用工具消费与 Space 的 Context Tool 选择属于不同 owner；连接目录可见不等于工具执行授权，Context 引用不生成 Grant。
-- UIX-20 的状态反馈由 `UI/src/operation-receipt.tsx` 等界面读取本域原始 Operation，不在 UI、App、Space 复制账本；交互栏（UIX-12）将来可作为受控调用入口，但当前没有真实对象接线。
-- A2 记录 77 个业务操作检查点与 UIX 20 项的逐项边界；只补实际接口/调用缺口，不为未批准的插件、DSH 或工作流调度新建公共派发体系。
