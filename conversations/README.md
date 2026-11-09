@@ -19,7 +19,7 @@ Conversations 管逻辑生成和用户消息历史；API 管真实 Provider 与�
 | 流式轮次隔离及恢复 | `ef3cd5fc` 提交了相关修复，Conversations 和桌面测试发生变更 | 取消竞态、迟到流、unknown、重启后的同 SHA 与真实 Provider 验收待核 |
 | 高级分支与采纳 | 不得以现有 `append/resend/select` 冒充 | 生成期间追加队列、采纳/拒绝、完整分支语义按正式范围另定 |
 
-**Context 内对话是优先缺口**。当前 Conversation 类型没有 Context 关联属性；桌面 Conversations 操作和 API 请求准备使用 context:null；Workbench 的 ConversationPanel 是独立普通对话入口，附件中的 FileReference.contextId 不能当作会话归属。需要按正式版本细化 Context 进入会话、会话列表/新建/切换、关联与解除、不丢历史、每轮引用解析、Agent/模型/工具选择和权限复核。切换 Context 或旧流不能污染新会话。不要为此重建另一套会话数据库；跨 Context 关联规则、默认值与自动使用规则尚需冻结。
+**Context 内对话是已确认的产品设计缺口，但不是已批准的 0.1.1 优先施工范围**。当前 Conversation 类型没有 Context 关联属性；桌面 Conversations 操作和 API 请求准备使用 context:null；Workbench 的 ConversationPanel 是独立普通对话入口，附件中的 FileReference.contextId 不能当作会话归属。原 0.1.1 B1-05/B3-03 明确要求独立普通对话、消息/段落、生成/重发；B2 另有 Context 关联 Agent/模型、API→Conversations 的基础组合。完整 Context 进入会话、会话列表/新建/切换、关联与解除、每轮自动引用解析及工具使用需待版本明确后细化，不能先作为本版验收阻塞。切换 Context 或旧流不能污染新会话。不要为此重建另一套会话数据库；跨 Context 关联规则、默认值与自动使用规则尚需冻结。
 
 ## 2026-11-09 代码进展说明
 
