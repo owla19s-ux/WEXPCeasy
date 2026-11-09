@@ -13,6 +13,8 @@
 | `src/middle-workspace.tsx`、`workspace-state.ts` | Context 多视图标签、预览、按 Context ID 隔离的布局状态 |
 | `src/conversation.tsx` | **正式普通对话组件已存在**：历史、新建、Agent 选择、发送、段落引用、编辑重发、生成状态及回执查询 |
 | `src/local-file-editor.tsx` | **本地编辑器已存在**：窗口内草稿、版本绑定保存、冲突重读、取消/unknown 反馈 |
+| `src/context-tools.tsx`、`operation-receipt.tsx` | Context 工具发现/引用与桌面 Operation 回执展示；工具可见不等于授权，回执呈现不等于业务确认已签收 |
+| `src/conversation-files.tsx` | 对话受控文件引用入口；文件选择、读取权限和真实发送仍须端到端验收 |
 | `src/interaction-dock.tsx` | 形象/交互栏基础显示及位置管理；真实角色素材/完整交互未交付 |
 | `src/index.ts`、`tests/` | UI/桌面桥类型、状态回归和测试；权限与 OS 事实仍在可信宿主 |
 
@@ -24,6 +26,10 @@
 - 视图容器只承载操作，不保存额外业务数据库、权限事实、密钥或外部 Operation。通过受控 DesktopBridge 调用正式 owner。
 - 窗口尺寸、拖动分栏、Snap、DPI/文本放大与窄窗布局必须可用；旧布局安全迁移，不为了测试方便删除有效断言。
 - 文件草稿的内存保留不等于持久化工作区；流式文本显示不等于生成已定稿；工具可见不等于授权使用。
+
+## 2026-11-09 新增交互变更核对
+
+已通过 main 提交差异核到 API/AI/Permissions/Space 设置页的撤权后迟到响应隔离、发现模型 ID 选择（不隐式注册），以及 Context 工具引用、对话文件引用、Operation 回执相关组件与桌面测试修改。对应 A2 最新记录的基线为 `a91aacf3`；当前同 SHA CI 和完整真实 UI 验收未核实。不能据代码提交推断这些交互已独立签收。
 
 ## 剩余施工与验收
 
