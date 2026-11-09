@@ -1,26 +1,35 @@
-# AI｜Agent、角色与岗位配置
+# AI｜角色、岗位等设定的独立管理与组合
 
-> Owner：`AI/`。当前正式行为见 [CONTRACT](CONTRACT.md)；0.1.1 工程与签收见 [A2](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)。
+> Owner：`AI/`。产品定位以已确认的“Role、Position 为不同类型的设定，API/模型独立配置、按需组合”为准；接口细节见 [CONTRACT](CONTRACT.md)，0.1.1 工程状态见 [A2](../docs/A2-版本与工程状态/0.1.1/功能与工程状态总表.md)。**现有源码结构不反向决定产品必须如何组合。**
 
-## 职责与现有代码
+## 职责与产品边界
 
-AI 管理三类独立配置：Role（name/prompt）、Position（name/responsibility）、Agent（name/roleId/positionId/model）。`ModelReference` 使用 `connectionId + modelId`；模型合法性通过外部 `VerifyModel` 协作校验。AI 不负责真实 API 传输、Conversations 历史、Space 引用权威、权限、Operation、Task 或 Agent runtime。
+- **Role（角色设定）**：管理角色行为、表达和提示等配置。
+- **Position（岗位设定）**：管理岗位职责、工作定位等配置。
+- **API / Model（独立配置）**：Provider、模型、连接和真实请求归 `connections/api`；本模块只使用获准的配置引用，不保存 Key 或复制模型本体。
+- **组合与使用**：角色、岗位和 API 是可独立维护、按工作需要选择或组合的设定；不得凭当前某个调用路径，写成“创建特定主体并填满全部设定才能对话”的产品要求。Context 的组合引用归 `space`，会话与消息归 `conversations`，可信调用入口归 `app`。
 
-`AI/src/index.ts` 已提供配置服务和公开类型，包含 ID/revision、格式规范化、角色/岗位关联、状态与回执校验。持久状态损坏和无效引用不能静默修复。现有 `AI/tests/` 为模块回归入口。**代码仍集中在 `src/index.ts`**；`configuration.ts`、`storage.ts`、`service.ts`、`model-reference.ts` 仅为职责拆分候选，不是已存在的实现。
+本 README **不将 Agent 设为与 Role / Position 并列的产品配置类别或对话前置条件**。这里的“主 AI、秘书、研究、执行、审查”等首先是不同工作定位/设定，不自动要求新的独立实体、运行器或工作流。
+
+## 当前源码事实与已发现偏差（不等于批准设计）
+
+- `AI/src/model.ts` 当前仍有 `role`、`position`、`agent` 三种持久类型，其中 `agent` 包含 `roleId/positionId/model`。这是**已存在的实现与兼容事实**，不作为新的产品类别要求。
+- `AI/src/index.ts` 对外导出配置读写与校验入口；`app/src/desktop-ai.ts` 和 `UI/src/ai-settings.tsx` 使用现有配置接口。
+- `app/src/desktop-conversations.ts` 当前发送接口要求 `agentId`，并通过该记录取得 Role 与 Model。这是**对话调用链的现有耦合限制**，不是 Role、Position、API 必须捆绑的已确认产品规则。
+- 既有 ID、修订、存储、权限和测试不得因文档恢复而被视为可直接删除或迁移；具体兼容处理须另行核对后施工。
 
 ## 功能与验证状态
 
-| 能力 | 代码状态 | 未完成/未签收 |
-|---|---|---|
-| Role/Position/Agent 配置 | 已有 `list/read/save`、正式类型和持久记录；桌面已有配置表单 | 删除/归档/停用尚无已确认公开入口；修订冲突与重启组合验收待核 |
-| Agent 引用 | Role/Position 和 API ModelReference 已有，Context 关联由 Space 持有 | 引用删除/失效、外部模型变更、Context 关联及本轮快照待核；交互栏实际 AI/秘书入口仍是 UI 占位 |
-| 配置权限与撤权 | 有受控读取/写入边界的设计与调用基础 | 精确可信入口、失权/列表投影、迟到结果 |
-| 模型偏好及对话消费 | App/普通对话已有 Agent 读取与选择入口 | 0.1.1 新增 Context 主 AI 基础对话消费：依获准关联复核 Agent/Role/Model 的 ID/修订及请求快照；真实请求和恢复待实现/验收 |
+| 能力 | 当前事实 | 需核对或补齐 |
+| --- | --- | --- |
+| 角色设定 | Role 定义、读取/保存及桌面配置入口已有基础 | 独立选择与复用、生命周期和重启/撤权验证 |
+| 岗位设定 | Position 定义、读取/保存及桌面配置入口已有基础 | 与角色独立使用、职责/范围配置和重启验证 |
+| API/模型引用 | 已有 ModelReference 及外部模型校验基础 | 消费时真实引用与配置来源，不复制 API 权威数据 |
+| 对话消费 | 现有普通对话通过旧 `agentId` 路径发起 | 核对该强制依赖与原始设定自由组合要求的偏差；**不在此处决定新接口** |
+| 配置权限及恢复 | 存储与授权处理已有代码和测试 | 当前 SHA 的冲突、失效、撤权、恢复与桌面验收 |
 
-0.1.1 的 Context **主 AI**是已有 Agent 的一项受控引用/当前选择，不是新 Agent 类型、权限等级或多 AI 团队。Workflows 才承担后续多 Agent 组织与调度；AI 仅暴露既有配置及有效性，不存 Context 会话、执行账本或业务消息。
+## 后续处理边界
 
-## 调整与施工入口
+先对照已确认产品需求核查“独立设定 → 组合选择 → 对话消费”的真实入口，再制定最小兼容调整。**当前只修文档，不修改业务源码、不新增 Agent 产品类别、不重写现有会话管理，也不擅自决定 Context 会话的数据结构或版本扩展。**
 
-先验证公开调用、配置修订、损坏/收据、模型与角色失效；然后在保持 `src/index.ts` 对外兼容的前提下按职责最小拆分，并补 Context、Conversations 和 UI 的组合回归。不要建立新的运行时记忆、调度器、权限或网络连接器。
-
-阅读顺序：根 README → 本 README/CONTRACT → `src/index.ts` 与 `tests/`。执行 `npm run build`、`npm run typecheck`、`npm test` 与 `npm run check:boundaries` 中可用部分；提交 SHA 和测试来源单独记录。当前仅静态复核，未独立签收。
+阅读顺序：根 README → 本 README / CONTRACT → 目标源码与测试；实际通过情况以同 SHA 的运行证据为准。
