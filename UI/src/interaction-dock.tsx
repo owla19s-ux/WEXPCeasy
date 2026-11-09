@@ -1,5 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import type {PointerEvent as ReactPointerEvent} from 'react';
+import {AvatarEntry} from '../avatar/avatar.js';
+import {InteractionBar} from '../interaction-bar/interaction-bar.js';
 type Point={x:number;y:number};
 type DockState={open:boolean;free:Point;withinBar:number};
 type Geometry={width:number;height:number;barX:number;barY:number;barWidth:number;barHeight:number};
@@ -38,13 +40,8 @@ export function InteractionDock({visible}:{visible:boolean}){
   if(e.currentTarget.hasPointerCapture(drag.id))e.currentTarget.releasePointerCapture(drag.id);
  }
  return <div className="interaction-overlay" ref={host} data-interaction-dock data-open={state.open}>
-  {state.open&&<div className="interaction-bar" ref={bar} aria-label="WEX 交互栏">
-   <strong>交互栏</strong><span>AI / 秘书 / Context 入口待接线</span>
-   <button type="button" onClick={()=>setState(s=>({...s,open:false}))}>收起</button>
-  </div>}
-  <button type="button" className="interaction-avatar" style={{left:x,top:y}}
-   title={state.open?'拖动可调整栏内位置；点击收起':'拖动可调整位置；点击展开交互栏'}
-   aria-label={state.open?'收起交互栏':'展开交互栏'}
+  {state.open&&<div ref={bar}><InteractionBar onCollapse={()=>setState(s=>({...s,open:false}))}/></div>}
+  <AvatarEntry x={x} y={y} expanded={state.open}
    onPointerDown={e=>{if(e.button!==0||pointer.current)return;e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);pointer.current={id:e.pointerId,x:e.clientX,y:e.clientY,state,moved:false};}}
    onPointerMove={e=>{const d=pointer.current;if(!d||d.id!==e.pointerId)return;
     const dx=e.clientX-d.x,dy=e.clientY-d.y;if(Math.hypot(dx,dy)>5)d.moved=true;if(!d.moved)return;
@@ -56,8 +53,7 @@ export function InteractionDock({visible}:{visible:boolean}){
      setState(s=>({...s,free:{x:clamp(d.state.free.x+dx/xRange),y:clamp(d.state.free.y+dy/yRange)}}));
     }
    }}
-   onPointerUp={e=>finish(e,false)} onPointerCancel={e=>finish(e,true)} onLostPointerCapture={e=>finish(e,true)}>
-   <span aria-hidden="true">W</span>
-  </button>
+   onPointerUp={e=>finish(e,false)} onPointerCancel={e=>finish(e,true)} onLostPointerCapture={e=>finish(e,true)}
+  />
  </div>;
 }
