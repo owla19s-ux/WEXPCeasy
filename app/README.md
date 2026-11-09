@@ -25,3 +25,7 @@
 | 生命周期/Renderer 失败 | 即时封锁、资源释放与恢复逻辑已有专项代码 | 关闭失败、重复失效、停止不确定与实机 |
 
 施工先看最新 Actions 全运行集合及 SHA，再跑可用的 `npm run test:app`、build/typecheck/test/boundaries 与 Windows 专项。根 README → 本 README → `src/` 与 `tests/` 是默认阅读路径；历史批次仅在具体证据争议时追查。
+
+## 97 项对账｜App IPC、宿主与 UIX（2026-11-09）
+
+F14 操作级检查点覆盖安装与数据根、可信窗口和身份、细分 Desktop IPC、模块装配/退出、Renderer 故障、布局及恢复。UIX-01～12/20 的导航、视图、栏体、虚拟形象与回执主要由 UI 表示，App 只提供受信 OS/窗口接口，不创建第二套 Context/Conversations/Operation。UIX-12 真实 AI/秘书/Context 入口在 UI 中仍占位，UIX-19 桌面级角色是后置独立设计。关闭窗口、取消生成与真实外部停止不同；NSIS/Windows 实机 E4 延期不代表现有 IPC 无实现，也不允许用旧 CI 代替同 SHA 验收。
