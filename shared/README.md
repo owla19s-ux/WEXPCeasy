@@ -17,11 +17,8 @@
 
 - Store 操作必须表达修订/冲突、已提交/确定未提交/unknown，不能遇到异常静默重试或覆盖数据。
 - 路径/数据根不是安装目录；跨盘、符号链接、权限变化和目标失联需要明确拒绝或诊断。
+- UI 视图布局和形象位置目前属于 Renderer 本地偏好；本地文件编辑草稿在窗口内存，不能凭 Shared 的 SQLite/Store 宣称崩溃后仍能恢复草稿。
 - Lock、Vault、诊断属于技术基础；秘密不得进入普通日志/Renderer。诊断记录不代替领域正式账本。
 - 以 `npm run test:shared`、build/typecheck/test/boundaries 和 Windows 专项分别验证并记录 SHA。优先复验现有损坏、回滚、恢复、ACL/safeStorage 用例，失败后再修，不能创建重复数据库或凭证服务。
 
 施工顺序：根 README → 本 README → 公开源码与测试；版本/Windows 规则按需查阅 [正式设计](../docs/A1-正式产品设计/架构与决策/源码目录与Windows数据规则-2026-10-30.md)。
-
-## 97 项对账｜技术持久化与 UI 偏好界限（2026-11-09）
-
-第四批 F10/F15 涉及 Store/CAS、intent/unknown、Root/Lock、Vault/凭证和诊断；业务记录分别属于 Space、AI、Conversations、Permissions、Connections 等 owner。UIX-06/11 的视图标签、交互栏坐标保存在 UI 本地偏好；`UI/src/local-file-editor.tsx` 的草稿是窗口内存 Map，并不因 Shared SQLite 存在而自动具备崩溃恢复。日志不是 Operation；旧数据根/凭证、ACL/别名和损坏/重启须独立验收。
