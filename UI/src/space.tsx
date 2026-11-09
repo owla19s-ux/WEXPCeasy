@@ -1,5 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import type {ReactNode} from 'react';
+import {ContextAssociations} from './context-associations.js';
 import {LocalFileEditor} from './local-file-editor.js';
 import type {LocalDrafts} from './local-file-editor.js';
 import {ContextAddresses} from './space-addresses.js';
@@ -56,6 +57,7 @@ export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sectio
  <label>名称<input required maxLength={4096} disabled={busy} value={name} onChange={event=>setName(event.target.value)}/></label><label>说明<textarea maxLength={4096} disabled={busy} value={description} onChange={event=>setDescription(event.target.value)}/></label><button disabled={busy} type="submit">{busy?'处理中…':'保存'}</button></form>
  {selectedSpace&&<div><h3>Space 工作目录</h3><p>{selectedSpace.directory??'未关联'}</p><button disabled={busy} onClick={()=>void run(async()=>{const result=await call({kind:'space.directory',id:selectedSpace.id,expectedRevision:selectedSpace.revision});if(result?.status==='committed')await refresh();})}>选择关联目录</button>{selectedSpace.directory&&<button disabled={busy} onClick={()=>void run(async()=>{const result=await call({kind:'space.directory',id:selectedSpace.id,expectedRevision:selectedSpace.revision,clear:true});if(result?.status==='committed')await refresh();})}>解除目录关联</button>}</div>}
  {detail&&<article><h3>{detail.context.name}</h3><p>{detail.context.description}</p><ContextAddresses key={detail.context.id} detail={detail} busy={busy} run={run} call={call} reload={()=>open(detail.context.id)} onPreview={value=>{if(!value||value.contextId===selectedContext.current)setResourcePreview(value);}}/>
+ <ContextAssociations key={detail.context.id} bridge={bridge} contextId={detail.context.id} associations={detail.associations??[]} complete={detail.associationsComplete??true} reload={()=>open(detail.context.id)}/>
  <small>Context ID：{detail.context.id}</small><p>记录目录：{detail.location}</p><p>当前 Space：{data.spaces.find(x=>x.id===detail.organization.spaceId)?.name??'未分配'}</p>
  <label>目标 Space<select id="context-space" disabled={busy||detail.organization.spaceId!==null} value={detail.organization.spaceId??spaceId} onChange={event=>setSpaceId(event.target.value)}><option value="">选择 Space</option>{data.spaces.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
  <label>目标分组<select id="context-group" disabled={busy} value={groupId} onChange={event=>setGroupId(event.target.value)}><option value="">不分组</option>{data.groups.filter(g=>g.spaceId===(detail.organization.spaceId??spaceId)).map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select></label>

@@ -28,7 +28,7 @@ async function fixture(t,withFiles=false){
  const contextDirectory=join(root,'attachment-context');if(withFiles){await mkdir(contextDirectory);await writeFile(join(contextDirectory,'.wex-root.json'),JSON.stringify({format:1,id:'attachment-context'}));}
  const space=withFiles?createDesktopSpace({authority,rootId:'business',confirm,chooseDirectory:async()=>contextDirectory}):undefined;
  const ai=createDesktopAi({authority,confirm}),chat=createDesktopConversations({authority,confirm,onText:v=>deltas.push(v),readAttachment:space?input=>space.request({kind:'resource.read',contextId:input.contextId,id:input.addressId,mode:'file'}):undefined});
- const options={dataRoot:root,...authority.policy,api:{deriveRequest:api.derive},ai:{bindRead:ai.bindRead},conversations:true,...(withFiles?{space:{},localFiles:{coordinateWrites:true}}:{})};
+ const options={dataRoot:root,...authority.policy,api:{deriveRequest:api.derive},ai:{bindRead:ai.bindRead},conversations:true,...(withFiles?{space:{deriveRequest:space.derive,owner:space.owner},localFiles:{coordinateWrites:true}}:{})};
  const host=await startFoundations(options);api.attach(host);ai.attach(host);chat.attach(host);space?.attach(host);
  t.after(async()=>{release?.();chat.close();space?.close();ai.close();api.close();await host.stop();server.closeAllConnections();server.close();await rm(root,{recursive:true,force:true});});
  return {root,host,authority,api,ai,chat,space,calls,deltas,endpoint:'http://127.0.0.1:'+server.address().port+'/v1',deny(){consent=false;},allow(){consent=true;},wait(){mode='wait';return new Promise(r=>arrived=r);},release(){release?.();}};
@@ -247,4 +247,22 @@ test('Role and Position save and edit before any API exists',async t=>{
  const result=await f.ai.request({kind:'snapshot'});
  assert.equal(result.entries.length,2);assert.ok(result.entries.every(e=>(e.prompt??e.responsibility)==='edited'));
  assert.equal(f.calls.length,0);
+});
+
+
+test('Context references validate real owners, allow multiple settings and existing conversations, and survive replacement conflicts',async t=>{
+ const f=await fixture(t,true);await configured(f);
+ const ctx=await f.space.request({kind:'context.create',name:'Work'}),conversation=await f.chat.request({kind:'create'});
+ const refs=[];
+ for(const [owner,targetType,targetId] of [['AI','role','role'],['AI','position','position'],['conversations','conversation',conversation.id]]){
+  const r=await f.space.request({kind:'association.add',contextId:ctx.id,owner,targetType,targetId,purpose:'reference'});
+  assert.equal(r.status,'committed');refs.push(r);
+ }
+ let detail=await f.space.request({kind:'context.open',id:ctx.id});assert.equal(detail.associations.length,3);
+ assert.equal((await f.space.request({kind:'association.add',contextId:ctx.id,owner:'AI',targetType:'position',targetId:'missing',purpose:'bad'})).status,'unavailable');
+ assert.equal((await f.space.request({kind:'association.replace',contextId:ctx.id,id:refs[0].id,expectedRevision:99,owner:'AI',targetType:'role',targetId:'role',purpose:'stale'})).status,'rejected');
+ assert.equal((await f.space.request({kind:'association.remove',contextId:ctx.id,id:refs[1].id,expectedRevision:1})).status,'committed');
+ detail=await f.space.request({kind:'context.open',id:ctx.id});assert.equal(detail.associations.length,2);
+ assert.equal((await f.ai.request({kind:'snapshot'})).entries.length,3);
+ assert.equal((await f.chat.request({kind:'open',id:conversation.id})).status,'ok');
 });

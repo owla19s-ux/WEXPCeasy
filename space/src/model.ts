@@ -10,7 +10,8 @@ export interface Target {owner:string;targetType:string;targetId:string}
 /** Shared write/read invariant: target identity must match the relation subtype. */
 export function supportedTarget(value:Target,kind:'association'|'tool'):boolean {
  return kind==='tool'?value.owner==='connections'&&value.targetType==='tool':
-  (value.owner==='AI'&&['role','agent'].includes(value.targetType))||
+  (value.owner==='AI'&&['role','position','agent'].includes(value.targetType))||
+  (value.owner==='conversations'&&value.targetType==='conversation')||
   (value.owner==='connections/api'&&['api','model'].includes(value.targetType));
 }
 export interface Association extends Target {id:string;revision:number;purpose:string}
