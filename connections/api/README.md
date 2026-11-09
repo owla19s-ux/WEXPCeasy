@@ -44,3 +44,9 @@ API 独立管理非秘密 Provider/Connection/Model、模型能力观察、请�
 4. **逐层验收**：API 专属测试、build/typecheck、边界、真实 Provider/Key、UI/Conversations 工具轮次、Windows。先查看 [Actions 运行集合](https://github.com/owla19s-ux/WEXPCeasy/actions/runs)，记录测试 SHA；未验证则如实标注。
 
 研究材料只在确有接口争议时查阅；模块 README 不维护另一套历史任务书。
+
+## 97 项对账｜F04 的业务操作与桌面入口（2026-11-09）
+
+第一批操作级检查点区分 Provider/Connection 新增、修改、启停、删除，凭证设置，模型目录刷新、手工登记、编辑/选用/删除，能力来源和方向观察，temperature/top_p/max_tokens，探针、真实生成、工具提议与轮次快照。
+
+`app/src/desktop-api.ts` 已有 connection.delete、model.delete 与 top_p 相关输入，但 `UI/src/api-settings.tsx` 缺少对应完整删除和 top_p 编辑 UI。底层 CRUD 不等于桌面功能交付；删除关联保护和连接复制凭证规则不能臆造。能力 observation 不等于实际多模态 wire 支持；未经验证的模型、协议和费用不得显示已成功。A2 登记本版子行为与未决策略，按单 owner 补 UI、IPC 与测试闭环。
