@@ -15,14 +15,15 @@
 | `src/local-file-editor.tsx` | **本地编辑器已存在**：窗口内草稿、版本绑定保存、冲突重读、取消/unknown 反馈 |
 | `src/context-tools.tsx`、`operation-receipt.tsx` | Context 工具发现/引用与桌面 Operation 回执展示；工具可见不等于授权，回执呈现不等于业务确认已签收 |
 | `src/conversation-files.tsx` | 对话受控文件引用入口；文件选择、读取权限和真实发送仍须端到端验收 |
-| `src/interaction-dock.tsx` | 形象/交互栏基础显示及位置管理；真实角色素材/完整交互未交付 |
+| [`avatar/avatar.tsx`](avatar/README.md)、[`interaction-bar/interaction-bar.tsx`](interaction-bar/README.md) | 虚拟形象入口与交互栏分别维护展示/交互；当前仅基础外观，真实 AI/秘书/Context 对象入口尚未接线 |
+| `src/interaction-dock.tsx` | 兼容装配层：共同展开状态、原 UI 偏好和两套相对坐标；保留原 `InteractionDock`、`restoreDockState` 导出及旧测试入口 |
 | `src/index.ts`、`tests/` | UI/桌面桥类型、状态回归和测试；权限与 OS 事实仍在可信宿主 |
 
 早期“只有 Space 页面”“全部对话为占位”“只有只读预览”“无文件编辑器”均不是当前状态，不得继续按这些旧结论重造组件。`github-tools.tsx` 提供官方目录、Schema、JSON 参数及 Operation 结果展示，经 DesktopBridge 手动触发；撤权、连接/配置切换清理目录与旧结果。此入口要求可信宿主装配 MCP runtime，不代表默认安装包已提供运行时或所有官方工具已验收。
 
 ## 产品约束
 
-当前界面只有 `context` / `structure` 两类工作视图：它们是基础标签和按需预览，不是长期专业多视图引擎。`src/space.tsx` 的类别按钮目前纵列渲染，且导航只有折叠态，与 A1 三个横排窄高类别按钮及完全隐藏能力仍有差距。`src/interaction-dock.tsx` 已有栏体开合、窗口内悬浮标记与两套坐标，但 AI/秘书/Context 对象入口未接线；底部输出不是交互栏。
+当前界面只有 `context` / `structure` 两类工作视图：它们是基础标签和按需预览，不是长期专业多视图引擎。`src/space.tsx` 的类别按钮目前纵列渲染，且导航只有折叠态，与 A1 三个横排窄高类别按钮及完全隐藏能力仍有差距。形象与交互栏现分属 [`avatar/`](avatar/README.md) 和 [`interaction-bar/`](interaction-bar/README.md)，由 `src/interaction-dock.tsx` 维持现有联动/位置与旧导出兼容；AI/秘书/Context 对象入口尚未接线，底部输出也不是交互栏。虚拟形象未来可映射 AI/Agent/秘书的显示身份与状态，但 AI 配置和会话事实仍由各自模块负责，UI 不能凭形象点击直接授权或执行。
 
 
 - PC 优先；单 Context 可开多个视图、布局保存恢复。窗口与 Context 组织方式尚未最终冻结，不据此提前建设独立多窗口调度系统。
