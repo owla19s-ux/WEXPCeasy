@@ -22,3 +22,10 @@ AI 管理三类独立配置：Role（name/prompt）、Position（name/responsibi
 先验证公开调用、配置修订、损坏/收据、模型与角色失效；然后在保持 `src/index.ts` 对外兼容的前提下按职责最小拆分，并补 Context、Conversations 和 UI 的组合回归。不要建立新的运行时记忆、调度器、权限或网络连接器。
 
 阅读顺序：根 README → 本 README/CONTRACT → `src/index.ts` 与 `tests/`。执行 `npm run build`、`npm run typecheck`、`npm test` 与 `npm run check:boundaries` 中可用部分；提交 SHA 和测试来源单独记录。当前仅静态复核，未独立签收。
+
+## 97 项对账｜AI 配置与交互栏对象（2026-11-09）
+
+- 对应第二批 F02 操作检查点和 UIX-04/10/12/18：Role、Position、Agent 的 `list/read/save`、模型引用校验、角色/职责关联均有领域基础；桌面 `app/src/desktop-ai.ts` 目前提供 snapshot/save，`UI/src/ai-settings.tsx` 有配置表单。
+- **尚无已确认的删除/归档/停用公开入口**，不可把“可以保存”写成完整 CRUD，也不可未经引用政策自动级联删除 Role、Position 或 Agent。多职责、多角色组合和模型/默认值优先级待合同冻结。
+- Space 承担 Context 对 AI 对象的引用；Conversations 保存本轮所用 Agent/模型依据；AI 配置有效性不代表 Agent Runtime 在线。交互栏的 AI/秘书实际对象入口仍为 UI 占位，不能当 AI 配置模块未实现或已完成运行时。
+- 本版只对已批准配置动作逐项验证修订/权限/撤权/失联/重启与桌面接线；多 Agent 调度、派生记忆、角色动画留待后续独立规格。
