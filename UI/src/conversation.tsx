@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {ConversationFiles} from './conversation-files.js';
-import type {ConversationFileReference,DesktopBridge,DesktopConversationInput,ConversationView,AiEntry,ApiConnectionView,ApiModelView} from './index.js';
-export function ConversationPanel({bridge}:{bridge:DesktopBridge}){
+import type {ConversationFileReference,DesktopBridge,DesktopConversationInput,ConversationView,AiEntry,ApiConnectionView,ApiModelView,AssociationItem} from './index.js';
+export function ConversationPanel({bridge,contextId,initialId,startNew,associations=[]}:{bridge:DesktopBridge;contextId?:string;initialId?:string;startNew?:boolean;associations?:AssociationItem[]}){
  const [conversations,setConversations]=useState<ConversationView[]>([]),[current,setCurrent]=useState<ConversationView>();
  const [agents,setAgents]=useState<AiEntry[]>([]),[agentId,setAgentId]=useState('');
  const [roleId,setRoleId]=useState(''),[positionId,setPositionId]=useState(''),[connectionId,setConnectionId]=useState(''),[modelId,setModelId]=useState('');
@@ -11,23 +11,26 @@ export function ConversationPanel({bridge}:{bridge:DesktopBridge}){
  const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[stream,setStream]=useState('');
  const currentId=useRef<string|undefined>(undefined),sequence=useRef(0),epoch=useRef(0),running=useRef(false);
  const streaming=useRef<{conversationId:string;known:Set<string>;generationId?:string}|undefined>(undefined);
- useEffect(()=>bridge.onConversationText(event=>{const round=streaming.current;if(!round||event.conversationId!==round.conversationId||round.known.has(event.generationId))return;if(round.generationId&&round.generationId!==event.generationId)return;round.generationId=event.generationId;setStream(s=>s+event.text);}),[bridge]);
- useEffect(()=>{const unsubscribe=bridge.onAccessChanged(()=>{epoch.current++;streaming.current=undefined;running.current=false;setBusy(false);sequence.current++;currentId.current=undefined;setCurrent(undefined);setConversations([]);setAgents([]);setConnections([]);setModels([]);setAgentId('');setRoleId('');setPositionId('');setConnectionId('');setModelId('');setFiles({});setStream('');setMessage('授权已变更，请重新读取对话；未发送输入已保留。');});return ()=>{epoch.current++;streaming.current=undefined;sequence.current++;currentId.current=undefined;running.current=false;unsubscribe();};},[bridge]);
+ useEffect(()=>bridge.onConversationText(event=>{const round=streaming.current;if((event.contextId??undefined)!==contextId||!round||event.conversationId!==round.conversationId||round.known.has(event.generationId))return;if(round.generationId&&round.generationId!==event.generationId)return;round.generationId=event.generationId;setStream(s=>s+event.text);}),[bridge,contextId]);
+ useEffect(()=>{const unsubscribe=bridge.onAccessChanged(()=>{epoch.current++;streaming.current=undefined;running.current=false;setBusy(false);sequence.current++;currentId.current=undefined;setCurrent(undefined);setConversations([]);setAgents([]);setConnections([]);setModels([]);setAgentId('');setRoleId('');setPositionId('');setConnectionId('');setModelId('');setFiles({});setStream('');setMessage('授权已变更，请重新读取对话；未发送输入已保留。');});return ()=>{if(streaming.current)void bridge.cancelConversations();epoch.current++;streaming.current=undefined;sequence.current++;currentId.current=undefined;running.current=false;unsubscribe();};},[bridge]);
+ async function conversationRequest(input:DesktopConversationInput){return bridge.conversations({...input,...(contextId?{contextId}:{})});}
+ function settings(entries:AiEntry[]){return contextId?entries.filter(e=>associations.some(r=>r.owner==='AI'&&r.targetType===e.kind&&r.targetId===e.id)):entries;}
+ useEffect(()=>{if(initialId)void run(()=>open(initialId));else if(startNew)void run(async()=>{const r=await call({kind:'create'});if(r.status==='committed'&&r.id)await open(r.id);});},[bridge,contextId,initialId,startNew]);
  async function checked<T,>(request:()=>Promise<T>):Promise<T>{const captured=epoch.current;const reply=await request();if(captured!==epoch.current)throw Error('stale_conversation_request');return reply;}
  async function cancel(){const captured=epoch.current;try{const r=await checked(()=>bridge.cancelConversations());setMessage(r.ok?'已请求停止本轮等待；以轮次状态为准。':r.error);}catch{if(captured===epoch.current)setMessage('停止请求不可用，请核对轮次状态。');}}
  async function call(input:DesktopConversationInput){
-  const r=await checked(()=>bridge.conversations(input));if(!r.ok)throw Error(r.error);
-  if(r.value.status!=='ok'&&r.value.status!=='committed')throw Error(r.value.status==='unknown'?'结果未知，请核对原 Operation，勿重复发送。':r.value.status);
+  const r=await checked(()=>conversationRequest(input));if(!r.ok)throw Error(r.error);
+  if(r.value.status!=='ok'&&r.value.status!=='committed')throw Error(r.value.status==='unknown'?'结果未知，请核对原 Operation，勿重复发送。':r.value.status+('reason'in r.value?'：'+r.value.reason:''));
   return r.value;
  }
  async function run(work:()=>Promise<void>){if(running.current)return;const captured=epoch.current;running.current=true;setBusy(true);setMessage('');try{await work();}catch(e){if(captured===epoch.current){setCurrent(undefined);setConversations([]);setStream('');setMessage(e instanceof Error?e.message:'对话不可用');}}finally{if(captured===epoch.current){running.current=false;setBusy(false);}}}
  async function open(id:string,restoredText?:string){const n=++sequence.current;streaming.current=undefined;currentId.current=id;setCurrent(undefined);setStream('');setReplaces(undefined);const r=await call({kind:'open',id});if(n===sequence.current&&r.status==='ok'&&'conversation'in r){setCurrent(r.conversation);setText(restoredText??drafts[id]??'');}}
  const key=current?.id??currentId.current??'new';
- return <div data-conversations><h2>普通对话</h2><p role="status">{message}</p>
- <div className="actions"><button disabled={busy} onClick={()=>void run(async()=>{const r=await call({kind:'snapshot'});if(r.status==='ok'&&'conversations'in r)setConversations(r.conversations);})}>读取对话历史</button>
- <button disabled={busy} onClick={()=>void run(async()=>{const r=await call({kind:'create'});if(r.status==='committed'&&r.id)await open(r.id);})}>新建普通对话</button>
- <button disabled={busy} onClick={()=>void run(async()=>{const r=await checked(()=>bridge.ai({kind:'snapshot'}));if(!r.ok||r.value.status!=='ok')throw Error('Agent 列表不可用');setAgents(r.value.entries);})}>读取可用 Agent</button>
- <button disabled={busy} onClick={()=>void run(async()=>{const r=await checked(()=>bridge.ai({kind:'snapshot'}));if(!r.ok||r.value.status!=='ok')throw Error('设定列表不可用');setAgents(r.value.entries);})}>读取角色与岗位</button>
+ return <div data-conversations><h2>{contextId?'Context 对话':'普通对话'}</h2>{contextId&&<small>Context {contextId}</small>}<p role="status">{message}</p>
+ <div className="actions"><button disabled={busy} onClick={()=>void run(async()=>{const r=await call({kind:'snapshot'});if(r.status==='ok'&&'conversations'in r)setConversations(r.conversations);})}>{contextId?'读取关联会话':'读取对话历史'}</button>
+ <button disabled={busy} onClick={()=>void run(async()=>{const r=await call({kind:'create'});if(r.status==='committed'&&r.id)await open(r.id);})}>{contextId?'新建 Context 会话':'新建普通对话'}</button>
+ <button disabled={busy} onClick={()=>void run(async()=>{const r=await checked(()=>bridge.ai({kind:'snapshot'}));if(!r.ok||r.value.status!=='ok')throw Error('Agent 列表不可用');setAgents(settings(r.value.entries));})}>读取可用 Agent</button>
+ <button disabled={busy} onClick={()=>void run(async()=>{const r=await checked(()=>bridge.ai({kind:'snapshot'}));if(!r.ok||r.value.status!=='ok')throw Error('设定列表不可用');setAgents(settings(r.value.entries));})}>读取角色与岗位</button>
  <button disabled={busy} onClick={()=>void run(async()=>{const r=await checked(()=>bridge.api({kind:'snapshot'}));if(!r.ok||r.value.status!=='ok'||r.value.view!=='connections')throw Error('连接列表不可用');setConnections(r.value.connections);setModels([]);setConnectionId('');setModelId('');})}>读取模型连接</button></div>
  <nav aria-label="普通对话历史">{conversations.map(c=><button key={c.id} disabled={busy} onClick={()=>void run(()=>open(c.id))}>{c.messages[0]?.segments[0]?.text.slice(0,40)??'空对话'}<small>{c.id}</small></button>)}</nav>
  <label>本轮 Agent<select disabled={busy} value={agentId} onChange={e=>{setAgentId(e.target.value);setRoleId('');setPositionId('');}}><option value="">请选择已配置 Agent</option>{agents.filter(a=>a.kind==='agent').map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
@@ -44,7 +47,7 @@ export function ConversationPanel({bridge}:{bridge:DesktopBridge}){
  <form aria-label="普通对话输入" onSubmit={e=>{e.preventDefault();if(!current)return;const id=current.id,input=text,n=sequence.current,captured=epoch.current;setStream('');void run(async()=>{
   streaming.current={conversationId:id,known:new Set(current.generations.map(g=>g.id))};
   let result;
-  try{const reply=await checked(()=>bridge.conversations({kind:replaces?'resend':'send',id,expectedRevision:current.revision,...(agentId?{agentId}:{selection:{...(roleId?{roleId}:{}),...(positionId?{positionId}:{}),connectionId,modelId}}),text:input,...(replaces?{replaces}:{}),...(files[id]?.length?{attachments:files[id]}:{})}));if(!reply.ok)throw Error(reply.error);result=reply.value;}finally{if(captured===epoch.current){streaming.current=undefined;setStream('');}}
+  try{const reply=await checked(()=>conversationRequest({kind:replaces?'resend':'send',id,expectedRevision:current.revision,...(agentId?{agentId}:{selection:{...(roleId?{roleId}:{}),...(positionId?{positionId}:{}),connectionId,modelId}}),text:input,...(replaces?{replaces}:{}),...(files[id]?.length?{attachments:files[id]}:{})}));if(!reply.ok)throw Error(reply.error);result=reply.value;}finally{if(captured===epoch.current){streaming.current=undefined;setStream('');}}
   if(n===sequence.current){
    if(result.status==='committed'){setFiles(d=>({...d,[id]:[]}));setDrafts(d=>({...d,[id]:''}));setText('');setReplaces(undefined);await open(id,'');}
    else{await open(id,input);setMessage(result.status==='unknown'?'结果未知，请核对原 Operation，勿重复发送。'+('operationId'in result?result.operationId??'':''):result.status);}

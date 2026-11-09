@@ -10,7 +10,7 @@ const id=(v:unknown):v is string=>typeof v==='string'&&/^[a-zA-Z0-9_-]{1,120}$/.
 function capture(raw:unknown):DesktopConversationInput|undefined{
  if(!object(raw)||typeof raw.kind!=='string')return;
  const fields:Record<string,string[]>={snapshot:['kind'],create:['kind'],open:['kind','id'],append:['kind','id','expectedRevision','text'],send:['kind','id','expectedRevision','text'],resend:['kind','id','expectedRevision','text','replaces'],select:['kind','id','expectedRevision','messageId','segmentIds'],recover:['kind','id','generationId']};
- const keys=Object.hasOwn(fields,raw.kind)?[...fields[raw.kind]!,...(['send','resend'].includes(raw.kind)?[Object.hasOwn(raw,'agentId')?'agentId':'selection']:[]),...(['send','resend','append'].includes(raw.kind)&&Object.hasOwn(raw,'attachments')?['attachments']:[])]:undefined;
+ const keys=Object.hasOwn(fields,raw.kind)?[...fields[raw.kind]!,...(Object.hasOwn(raw,'contextId')?['contextId']:[]),...(['send','resend'].includes(raw.kind)?[Object.hasOwn(raw,'agentId')?'agentId':'selection']:[]),...(['send','resend','append'].includes(raw.kind)&&Object.hasOwn(raw,'attachments')?['attachments']:[])]:undefined;
  if(!keys||Reflect.ownKeys(raw).length!==keys.length||!keys.every(k=>Object.hasOwn(raw,k)))return;
  for(const [k,v] of Object.entries(raw)){
   if(k==='kind')continue;
@@ -23,11 +23,12 @@ function capture(raw:unknown):DesktopConversationInput|undefined{
  }
  return structuredClone(raw) as unknown as DesktopConversationInput;
 }
-export function createDesktopConversations(options:{authority:DesktopAuthority;confirm:(summary:string)=>Promise<boolean>;onText?:(event:ConversationText)=>void;readAttachment?:(source:ConversationFileReference)=>Promise<DesktopSpaceReply>}){
+export function createDesktopConversations(options:{authority:DesktopAuthority;confirm:(summary:string)=>Promise<boolean>;readContext?:(id:string)=>Promise<import('../../space/src/index.js').ContextView|undefined>;onText?:(event:ConversationText)=>void;readAttachment?:(source:ConversationFileReference)=>Promise<DesktopSpaceReply>}){
  const a=options.authority;
  let host:FoundationHost|undefined,closed=false,active:{id:string;generationId:string;cancel:object;revision:number;cancelledRevision?:number}|undefined;
- const op=(resource:string,action:string,target:string):LocalOperation=>({resource,action,target,context:null});
- const chat=(action:string,id:string)=>op('conversations',action,'conversation:'+id);
+ let contextId:string|null=null;
+ const op=(resource:string,action:string,target:string,context:string|null=null):LocalOperation=>({resource,action,target,context});
+ const chat=(action:string,id:string)=>op('conversations',action,'conversation:'+id,contextId);
  function grant(scope:LocalOperation){a.permit(scope);const request=a.bind(scope);if(!request)throw Error('permission_unavailable');return request;}
  function read(id:string):Conversation{
   const r=host!.conversations!.service.read(grant(chat('read',id)),id);if(r.status!=='ok')throw Error('conversation_unavailable');return r.conversation;
@@ -43,10 +44,38 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
   const scope=op('connections/api',kind+'.read',kind+':'+id),r=host!.api!.query(grant(scope),{kind,id});
   if(r.status!=='ok'||Array.isArray(r.value))throw Error('configuration_unavailable');return r.value;
  }
+ async function environment(id:string){
+  if(options.readContext){const value=await options.readContext(id);if(!value)throw Error('context_unavailable');return value;}
+  if(!host?.space)throw Error('context_unavailable');
+  const r=await host.space.query(grant(op('space','context.read','context:'+id,id)),{kind:'context',id});
+  if(r.status!=='ok'||!('associations'in r.value))throw Error('context_unavailable');return r.value;
+ }
  async function perform(input:DesktopConversationInput):Promise<DesktopConversationReply>{
-  if(!await a.confirm(options.confirm,input.kind==='snapshot'?'读取已保存的普通对话列表及当前获准的历史。':input.kind==='send'||input.kind==='resend'?'准备发送对话输入（'+input.text.length+' 字符）。随后会展示实际 Provider 与模型并再次确认网络发送。':'本次普通对话操作：'+input.kind+('id'in input?' / '+input.id:'')))return {status:'cancelled'};
+  contextId=input.contextId??null;
+  if(!await a.confirm(options.confirm,(contextId?'Context '+contextId+'：':'普通对话：')+(input.kind==='snapshot'?'读取已保存的普通对话列表及当前获准的历史。':input.kind==='send'||input.kind==='resend'?'准备发送对话输入（'+input.text.length+' 字符）。随后会展示实际 Provider 与模型并再次确认网络发送。':'本次普通对话操作：'+input.kind+('id'in input?' / '+input.id:''))))return {status:'cancelled'};
+  let context=contextId?await environment(contextId):undefined;
+  if(context){
+   for(const target of context.associations){
+    const scope=target.owner==='AI'?op('AI',target.targetType+'.read',target.targetType+':'+target.targetId):target.owner==='conversations'?op('conversations','read','conversation:'+target.targetId):undefined;
+    if(scope)grant(scope);
+   }
+   // Re-query after exact owner reads are admitted; never infer a valid target from a saved ID alone.
+   context=await environment(context.id);
+  }
   if(input.kind==='create'){
-   const id=randomUUID(),r=change(id,0,{kind:'create'});return r.status==='committed'?{...r,id}:r;
+   const id=randomUUID(),r=change(id,0,{kind:'create'});
+   if(r.status!=='committed')return r;
+   if(context){
+    grant(op('conversations','read','conversation:'+id));
+    const linked=await host!.space!.execute(grant(op('space','association.add','context:'+context.id,context.id)),{kind:'association.add',contextId:context.id,owner:'conversations',targetType:'conversation',targetId:id,purpose:'conversation',intent:randomUUID()});
+    if(linked.status!=='committed')return {status:'unavailable',reason:'conversation_created_unlinked:'+id};
+   }
+   return {...r,id};
+  }
+  if(input.kind==='snapshot'&&context){
+   const conversations:Conversation[]=[];
+   for(const ref of context.associations.filter(r=>r.owner==='conversations'&&r.targetType==='conversation'))conversations.push(read(ref.targetId));
+   return {status:'ok',conversations};
   }
   if(input.kind==='snapshot'){
    const scope=op('conversations','list','conversation:*');grant(scope);
@@ -60,12 +89,13 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
     for(const s of pending)grant(s);
    }return {status:'unavailable',reason:'projection_unavailable'};
   }
+  if(context&&!context.associations.some(r=>r.owner==='conversations'&&r.targetType==='conversation'&&r.targetId===input.id))return {status:'reference_unavailable'};
   const current=read(input.id);
   if(input.kind==='open')return {status:'ok',conversation:current};
   if(input.kind==='recover'){
    const generation=current.generations.find(g=>g.id===input.generationId);
    if(!generation?.operationId)return {status:'invalid_transition'};
-   return host!.conversations!.generation!.recover({read:grant(chat('read',input.id)),receipt:grant(op('conversations','receipt.read','operation:'+generation.operationId)),finish:grant(chat('finish',input.id))},input.id,input.generationId,randomUUID());
+   return host!.conversations!.generation!.recover({read:grant(chat('read',input.id)),receipt:grant(op('conversations','receipt.read','operation:'+generation.operationId,contextId)),finish:grant(chat('finish',input.id))},input.id,input.generationId,randomUUID());
   }
   if(current.revision!==input.expectedRevision)return {status:'revision_conflict'};
   const segments='text'in input?[{id:'text',text:input.text},...('attachments'in input?input.attachments??[]:[]).map((source,index)=>({id:'file-'+index,text:'文件引用（正文未发送）',source}))]:[];
@@ -75,17 +105,32 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
   let selection=input.selection;
   if(input.agentId){const agent=ai('agent',input.agentId);if(agent.kind!=='agent')return {status:'reference_unavailable'};selection={roleId:agent.roleId,positionId:agent.positionId,...agent.model};}
   if(!selection)return {status:'reference_unavailable'};
-  const prompts:string[]=[];
-  if(selection.roleId){const role=ai('role',selection.roleId);if(role.kind!=='role')return {status:'reference_unavailable'};prompts.push(role.prompt);}
-  if(selection.positionId){const position=ai('position',selection.positionId);if(position.kind!=='position')return {status:'reference_unavailable'};prompts.push(position.responsibility);}
+  const settings:ReturnType<typeof ai>[]=[],prompts:string[]=[];
+  if(selection.roleId){const role=ai('role',selection.roleId);if(role.kind!=='role')return {status:'reference_unavailable'};settings.push(role);prompts.push(role.prompt);}
+  if(selection.positionId){const position=ai('position',selection.positionId);if(position.kind!=='position')return {status:'reference_unavailable'};settings.push(position);prompts.push(position.responsibility);}
   const model=api('model',selection.modelId) as ApiModel,connection=api('connection',selection.connectionId) as ApiConnection;
+  if(context){
+   const refs=input.agentId?[['agent',input.agentId]]:[...(selection.roleId?[['role',selection.roleId]]:[]),...(selection.positionId?[['position',selection.positionId]]:[])];
+   if(refs.some(([kind,id])=>!context!.associations.some(r=>r.owner==='AI'&&r.targetType===kind&&r.targetId===id)))return {status:'reference_unavailable'};
+  }
   if(model.connectionId!==connection.id)return {status:'reference_unavailable'};
-  if(!await a.confirm(options.confirm,'向 Provider 发送真实对话请求：'+connection.name+'\n'+connection.endpoint+'\n模型：'+model.name+' ('+model.modelId+')\n包括当前对话历史、角色/岗位设定和本次输入，可能产生费用。输入：\n'+input.text))return {status:'cancelled'};
+  if(prompts.join('\n\n').length>32000)return {status:'rejected',reason:'combined_prompt_too_large'};
+  if(!await a.confirm(options.confirm,'向 Provider 发送真实对话请求：'+(contextId?'Context '+contextId+'\n':'普通对话\n')+connection.name+'\n'+connection.endpoint+'\n模型：'+model.name+' ('+model.modelId+')\n包括当前对话历史、角色/岗位设定和本次输入，可能产生费用。输入：\n'+input.text))return {status:'cancelled'};
+  for(const entry of settings)if(ai(entry.kind,entry.id).revision!==entry.revision)return {status:'revision_conflict'};
+  if(api('model',model.id).revision!==model.revision||api('connection',connection.id).revision!==connection.revision)return {status:'revision_conflict'};
+  if(context){const latest=await environment(context.id);const signature=(v:typeof context)=>JSON.stringify({id:v!.id,revision:v!.revision,associations:v!.associations});if(signature(latest)!==signature(context))return {status:'revision_conflict'};}
   // Capture all exact permissions before dispatch. The running round keeps this configuration snapshot.
-  grant(op('connections/api','request.prepare','model:'+model.id));
-  const requests={read:grant(chat('read',input.id)),dispatch:grant(chat('dispatch',input.id)),api:grant(op('connections/api','request.send','model:'+model.id)),
+  grant(op('connections/api','request.prepare','model:'+model.id,contextId));
+  const requests={read:grant(chat('read',input.id)),dispatch:grant(chat('dispatch',input.id)),api:grant(op('connections/api','request.send','model:'+model.id,contextId)),
    finish:grant(chat('finish',input.id)),fail:grant(chat('fail',input.id)),unknown:grant(chat('unknown',input.id))};
   const cancel=grant(chat('cancel',input.id));grant(chat('append',input.id));grant(chat(input.kind==='resend'?'resend':'begin',input.id));
+  if(context){
+   const proof=a.bind(op('space','context.read','context:'+context.id,context.id))!;
+   const proofs=[proof,...settings.map(entry=>a.bind(op('AI',entry.kind+'.read',entry.kind+':'+entry.id))!)];
+   const valid=()=>!closed&&proofs.every(r=>host!.permissions!.evaluate(r).status==='allow');
+   for(const action of ['read','dispatch','finish','fail','unknown'])a.constrain(chat(action,input.id),valid);
+   a.constrain(op('connections/api','request.send','model:'+model.id,contextId),valid);
+  }
   const generationId=randomUUID(),messageId=randomUUID();
   let r;
   if(input.kind==='resend')r=change(input.id,current.revision,{kind:'resend',replaces:input.replaces!,messageId,generationId,segments});
@@ -97,8 +142,8 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
   active={id:input.id,generationId,cancel,revision:r.revision+1};
   try{
    const result=await host.conversations.generation.send({conversationId:input.id,generationId,operationId:randomUUID(),replyId:randomUUID(),intent:randomUUID(),expectedRevision:r.revision,requests,systemPrompt:prompts.join('\n\n'),
-    preparation:{requestId:randomUUID(),connectionId:connection.id,connectionRevision:connection.revision,modelId:model.id,modelRevision:model.revision,context:null,parameters:{},timeoutMs:60000,stream:true},
-    onText:text=>{if(!closed)options.onText?.({conversationId:input.id,generationId,text});}});
+    preparation:{requestId:randomUUID(),connectionId:connection.id,connectionRevision:connection.revision,modelId:model.id,modelRevision:model.revision,context:contextId,parameters:{},timeoutMs:60000,stream:true},
+    onText:text=>{if(!closed)options.onText?.({conversationId:input.id,generationId,text,...(contextId?{contextId}:{})});}});
    return active?.cancelledRevision?{status:'committed',revision:active.cancelledRevision}:result;
   }finally{active=undefined;}
  }

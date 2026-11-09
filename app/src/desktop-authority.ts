@@ -13,12 +13,12 @@ function capture(input:LocalOperation):Readonly<LocalOperation>{
 /** Per-window identity, operation admission and exact permission bindings only; no business state. */
 export function createDesktopAuthority(){
  const source={},historyToken={},session=randomUUID(),management=new WeakSet<object>(),requests=new WeakMap<object,Readonly<LocalOperation>>();
- const enabled=new Set<string>();
+ const enabled=new Set<string>(),constraints=new Map<string,()=>boolean>();
  let host:FoundationHost|undefined,closed=false,busy=false,approvedRevision:number|undefined;
  const identity={subject:'desktop-user',entry:'desktop:'+session,relationship:'desktop:'+session,relationshipGeneration:1,moduleEnabled:true,globalEnabled:true,sourceAllowed:true,entryEnabled:true};
  const policy:Pick<FoundationOptions,'trust'|'local'>={
   trust:{current:()=>undefined,canManage:change=>!closed&&management.has(change),canReadHistory:r=>!closed&&r===historyToken},
-  local:{current:(candidate,op)=>!closed&&candidate===source&&enabled.has(key(op))?identity:undefined}
+  local:{current:(candidate,op)=>!closed&&candidate===source&&enabled.has(key(op))&&(!constraints.has(key(op))||constraints.get(key(op))!())?identity:undefined}
  };
  function history(){
   const result=host?.permissions?.history(historyToken);if(result?.status!=='ok')throw Error('permission_history_unavailable');return result;
@@ -36,7 +36,7 @@ export function createDesktopAuthority(){
  function permit(input:LocalOperation){
   const op=capture(input),record=validApproval();
   if(!host?.permissions||!host.local)throw Error('entry_unavailable');
-  enabled.add(key(op));const request=bind(op);if(!request)throw Error('entry_unavailable');
+  constraints.delete(key(op));enabled.add(key(op));const request=bind(op);if(!request)throw Error('entry_unavailable');
   if(host.permissions.evaluate(request).status==='allow')return;
   const scope:Scope={subject:identity.subject,entry:identity.entry,relationship:identity.relationship,relationshipGeneration:1,conversation:null,...op};
   const change:Change={intent:randomUUID(),expectedRevision:record.revision,scope};
@@ -44,6 +44,7 @@ export function createDesktopAuthority(){
   if(result.status!=='committed')throw Error('permission_commit_unconfirmed');
  }
  return Object.freeze({policy,permit,bind,
+  constrain(input:LocalOperation,check:()=>boolean){validApproval();constraints.set(key(capture(input)),check);},
   related(parent:object,input:LocalOperation){
    const original=requests.get(parent);if(!original||closed)return;
    const before=host?.permissions?.evaluate(parent);if(before?.status!=='allow')return;
@@ -91,7 +92,7 @@ export function createDesktopAuthority(){
    if(closed||busy)return;busy=true;approvedRevision=undefined;
    try{return await work();}finally{approvedRevision=undefined;busy=false;}
   },
-  close(){closed=true;enabled.clear();approvedRevision=undefined;host?.local?.close(source);}
+  close(){closed=true;enabled.clear();constraints.clear();approvedRevision=undefined;host?.local?.close(source);}
  });
 }
 export type DesktopAuthority=ReturnType<typeof createDesktopAuthority>;

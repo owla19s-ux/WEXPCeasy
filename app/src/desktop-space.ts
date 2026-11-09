@@ -266,7 +266,8 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
   // Never automatically replay writes, including unknown results.
   return await host!.space!.execute(bind(op)!,command) as DesktopSpaceReply;
  }
- return Object.freeze({policy,derive,owner,attach(value:FoundationHost){if(host)throw Error('already_attached');host=value;authority.attach(value);},
+ return Object.freeze({policy,derive,owner,
+  async readContext(id:string){const r=await query({kind:'context',id},operation('context.read','context:'+id,id));return r.status==='ok'&&'associations'in r.value?r.value:undefined;},attach(value:FoundationHost){if(host)throw Error('already_attached');host=value;authority.attach(value);},
   async request(raw:unknown):Promise<DesktopSpaceReply>{
    const input=capture(raw);if(!input)return {status:'rejected',reason:'invalid_request'};
    if(closed||!host?.space||!host.local)return {status:'unavailable',reason:'space_unavailable'};

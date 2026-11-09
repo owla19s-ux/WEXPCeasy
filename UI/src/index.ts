@@ -60,14 +60,15 @@ export type DesktopAiReply={status:'ok';entries:AiEntry[]}|{status:'committed';r
 export interface ConversationFileReference {kind:'local-reference';contextId:string;addressId:string;version:string;mime:'text/plain'}
 export interface ConversationView {id:string;revision:number;messages:{id:string;role:'user'|'assistant';segments:{id:string;text:string;source?:ConversationFileReference}[];replaces?:string}[];generations:{id:string;inputMessageId:string;status:string;operationId?:string}[];selections?:{messageId:string;segmentIds:string[]}[]}
 export interface ConversationSelection {roleId?:string;positionId?:string;connectionId:string;modelId:string}
-export type DesktopConversationInput={kind:'snapshot'}|{kind:'create'}|{kind:'open';id:string}|
+export type DesktopConversationInput=DesktopConversationCommand&{contextId?:string};
+export type DesktopConversationCommand={kind:'snapshot'}|{kind:'create'}|{kind:'open';id:string}|
  {kind:'send'|'resend';id:string;expectedRevision:number;agentId?:string;selection?:ConversationSelection;text:string;replaces?:string;attachments?:ConversationFileReference[]}|
  {kind:'append';id:string;expectedRevision:number;text:string;attachments?:ConversationFileReference[]}|
  {kind:'select';id:string;expectedRevision:number;messageId:string;segmentIds:string[]}|
  {kind:'recover';id:string;generationId:string};
 export type DesktopConversationReply={status:'ok';conversation:ConversationView}|{status:'ok';conversations:ConversationView[]}|
  {status:'committed';id?:string;revision:number}|{status:'invalid_request'|'storage_unavailable'|'cancelled'|'unavailable'|'denied'|'invalid'|'reference_unavailable'|'revision_conflict'|'intent_conflict'|'unknown'|'not_committed'|'conflict'|'rejected'|'not_found'|'failed_no_commit'|'invalid_transition'|'already_dispatched';reason?:string;operationId?:string};
-export interface ConversationText {conversationId:string;generationId:string;text:string}
+export interface ConversationText {conversationId:string;generationId:string;text:string;contextId?:string}
 export type DesktopPermissionInput={kind:'snapshot'}|{kind:'revoke';id:string;expectedRevision:number};
 export type DesktopPermissionReply={status:'ok';source?:{kind:'native-local';subject:string;entry:string;relationship:string;relationshipGeneration:number;moduleEnabled:boolean;globalEnabled:boolean;entryEnabled:boolean};revision:number;entries:{id:string;resource:string;action:string;target:string;context:string|null}[]}|
  {status:'committed';revision:number}|{status:'unknown';intent:string}|{status:'rejected'|'unavailable';reason:string}|{status:'cancelled'};

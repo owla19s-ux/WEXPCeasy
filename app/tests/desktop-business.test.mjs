@@ -27,7 +27,7 @@ async function fixture(t,withFiles=false){
  const {createDesktopSpace}=await import('../../dist/app/src/desktop-space.js');
  const contextDirectory=join(root,'attachment-context');if(withFiles){await mkdir(contextDirectory);await writeFile(join(contextDirectory,'.wex-root.json'),JSON.stringify({format:1,id:'attachment-context'}));}
  const space=withFiles?createDesktopSpace({authority,rootId:'business',confirm,chooseDirectory:async()=>contextDirectory}):undefined;
- const ai=createDesktopAi({authority,confirm}),chat=createDesktopConversations({authority,confirm,onText:v=>deltas.push(v),readAttachment:space?input=>space.request({kind:'resource.read',contextId:input.contextId,id:input.addressId,mode:'file'}):undefined});
+ const ai=createDesktopAi({authority,confirm}),chat=createDesktopConversations({authority,confirm,readContext:space?id=>space.readContext(id):undefined,onText:v=>deltas.push(v),readAttachment:space?input=>space.request({kind:'resource.read',contextId:input.contextId,id:input.addressId,mode:'file'}):undefined});
  const options={dataRoot:root,...authority.policy,api:{deriveRequest:api.derive},ai:{bindRead:ai.bindRead},conversations:true,...(withFiles?{space:{deriveRequest:space.derive,owner:space.owner},localFiles:{coordinateWrites:true}}:{})};
  const host=await startFoundations(options);api.attach(host);ai.attach(host);chat.attach(host);space?.attach(host);
  t.after(async()=>{release?.();chat.close();space?.close();ai.close();api.close();await host.stop();server.closeAllConnections();server.close();await rm(root,{recursive:true,force:true});});
@@ -265,4 +265,58 @@ test('Context references validate real owners, allow multiple settings and exist
  detail=await f.space.request({kind:'context.open',id:ctx.id});assert.equal(detail.associations.length,2);
  assert.equal((await f.ai.request({kind:'snapshot'})).entries.length,3);
  assert.equal((await f.chat.request({kind:'open',id:conversation.id})).status,'ok');
+});
+
+test('Context conversation uses real scope, requires references and keeps ordinary history independent',async t=>{
+ const f=await fixture(t,true),{c,m}=await configured(f);
+ const ctx=await f.space.request({kind:'context.create',name:'Scoped'});
+ for(const targetType of ['role','position'])assert.equal((await f.space.request({kind:'association.add',contextId:ctx.id,owner:'AI',targetType,targetId:targetType,purpose:'use'})).status,'committed');
+ const created=await f.chat.request({kind:'create',contextId:ctx.id});assert.equal(created.status,'committed');
+ let detail=await f.space.request({kind:'context.open',id:ctx.id});assert.ok(detail.associations.some(a=>a.targetId===created.id));
+ const selection={roleId:'role',positionId:'position',connectionId:c.id,modelId:m.id};
+ const sent=await f.chat.request({kind:'send',id:created.id,expectedRevision:1,text:'scoped question',selection,contextId:ctx.id});assert.equal(sent.status,'committed');
+ const grants=await f.authority.settings({kind:'snapshot'},async()=>true);
+ assert.ok(grants.entries.some(e=>e.resource==='connections/api'&&e.action==='request.send'&&e.context===ctx.id));
+ assert.equal((await f.chat.request({kind:'open',id:created.id,contextId:ctx.id})).conversation.messages.length,2);
+ const scope=f.calls.at(-1);assert.equal(scope.messages[0].content,'Be precise.\n\nAnswer carefully.');
+ const history=await f.chat.request({kind:'snapshot',contextId:ctx.id});assert.equal(history.conversations.length,1);
+ assert.equal((await f.chat.request({kind:'open',id:created.id})).status,'ok');
+ const ordinary=await f.chat.request({kind:'create'});
+ assert.notEqual((await f.chat.request({kind:'open',id:ordinary.id,contextId:ctx.id})).status,'ok');
+ detail=await f.space.request({kind:'context.open',id:ctx.id});const roleRef=detail.associations.find(a=>a.targetType==='role');
+ await f.space.request({kind:'association.remove',contextId:ctx.id,id:roleRef.id,expectedRevision:1});
+ const current=await f.chat.request({kind:'open',id:created.id,contextId:ctx.id}),before=f.calls.length;
+ assert.notEqual((await f.chat.request({kind:'send',id:created.id,contextId:ctx.id,expectedRevision:current.conversation.revision,text:'unlinked role',selection})).status,'committed');
+ assert.equal(f.calls.length,before);
+});
+test('revoking Context access withholds remaining streaming and completion from that environment',async t=>{
+ const f=await fixture(t,true),{c,m}=await configured(f),ctx=await f.space.request({kind:'context.create',name:'Revocable'});
+ await f.space.request({kind:'association.add',contextId:ctx.id,owner:'AI',targetType:'role',targetId:'role',purpose:'use'});
+ const created=await f.chat.request({kind:'create',contextId:ctx.id});assert.equal(created.status,'committed');
+ const arrived=f.wait(),job=f.chat.request({kind:'send',id:created.id,contextId:ctx.id,expectedRevision:1,text:'wait',selection:{roleId:'role',connectionId:c.id,modelId:m.id}});await arrived;
+ const snapshot=await f.authority.settings({kind:'snapshot'},async()=>true),row=snapshot.entries.find(e=>e.resource==='space'&&e.action==='context.read'&&e.context===ctx.id);
+ assert.ok(row);await f.authority.settings({kind:'revoke',id:row.id,expectedRevision:snapshot.revision},async()=>true);
+ const before=f.deltas.length;f.release();assert.notEqual((await job).status,'committed');assert.equal(f.deltas.length,before);
+ const ordinary=await f.chat.request({kind:'open',id:created.id});assert.equal(ordinary.conversation.messages.length,1);
+});
+
+test('Context references and direct conversation recover with a fresh host and window without network replay',async t=>{
+ const f=await fixture(t,true),{c,m}=await configured(f),ctx=await f.space.request({kind:'context.create',name:'Persistent'});
+ await f.space.request({kind:'association.add',contextId:ctx.id,owner:'AI',targetType:'position',targetId:'position',purpose:'work'});
+ const created=await f.chat.request({kind:'create',contextId:ctx.id});
+ await f.chat.request({kind:'send',id:created.id,contextId:ctx.id,expectedRevision:1,text:'remember',selection:{positionId:'position',connectionId:c.id,modelId:m.id}});
+ const before=f.calls.length;f.chat.close();f.space.close();f.ai.close();f.api.close();await f.host.stop();
+ const {createDesktopAi}=await import('../../dist/app/src/desktop-ai.js'),{createDesktopSpace}=await import('../../dist/app/src/desktop-space.js'),{createDesktopConversations}=await import('../../dist/app/src/desktop-conversations.js');
+ const authority=createDesktopAuthority(),confirm=async()=>true;
+ const api=createDesktopApi({authority,confirm,requestCredential:async()=>undefined,cancelCredential(){}}),ai=createDesktopAi({authority,confirm});
+ const space=createDesktopSpace({authority,rootId:'business',confirm,chooseDirectory:async()=>undefined});
+ const chat=createDesktopConversations({authority,confirm,readContext:id=>space.readContext(id)});
+ const host=await startFoundations({dataRoot:f.root,...authority.policy,api:{deriveRequest:api.derive},ai:{bindRead:ai.bindRead},conversations:true,space:{deriveRequest:space.derive,owner:space.owner}});
+ api.attach(host);ai.attach(host);space.attach(host);chat.attach(host);
+ try{
+  const history=await chat.request({kind:'snapshot',contextId:ctx.id});assert.equal(history.status,'ok');assert.equal(history.conversations.length,1);
+  assert.equal(history.conversations[0].messages[1].segments[0].text,'hello world');
+  const detail=await space.request({kind:'context.open',id:ctx.id});assert.equal(detail.associations.length,2);
+  assert.equal((await chat.request({kind:'open',id:created.id,contextId:ctx.id})).status,'ok');assert.equal(f.calls.length,before);
+ }finally{chat.close();space.close();ai.close();api.close();await host.stop();}
 });
