@@ -15,7 +15,9 @@ AI 管理三类独立配置：Role（name/prompt）、Position（name/responsibi
 | Role/Position/Agent 配置 | 已有 `list/read/save`、正式类型和持久记录；桌面已有配置表单 | 删除/归档/停用尚无已确认公开入口；修订冲突与重启组合验收待核 |
 | Agent 引用 | Role/Position 和 API ModelReference 已有，Context 关联由 Space 持有 | 引用删除/失效、外部模型变更、Context 关联及本轮快照待核；交互栏实际 AI/秘书入口仍是 UI 占位 |
 | 配置权限与撤权 | 有受控读取/写入边界的设计与调用基础 | 精确可信入口、失权/列表投影、迟到结果 |
-| 模型偏好及对话消费 | App/对话有 Agent 读取与选择入口 | 配置变化时的快照、一轮真实请求和恢复 |
+| 模型偏好及对话消费 | App/普通对话已有 Agent 读取与选择入口 | 0.1.1 新增 Context 主 AI 基础对话消费：依获准关联复核 Agent/Role/Model 的 ID/修订及请求快照；真实请求和恢复待实现/验收 |
+
+0.1.1 的 Context **主 AI**是已有 Agent 的一项受控引用/当前选择，不是新 Agent 类型、权限等级或多 AI 团队。Workflows 才承担后续多 Agent 组织与调度；AI 仅暴露既有配置及有效性，不存 Context 会话、执行账本或业务消息。
 
 ## 调整与施工入口
 
