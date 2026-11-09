@@ -16,3 +16,7 @@
 ## 测试与下一步
 
 优先验证 Windows 路径/ACL/别名、外部并发修改、editToken 与观察版本、撤权、取消、重启恢复、权限拒绝及真实文件保存。执行模块测试与全仓可用 build/typecheck/test/boundaries，并明确同 SHA、模拟/真实环境及未验证项。需要新增本机执行能力时先取得具体版本与权限范围，不另建账本。
+
+## 97 项对账｜Local 操作与 UIX-05/06（2026-11-09）
+
+第四批 F06 明确区分可信路径选择、文件/目录读取、绑定版本保存、冲突重读、草稿与 unknown 原 Operation 回查。`app/src/desktop-space.ts` 有 resource.read/save，`UI/src/local-file-editor.tsx` 有窗口内草稿、editToken、保存和冲突比较；这不是持久草稿或完整多文件编辑器。Context 地址属于 Space 的引用，Local 保有真实 OS 路径/版本事实；跨进程/别名/ACL 和 Windows 实机仍待核。F06-009/010 环境管理归 environments，Shell/安装器不自动进入本版。
