@@ -10,7 +10,7 @@ export type ContextItem=({status:'available';description:string}&SpaceName)|{sta
 export interface ContextOrganization {contextId:string;revision:number;spaceId:string|null;groupId:string|null}
 export interface AddressItem extends SpaceName {address:string;notes:string;purpose:string|string[];status:'unverified';type?:string;source?:string}
 export interface ToolItem {id:string;revision:number;owner:string;targetType:string;targetId:string;purpose:string;enabled:boolean;availability:'available'|'unavailable'|'conflict'|'unknown';sourceRevision:string;observedAt:string}
-export type DesktopSpaceInput={kind:'resource.save';contextId:string;id:string;editToken:string;content:string}|{kind:'resource.read';contextId:string;id:string;mode:'file'|'directory'}|{kind:'category.create';name:string}|{kind:'category.edit';id:string;expectedRevision:number;name:string}|
+export type DesktopSpaceInput={kind:'tool.connections';contextId:string}|{kind:'tool.candidates';contextId:string;connectionId:string}|{kind:'tool.add';contextId:string;targetId:string;purpose:string}|{kind:'tool.set';contextId:string;id:string;expectedRevision:number;enabled:boolean}|{kind:'tool.remove';contextId:string;id:string;expectedRevision:number}|{kind:'resource.save';contextId:string;id:string;editToken:string;content:string}|{kind:'resource.read';contextId:string;id:string;mode:'file'|'directory'}|{kind:'category.create';name:string}|{kind:'category.edit';id:string;expectedRevision:number;name:string}|
  {kind:'address.add';contextId:string;name:string;address:string;notes?:string;purpose?:string|string[]}|{kind:'address.edit';contextId:string;id:string;expectedRevision:number;name:string;address:string;notes?:string;purpose?:string|string[]}|
  {kind:'address.remove';contextId:string;id:string;expectedRevision:number}|{kind:'primary.select';contextId:string;id:string|null;expectedRevision:number}|{kind:'snapshot'}|{kind:'context.open';id:string}|
  {kind:'space.create';name:string;description?:string;categoryId?:string|null}|{kind:'space.edit';id:string;expectedRevision:number;name:string;description?:string;categoryId?:string|null}|
@@ -18,7 +18,8 @@ export type DesktopSpaceInput={kind:'resource.save';contextId:string;id:string;e
  {kind:'group.create';spaceId:string;name:string}|{kind:'group.edit';id:string;expectedRevision:number;name:string}|
  {kind:'context.create';name:string;description?:string}|{kind:'context.edit';id:string;expectedRevision:number;name:string;description?:string}|
  {kind:'context.group';contextId:string;spaceId:string;groupId:string|null;expectedRevision:number};
-export type DesktopSpaceReply=
+export type DesktopSpaceReply={status:'ok';view:'tool-connections';connections:{id:string;adapter:string;enabled:boolean}[]}|{status:'ok';view:'tool-candidates';tools:{targetId:string;name:string}[]}|
+
  {status:'saved';version:string;operationId:string}|
  {status:'ok';view:'file';contextId:string;addressId:string;content:string;version:string;editToken?:string}|
  {status:'ok';view:'directory';contextId:string;addressId:string;entries:{name:string;kind:'file'|'directory'|'symlink'|'other'}[];complete:boolean;version:string}|

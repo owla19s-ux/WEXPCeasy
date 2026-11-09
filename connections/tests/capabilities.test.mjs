@@ -166,3 +166,12 @@ for(const stage of ['prepare','authorization-recheck','dispatch-record','receipt
   assert.equal(calls,stage.startsWith('receipt-')?1:0);
  });
 }
+
+test('persistent capability references are distinct from invocation grants and round-trip exact identity',()=>{
+ assert.equal(typeof api.capabilityReferenceTarget,'function');
+ const reference=api.capabilityReferenceTarget('fixture','connection','tool:name');
+ assert.deepEqual(api.parseCapabilityReference(reference),{adapterId:'fixture',connectionId:'connection',name:'tool:name'});
+ assert.notEqual(reference,api.capabilityInvocationTarget('fixture','connection','tool:name',{}));
+ assert.equal(api.parseCapabilityReference('capability-reference:["fixture","connection"]'),undefined);
+ assert.equal(api.parseCapabilityReference(reference+' '),undefined);
+});

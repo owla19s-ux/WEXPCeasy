@@ -8,13 +8,13 @@ import {startFoundations} from '../../dist/app/src/index.js';
 import {createDesktopAuthority} from '../../dist/app/src/desktop-authority.js';
 import {createDesktopSpace} from '../../dist/app/src/desktop-space.js';
 // Native confirmation and directory chooser are platform fixtures; all domain services and SQLite are real.
-async function fixture(t){
+async function fixture(t,toolOptions={}){
  const base=await mkdtemp(join(tmpdir(),'wex-desktop-space-')),root=join(base,'public'),context=join(base,'context');
  for(const [path,id] of [[root,'public-root'],[context,'context-root']]){await mkdir(path);await writeFile(join(path,'.wex-root.json'),JSON.stringify({format:1,id}));}
  let allow=true,confirmations=0,pause;
  const authority=createDesktopAuthority();
  const access=createDesktopSpace({authority,rootId:'public-root',confirm:async summary=>{confirmations++;if(pause&&summary.startsWith('保存本地文件：'))await pause();return allow;},chooseDirectory:async()=>context});
- const host=await startFoundations({dataRoot:root,...access.policy,space:{deriveRequest:access.derive},localFiles:{coordinateWrites:true},localDirectories:{}});
+ const host=await startFoundations({dataRoot:root,...access.policy,space:{deriveRequest:access.derive,owner:access.owner},localFiles:{coordinateWrites:true},localDirectories:{},connections:{adapters:[],capabilityAdapters:[{id:'fixture',version:'1',async discover(){return [{name:'inspect',inputSchema:{type:'object'}}];},async invoke(){throw Error('selection_must_not_invoke');},async stop(){},...toolOptions}]}});
  access.attach(host);t.after(async()=>{access.close();await host.stop();await rm(base,{recursive:true,force:true});});
  return {access,host,root,context,authority,setAllow:value=>allow=value,pauseSave:value=>pause=value,count:()=>confirmations};
 }
@@ -58,7 +58,7 @@ test('closing while native consent is pending prevents late writes',async t=>{
  const base=await mkdtemp(join(tmpdir(),'wex-space-consent-'));await writeFile(join(base,'.wex-root.json'),JSON.stringify({format:1,id:'public-root'}));
  let resolveConsent,entered;const entering=new Promise(r=>entered=r);
  const access=createDesktopSpace({rootId:'public-root',confirm:()=>{entered();return new Promise(r=>resolveConsent=r);},chooseDirectory:async()=>undefined});
- const host=await startFoundations({dataRoot:base,...access.policy,space:{deriveRequest:access.derive}});access.attach(host);
+ const host=await startFoundations({dataRoot:base,...access.policy,space:{deriveRequest:access.derive,owner:access.owner}});access.attach(host);
  try{const pending=access.request({kind:'space.create',name:'late'});await entering;access.close();resolveConsent(true);assert.equal((await pending).status,'unavailable');}
  finally{await host.stop();await rm(base,{recursive:true,force:true});}
 });
@@ -106,7 +106,7 @@ test('categories and multi-address primary references survive a fresh SQLite hos
  await f.access.request({kind:'primary.select',contextId:context.id,id:address.id,expectedRevision:1});
  f.access.close();assert.equal((await f.host.stop()).status,'stopped');
  const access=createDesktopSpace({rootId:'public-root',confirm:async()=>true,chooseDirectory:async()=>undefined});
- const host=await startFoundations({dataRoot:f.root,...access.policy,space:{deriveRequest:access.derive}});access.attach(host);
+ const host=await startFoundations({dataRoot:f.root,...access.policy,space:{deriveRequest:access.derive,owner:access.owner}});access.attach(host);
  try{
   const snapshot=await access.request({kind:'snapshot'});assert.equal(snapshot.categories[0].id,category.id);assert.equal(snapshot.spaces[0].id,space.id);assert.equal(snapshot.spaces[0].categoryId,category.id);
   const detail=await access.request({kind:'context.open',id:context.id});assert.equal(detail.context.primaryAddress,address.id);assert.deepEqual(detail.resources[0].purpose,['reference','operation']);assert.equal(detail.resources[0].notes,'original');
@@ -148,7 +148,7 @@ test('saved Local content and Operation survive a fresh host while old window ob
  const saved=await f.access.request({kind:'resource.save',contextId:context.id,id:address.id,editToken:read.editToken,content:'saved before restart'});assert.equal(saved.status,'saved');
  f.access.close();assert.equal((await f.host.stop()).status,'stopped');
  const access=createDesktopSpace({rootId:'public-root',confirm:async()=>true,chooseDirectory:async()=>undefined});
- const host=await startFoundations({dataRoot:f.root,...access.policy,space:{deriveRequest:access.derive},localFiles:{coordinateWrites:true}});access.attach(host);
+ const host=await startFoundations({dataRoot:f.root,...access.policy,space:{deriveRequest:access.derive,owner:access.owner},localFiles:{coordinateWrites:true}});access.attach(host);
  try{
   assert.equal(host.connections.operations.get(saved.operationId).phase,'observed');
   assert.equal((await access.request({kind:'resource.save',contextId:context.id,id:address.id,editToken:read.editToken,content:'old window'})).status,'rejected');
@@ -156,4 +156,38 @@ test('saved Local content and Operation survive a fresh host while old window ob
   assert.equal((await access.request({kind:'resource.save',contextId:context.id,id:address.id,editToken:observed.editToken,content:'saved after restart'})).status,'saved');
   assert.equal(await readFile(path,'utf8'),'saved after restart');
  }finally{access.close();await host.stop();}
+});
+
+test('Context tool selection uses public discovery, survives restart, and never grants execution',async t=>{
+ const f=await fixture(t),context=await f.access.request({kind:'context.create',name:'Tools'});
+ assert.equal(f.host.connections.configs.put({id:'tools',adapter:'fixture',endpoint:'fixture:tools',credentialRef:null,enabled:true},0,'config-tools').status,'ok');
+ const connections=await f.access.request({kind:'tool.connections',contextId:context.id});assert.equal(connections.status,'ok');assert.equal(connections.connections[0].id,'tools');
+ const candidates=await f.access.request({kind:'tool.candidates',contextId:context.id,connectionId:'tools'});assert.equal(candidates.status,'ok');assert.equal(candidates.tools[0].name,'inspect');
+ f.setAllow(false);assert.equal((await f.access.request({kind:'tool.add',contextId:context.id,targetId:candidates.tools[0].targetId,purpose:'inspect'})).status,'cancelled');f.setAllow(true);
+ const added=await f.access.request({kind:'tool.add',contextId:context.id,targetId:candidates.tools[0].targetId,purpose:'inspect'});assert.equal(added.status,'committed');
+ let opened=await f.access.request({kind:'context.open',id:context.id});assert.equal(opened.tools[0].availability,'available');assert.equal(opened.tools[0].enabled,true);
+ const permissions=await f.authority.settings({kind:'snapshot'},async()=>true);assert.equal(permissions.entries.some(e=>e.resource==='fixture'&&e.action==='write'),false);assert.equal(f.host.connections.operations.read().operations.length,0);
+ assert.equal((await f.access.request({kind:'tool.set',contextId:context.id,id:added.id,expectedRevision:1,enabled:false})).status,'committed');
+ assert.equal((await f.access.request({kind:'tool.remove',contextId:context.id,id:added.id,expectedRevision:1})).status,'rejected');
+ opened=await f.access.request({kind:'context.open',id:context.id});assert.equal(opened.tools[0].enabled,false);
+ f.access.close();assert.equal((await f.host.stop()).status,'stopped');
+ const authority=createDesktopAuthority(),access=createDesktopSpace({authority,rootId:'public-root',confirm:async()=>true,chooseDirectory:async()=>f.context});
+ const restored=await startFoundations({dataRoot:f.root,...authority.policy,space:{deriveRequest:access.derive,owner:access.owner},connections:{adapters:[],capabilityAdapters:[{id:'fixture',version:'1',async discover(){return [{name:'inspect',inputSchema:{type:'object'}}];},async invoke(){throw Error('must_not_invoke');},async stop(){}}]}});access.attach(restored);
+ try{
+  const recovered=await access.request({kind:'context.open',id:context.id});assert.equal(recovered.tools[0].id,added.id);assert.equal(recovered.tools[0].enabled,false);
+  assert.equal((await access.request({kind:'tool.remove',contextId:context.id,id:added.id,expectedRevision:2})).status,'committed');
+  assert.equal((await access.request({kind:'context.open',id:context.id})).tools.length,0);
+ }finally{access.close();await restored.stop();}
+});
+
+test('Context revocation during tool discovery withholds the late catalog and prevents execution grants',async t=>{
+ let entered,release;const arrived=new Promise(resolve=>entered=resolve),held=new Promise(resolve=>release=resolve);
+ const f=await fixture(t,{async discover(){entered();await held;return [{name:'private-tool',inputSchema:{type:'object'}}];}});
+ const context=await f.access.request({kind:'context.create',name:'Private source'});
+ f.host.connections.configs.put({id:'tools',adapter:'fixture',endpoint:'fixture:tools',credentialRef:null,enabled:true},0,'config');
+ const pending=f.access.request({kind:'tool.candidates',contextId:context.id,connectionId:'tools'});await arrived;
+ const grants=await f.authority.settings({kind:'snapshot'},async()=>true),grant=grants.entries.find(e=>e.resource==='space'&&e.action==='context.read');assert.ok(grant);
+ assert.equal((await f.authority.settings({kind:'revoke',id:grant.id,expectedRevision:grants.revision},async()=>true)).status,'committed');
+ release();const result=await pending;assert.equal(result.status,'rejected');assert.equal(JSON.stringify(result).includes('private-tool'),false);
+ assert.equal(f.host.connections.operations.read().operations.length,0);
 });

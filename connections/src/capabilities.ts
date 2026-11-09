@@ -37,3 +37,18 @@ export function captureCapabilityArguments(args:Record<string,Json>):Record<stri
   throw Error('invalid_capability_arguments');
  return JSON.parse(canonical(args)) as Record<string,Json>;
 }
+/** Persistent selection identity only. This target is never accepted as an invocation grant. */
+export function capabilityReferenceTarget(adapterId:string,connectionId:string,name:string):string{
+ for(const value of [adapterId,connectionId,name])if(typeof value!=='string'||!value.trim()||value.length>1024)throw Error('invalid_capability_reference');
+ const target='capability-reference:'+JSON.stringify([adapterId,connectionId,name]);
+ if(target.length>4096)throw Error('invalid_capability_reference');return target;
+}
+export function parseCapabilityReference(target:string):{adapterId:string;connectionId:string;name:string}|undefined{
+ try{if(typeof target!=='string'||!target.startsWith('capability-reference:'))return;
+  const values:unknown=JSON.parse(target.slice('capability-reference:'.length));
+  if(!Array.isArray(values)||values.length!==3||!values.every(v=>typeof v==='string'))return;
+  const [adapterId,connectionId,name]=values as [string,string,string];
+  if(capabilityReferenceTarget(adapterId,connectionId,name)!==target)return;
+  return {adapterId,connectionId,name};
+ }catch{return;}
+}

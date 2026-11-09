@@ -39,7 +39,7 @@ export async function runDesktop(options:{url:string;preload:string;start:(polic
   catch{localDiagnostics.push({module:'diagnostics',reason:'diagnostic_write_failed'});}
  }
  const lifecycle=createDesktopLifecycle(async()=>{
-  const value=await options.start(access?{...authority.policy,space:{deriveRequest:access.derive},api:{deriveRequest:api!.derive},ai:{bindRead:ai!.bindRead}}:undefined);
+  const value=await options.start(access?{...authority.policy,space:{deriveRequest:access.derive,owner:access.owner},api:{deriveRequest:api!.derive},ai:{bindRead:ai!.bindRead}}:undefined);
   // Lifecycle receives the provider before client attachment can fail, so shutdown never loses ownership.
   host=value;if(fault)recordFault();return value;
  });

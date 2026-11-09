@@ -1,6 +1,7 @@
 import {randomUUID,createHash} from 'node:crypto';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {capabilityDiscoveryTarget,capabilityReferenceTarget,parseCapabilityReference} from '../../connections/src/index.js';
 import {localFileTarget,localDirectoryTarget} from '../../connections/local/src/index.js';
 import type {FoundationHost,FoundationOptions} from './foundations.js';
 import type {LocalOperation} from './local-entries.js';
@@ -10,6 +11,8 @@ import type {SpaceCommand,SpaceQuery,QueryResult,ProjectionScope} from '../../sp
 import type {DesktopSpaceInput,DesktopSpaceReply} from '../../UI/src/index.js';
 interface FileObservation {contextId:string;addressId:string;revision:number;address:string;path:string;target:string;version:string}
 const schemas:Record<string,readonly string[]>={
+ 'tool.connections':['kind','contextId'],'tool.candidates':['kind','contextId','connectionId'],
+ 'tool.add':['kind','contextId','targetId','purpose'],'tool.set':['kind','contextId','id','expectedRevision','enabled'],'tool.remove':['kind','contextId','id','expectedRevision'],
  'resource.save':['kind','contextId','id','editToken','content'],
  'resource.read':['kind','contextId','id','mode'],
  'category.create':['kind','name'],'category.edit':['kind','id','expectedRevision','name'],
@@ -33,7 +36,7 @@ function capture(input:unknown):DesktopSpaceInput|undefined{
   if(key==='expectedRevision'){if(!Number.isSafeInteger(value)||Number(value)<0)return;}
   else if(key==='content'){if(typeof value!=='string'||Buffer.byteLength(value,'utf8')>1024*1024||Buffer.from(value,'utf8').toString('utf8')!==value)return;}
   else if(key==='mode'){if(!['file','directory'].includes(String(value)))return;}
-  else if(key==='clear'){if(typeof value!=='boolean')return;}
+  else if(key==='clear'||key==='enabled'){if(typeof value!=='boolean')return;}
   else if((key==='groupId'||key==='categoryId'||(key==='id'&&row.kind==='primary.select'))&&value===null){}
   else if(key==='purpose'&&Array.isArray(value)){
    if(value.length>32||Object.keys(value).length!==value.length||value.some(x=>typeof x!=='string'||!x.trim()||x.length>4096))return;
@@ -46,7 +49,7 @@ function capture(input:unknown):DesktopSpaceInput|undefined{
  if(required.some(k=>!Object.hasOwn(out,k)))return;
  return out as unknown as DesktopSpaceInput;
 }
-const titles:Record<string,string>={'resource.read':'查看已关联资源','category.create':'创建 Space 类别','category.edit':'编辑 Space 类别','address.add':'添加 Context 地址引用','address.edit':'编辑地址引用','address.remove':'解除地址引用（保留外部原资源）','primary.select':'选择 Context 主地址','space.create':'创建 Space','space.edit':'编辑 Space','space.directory':'变更 Space 工作目录关联','group.create':'创建分组','group.edit':'编辑分组','context.create':'创建 Context','context.edit':'编辑 Context','context.group':'移动 Context 分组','context.open':'查看 Context'};
+const titles:Record<string,string>={'tool.connections':'读取可关联工具连接（不授权执行）','tool.candidates':'读取可关联能力目录（不授权执行）','tool.add':'关联 Context 工具引用（不授权执行）','tool.set':'变更 Context 工具选择（不授权执行）','tool.remove':'解除 Context 工具引用（保留外部能力）','resource.read':'查看已关联资源','category.create':'创建 Space 类别','category.edit':'编辑 Space 类别','address.add':'添加 Context 地址引用','address.edit':'编辑地址引用','address.remove':'解除地址引用（保留外部原资源）','primary.select':'选择 Context 主地址','space.create':'创建 Space','space.edit':'编辑 Space','space.directory':'变更 Space 工作目录关联','group.create':'创建分组','group.edit':'编辑分组','context.create':'创建 Context','context.edit':'编辑 Context','context.group':'移动 Context 分组','context.open':'查看 Context'};
 const key=(op:LocalOperation)=>JSON.stringify(op);
 /** Native-confirmed local UI adapter. Domain data remains in Space; no Renderer identity/grant/path API. */
 export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:string;confirm:(summary:string)=>Promise<boolean>;chooseDirectory:()=>Promise<string|undefined>}){
@@ -76,6 +79,20 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
   }
   throw Error('projection_unavailable');
  }
+ const configScope:LocalOperation={resource:'connections',action:'configuration.read',target:'connections:configurations',context:null};
+ function toolScope(adapterId:string,connectionId:string):LocalOperation{return {resource:adapterId,action:'read',target:capabilityDiscoveryTarget(adapterId,connectionId),context:null};}
+ const owner:import('../../space/src/index.js').OwnerPort={async resolve(parent,target){
+  if(closed||!host?.connections||!authority.owns(parent,'space')||target.owner!=='connections'||target.targetType!=='tool')return {status:'unsupported'};
+  const reference=parseCapabilityReference(target.targetId);if(!reference)return {status:'unsupported'};
+  for(const scope of [configScope,toolScope(reference.adapterId,reference.connectionId)])if(!authority.enabled(scope)){if(reading)pending.set(key(scope),scope);return {status:'denied'};}
+  const configRequest=authority.related(parent,configScope),request=authority.related(parent,toolScope(reference.adapterId,reference.connectionId));
+  if(!configRequest||!request)return {status:'denied'};
+  const configs=host.connections.configs.read();
+  const result=await host.connections.discover(reference.adapterId,request,reference.connectionId,configs.revision);
+  if(result.status!=='ok'||!Array.isArray(result.value)||!result.value.some(tool=>tool&&typeof tool==='object'&&!Array.isArray(tool)&&tool['name']===reference.name))return {status:'unavailable'};
+  if(!authority.related(parent,configScope)||!authority.related(parent,toolScope(reference.adapterId,reference.connectionId)))return {status:'denied'};
+  return {status:'available',...target,availability:'available',sourceRevision:String(configs.revision),observedAt:new Date().toISOString()};
+ }};
  async function readResource(input:Extract<DesktopSpaceInput,{kind:'resource.read'}>):Promise<DesktopSpaceReply>{
   const read=()=>query({kind:'context',id:input.contextId},operation('context.read','context:'+input.contextId,input.contextId));
   const before=await read();if(before.status!=='ok')return {status:'unavailable',reason:'context_unavailable'};
@@ -184,6 +201,22 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
    const value=context.value as import('../../space/src/index.js').ContextView;
    return {status:'ok',view:'context',context:{id:value.id,revision:value.revision,name:value.name,description:value.description,primaryAddress:value.primaryAddress},resources:value.resources,tools:value.tools,location:(location.value as {location:string}).location,organization:organization.value as never};
   }
+  if(input.kind==='tool.connections'||input.kind==='tool.candidates'){
+   const context=await query({kind:'context',id:input.contextId},operation('context.read','context:'+input.contextId,input.contextId));
+   if(context.status!=='ok'||!host?.connections)return {status:'unavailable',reason:'context_or_connections_unavailable'};
+   permit(configScope);const request=bind(configScope)!;if(host.permissions!.evaluate(request).status!=='allow')return {status:'rejected',reason:'permission_unavailable'};
+   const configs=host.connections.configs.read(),adapters=new Set(host.connections.capabilities().map(adapter=>adapter.id));
+   if(input.kind==='tool.connections')return {status:'ok',view:'tool-connections',connections:configs.items.filter(c=>adapters.has(c.adapter)).map(c=>({id:c.id,adapter:c.adapter,enabled:c.enabled}))};
+   const connection=configs.items.find(c=>c.id===input.connectionId&&adapters.has(c.adapter));if(!connection)return {status:'unavailable',reason:'connection_unavailable'};
+   const contextRequest=bind(operation('context.read','context:'+input.contextId,input.contextId))!;
+   const scope=toolScope(connection.adapter,connection.id);permit(scope);
+   const result=await host.connections.discover(connection.adapter,bind(scope)!,connection.id,configs.revision);
+   if(host.permissions!.evaluate(contextRequest).status!=='allow')return {status:'rejected',reason:'context_authorization_changed'};
+   if(result.status!=='ok'||!Array.isArray(result.value))return {status:'unavailable',reason:'tool_catalog_unavailable'};
+   const tools:{targetId:string;name:string}[]=[];
+   for(const tool of result.value){if(!tool||typeof tool!=='object'||Array.isArray(tool)||typeof tool['name']!=='string')return {status:'unavailable',reason:'invalid_tool_catalog'};tools.push({targetId:capabilityReferenceTarget(connection.adapter,connection.id,tool['name']),name:tool['name']});}
+   return {status:'ok',view:'tool-candidates',tools};
+  }
   let command:SpaceCommand;
   if(input.kind==='context.create'||input.kind==='space.directory'){
    const location=input.kind==='space.directory'&&input.clear?null:await options.chooseDirectory();
@@ -191,6 +224,10 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
    if(closed)return {status:'unavailable',reason:'session_closed'};
    command=input.kind==='context.create'?{kind:input.kind,name:input.name,description:input.description??'',location:resolve(location!),intent:randomUUID()}:
     {kind:input.kind,id:input.id,expectedRevision:input.expectedRevision,location:location===null?null:resolve(location),intent:randomUUID()};
+  }else if(input.kind==='tool.add'){
+   const reference=parseCapabilityReference(input.targetId);if(!reference)return {status:'rejected',reason:'invalid_tool_reference'};
+   permit(configScope);permit(toolScope(reference.adapterId,reference.connectionId));
+   command={kind:'tool.add',contextId:input.contextId,owner:'connections',targetType:'tool',targetId:input.targetId,purpose:input.purpose,intent:randomUUID()};
   }else command={...input,intent:randomUUID()} as SpaceCommand;
   if(command.kind==='context.group'){
    const current=await query({kind:'context.organization',id:command.contextId},operation('context.organization.read','context:'+command.contextId,command.contextId));
@@ -206,7 +243,7 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
   // Never automatically replay writes, including unknown results.
   return await host!.space!.execute(bind(op)!,command) as DesktopSpaceReply;
  }
- return Object.freeze({policy,derive,attach(value:FoundationHost){if(host)throw Error('already_attached');host=value;authority.attach(value);},
+ return Object.freeze({policy,derive,owner,attach(value:FoundationHost){if(host)throw Error('already_attached');host=value;authority.attach(value);},
   async request(raw:unknown):Promise<DesktopSpaceReply>{
    const input=capture(raw);if(!input)return {status:'rejected',reason:'invalid_request'};
    if(closed||!host?.space||!host.local)return {status:'unavailable',reason:'space_unavailable'};

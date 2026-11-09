@@ -1,3 +1,4 @@
+import {ContextTools} from './context-tools.js';
 import {useState} from 'react';
 import type {DesktopSpaceInput,DesktopSpaceReply,AddressItem} from './index.js';
 type Detail=Extract<DesktopSpaceReply,{view:'context'}>;
@@ -27,5 +28,5 @@ export function ContextAddresses({detail,busy,run,call,reload,onPreview}:{detail
  <form aria-label="地址引用" onSubmit={event=>{event.preventDefault();void run(save);}}><h4>{editing?'编辑地址引用':'添加地址引用'}</h4><label>地址名称<input name="address-name" required disabled={busy} value={name} maxLength={4096} onChange={e=>setName(e.target.value)}/></label><label>地址<input name="address-value" required disabled={busy} value={address} maxLength={4096} onChange={e=>setAddress(e.target.value)}/></label><label>备注<textarea name="address-notes" disabled={busy} value={notes} maxLength={4096} onChange={e=>setNotes(e.target.value)}/></label>
  <fieldset disabled={busy}><legend>用途（可多选）</legend>{[['reference','参考'],['operation','操作'],['output','产出']].map(([value,label])=><label className="purpose" key={value}><input type="checkbox" checked={purposes.includes(value!)} onChange={e=>setPurposes(current=>e.target.checked?[...current,value!]:current.filter(x=>x!==value))}/>{label}</label>)}</fieldset>
  <button type="submit" disabled={busy||purposes.length===0}>保存地址</button>{editing&&<button type="button" disabled={busy} onClick={reset}>取消地址编辑</button>}</form>
- <h4>已获准的工具能力</h4>{detail.tools.length===0?<p>当前查询没有可显示的工具能力。</p>:detail.tools.map(tool=><p key={tool.id}>{tool.targetId} · {tool.owner}/{tool.targetType} · {tool.availability}（{tool.enabled?'已选择':'未启用'}）</p>)}</div>;
+ <ContextTools key={detail.context.id} detail={detail} busy={busy} run={run} call={call} reload={reload}/></div>;
 }

@@ -49,7 +49,7 @@ const startup=policy=>startFoundations({dataRoot:root,expectedRootId:id,trust:{c
   return new Response(JSON.stringify({content:{path:'README.md',sha:githubSha},commit:{sha:'c'.repeat(40)}}),{status:200,headers:{'content-type':'application/json'}});
  }
  return new Response(JSON.stringify({type:'file',path:'README.md',sha:githubSha,encoding:'base64',content:Buffer.from(githubText).toString('base64'),size:Buffer.byteLength(githubText)}),{status:200,headers:{'content-type':'application/json'}});
- }},conversations:true,ai:{bindRead:()=>undefined},localFiles:{coordinateWrites:true},localDirectories:{},technicalDiagnostics:{},
+ }},connections:{adapters:[],capabilityAdapters:[{id:'fixture',version:'1',async discover(){return [{name:'inspect',inputSchema:{type:'object'}}];},async invoke(){throw Error('context_selection_must_not_execute');},async stop(){}}]},conversations:true,ai:{bindRead:()=>undefined},localFiles:{coordinateWrites:true},localDirectories:{},technicalDiagnostics:{},
  openStore(path,namespace){const db=openSqliteStore(path,namespace);return {...db,close(){if(failClose&&namespace==='permissions'){failClose=false;throw Error('injected-close');}db.close();}};},...policy});
 const timer=setTimeout(()=>{console.error('desktop_runtime_timeout');app.exit(1);},75000);
 try{
@@ -354,6 +354,19 @@ try{
  await capture('-recovery');
  await click('设置');
  await click('返回工作区');await click('Space / Context');
+ const currentConfig=host.connections.configs.read();assert.equal(host.connections.configs.put({id:'context-tools-fixture',adapter:'fixture',endpoint:'fixture:tools',credentialRef:null,enabled:true},currentConfig.revision,'context-tools-config').status,'ok');
+ await click('打开工作区');await waitFor("[...document.querySelectorAll('nav button')].some(b=>b.textContent.includes('Desktop Context')&&!b.disabled)");
+ await wc.executeJavaScript("[...document.querySelectorAll('nav button')].find(b=>b.textContent.includes('Desktop Context')).click();true");
+ await waitFor("!!document.querySelector('[data-context-tools]')");await click('读取可关联工具连接');
+ await waitFor("document.querySelector('[data-context-tools] select').options.length>1");await choose('[data-context-tools] select','context-tools-fixture');await click('发现可关联工具');
+ await waitFor("document.querySelector('form[aria-label=\"Context 工具引用\"] select').options.length>1");
+ const selectedTool=await wc.executeJavaScript("document.querySelector('form[aria-label=\"Context 工具引用\"] select option:nth-child(2)').value");
+ await choose('form[aria-label="Context 工具引用"] select',selectedTool);await choose('form[aria-label="Context 工具引用"] input','Inspect only');
+ await wc.executeJavaScript("document.querySelector('form[aria-label=\"Context 工具引用\"]').requestSubmit();true");
+ await waitFor("!![...document.querySelectorAll('[data-context-tools] button')].find(b=>b.textContent==='停用工具选择'&&!b.disabled)");await click('停用工具选择');
+ await waitFor("!![...document.querySelectorAll('[data-context-tools] button')].find(b=>b.textContent==='启用工具选择'&&!b.disabled)");await click('解除工具引用');
+ await waitFor("document.querySelectorAll('[data-context-tools] article').length===0");
+ const toolGrants=await wc.executeJavaScript("window.wexHost.permissions({kind:'snapshot'})");assert.equal(toolGrants.value.entries.some(e=>e.resource==='fixture'&&e.action==='write'),false);
  const directory=await invoke({kind:'address.add',contextId:created.id,name:'Selected directory',address:pathToFileURL(contextRoot).href,purpose:'reference'});assert.equal(directory.status,'committed');
  const listed=await invoke({kind:'resource.read',contextId:created.id,id:directory.id,mode:'directory'});assert.equal(listed.status,'ok');assert.equal(listed.view,'directory');assert.ok(listed.entries.some(e=>e.name==='preview.txt'));
  const retained=await invoke({kind:'context.open',id:created.id});assert.equal(retained.resources.length,3);assert.ok(retained.context.primaryAddress);
