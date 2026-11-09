@@ -58,8 +58,9 @@ export type DesktopAiInput={kind:'snapshot'}|{kind:'save';id:string;expectedRevi
 export type DesktopAiReply={status:'ok';entries:AiEntry[]}|{status:'committed';revision:number}|{status:'invalid_request'|'storage_unavailable'|'cancelled'|'unavailable'|'denied'|'invalid'|'reference_unavailable'|'revision_conflict'|'intent_conflict'|'unknown'|'not_committed'|'conflict'|'rejected'|'not_found'|'failed_no_commit';reason?:string;intent?:string};
 export interface ConversationFileReference {kind:'local-reference';contextId:string;addressId:string;version:string;mime:'text/plain'}
 export interface ConversationView {id:string;revision:number;messages:{id:string;role:'user'|'assistant';segments:{id:string;text:string;source?:ConversationFileReference}[];replaces?:string}[];generations:{id:string;inputMessageId:string;status:string;operationId?:string}[];selections?:{messageId:string;segmentIds:string[]}[]}
+export interface ConversationSelection {roleId?:string;positionId?:string;connectionId:string;modelId:string}
 export type DesktopConversationInput={kind:'snapshot'}|{kind:'create'}|{kind:'open';id:string}|
- {kind:'send'|'resend';id:string;expectedRevision:number;agentId:string;text:string;replaces?:string;attachments?:ConversationFileReference[]}|
+ {kind:'send'|'resend';id:string;expectedRevision:number;agentId?:string;selection?:ConversationSelection;text:string;replaces?:string;attachments?:ConversationFileReference[]}|
  {kind:'append';id:string;expectedRevision:number;text:string;attachments?:ConversationFileReference[]}|
  {kind:'select';id:string;expectedRevision:number;messageId:string;segmentIds:string[]}|
  {kind:'recover';id:string;generationId:string};

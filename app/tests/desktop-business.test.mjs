@@ -217,3 +217,34 @@ test('original Operation receipt requires explicit native consent and reads dura
   const permissions=await f.authority.settings({kind:'snapshot'},async()=>true);assert.equal(permissions.source.kind,'native-local');assert.match(permissions.source.entry,/^desktop:/);
  }finally{controls.close();}
 });
+
+test('direct Role, Position and combined settings use an explicit model without an Agent',async t=>{
+ const f=await fixture(t),{c,m}=await configured(f);
+ for(const [selection,prompt] of [
+  [{roleId:'role'},'Be precise.'],[{positionId:'position'},'Answer carefully.'],
+  [{roleId:'role',positionId:'position'},'Be precise.\n\nAnswer carefully.']
+ ]){
+  const created=await f.chat.request({kind:'create'});
+  const sent=await f.chat.request({kind:'send',id:created.id,expectedRevision:1,text:'direct question',selection:{...selection,connectionId:c.id,modelId:m.id}});
+  assert.equal(sent.status,'committed');
+  assert.deepEqual(f.calls.at(-1).messages,[{role:'system',content:prompt},{role:'user',content:'direct question'}]);
+  assert.equal((await f.chat.request({kind:'open',id:created.id})).conversation.messages[1].segments[0].text,'hello world');
+ }
+ const created=await f.chat.request({kind:'create'}),before=f.calls.length;
+ for(const selection of [{connectionId:c.id,modelId:m.id},{roleId:'missing',connectionId:c.id,modelId:m.id},{roleId:'role',connectionId:'missing',modelId:m.id}]){
+  assert.notEqual((await f.chat.request({kind:'send',id:created.id,expectedRevision:1,text:'blocked',selection})).status,'committed');
+ }
+ assert.equal(f.calls.length,before);
+ assert.equal((await f.chat.request({kind:'open',id:created.id})).conversation.messages.length,0);
+});
+test('Role and Position save and edit before any API exists',async t=>{
+ const f=await fixture(t);
+ for(const [kind,field] of [['role','prompt'],['position','responsibility']]){
+  const value={kind,name:kind,[field]:'first'};
+  assert.equal((await f.ai.request({kind:'save',id:kind,expectedRevision:0,value})).status,'committed');
+  assert.equal((await f.ai.request({kind:'save',id:kind,expectedRevision:1,value:{...value,[field]:'edited'}})).status,'committed');
+ }
+ const result=await f.ai.request({kind:'snapshot'});
+ assert.equal(result.entries.length,2);assert.ok(result.entries.every(e=>(e.prompt??e.responsibility)==='edited'));
+ assert.equal(f.calls.length,0);
+});

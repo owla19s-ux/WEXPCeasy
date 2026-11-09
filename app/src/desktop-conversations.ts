@@ -9,12 +9,13 @@ const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const id=(v:unknown):v is string=>typeof v==='string'&&/^[a-zA-Z0-9_-]{1,120}$/.test(v);
 function capture(raw:unknown):DesktopConversationInput|undefined{
  if(!object(raw)||typeof raw.kind!=='string')return;
- const fields:Record<string,string[]>={snapshot:['kind'],create:['kind'],open:['kind','id'],append:['kind','id','expectedRevision','text'],send:['kind','id','expectedRevision','agentId','text'],resend:['kind','id','expectedRevision','agentId','text','replaces'],select:['kind','id','expectedRevision','messageId','segmentIds'],recover:['kind','id','generationId']};
- const keys=Object.hasOwn(fields,raw.kind)?[...fields[raw.kind]!,...(['send','resend','append'].includes(raw.kind)&&Object.hasOwn(raw,'attachments')?['attachments']:[])]:undefined;
+ const fields:Record<string,string[]>={snapshot:['kind'],create:['kind'],open:['kind','id'],append:['kind','id','expectedRevision','text'],send:['kind','id','expectedRevision','text'],resend:['kind','id','expectedRevision','text','replaces'],select:['kind','id','expectedRevision','messageId','segmentIds'],recover:['kind','id','generationId']};
+ const keys=Object.hasOwn(fields,raw.kind)?[...fields[raw.kind]!,...(['send','resend'].includes(raw.kind)?[Object.hasOwn(raw,'agentId')?'agentId':'selection']:[]),...(['send','resend','append'].includes(raw.kind)&&Object.hasOwn(raw,'attachments')?['attachments']:[])]:undefined;
  if(!keys||Reflect.ownKeys(raw).length!==keys.length||!keys.every(k=>Object.hasOwn(raw,k)))return;
  for(const [k,v] of Object.entries(raw)){
   if(k==='kind')continue;
-  if(k==='attachments'){if(!Array.isArray(v)||v.length>8||v.some(source=>!object(source)||Object.keys(source).sort().join(',')!=='addressId,contextId,kind,mime,version'||source.kind!=='local-reference'||source.mime!=='text/plain'||!id(source.contextId)||!id(source.addressId)||typeof source.version!=='string'||!/^[a-f0-9]{64}$/.test(source.version)))return;}
+  if(k==='selection'){if(!object(v)||Reflect.ownKeys(v).some(k=>!['roleId','positionId','connectionId','modelId'].includes(String(k)))||!id(v.connectionId)||!id(v.modelId)||(!id(v.roleId)&&!id(v.positionId))||('roleId'in v&&!id(v.roleId))||('positionId'in v&&!id(v.positionId)))return;}
+  else if(k==='attachments'){if(!Array.isArray(v)||v.length>8||v.some(source=>!object(source)||Object.keys(source).sort().join(',')!=='addressId,contextId,kind,mime,version'||source.kind!=='local-reference'||source.mime!=='text/plain'||!id(source.contextId)||!id(source.addressId)||typeof source.version!=='string'||!/^[a-f0-9]{64}$/.test(source.version)))return;}
   else if(k==='expectedRevision'){if(!Number.isSafeInteger(v)||Number(v)<1)return;}
   else if(k==='text'){if(typeof v!=='string'||!v.trim()||v.length>32000)return;}
   else if(k==='segmentIds'){if(!Array.isArray(v)||v.length>256||!v.every(id)||new Set(v).size!==v.length)return;}
@@ -71,12 +72,15 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
   if(input.kind==='append')return change(input.id,input.expectedRevision,{kind:'append',messageId:randomUUID(),segments});
   if(input.kind==='select')return change(input.id,input.expectedRevision,{kind:'select',messageId:input.messageId,segmentIds:input.segmentIds});
   if(!host?.api||!host.ai||!host.conversations?.generation)return {status:'unavailable',reason:'generation_unavailable'};
-  const agent=ai('agent',input.agentId);if(agent.kind!=='agent')return {status:'reference_unavailable'};
-  const role=ai('role',agent.roleId);if(role.kind!=='role')return {status:'reference_unavailable'};
-  ai('position',agent.positionId);
-  const model=api('model',agent.model.modelId) as ApiModel,connection=api('connection',agent.model.connectionId) as ApiConnection;
+  let selection=input.selection;
+  if(input.agentId){const agent=ai('agent',input.agentId);if(agent.kind!=='agent')return {status:'reference_unavailable'};selection={roleId:agent.roleId,positionId:agent.positionId,...agent.model};}
+  if(!selection)return {status:'reference_unavailable'};
+  const prompts:string[]=[];
+  if(selection.roleId){const role=ai('role',selection.roleId);if(role.kind!=='role')return {status:'reference_unavailable'};prompts.push(role.prompt);}
+  if(selection.positionId){const position=ai('position',selection.positionId);if(position.kind!=='position')return {status:'reference_unavailable'};prompts.push(position.responsibility);}
+  const model=api('model',selection.modelId) as ApiModel,connection=api('connection',selection.connectionId) as ApiConnection;
   if(model.connectionId!==connection.id)return {status:'reference_unavailable'};
-  if(!await a.confirm(options.confirm,'向 Provider 发送真实对话请求：'+connection.name+'\n'+connection.endpoint+'\n模型：'+model.name+' ('+model.modelId+')\n包括当前对话历史、角色提示词和本次输入，可能产生费用。输入：\n'+input.text))return {status:'cancelled'};
+  if(!await a.confirm(options.confirm,'向 Provider 发送真实对话请求：'+connection.name+'\n'+connection.endpoint+'\n模型：'+model.name+' ('+model.modelId+')\n包括当前对话历史、角色/岗位设定和本次输入，可能产生费用。输入：\n'+input.text))return {status:'cancelled'};
   // Capture all exact permissions before dispatch. The running round keeps this configuration snapshot.
   grant(op('connections/api','request.prepare','model:'+model.id));
   const requests={read:grant(chat('read',input.id)),dispatch:grant(chat('dispatch',input.id)),api:grant(op('connections/api','request.send','model:'+model.id)),
@@ -92,7 +96,7 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
   if(r.status!=='committed')return r;
   active={id:input.id,generationId,cancel,revision:r.revision+1};
   try{
-   const result=await host.conversations.generation.send({conversationId:input.id,generationId,operationId:randomUUID(),replyId:randomUUID(),intent:randomUUID(),expectedRevision:r.revision,requests,systemPrompt:role.prompt,
+   const result=await host.conversations.generation.send({conversationId:input.id,generationId,operationId:randomUUID(),replyId:randomUUID(),intent:randomUUID(),expectedRevision:r.revision,requests,systemPrompt:prompts.join('\n\n'),
     preparation:{requestId:randomUUID(),connectionId:connection.id,connectionRevision:connection.revision,modelId:model.id,modelRevision:model.revision,context:null,parameters:{},timeoutMs:60000,stream:true},
     onText:text=>{if(!closed)options.onText?.({conversationId:input.id,generationId,text});}});
    return active?.cancelledRevision?{status:'committed',revision:active.cancelledRevision}:result;
