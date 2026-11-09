@@ -31,3 +31,10 @@ Permissions 决定授权，Shared 保管秘密和技术存储，App 提供可信
 - 验证层次：模块单测 → 公共 Connections 组合 → 真实适配器 → App IPC → UI/AI/Conversations/Space → Windows 实机。每层单独标注 commit SHA、运行结果及证据，不将跨域任务改造成单模块权威。
 
 本 README 不维护历史研究批次或固定实施顺序；旧资料仅按需追溯。
+
+## 97 项对账｜公共 Operation 与 UI 观察（2026-11-09）
+
+- 第三批 F05 操作检查点分别核对 capability 发现（工具名/Schema/来源/版本）、受控 invoke（connection+toolName+原始参数）、attempt/Operation、按原 ID 读取回执、取消/unknown 与 stop 排空；不把 observed 或 MCP isError 当外部业务完成。
+- GitHub 文件版本写入、官方 MCP 通用工具消费与 Space 的 Context Tool 选择属于不同 owner；连接目录可见不等于工具执行授权，Context 引用不生成 Grant。
+- UIX-20 的状态反馈由 `UI/src/operation-receipt.tsx` 等界面读取本域原始 Operation，不在 UI、App、Space 复制账本；交互栏（UIX-12）将来可作为受控调用入口，但当前没有真实对象接线。
+- A2 记录 77 个业务操作检查点与 UIX 20 项的逐项边界；只补实际接口/调用缺口，不为未批准的插件、DSH 或工作流调度新建公共派发体系。
