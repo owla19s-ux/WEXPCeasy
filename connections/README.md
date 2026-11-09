@@ -7,7 +7,7 @@
 | Owner | 职责 | 当前状态 |
 |---|---|---|
 | `connections/src/` | 连接配置、受控 read/dispatch/discover/invoke、Operation/attempt/Receipt、生命周期及公共调用契约 | 代码与测试已存在，完整跨模块组合未签收 |
-| [API](api/README.md) | 模型连接、协议、请求和结果 | 两种协议路径与基础调用已存在，真实服务待核 |
+| [API](api/README.md) | 模型连接、协议、请求和结果 | 两种协议路径与基础调用已存在；Context 内对话实际配置选择/请求未贯通 |
 | [GitHub](github/README.md) | 官方 MCP 能力适配、GitHub 文件兼容 | 已有文件兼容与通用 MCP Adapter；产品完整验收仍待完成 |
 | [Local](local/README.md) | 受控本机文件/目录及以后批准的 OS 执行适配 | 文件读写、版本绑定、编辑 UI 已有，Windows 实机待核 |
 | `dsh/`、`search/` | 外部 Agent 与搜索候选 | 非 0.1.1 默认交付，不因目录存在宣称实现 |
@@ -22,6 +22,8 @@ Permissions 决定授权，Shared 保管秘密和技术存储，App 提供可信
 通用能力已存在：`capabilities.ts` 定义 `ConfiguredCapabilityAdapter`、`capabilityDiscoveryTarget`、`capabilityInvocationTarget` 与 `captureCapabilityArguments`；`ConnectionService.discover/invoke` 复用原配置、受控读取/派发及 Operation 账本。`ConnectionClient` 保留旧形状，`ConnectionCapabilityClient` 为增量端口。发现用 read 授权，任意工具执行用精确参数绑定的 write 授权；`isError` 保留为工具结果，observed 不等于业务成功。
 
 历史 PR #4 的底座已由源码逐文件确认吸收；PR #3 的另一套公共目标与 Session Manager 不引入。App 以当前公开端口装配 GitHub 能力，DesktopBridge 提供经 Native 确认的手动目录与调用。运行时必须由可信宿主提供；默认桌面分发尚未自动装配官方二进制。
+
+**Context → 对话 → API/GitHub 的跨域链路待验**。Context 关联和 Tool.enabled 不是 Connections 的执行授权；Connections 管可信连接配置、发现/调用、配置版本、Operation/attempt/Receipt，不决定哪个 Context 在哪一轮 Conversation 自动公开哪些工具。可信调用方须明确关联的 Context/Conversation/Agent、引用版本与工具/参数；“引用存在、已启用、已发现、已获权、已调用、已成功”应分别记录，不添加第二套运行账本。
 
 ## 施工规则与验收
 
