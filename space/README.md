@@ -17,11 +17,13 @@ Space 维护 Category、Space、Group、Context 的组织关系、稳定 ID、�
 | Category 可见性 | 已有准备/提交和恢复边界的撤权相关修复/测试提交（`3693a8ec`、`beea0ce2`、`c2e68469`） | 当前 SHA 同步回归、原回执/未授权落库防护 |
 | Space 桌面展示 | 现有 Space 页面和资源预览/编辑入口 | 快速切换、迟到响应、权限变化与 Windows 验收 |
 
-**版本边界核对：Context 内会话属于完整产品待细化方向，不能直接作为 0.1.1 P0 任务**。现有 Context 只存组织、地址、关联及 Tool 选择；桌面 Context 打开投影没有正式会话列表/关联操作。Context 需要能够组织和引用关联 Conversation，但会话本体、消息与生成仍归 Conversations。资源引用、配置选择、局部启用、目标实际可用、权限允许与实际执行是不同层次；Tool.enabled 不授予执行许可。原 0.1.1 的 B2-02/B2-04 只要求 Context 与 Agent/模型、资源/Connections 的基础关联及能力调用；完整 Context 内会话组织、列表/绑定/解除等操作在原计划中未明确规定版本。具体关联生命周期、默认与覆盖优先级仍需依据版本设计细化，不能擅自新增数据结构。
+**版本修订（2026-11-09）**：0.1.1 已批准每个 Context 可选择一个主 AI 并进入一个可恢复的基础关联对话，用于 B2 基础链路验收；不依赖工作流。完整 Context 多会话组织、任意会话关联/解除、自动配置继承与多 AI 仍不在该最小闭环内。现有 Context 只存组织、地址、关联及 Tool 选择；桌面 Context 打开投影没有正式会话列表/关联操作。Context 需要能够组织和引用关联 Conversation，但会话本体、消息与生成仍归 Conversations。资源引用、配置选择、局部启用、目标实际可用、权限允许与实际执行是不同层次；Tool.enabled 不授予执行许可。原 0.1.1 的 B2-02/B2-04 只要求 Context 与 Agent/模型、资源/Connections 的基础关联及能力调用；完整 Context 内会话组织、列表/绑定/解除等操作在原计划中未明确规定版本。具体关联生命周期、默认与覆盖优先级仍需依据版本设计细化，不能擅自新增数据结构。
 
 ## 2026-11-09 桌面工具引用进展
 
 [`5a77d192`](https://github.com/owla19s-ux/WEXPCeasy/commit/5a77d192bf8d0154ca5975c42ec7e8f42181090c) 已提交经授权发现工具并管理 Context 工具引用的桌面交互，相关差异涉及 `UI/src/context-tools.tsx`、`app/src/desktop-space.ts`、Connections 能力及测试。该证据仅说明代码/测试已提交，不等于 Space 所有引用关系或真实工具执行已通过；最新 main `a91aacf3` 的同 SHA CI、撤权/重启/失联验收仍待核。Space 仍只持引用，工具发现不授予执行权。
+
+本版重点：复用现有 `AI:agent` Association 和 Context 稳定 ID，明确主 AI 的唯一有效选择与读取结果，并以受控、可持久关系关联基本 Conversation；不得复制消息、配置或权限数据。`Context.config` 当前要求空对象，**不得直接写入任意新键**；关联方式/持久边界须由本模块和 Conversations 的现有 Store 与公开接口共同确定，防止破坏旧数据。异常时保留旧关联并报告冲突/失权，避免自动转用其他 Agent。
 
 ## 调整与验收
 
