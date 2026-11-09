@@ -19,3 +19,7 @@
 Permissions 维护唯一可修改授权/撤权记录；Connections 持有对外 Operation，App 提供真实用户/OS 可信入口，各领域维护自己的写入/修订规则。取消本地等待、撤权、外部进程终止、远端副作用回滚是不同事实，不能混淆。
 
 默认阅读：根 README → 本 README → `src/index.ts`、`src/service.ts`、`tests/`。运行 `npm run test:permissions` 与可用全仓 build/typecheck/test/boundaries；含 local、拒绝、撤权、管理命令复核及重启恢复用例。附测试 SHA 和真实/模拟证据，不将历史 `1048b6a` 作为最新基线。
+
+## 97 项对账｜F09 与权限 UI（2026-11-09）
+
+第三批检查点覆盖入口/主体、模块/全局总闸、对话许可、操作前及派发前复核、审批/Grant/撤销、审计与资源外发；能力发现、Context Tool 引用、AI 职责均不自动授权。A1 D01/D02 已确认对话 I～IV 级的**产品语义**，不代表当前代码和 UI 完成交付。`UI/src/permission-settings.tsx` 目前只展示当前窗口 scope/准入并支持 snapshot/revoke，未提供四级对话权限编辑。高危专项政策与 Task/callback 的未决范围不能通过 UIX 交互栏入口绕过。撤权不能自动回滚已发生的远端副作用。
