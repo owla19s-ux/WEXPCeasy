@@ -38,15 +38,12 @@ API 独立管理非秘密 Provider/Connection/Model、模型能力观察、请�
 
 ## 下一步调整与验收
 
+桌面功能核查须分别比较配置/模型操作的模块 API、`app/src/desktop-api.ts` 与 `UI/src/api-settings.tsx`：连接/模型删除和 `top_p` 已有底层入口，但相应 UI 完整操作仍缺；不得用模块 CRUD 代替用户可操作性。模型能力观察也不能替代真实多模态请求或探针结果。
+
+
 1. **先稳固底座**：现有模型观察和请求快照的配置修订、probe 协议版本、恢复、方向拒绝、旧格式兼容及 unknown/取消；先核测试再定向修复。
 2. **按协议独立源码文件**：不同 Provider 可共用兼容协议，同一厂商可有多个协议。先完成现有 Chat/Anthropic 路径的真实行为，不为未定国内外厂商名单机械建空协议文件；Gemini/Responses 等原生协议按后续证据接入。
 3. **按职责最小拆分**：保持公开 API 与现有消费者兼容，不把 service/model 重写为第二套系统；新增工具、模态与目录操作必须同时有协议支持、拒绝路径、状态迁移测试。
 4. **逐层验收**：API 专属测试、build/typecheck、边界、真实 Provider/Key、UI/Conversations 工具轮次、Windows。先查看 [Actions 运行集合](https://github.com/owla19s-ux/WEXPCeasy/actions/runs)，记录测试 SHA；未验证则如实标注。
 
 研究材料只在确有接口争议时查阅；模块 README 不维护另一套历史任务书。
-
-## 97 项对账｜F04 的业务操作与桌面入口（2026-11-09）
-
-第一批操作级检查点区分 Provider/Connection 新增、修改、启停、删除，凭证设置，模型目录刷新、手工登记、编辑/选用/删除，能力来源和方向观察，temperature/top_p/max_tokens，探针、真实生成、工具提议与轮次快照。
-
-`app/src/desktop-api.ts` 已有 connection.delete、model.delete 与 top_p 相关输入，但 `UI/src/api-settings.tsx` 缺少对应完整删除和 top_p 编辑 UI。底层 CRUD 不等于桌面功能交付；删除关联保护和连接复制凭证规则不能臆造。能力 observation 不等于实际多模态 wire 支持；未经验证的模型、协议和费用不得显示已成功。A2 登记本版子行为与未决策略，按单 owner 补 UI、IPC 与测试闭环。
