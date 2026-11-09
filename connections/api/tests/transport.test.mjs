@@ -566,7 +566,7 @@ test('generation records no-dispatch evidence when the final permission recheck 
  assert.deepEqual(result,{status:'blocked',operationId,reason:'authorization_or_configuration_changed'});
  const operation=h.ledger.get(operationId);
  assert.equal(operation.phase,'observed');
- assert.deepEqual(operation.observations,[{id:'api-not-dispatched',phase:'observed',value:{externalDispatched:false}}]);
+ assert.deepEqual(operation.observations.map(({recordedAt,...receipt})=>{assert.ok(Number.isFinite(Date.parse(recordedAt)));return receipt;}),[{id:'api-not-dispatched',phase:'observed',value:{externalDispatched:false}}]);
  assert.equal(h.calls(),0);
  h.f.permission.recheck=original;
  assert.equal((await h.transport.send(h.request(),operationId,h.input)).reason,'already_recorded_no_automatic_retry');
@@ -591,7 +591,7 @@ test('diagnostic cancellation inside the final recheck never invokes fetch',asyn
    assert.equal(result.status,'blocked');
    assert.equal(fetchCalls,0);
    assert.equal(h.ledger.get(operationId).phase,'observed');
-   assert.deepEqual(h.ledger.get(operationId).observations,[{id:'api-not-dispatched',phase:'observed',value:{externalDispatched:false}}]);
+   assert.deepEqual(h.ledger.get(operationId).observations.map(({recordedAt,...receipt})=>{assert.ok(Number.isFinite(Date.parse(recordedAt)));return receipt;}),[{id:'api-not-dispatched',phase:'observed',value:{externalDispatched:false}}]);
   });
  }
 });

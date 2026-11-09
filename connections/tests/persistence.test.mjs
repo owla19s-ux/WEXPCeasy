@@ -54,8 +54,8 @@ test('different operation and observation pairs cannot collide in persistence in
  ledger.prepare('a','second');ledger.markDispatched('a');
  assert.equal(ledger.observe('a:b','c',{source:'first'},'observed').status,'ok');
  assert.equal(ledger.observe('a','b:c',{source:'second'},'observed').status,'ok');
- assert.deepEqual(ledger.get('a:b').observations,[{id:'c',phase:'observed',value:{source:'first'}}]);
- assert.deepEqual(ledger.get('a').observations,[{id:'b:c',phase:'observed',value:{source:'second'}}]);
+ assert.deepEqual(ledger.get('a:b').observations.map(({recordedAt,...receipt})=>{assert.ok(Number.isFinite(Date.parse(recordedAt)));return receipt;}),[{id:'c',phase:'observed',value:{source:'first'}}]);
+ assert.deepEqual(ledger.get('a').observations.map(({recordedAt,...receipt})=>{assert.ok(Number.isFinite(Date.parse(recordedAt)));return receipt;}),[{id:'b:c',phase:'observed',value:{source:'second'}}]);
 });
 
 const binding={connectionId:'connection',configRevision:1,adapterId:'fixture',adapterVersion:'1.0',endpoint:'local:original'};

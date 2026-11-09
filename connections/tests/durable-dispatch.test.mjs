@@ -44,7 +44,7 @@ test('process restart preserves authorization, observed receipt and no-replay gu
  assert.equal(restored.result.reason,'already_recorded_no_automatic_retry');
  assert.equal(restored.operation.phase,'observed');
  assert.equal(restored.operation.attempts,1);
- assert.deepEqual(restored.operation.observations,[{id:'result',phase:'observed',value:{written:true}}]);
+ assert.deepEqual(restored.operation.observations.map(({recordedAt,...receipt})=>{assert.ok(Number.isFinite(Date.parse(recordedAt)));return receipt;}),[{id:'result',phase:'observed',value:{written:true}}]);
  assert.equal(run('revoke').result.reason,'authorization_deny');
  assert.equal(readFileSync(output,'utf8'),'once\n');
 });

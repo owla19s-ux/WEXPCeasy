@@ -50,3 +50,14 @@ test('late observation does not erase unknown outcome',()=>{
  assert.equal(l.get('late').phase,'unknown');
  assert.equal(l.get('late').observations.length,2);
 });
+
+test('durable Operation times survive replay while legacy records remain readable',()=>{
+ const s=store(),ledger=createOperationLedger(s);
+ const prepared=ledger.prepare('timed','fingerprint');assert.equal(prepared.status,'ok');assert.ok(Number.isFinite(Date.parse(prepared.operation.createdAt)));
+ ledger.markDispatched('timed');ledger.observe('timed','result',{isError:true},'observed');
+ const recorded=ledger.get('timed');assert.ok(Number.isFinite(Date.parse(recorded.observations[0].recordedAt)));
+ assert.deepEqual(createOperationLedger(s).get('timed'),recorded);
+ assert.deepEqual(ledger.observe('timed','result',{isError:true},'observed').operation,recorded);
+ const legacy=structuredClone(s.read().value);delete legacy.operations[0].createdAt;delete legacy.operations[0].observations[0].recordedAt;
+ const old=createOperationLedger({read:()=>({revision:1,value:legacy})});assert.equal(old.get('timed').createdAt,undefined);
+});

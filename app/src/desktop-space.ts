@@ -86,12 +86,17 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
   const reference=parseCapabilityReference(target.targetId);if(!reference)return {status:'unsupported'};
   for(const scope of [configScope,toolScope(reference.adapterId,reference.connectionId)])if(!authority.enabled(scope)){if(reading)pending.set(key(scope),scope);return {status:'denied'};}
   const configRequest=authority.related(parent,configScope),request=authority.related(parent,toolScope(reference.adapterId,reference.connectionId));
-  if(!configRequest||!request)return {status:'denied'};
+  if(!configRequest||!request||host.permissions!.evaluate(configRequest).status!=='allow')return {status:'denied'};
   const configs=host.connections.configs.read();
   const result=await host.connections.discover(reference.adapterId,request,reference.connectionId,configs.revision);
-  if(result.status!=='ok'||!Array.isArray(result.value)||!result.value.some(tool=>tool&&typeof tool==='object'&&!Array.isArray(tool)&&tool['name']===reference.name))return {status:'unavailable'};
-  if(!authority.related(parent,configScope)||!authority.related(parent,toolScope(reference.adapterId,reference.connectionId)))return {status:'denied'};
-  return {status:'available',...target,availability:'available',sourceRevision:String(configs.revision),observedAt:new Date().toISOString()};
+  if(host.permissions!.evaluate(configRequest).status!=='allow'||host.permissions!.evaluate(request).status!=='allow'||!authority.related(parent,configScope)||!authority.related(parent,toolScope(reference.adapterId,reference.connectionId)))return {status:'denied'};
+  if(host.connections.configs.read().revision!==configs.revision)return {status:'unavailable'};
+  const available=result.status==='ok'&&Array.isArray(result.value)&&result.value.some(tool=>tool&&typeof tool==='object'&&!Array.isArray(tool)&&tool['name']===reference.name);
+  const parentDecision=host.permissions!.evaluate(parent);
+  // A currently visible connection proves the stored reference identity, not remote availability.
+  // Only queries may retain an offline selection; creating a reference still requires fresh discovery.
+  if(!available&&(parentDecision.status!=='allow'||parentDecision.scope.action!=='context.read'||!configs.items.some(c=>c.id===reference.connectionId&&c.adapter===reference.adapterId)))return {status:'unavailable'};
+  return {status:'available',...target,availability:available?'available':'unavailable',sourceRevision:String(configs.revision),observedAt:new Date().toISOString()};
  }};
  async function readResource(input:Extract<DesktopSpaceInput,{kind:'resource.read'}>):Promise<DesktopSpaceReply>{
   const read=()=>query({kind:'context',id:input.contextId},operation('context.read','context:'+input.contextId,input.contextId));
@@ -211,7 +216,7 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
    const contextRequest=bind(operation('context.read','context:'+input.contextId,input.contextId))!;
    const scope=toolScope(connection.adapter,connection.id);permit(scope);
    const result=await host.connections.discover(connection.adapter,bind(scope)!,connection.id,configs.revision);
-   if(host.permissions!.evaluate(contextRequest).status!=='allow')return {status:'rejected',reason:'context_authorization_changed'};
+   if(host.permissions!.evaluate(contextRequest).status!=='allow'||host.permissions!.evaluate(request).status!=='allow')return {status:'rejected',reason:'context_authorization_changed'};
    if(result.status!=='ok'||!Array.isArray(result.value))return {status:'unavailable',reason:'tool_catalog_unavailable'};
    const tools:{targetId:string;name:string}[]=[];
    for(const tool of result.value){if(!tool||typeof tool!=='object'||Array.isArray(tool)||typeof tool['name']!=='string')return {status:'unavailable',reason:'invalid_tool_catalog'};tools.push({targetId:capabilityReferenceTarget(connection.adapter,connection.id,tool['name']),name:tool['name']});}

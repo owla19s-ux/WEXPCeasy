@@ -7,7 +7,7 @@ import {githubFileTarget,githubCredentialRef,githubCredentialTarget} from '../..
 import type {DesktopConnectionsInput,DesktopConnectionsReply,DesktopGitHubTool,ApiJson} from '../../UI/src/index.js';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
 const fields:Record<string,string[]>={
- snapshot:['kind'],toggle:['kind','id','expectedRevision','enabled'],
+ 'operation.read':['kind','id'],snapshot:['kind'],toggle:['kind','id','expectedRevision','enabled'],
  'github.create':['kind','expectedRevision'],'credential.set':['kind','id','expectedRevision'],'credential.revoke':['kind','id','expectedRevision'],
  'github.tools':['kind','id','expectedRevision'],'github.invoke':['kind','id','expectedRevision','toolName','arguments'],
  'github.read':['kind','id','expectedRevision','file'],'github.write':['kind','id','expectedRevision','file','expectedSha','content','message']
@@ -17,7 +17,7 @@ function capture(raw:unknown):DesktopConnectionsInput|undefined{
  const keys=fields[raw.kind]!;
  if(Reflect.ownKeys(raw).length!==keys.length||!keys.every(k=>Object.hasOwn(raw,k)))return;
  if(raw.kind!=='snapshot'){
-  if(!Number.isSafeInteger(raw.expectedRevision)||Number(raw.expectedRevision)<(raw.kind==='github.create'||raw.kind==='toggle'?0:1))return;
+  if(raw.kind!=='operation.read'&&(!Number.isSafeInteger(raw.expectedRevision)||Number(raw.expectedRevision)<(raw.kind==='github.create'||raw.kind==='toggle'?0:1)))return;
   if(raw.kind!=='github.create'&&(typeof raw.id!=='string'||!raw.id||raw.id.length>4096))return;
  }
  if(raw.kind==='toggle'&&typeof raw.enabled!=='boolean')return;
@@ -48,7 +48,7 @@ export function createDesktopConnections(options:{authority:DesktopAuthority;con
    if(closed||!host?.connections||!host.permissions)return {status:'unavailable',reason:'connections_unavailable'};
    try{return await a.run(async():Promise<DesktopConnectionsReply>=>{
     const file='file'in input?input.file:undefined;
-    const summary=input.kind==='snapshot'?'查看本数据根的连接配置及脱敏 Operation 摘要。不读取外部资源或凭证。':
+    const summary=input.kind==='operation.read'?'读取原 Operation '+input.id+' 的持久回执及结果。可能包含文件或工具返回内容；不会重发或重试。':input.kind==='snapshot'?'查看本数据根的连接配置及脱敏 Operation 摘要。不读取外部资源或凭证。':
      input.kind==='github.tools'?'读取连接 '+input.id+' 的 GitHub 官方 MCP 工具目录。发现工具不授予调用权限。':
      input.kind==='github.invoke'?'调用 GitHub 官方 MCP 工具\n连接：'+input.id+'\n工具：'+input.toolName+'\n参数：'+JSON.stringify(input.arguments,null,2)+'\n工具可能修改远端资源。仅执行一次；结果未知时请核对原 Operation 和远端状态。':
      input.kind==='github.create'?'登记 GitHub 官方 API 连接。不会自动联网或授予仓库权限。':
@@ -58,6 +58,14 @@ export function createDesktopConnections(options:{authority:DesktopAuthority;con
      (input.kind==='github.read'?'读取 GitHub 文件':'向 GitHub 提交文件修改')+'\nhttps://github.com/'+file!.owner+'/'+file!.repo+'\n分支/修订：'+file!.ref+'\n文件：'+file!.path+
      (input.kind==='github.write'?'\n基于文件 SHA：'+input.expectedSha+'\n提交说明：'+input.message+'\n内容 '+Buffer.byteLength(input.content,'utf8')+' 字节；摘要 '+createHash('sha256').update(input.content).digest('hex')+'\n将执行一次真实远端写入。结果未知不会自动重试。':'\n将执行真实网络读取。');
     if(!await a.confirm(options.confirm,summary)||closed)return {status:'cancelled'};
+    if(input.kind==='operation.read'){
+     const operationScope=scope('operation.read','operation:'+input.id);a.permit(operationScope);const request=a.bind(operationScope)!,decision=host!.permissions!.evaluate(request);
+     if(decision.status!=='allow')return {status:'rejected',reason:'permission_unavailable'};
+     const recorded=host!.connections!.operations.get(input.id);
+     if(host!.permissions!.recheck(request,decision).status!=='allow')return {status:'rejected',reason:'authorization_changed'};
+     if(!recorded)return {status:'unavailable',reason:'operation_not_found'};
+     return {status:'operation',operation:{id:recorded.id,phase:recorded.phase,attempts:recorded.attempts,...(recorded.createdAt?{createdAt:recorded.createdAt}:{}),connectionId:recorded.connection?.connectionId??null,adapter:recorded.connection?.adapterId??null,observations:recorded.observations}};
+    }
     const configScope=scope(input.kind==='snapshot'||input.kind==='github.read'||input.kind==='github.write'||input.kind==='github.tools'||input.kind==='github.invoke'?'configuration.read':'configuration.write',input.kind==='snapshot'?'connections:configurations':input.kind==='github.create'?'connections:configurations':'connection:'+input.id);
     a.permit(configScope);const request=a.bind(configScope)!,decision=host!.permissions!.evaluate(request);
     if(decision.status!=='allow')return {status:'rejected',reason:'permission_unavailable'};
@@ -66,7 +74,7 @@ export function createDesktopConnections(options:{authority:DesktopAuthority;con
      const snapshot=service.configs.read(),historyScope=scope('operation.list','connections:operations');a.permit(historyScope);
      const hr=a.bind(historyScope)!,before=host!.permissions!.evaluate(hr);
      if(before.status!=='allow')return {status:'rejected',reason:'permission_unavailable'};
-     const operations=service.operations.read().operations.map(o=>({id:o.id,phase:o.phase,attempts:o.attempts,connectionId:o.connection?.connectionId??null,adapter:o.connection?.adapterId??null}));
+     const operations=service.operations.read().operations.map(o=>({id:o.id,phase:o.phase,...(o.createdAt?{createdAt:o.createdAt}:{}),attempts:o.attempts,connectionId:o.connection?.connectionId??null,adapter:o.connection?.adapterId??null}));
      if(host!.permissions!.recheck(hr,before).status!=='allow'||host!.permissions!.evaluate(request).status!=='allow')return {status:'rejected',reason:'authorization_changed'};
      return {status:'ok',revision:snapshot.revision,connections:snapshot.items.map(c=>({id:c.id,adapter:c.adapter,endpoint:c.endpoint,enabled:c.enabled,hasCredential:c.credentialRef!==null})),operations,
       localFiles:!!host!.localFiles,localDirectories:!!host!.localDirectories&&['linux','win32'].includes(process.platform),credentialBackend:host!.credentials?.available()??false,githubMcpConfigured:service.capabilities().some(c=>c.id==='github')};

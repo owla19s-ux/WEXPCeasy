@@ -294,6 +294,7 @@ try{
  await waitFor("document.querySelectorAll('[data-permission-settings] li').length>0");
  const permissionSnapshot=await wc.executeJavaScript("window.wexHost.permissions({kind:'snapshot'})");
  assert.equal(permissionSnapshot.ok,true);
+ assert.equal(permissionSnapshot.value.source.kind,'native-local');assert.equal(await wc.executeJavaScript("document.querySelector('[data-permission-settings]').textContent.includes('授权来源：本机可信确认')"),true);
  const historyGrant=permissionSnapshot.value.entries.find(e=>e.resource==='conversations'&&e.action==='read');
  assert.ok(historyGrant);
  await wc.executeJavaScript("[...document.querySelectorAll('[data-permission-settings] li')].find(li=>li.querySelector('strong').textContent==='conversations / read').querySelector('button').click();true");
@@ -332,6 +333,11 @@ try{
  const writesAfterUnknown=githubCalls.filter(c=>c.method==='PUT').length;
  assert.equal(await wc.executeJavaScript("!!document.querySelector('textarea[name=\"github-content\"]')"),false);
  await click('读取连接与操作记录');assert.equal(githubCalls.filter(c=>c.method==='PUT').length,writesAfterUnknown);
+ const beforeReceipt={provider:providerCalls.length,github:githubCalls.length};
+ await wc.executeJavaScript("[...document.querySelectorAll('[data-connection-settings] li')].find(li=>li.querySelector('strong')?.textContent==='unknown').querySelector('[data-operation-receipt] button').click();true");
+ await waitFor("[...document.querySelectorAll('[data-operation-receipt] p')].some(p=>p.textContent.includes('结果未知'))");
+ assert.equal(await wc.executeJavaScript("[...document.querySelectorAll('[data-operation-receipt] time')].some(t=>Number.isFinite(Date.parse(t.dateTime)))"),true);
+ assert.equal(providerCalls.length,beforeReceipt.provider);assert.equal(githubCalls.length,beforeReceipt.github);
  await capture('-connectors');
  await click('解除 GitHub Token 并停用');await waitFor("document.querySelector('[data-connection-settings]').textContent.includes('无凭证引用')");
 

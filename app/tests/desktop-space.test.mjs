@@ -159,13 +159,18 @@ test('saved Local content and Operation survive a fresh host while old window ob
 });
 
 test('Context tool selection uses public discovery, survives restart, and never grants execution',async t=>{
- const f=await fixture(t),context=await f.access.request({kind:'context.create',name:'Tools'});
+ let online=true;const f=await fixture(t,{async discover(){if(!online)throw Error('fixture disconnected');return [{name:'inspect',inputSchema:{type:'object'}}];}}),context=await f.access.request({kind:'context.create',name:'Tools'});
  assert.equal(f.host.connections.configs.put({id:'tools',adapter:'fixture',endpoint:'fixture:tools',credentialRef:null,enabled:true},0,'config-tools').status,'ok');
  const connections=await f.access.request({kind:'tool.connections',contextId:context.id});assert.equal(connections.status,'ok');assert.equal(connections.connections[0].id,'tools');
  const candidates=await f.access.request({kind:'tool.candidates',contextId:context.id,connectionId:'tools'});assert.equal(candidates.status,'ok');assert.equal(candidates.tools[0].name,'inspect');
  f.setAllow(false);assert.equal((await f.access.request({kind:'tool.add',contextId:context.id,targetId:candidates.tools[0].targetId,purpose:'inspect'})).status,'cancelled');f.setAllow(true);
  const added=await f.access.request({kind:'tool.add',contextId:context.id,targetId:candidates.tools[0].targetId,purpose:'inspect'});assert.equal(added.status,'committed');
  let opened=await f.access.request({kind:'context.open',id:context.id});assert.equal(opened.tools[0].availability,'available');assert.equal(opened.tools[0].enabled,true);
+ online=false;opened=await f.access.request({kind:'context.open',id:context.id});assert.equal(opened.tools[0].id,added.id);assert.equal(opened.tools[0].availability,'unavailable');assert.notEqual((await f.access.request({kind:'tool.add',contextId:context.id,targetId:candidates.tools[0].targetId.replace('inspect','invented'),purpose:'must not add'})).status,'committed');online=true;
+ assert.equal(f.host.connections.configs.put({id:'tools',adapter:'fixture',endpoint:'fixture:tools',credentialRef:null,enabled:false},1,'disable-tools').status,'ok');
+ opened=await f.access.request({kind:'context.open',id:context.id});assert.equal(opened.tools[0].availability,'unavailable');
+ assert.equal(f.host.connections.configs.put({id:'tools',adapter:'fixture',endpoint:'fixture:tools',credentialRef:null,enabled:true},2,'enable-tools').status,'ok');
+ opened=await f.access.request({kind:'context.open',id:context.id});assert.equal(opened.tools[0].availability,'available');
  const permissions=await f.authority.settings({kind:'snapshot'},async()=>true);assert.equal(permissions.entries.some(e=>e.resource==='fixture'&&e.action==='write'),false);assert.equal(f.host.connections.operations.read().operations.length,0);
  assert.equal((await f.access.request({kind:'tool.set',contextId:context.id,id:added.id,expectedRevision:1,enabled:false})).status,'committed');
  assert.equal((await f.access.request({kind:'tool.remove',contextId:context.id,id:added.id,expectedRevision:1})).status,'rejected');
@@ -180,13 +185,13 @@ test('Context tool selection uses public discovery, survives restart, and never 
  }finally{access.close();await restored.stop();}
 });
 
-test('Context revocation during tool discovery withholds the late catalog and prevents execution grants',async t=>{
+for(const revokedResource of ['space','connections'])test('revoked '+revokedResource+' permission during tool discovery withholds the late catalog',async t=>{
  let entered,release;const arrived=new Promise(resolve=>entered=resolve),held=new Promise(resolve=>release=resolve);
  const f=await fixture(t,{async discover(){entered();await held;return [{name:'private-tool',inputSchema:{type:'object'}}];}});
  const context=await f.access.request({kind:'context.create',name:'Private source'});
  f.host.connections.configs.put({id:'tools',adapter:'fixture',endpoint:'fixture:tools',credentialRef:null,enabled:true},0,'config');
  const pending=f.access.request({kind:'tool.candidates',contextId:context.id,connectionId:'tools'});await arrived;
- const grants=await f.authority.settings({kind:'snapshot'},async()=>true),grant=grants.entries.find(e=>e.resource==='space'&&e.action==='context.read');assert.ok(grant);
+ const grants=await f.authority.settings({kind:'snapshot'},async()=>true),grant=grants.entries.find(e=>e.resource===revokedResource&&e.action===(revokedResource==='space'?'context.read':'configuration.read'));assert.ok(grant);
  assert.equal((await f.authority.settings({kind:'revoke',id:grant.id,expectedRevision:grants.revision},async()=>true)).status,'committed');
  release();const result=await pending;assert.equal(result.status,'rejected');assert.equal(JSON.stringify(result).includes('private-tool'),false);
  assert.equal(f.host.connections.operations.read().operations.length,0);

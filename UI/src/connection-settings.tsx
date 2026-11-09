@@ -1,3 +1,4 @@
+import {OperationReceipt} from './operation-receipt.js';
 import {GitHubTools} from './github-tools.js';
 import {useEffect,useRef,useState} from 'react';
 import type {DesktopBridge,DesktopConnectionsReply,DesktopGitHubFile} from './index.js';
@@ -69,5 +70,5 @@ export function ConnectionSettings({bridge}:{bridge:DesktopBridge}){
  <label>GitHub 工具连接<select name="github-tools-connection" disabled={busy} value={toolsSelected} onChange={e=>setToolsSelected(e.target.value)}><option value="">选择已登记连接</option>{data.connections.filter(c=>c.adapter==='github').map(c=><option key={c.id} value={c.id}>{c.id}</option>)}</select></label>
  {toolsConnection&&<GitHubTools key={toolsConnection.id+':'+data.revision} bridge={bridge} connectionId={toolsConnection.id} revision={data.revision} enabled={toolsConnection.enabled&&toolsConnection.hasCredential} runtimeConfigured={data.githubMcpConfigured===true}/>}
  <h4>Operation 摘要</h4><p>unknown 表示结果未知；此页不会自动重试。</p>
- <ul>{data.operations.map(o=><li key={o.id}><strong>{o.phase}</strong><small>{o.id} · {o.adapter??'API'} · 尝试 {o.attempts} 次</small></li>)}</ul></>}</div>;
+ <ul>{data.operations.map(o=><li key={o.id}><strong>{o.phase}</strong><small>{o.id} · 连接 {o.connectionId??'未记录'} · {o.adapter??'API'} · 尝试 {o.attempts} 次 · 创建 {o.createdAt??'时间未记录（旧操作）'}</small><OperationReceipt bridge={bridge} operationId={o.id}/></li>)}</ul></>}</div>;
 }

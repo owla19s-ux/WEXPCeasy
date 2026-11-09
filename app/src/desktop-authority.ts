@@ -66,7 +66,7 @@ export function createDesktopAuthority(){
    if(await native(input.kind==='snapshot'?'查看当前窗口的精确授权范围。不会展示其他窗口或历史会话的授权。':'撤销此窗口授权：'+entry!.resource+' / '+entry!.action+' / '+entry!.target)!==true)return {status:'cancelled'};
    if(closed)return {status:'unavailable',reason:'host_closed'};
    const latest=history();if(latest.revision!==record.revision)return {status:'rejected',reason:'revision_conflict'};
-   if(input.kind==='snapshot')return {status:'ok',revision:latest.revision,entries:current};
+   if(input.kind==='snapshot')return {status:'ok',revision:latest.revision,entries:current,source:{kind:'native-local',subject:identity.subject,entry:identity.entry,relationship:identity.relationship,relationshipGeneration:identity.relationshipGeneration,moduleEnabled:identity.moduleEnabled,globalEnabled:identity.globalEnabled,entryEnabled:identity.entryEnabled}};
    const {resource,action,target,context}=entry!;
    const change:Change={intent:randomUUID(),expectedRevision:latest.revision,scope:{subject:identity.subject,entry:identity.entry,relationship:identity.relationship,relationshipGeneration:1,conversation:null,resource,action,target,context}};
    management.add(change);let result;try{result=host.permissions.revoke(change);}finally{management.delete(change);}

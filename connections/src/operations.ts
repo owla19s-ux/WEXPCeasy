@@ -1,8 +1,8 @@
 import type {Store,Json,CommitResult} from '../../shared/src/index.js';
 export type OperationPhase='prepared'|'dispatched'|'observed'|'unknown';
-export interface Observation {id:string;phase:'observed'|'unknown';value:Json}
+export interface Observation {recordedAt?:string;id:string;phase:'observed'|'unknown';value:Json}
 export interface OperationConnection {connectionId:string;configRevision:number;adapterId:string;adapterVersion:string;endpoint:string}
-export interface Operation {connection?:OperationConnection;id:string;fingerprint:string;phase:OperationPhase;attempts:number;observations:Observation[]}
+export interface Operation {createdAt?:string;connection?:OperationConnection;id:string;fingerprint:string;phase:OperationPhase;attempts:number;observations:Observation[]}
 interface State {format:1;operations:Operation[]}
 export type OperationResult={status:'ok';operation:Operation;revision:number}|{status:'conflict'|'unavailable'|'unknown';reason:string};
 const clone=<T>(v:T):T=>structuredClone(v);
@@ -27,9 +27,10 @@ function validConnection(c:OperationConnection):boolean {
  return closed(c,['connectionId','configRevision','adapterId','adapterVersion','endpoint'])&&nonempty(c.connectionId)&&Number.isSafeInteger(c.configRevision)&&c.configRevision>0&&nonempty(c.adapterId)&&nonempty(c.adapterVersion)&&nonempty(c.endpoint);
 }
 function validOperation(o:Operation):boolean {
- if(!closed(o,['id','fingerprint','phase','attempts','observations'],['connection'])||!nonempty(o.id)||!nonempty(o.fingerprint)||!Array.isArray(o.observations))return false;
+ if(!closed(o,['id','fingerprint','phase','attempts','observations'],['connection','createdAt'])||!nonempty(o.id)||!nonempty(o.fingerprint)||!Array.isArray(o.observations))return false;
+ if(o.createdAt!==undefined&&(typeof o.createdAt!=='string'||!Number.isFinite(Date.parse(o.createdAt))))return false;
  if(o.connection!==undefined&&!validConnection(o.connection))return false;
- if(o.observations.some(x=>!closed(x,['id','phase','value'])||!nonempty(x.id)||!['observed','unknown'].includes(x.phase)||!validJson(x.value)))return false;
+ if(o.observations.some(x=>!closed(x,['id','phase','value'],['recordedAt'])||!nonempty(x.id)||!['observed','unknown'].includes(x.phase)||!validJson(x.value)||(x.recordedAt!==undefined&&(typeof x.recordedAt!=='string'||!Number.isFinite(Date.parse(x.recordedAt))))))return false;
  if(new Set(o.observations.map(x=>x.id)).size!==o.observations.length)return false;
  if(o.phase==='prepared')return o.attempts===0&&o.observations.length===0;
  if(o.attempts!==1)return false;
@@ -63,7 +64,7 @@ export function createOperationLedger(store:Store){
    if(!nonempty(id)||!nonempty(fingerprint)||(connection!==undefined&&!validConnection(connection)))return {status:'conflict',reason:'invalid_request'};
    try{const s=read(),prior=s.operations.find(o=>o.id===id);
     if(prior)return prior.fingerprint===fingerprint&&canonical((prior.connection??null) as unknown as Json)===canonical((connection??null) as unknown as Json)?{status:'ok',operation:prior,revision:s.revision}:{status:'conflict',reason:'intent_conflict'};
-    const op:Operation={id,fingerprint,phase:'prepared',attempts:0,observations:[],...(connection?{connection:clone(connection)}:{})};
+    const op:Operation={createdAt:new Date().toISOString(),id,fingerprint,phase:'prepared',attempts:0,observations:[],...(connection?{connection:clone(connection)}:{})};
     return result(write('operation:prepare:'+id,s.revision,[...s.operations,op]),op);
    }catch{return {status:'unavailable',reason:'store_failed'};}
   },
@@ -82,7 +83,7 @@ export function createOperationLedger(store:Store){
     if(op.phase==='prepared')return {status:'conflict',reason:'not_dispatched'};
     const previous=op.observations.find(o=>o.id===observationId);
     if(previous)return previous.phase===phase&&canonical(previous.value)===canonical(value)?{status:'ok',operation:op,revision:s.revision}:{status:'conflict',reason:'observation_conflict'};
-    const nextObservations=[...op.observations,{id:observationId,phase,value:clone(value)}];
+    const nextObservations=[...op.observations,{id:observationId,phase,value:clone(value),recordedAt:new Date().toISOString()}];
     const next:Operation={...op,phase:nextObservations.some(o=>o.phase==='unknown')?'unknown':'observed',observations:nextObservations};
     return result(write('operation:observation-v2:'+JSON.stringify([id,observationId]),s.revision,s.operations.map(o=>o.id===id?next:o)),next);
    }catch{return {status:'unavailable',reason:'store_failed'};}

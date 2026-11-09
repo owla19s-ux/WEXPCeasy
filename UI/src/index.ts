@@ -67,17 +67,19 @@ export type DesktopConversationReply={status:'ok';conversation:ConversationView}
  {status:'committed';id?:string;revision:number}|{status:'invalid_request'|'storage_unavailable'|'cancelled'|'unavailable'|'denied'|'invalid'|'reference_unavailable'|'revision_conflict'|'intent_conflict'|'unknown'|'not_committed'|'conflict'|'rejected'|'not_found'|'failed_no_commit'|'invalid_transition'|'already_dispatched';reason?:string;operationId?:string};
 export interface ConversationText {conversationId:string;generationId:string;text:string}
 export type DesktopPermissionInput={kind:'snapshot'}|{kind:'revoke';id:string;expectedRevision:number};
-export type DesktopPermissionReply={status:'ok';revision:number;entries:{id:string;resource:string;action:string;target:string;context:string|null}[]}|
+export type DesktopPermissionReply={status:'ok';source?:{kind:'native-local';subject:string;entry:string;relationship:string;relationshipGeneration:number;moduleEnabled:boolean;globalEnabled:boolean;entryEnabled:boolean};revision:number;entries:{id:string;resource:string;action:string;target:string;context:string|null}[]}|
  {status:'committed';revision:number}|{status:'unknown';intent:string}|{status:'rejected'|'unavailable';reason:string}|{status:'cancelled'};
 
 export interface DesktopGitHubFile {owner:string;repo:string;ref:string;path:string}
 export interface DesktopGitHubTool {name:string;description?:string;inputSchema:Record<string,ApiJson>;annotations?:Record<string,ApiJson>}
-export type DesktopConnectionsInput={kind:'github.tools';id:string;expectedRevision:number}|
+export type DesktopConnectionsInput={kind:'operation.read';id:string}|{kind:'github.tools';id:string;expectedRevision:number}|
  {kind:'github.invoke';id:string;expectedRevision:number;toolName:string;arguments:Record<string,ApiJson>}|{kind:'snapshot'}|{kind:'toggle';id:string;expectedRevision:number;enabled:boolean}|
  {kind:'github.create';expectedRevision:number}|{kind:'credential.set';id:string;expectedRevision:number}|{kind:'credential.revoke';id:string;expectedRevision:number}|
  {kind:'github.read';id:string;expectedRevision:number;file:DesktopGitHubFile}|
  {kind:'github.write';id:string;expectedRevision:number;file:DesktopGitHubFile;expectedSha:string;content:string;message:string};
-export type DesktopConnectionsReply={status:'tools';tools:DesktopGitHubTool[]}|
- {status:'tool-result';toolName:string;result:ApiJson;operationId:string}|{status:'ok';revision:number;connections:{id:string;adapter:string;endpoint:string;enabled:boolean;hasCredential:boolean}[];operations:{id:string;phase:string;attempts:number;connectionId:string|null;adapter:string|null}[];localFiles:boolean;localDirectories:boolean;credentialBackend?:boolean;githubMcpConfigured?:boolean}|
+export interface DesktopOperation {id:string;phase:string;createdAt?:string;connectionId:string|null;adapter:string|null;attempts:number;observations:{id:string;phase:string;recordedAt?:string;value:ApiJson}[]}
+export type DesktopConnectionsReply={status:'operation';operation:DesktopOperation}|
+{status:'tools';tools:DesktopGitHubTool[]}|
+ {status:'tool-result';toolName:string;result:ApiJson;operationId:string}|{status:'ok';revision:number;connections:{id:string;adapter:string;endpoint:string;enabled:boolean;hasCredential:boolean}[];operations:{id:string;phase:string;createdAt?:string;attempts:number;connectionId:string|null;adapter:string|null}[];localFiles:boolean;localDirectories:boolean;credentialBackend?:boolean;githubMcpConfigured?:boolean}|
  {status:'committed';revision:number;notice?:string}|{status:'file';file:DesktopGitHubFile;sha:string;content:string;size:number}|
  {status:'written';sha:string;commitSha:string;operationId:string}|{status:'rejected'|'unavailable'|'conflict'|'unknown';reason:string;operationId?:string}|{status:'cancelled'};

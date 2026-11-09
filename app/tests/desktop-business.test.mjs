@@ -201,3 +201,19 @@ test('desktop file references require a current authorized Local observation and
  assert.equal((await f.chat.request({kind:'append',id:created.id,expectedRevision:2,text:'stale',attachments})).status,'rejected');
  assert.equal((await f.chat.request({kind:'open',id:created.id})).conversation.messages.length,1);
 });
+
+test('original Operation receipt requires explicit native consent and reads durable results without replay',async t=>{
+ const f=await fixture(t);await configured(f);
+ const created=await f.chat.request({kind:'create'});await f.chat.request({kind:'send',id:created.id,expectedRevision:1,agentId:'agent',text:'receipt'});
+ const opened=await f.chat.request({kind:'open',id:created.id}),operationId=opened.conversation.generations[0].operationId;
+ const {createDesktopConnections}=await import('../../dist/app/src/desktop-connections.js');let allowed=false;
+ const controls=createDesktopConnections({authority:f.authority,confirm:async()=>allowed});controls.attach(f.host);
+ try{
+  const before=f.calls.length;
+  assert.equal((await controls.request({kind:'operation.read',id:operationId})).status,'cancelled');allowed=true;
+  const result=await controls.request({kind:'operation.read',id:operationId});assert.equal(result.status,'operation');assert.equal(result.operation.id,operationId);assert.equal(result.operation.phase,'observed');assert.ok(result.operation.observations.length>0);assert.equal(f.calls.length,before);
+  assert.equal((await controls.request({kind:'operation.read',id:'missing'})).status,'unavailable');
+  assert.equal((await controls.request({kind:'operation.read',id:operationId,scope:'admin'})).status,'rejected');
+  const permissions=await f.authority.settings({kind:'snapshot'},async()=>true);assert.equal(permissions.source.kind,'native-local');assert.match(permissions.source.entry,/^desktop:/);
+ }finally{controls.close();}
+});

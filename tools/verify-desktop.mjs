@@ -9,7 +9,7 @@ function run(args,fixtureRoot){return new Promise((resolve,reject)=>{
  const child=spawn(electron,args,{stdio:'inherit',env:{...process.env,ELECTRON_ENABLE_LOGGING:'1',...(fixtureRoot?{WEX_DESKTOP_FIXTURE_ROOT:fixtureRoot}:{})}});
  child.on('error',reject);child.on('exit',code=>resolve(code??1));
 });}
-for(const [entry,...args] of [['runtime.mjs'],['load-failure.mjs'],['renderer-failure.mjs','idle'],['renderer-failure.mjs','startup'],['renderer-failure.mjs','stream'],['renderer-failure.mjs','destroyed'],['credential-storage.mjs'],['credential-entry.mjs'],['github-tools-state.mjs'],['api-settings-state.mjs'],['ai-settings-state.mjs'],['conversation-state.mjs'],['conversation-files-state.mjs'],['permission-settings-state.mjs'],['workspace-access-state.mjs']]){
+for(const [entry,...args] of [['runtime.mjs'],['load-failure.mjs'],['renderer-failure.mjs','idle'],['renderer-failure.mjs','startup'],['renderer-failure.mjs','stream'],['renderer-failure.mjs','destroyed'],['credential-storage.mjs'],['credential-entry.mjs'],['github-tools-state.mjs'],['api-settings-state.mjs'],['ai-settings-state.mjs'],['conversation-state.mjs'],['conversation-files-state.mjs'],['permission-settings-state.mjs'],['operation-receipt-state.mjs'],['workspace-access-state.mjs']]){
  const root=await mkdtemp(join(tmpdir(),'wex-desktop-fixture-'));
  let code;
  try{code=await run(['app/desktop/tests/'+entry,...args],root);if(code===0&&entry==='credential-storage.mjs'&&process.platform==='win32')code=await run(['app/desktop/tests/'+entry,'--recover'],root);}

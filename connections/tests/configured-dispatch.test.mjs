@@ -60,7 +60,7 @@ for(const mode of ['disable','remove','version','revoke'])test(mode+' during dis
  const b=connections.createConfiguredDispatchBoundary(h.permission,ledger,h.configs,h.adapter);
  assert.equal((await h.dispatch(b)).status,'blocked');assert.equal(h.calls,0);
  assert.equal(ledger.get('op').attempts,1);
- assert.deepEqual(ledger.get('op').observations,[{id:'host-not-dispatched',phase:'observed',value:{reason:mode==='revoke'?'authorization_revoked':'connection_changed',externalDispatched:false}}]);
+ assert.deepEqual(ledger.get('op').observations.map(({recordedAt,...receipt})=>{assert.ok(Number.isFinite(Date.parse(recordedAt)));return receipt;}),[{id:'host-not-dispatched',phase:'observed',value:{reason:mode==='revoke'?'authorization_revoked':'connection_changed',externalDispatched:false}}]);
 });
 test('in-flight configuration stays bound while later edits block replay',async t=>{
  const h=fixture(t);h.grant();let release;const wait=new Promise(r=>release=r);let captured;
