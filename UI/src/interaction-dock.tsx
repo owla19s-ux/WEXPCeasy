@@ -40,7 +40,7 @@ export function InteractionDock({visible}:{visible:boolean}){
   if(e.currentTarget.hasPointerCapture(drag.id))e.currentTarget.releasePointerCapture(drag.id);
  }
  return <div className="interaction-overlay" ref={host} data-interaction-dock data-open={state.open}>
-  {state.open&&<div ref={bar}><InteractionBar onCollapse={()=>setState(s=>({...s,open:false}))}/></div>}
+  {state.open&&<InteractionBar barRef={bar} onCollapse={()=>setState(s=>({...s,open:false}))}/> }
   <AvatarEntry x={x} y={y} expanded={state.open}
    onPointerDown={e=>{if(e.button!==0||pointer.current)return;e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);pointer.current={id:e.pointerId,x:e.clientX,y:e.clientY,state,moved:false};}}
    onPointerMove={e=>{const d=pointer.current;if(!d||d.id!==e.pointerId)return;
