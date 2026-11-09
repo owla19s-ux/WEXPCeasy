@@ -1,13 +1,17 @@
-# AI｜正式模块功能与接口契约
+# AI｜角色、岗位等设定的行为与现有接口契约
 
 > 2026-11-08 只读复核：`main@4ec86a84f83aad2e6b6ef46a1fc0db103fc015a1`。本契约承接已确认的产品**行为与归属边界**；明确标注真实已实现接口、确定的实施原则与未决假设。未执行本轮测试，不得将建议结构当作已运行 API。
 >
 > 入口：[README](README.md)；历史研究（按需）：[A0 原契约归档](../docs/A0-产品构想与研究/方案与研究/既有研究/contracts/AI/CONTRACT-archive.md)。历史候选不自动升级为施工指令。
 
+## 1. 产品设定与既有接口的区分
+
+> **2026-11-09 用户纠偏（本节产品定位优先）**：Role（角色）和 Position（岗位）是不同类型的**设定**，API/Model 为独立配置，允许按使用场景选择与组合。**Agent 不列为本模块与 Role/Position 并列、必须创建的产品设定类别，也不是对话的已批准强制前置条件**。下文历史 AIC/F02 中的 Agent 目标、旧 `agent` 类型和方法仅作为既存研究/实现事实保留；涉及独立 Agent 产品生命周期的条款不因旧名称而获得新施工授权。实际源码仍有该类型，不在本次文档修改中删除数据或改接口。
+
 ## 1. 术语、权威和不变量（已确认产品边界）
 
-- Agent 是可复用的 AI 主体配置；Role 是角色与行为/提示配置；Position 是岗位职责定义；Responsibility 是在特定工作范围承担的职责。它们不等于 Provider、模型、真实运行实例或 Session。
-- 同一 Agent 可以组合不同角色/职责并被多个 Context 引用；角色、岗位、执行身份、模型与连接需分离。当前源码的单 Role/Position 必填仅为**实现现状**，不应成为长期产品上限。
+- Role 是角色行为、表达和提示等设定；Position 是岗位及工作职责、定位等设定；两者均为独立可复用配置。API/Model 的 Provider 与真实调用归 `connections/api`。旧 `agent` 是当前源码仍持有的组合记录类型，不等于已确认的第三种必须配置的产品设定。
+- 角色、岗位、模型连接、Context 选择、工作职责、执行身份均需分离。不同设定可按实际需要选取和组合，**不要求先创建旧 `agent` 并同时绑定 Role、Position、Model 才允许对话**；当前源码的此类必填限制只是需复核的实现偏差。
 - **AI owner**：配置、角色、职责关联/资格及修订、工作配置依据与获准的 AI 派生数据。
 - **Space**：Context 的配置选择与组织关系；**workflows**：Task、派发、轮次、交接及检查点；**connections/api**：Provider 协议、模型目录与调用；**connections**：Operation/回执与外部 Runtime/Session 的实际观察；**conversations**：对话历史、生成和普通对话；**permissions**：权限与撤权；**app**：可信宿主/IPC。
 - Role 名称、Prompt、工具资格、模型能力、Context 选择和外部 Agent 自述均**不授予实际执行权限**。不同 Agent 即使共用模型，也不合并身份、会话或许可。
@@ -29,9 +33,11 @@
 
 `list` 要求列表范围授权，并对每条返回配置重新检查读授权；`read` 再次检查读取许可；`save` 做修订/intent 校验、Role/Position 引用存在性与读取许可、API model 引用核对和写授权复核。返回可能有 `committed`、`denied`、`invalid`、`reference_unavailable`、`revision_conflict`、`intent_conflict`、`unknown`、`unavailable` 等状态，不能把未知写入当成功。
 
-当前 Agent 配置要求 roleId、positionId、连接及 modelId；不存在公开删除/归档/停用或多职责关系接口。以上是现状，**不是**要求新代码继续固定这些限制。
+当前旧 `agent` 配置要求 roleId、positionId、连接及 modelId；普通对话桌面入口还要求 `agentId`。这仅是现状与兼容约束，**不得用它反向规定产品必须经过 Agent**。现有接口缺少独立于该绑定的可复用设定消费通路，具体修复需要另行核验。
 
-## 3. 目标功能行为及分期（契约目标，不等于已有源码）
+## 3. 历史功能锚点及分期（不因旧 Agent 名称形成新产品类别）
+
+> AIC-01/03/04/05～08、F02 中沿用的 Agent 标记反映历史研究/代码入口；**不在本契约把 Agent 作为第三类设定或独立产品入口新增施工**。Role/Position/模型引用应首先按不同设定审查，历史关于独立 Agent 生命周期/多 Agent 运行的候选项目待后续另行确认。
 
 | AIC 锚点 | 功能与对应编号 | 行为边界及施工判定 |
 | --- | --- | --- |
@@ -61,7 +67,7 @@ F10-014 公共策略/经验库目前 owner 未定，不通过此契约擅自交�
 ## 5. 直接依赖与消费接口
 
 - **App/UI**：`app/src/desktop-ai.ts` 已提供 snapshot/save 桌面受信入口；`UI/src/ai-settings.tsx` 当前可管理基础配置。新管理操作如需 UI，沿用现有桥，不绕过宿主权限。
-- **Conversations**：`app/src/desktop-conversations.ts` 已按 Agent→Role/Position→API Model/Connection 读取并准备普通对话；跨 Context 多职责、配置快照/撤权与在途一致性不得仅凭已有 send 认定完成。
+- **Conversations**：`app/src/desktop-conversations.ts` 当前通过旧 `agentId` 查 Role、API Model/Connection 并准备普通对话；这是既有调用链耦合，**不是产品要求先创建 Agent**。Context 使用既有对话功能的设计仍应以独立设定、受控组合和现有会话复用为基础。
 - **Space**：存储 Context 对 Agent 的选择；AI 提供 Role/职责定义及必要公开查询，不能重复保存 Context 权威成员表。
 - **Permissions**：授予/撤销权限属于 permissions；AI 只持有配置与资格事实，不建立新的 Grant/Operation。
 - **Connections/API**：模型目录和真实调用归 connections/api，AI 不实现 Provider 协议，也不持有 Key、网络请求或模型计费记录。
