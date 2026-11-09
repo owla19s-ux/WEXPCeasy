@@ -23,7 +23,7 @@ Permissions 决定授权，Shared 保管秘密和技术存储，App 提供可信
 
 历史 PR #4 的底座已由源码逐文件确认吸收；PR #3 的另一套公共目标与 Session Manager 不引入。App 以当前公开端口装配 GitHub 能力，DesktopBridge 提供经 Native 确认的手动目录与调用。运行时必须由可信宿主提供；默认桌面分发尚未自动装配官方二进制。
 
-**Context → 对话 → API/GitHub 的跨域链路待验**。Context 关联和 Tool.enabled 不是 Connections 的执行授权；Connections 管可信连接配置、发现/调用、配置版本、Operation/attempt/Receipt，不决定哪个 Context 在哪一轮 Conversation 自动公开哪些工具。可信调用方须明确关联的 Context/Conversation/Agent、引用版本与工具/参数；“引用存在、已启用、已发现、已获权、已调用、已成功”应分别记录，不添加第二套运行账本。
+**已批准基础组合与完整 Context 内对话分开验收**。0.1.1 B2-02/03/04 包含 Context→Agent/模型、API→Conversations、Context→Connections 的基础能力；完整 Context 内会话组织与自动工具消费未被原计划明确列为本版交付，也未明确写成 0.1.2，待版本归属确认。Context 关联和 Tool.enabled 不是 Connections 的执行授权；Connections 管可信连接配置、发现/调用、配置版本、Operation/attempt/Receipt，不决定哪个 Context 在哪一轮 Conversation 自动公开哪些工具。可信调用方须明确关联的 Context/Conversation/Agent、引用版本与工具/参数；“引用存在、已启用、已发现、已获权、已调用、已成功”应分别记录，不添加第二套运行账本。
 
 ## 施工规则与验收
 
