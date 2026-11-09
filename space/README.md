@@ -17,6 +17,10 @@ Space 维护 Category、Space、Group、Context 的组织关系、稳定 ID、�
 | Category 可见性 | 已有准备/提交和恢复边界的撤权相关修复/测试提交（`3693a8ec`、`beea0ce2`、`c2e68469`） | 当前 SHA 同步回归、原回执/未授权落库防护 |
 | Space 桌面展示 | 现有 Space 页面和资源预览/编辑入口 | 快速切换、迟到响应、权限变化与 Windows 验收 |
 
+## 2026-11-09 桌面工具引用进展
+
+[`5a77d192`](https://github.com/owla19s-ux/WEXPCeasy/commit/5a77d192bf8d0154ca5975c42ec7e8f42181090c) 已提交经授权发现工具并管理 Context 工具引用的桌面交互，相关差异涉及 `UI/src/context-tools.tsx`、`app/src/desktop-space.ts`、Connections 能力及测试。该证据仅说明代码/测试已提交，不等于 Space 所有引用关系或真实工具执行已通过；最新 main `a91aacf3` 的同 SHA CI、撤权/重启/失联验收仍待核。Space 仍只持引用，工具发现不授予执行权。
+
 ## 调整与验收
 
 1. 先确认本域已有公开端口和模块测试，区分“引用”“配置选择”“执行绑定”，不因引用存在自动赋权。
