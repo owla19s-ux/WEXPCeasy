@@ -68,6 +68,7 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
    if(context){
     grant(op('conversations','read','conversation:'+id));
     const linked=await host!.space!.execute(grant(op('space','association.add','context:'+context.id,context.id)),{kind:'association.add',contextId:context.id,owner:'conversations',targetType:'conversation',targetId:id,purpose:'conversation',intent:randomUUID()});
+    if(linked.status==='unknown')return {status:'unknown',id,intent:linked.intent,reason:'conversation_created_association_unknown'};
     if(linked.status!=='committed')return {status:'unavailable',reason:'conversation_created_unlinked:'+id};
    }
    return {...r,id};
@@ -102,10 +103,10 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
   if(input.kind==='append')return change(input.id,input.expectedRevision,{kind:'append',messageId:randomUUID(),segments});
   if(input.kind==='select')return change(input.id,input.expectedRevision,{kind:'select',messageId:input.messageId,segmentIds:input.segmentIds});
   if(!host?.api||!host.ai||!host.conversations?.generation)return {status:'unavailable',reason:'generation_unavailable'};
-  let selection=input.selection;
-  if(input.agentId){const agent=ai('agent',input.agentId);if(agent.kind!=='agent')return {status:'reference_unavailable'};selection={roleId:agent.roleId,positionId:agent.positionId,...agent.model};}
-  if(!selection)return {status:'reference_unavailable'};
   const settings:ReturnType<typeof ai>[]=[],prompts:string[]=[];
+  let selection=input.selection;
+  if(input.agentId){const agent=ai('agent',input.agentId);if(agent.kind!=='agent')return {status:'reference_unavailable'};settings.push(agent);selection={roleId:agent.roleId,positionId:agent.positionId,...agent.model};}
+  if(!selection)return {status:'reference_unavailable'};
   if(selection.roleId){const role=ai('role',selection.roleId);if(role.kind!=='role')return {status:'reference_unavailable'};settings.push(role);prompts.push(role.prompt);}
   if(selection.positionId){const position=ai('position',selection.positionId);if(position.kind!=='position')return {status:'reference_unavailable'};settings.push(position);prompts.push(position.responsibility);}
   const model=api('model',selection.modelId) as ApiModel,connection=api('connection',selection.connectionId) as ApiConnection;

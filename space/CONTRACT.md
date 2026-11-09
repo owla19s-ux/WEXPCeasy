@@ -40,7 +40,7 @@
 - 工具：`tool.add/set/remove`。
 - 不存在 `placement.*`，也没有完整的 `context.config.*` 公开修改命令。
 
-**[源码已存在]** `SpaceQuery` 当前包括 `organization`（category/space/group）、`contexts`、`context`、`context.location`、`context.organization`。`ContextView` 返回本体和可见的 resources、associations、tools；`ToolView` 的 availability 为 available/unavailable/conflict/unknown，并有来源修订和观察时间。当前 Tool 状态投影不代表最终执行资格。
+**[源码已存在]** `SpaceQuery` 当前包括 `organization`（category/space/group）、`contexts`、`context`、`context.location`、`context.organization`。`ContextView` 返回本体和可见的 resources、associations、tools；Context QueryResult.complete 为 false 时表示有引用未能投影，原引用仍保留。桌面 detail 将其投影为 associationsComplete；`ToolView` 的 availability 为 available/unavailable/conflict/unknown，并有来源修订和观察时间。当前 Tool 状态投影不代表最终执行资格。
 
 **[源码已存在]** `Mutation` 区分 `committed(id,revision)`、`rejected(reason)`、`unavailable(reason)`、`failed_no_commit(reason)`、`unknown(intent,id?)`。`QueryResult` 正常返回 `status:'ok',value`（可选 `complete`），异常沿用非提交结果。不能用布尔值或构建成功替代事务结果；具体错误 reason 以代码和测试为准，不凭本文凭空增加枚举。
 
@@ -74,7 +74,7 @@
 
 **[产品已确认]** 引用、配置选择、执行绑定三层独立：引用只表示组合事实；配置选择只保存允许的局部配置/目标引用；执行权限、实际任务输入/输出和连接器调用由消费者、Permissions 与目标 Owner 决定。新增引用不意味着启用全局服务或自动执行。
 
-**[源码已存在]** `Target` 为 `owner,targetType,targetId`，`Association` 额外包含 `id,revision,purpose`；`Tool` 增加 `enabled`。`supportedTarget()` 当前仅接受普通引用 `AI:role/agent`、`connections/api:api/model` 和工具 `connections:tool`。目标验证需要 `OwnerPort.resolve` 的当前合法观察；不匹配/不可证实应拒绝或报告不可用。`tool.set` 仅修改本 Context 的选择事实。
+**[源码已存在]** `Target` 为 `owner,targetType,targetId`，`Association` 额外包含 `id,revision,purpose`；`Tool` 增加 `enabled`。`supportedTarget()` 当前仅接受普通引用 `AI:role/position/agent`、`connections/api:api/model`、`conversations:conversation` 和工具 `connections:tool`。目标验证需要 `OwnerPort.resolve` 的当前合法观察；不匹配/不可证实应拒绝或报告不可用。`tool.set` 仅修改本 Context 的选择事实。
 
 **[实施建议]** 为 A1 F01-008 中实际目标 Owner 支持的资料、工作流、其它 Context 等逐步扩充允许的目标类型及验证器，继续使用已有 Association/专用 Address/Tool 结构；不新建并行关系底座，也不无条件放开 owner/type 组合。实际已发现工具目录由 Connections 提供，Space 持久化选择 ID；真实调用走对应执行 Owner。
 
@@ -104,7 +104,7 @@
 |---|---|---|
 | `permissions` | 本次入口/目标权限裁决和重检 | 自定义权限政策或默认授权 |
 | `shared` | Store、Root、Lock、通用技术机制 | 把 Space 业务规则转移到 shared |
-| `AI` | Role/Agent 的身份和可见状态 | 角色定义、Agent 运行、人格策略 |
+| `AI` | Role/Position/旧 Agent 的身份和可见状态 | 角色定义、Agent 运行、人格策略 |
 | `connections/api` | API/模型配置对象身份及可用投影 | API Key、Provider 协议、实际生成 |
 | `connections` | 工具目录和真实能力身份、调用/Operation | 在 Space 内复制派发、回执 |
 | `connections/local` / `environments` | 目录/工具/环境的真实观察和执行能力 | 任意本地操作、环境安装 |
