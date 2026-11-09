@@ -29,3 +29,9 @@
 5. 验收分别覆盖官方构建/初始化、目录与 Schema、多类真实工具、公共端口、可信 IPC/UI、凭证轮换/撤权、unknown/重启、远端写入回读和 Windows 安装。记录同 SHA CI、真实/模拟来源与未测项。
 
 本页描述源码能力与验收边界；当前提交测试及 Actions 证据见集成 PR 与 A2，不对完整 GitHub 模块或 Windows E4 签收。
+
+## 97 项对账｜GitHub 文件与通用 MCP 工具（2026-11-09）
+
+- 对应第三批 F05-012、U13：GitHub 的可信连接/凭证、仓库文件读取、基于 SHA 的版本写入、目录/工具 Schema 发现、任意已发现工具名与 JSON 参数 invoke、Operation/错误/unknown、Adapter 初始化/关闭均须分项验证。
+- `UI/src/connection-settings.tsx` 有文件/连接设置；`UI/src/github-tools.tsx` 有通用工具目录与手动调用。**这些不是零实现**，但默认 Windows 安装包官方 MCP 二进制/Runtime 装配、真实远端读写回验和 AI/Context/对话工具消费仍未签收。
+- 官方 Server 工具目录才是动态能力来源，GH-01～12 只是领域锚点。不得为不同官方工具手写第二套功能库或公共 Operation；用户点击、AI 提议、工具实际执行和 GitHub 返回业务成功分别判权与记证据。
