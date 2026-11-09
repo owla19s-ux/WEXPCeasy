@@ -1,5 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import type {ReactNode} from 'react';
+import {ConversationPanel} from './conversation.js';
+import {ContextAssociations} from './context-associations.js';
 import {LocalFileEditor} from './local-file-editor.js';
 import type {LocalDrafts} from './local-file-editor.js';
 import {ContextAddresses} from './space-addresses.js';
@@ -10,11 +12,12 @@ type ResourcePreview=Extract<DesktopSpaceReply,{view:'file'|'directory'}>;
 export interface SpaceSections {contextId:string|null;resourcePreview:ReactNode|null;dismissResourcePreview:()=>void;toolbar:ReactNode;categories:ReactNode;structure:ReactNode;content:ReactNode;summary:ReactNode}
 export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sections:SpaceSections)=>ReactNode}){
  const epoch=useRef(0),running=useRef(false),openSequence=useRef(0),selectedContext=useRef<string|null>(null),fileDrafts=useRef<LocalDrafts>(new Map());
+ const [chatSession,setChatSession]=useState<{contextId:string;id?:string;token:number}>();
  const [resourcePreview,setResourcePreview]=useState<ResourcePreview>();
  const [data,setData]=useState<Snapshot>(),[detail,setDetail]=useState<Detail>(),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const [categoryFilter,setCategoryFilter]=useState(''),[categoryId,setCategoryId]=useState('');
  const [spaceId,setSpaceId]=useState(''),[groupId,setGroupId]=useState(''),[mode,setMode]=useState('space.create'),[name,setName]=useState(''),[description,setDescription]=useState('');
- useEffect(()=>{const unsubscribe=bridge.onAccessChanged(()=>{epoch.current++;running.current=false;setBusy(false);openSequence.current++;selectedContext.current=null;fileDrafts.current.clear();setResourcePreview(undefined);setDetail(undefined);setData(undefined);setName('');setDescription('');setSpaceId('');setGroupId('');setCategoryId('');setCategoryFilter('');setMessage('授权已变更，请重新打开工作区。');});return ()=>{epoch.current++;openSequence.current++;selectedContext.current=null;running.current=false;unsubscribe();};},[bridge]);
+ useEffect(()=>{const unsubscribe=bridge.onAccessChanged(()=>{epoch.current++;running.current=false;setBusy(false);openSequence.current++;selectedContext.current=null;fileDrafts.current.clear();setChatSession(undefined);setResourcePreview(undefined);setDetail(undefined);setData(undefined);setName('');setDescription('');setSpaceId('');setGroupId('');setCategoryId('');setCategoryFilter('');setMessage('授权已变更，请重新打开工作区。');});return ()=>{epoch.current++;openSequence.current++;selectedContext.current=null;running.current=false;unsubscribe();};},[bridge]);
  async function call(input:DesktopSpaceInput){
   const captured=epoch.current;const reply=await bridge.space(input);if(captured!==epoch.current)throw Error('stale_space_request');if(!reply.ok)throw Error('桌面请求被拒绝');
   const result=reply.value;
@@ -27,7 +30,7 @@ export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sectio
   const result=await call({kind:'snapshot'});if(result?.status==='ok'&&result.view==='snapshot'){setData(result);if(!result.complete)setMessage('部分 Context 不可用，已保留登记信息。');}
  }
  async function run(work:()=>Promise<void>){if(running.current)return;const captured=epoch.current;running.current=true;setBusy(true);setMessage('');try{await work();}catch(error){if(captured===epoch.current){setDetail(undefined);setData(undefined);setMessage(error instanceof Error?error.message:'操作失败');}}finally{if(captured===epoch.current){running.current=false;setBusy(false);}}}
- async function open(id:string){const sequence=++openSequence.current;selectedContext.current=id;setResourcePreview(undefined);const result=await call({kind:'context.open',id});if(sequence!==openSequence.current)return;if(result?.status==='ok'&&result.view==='context'){setDetail(result);setName(result.context.name);setDescription(result.context.description);setMode('context.edit');}}
+ async function open(id:string){setChatSession(undefined);const sequence=++openSequence.current;selectedContext.current=id;setResourcePreview(undefined);const result=await call({kind:'context.open',id});if(sequence!==openSequence.current)return;if(result?.status==='ok'&&result.view==='context'){setDetail(result);setName(result.context.name);setDescription(result.context.description);setMode('context.edit');}}
  async function submit(){
   let input:DesktopSpaceInput;
   if(mode==='category.create')input={kind:'category.create',name};
@@ -56,6 +59,8 @@ export function SpacePanel({bridge,render}:{bridge:DesktopBridge;render?:(sectio
  <label>名称<input required maxLength={4096} disabled={busy} value={name} onChange={event=>setName(event.target.value)}/></label><label>说明<textarea maxLength={4096} disabled={busy} value={description} onChange={event=>setDescription(event.target.value)}/></label><button disabled={busy} type="submit">{busy?'处理中…':'保存'}</button></form>
  {selectedSpace&&<div><h3>Space 工作目录</h3><p>{selectedSpace.directory??'未关联'}</p><button disabled={busy} onClick={()=>void run(async()=>{const result=await call({kind:'space.directory',id:selectedSpace.id,expectedRevision:selectedSpace.revision});if(result?.status==='committed')await refresh();})}>选择关联目录</button>{selectedSpace.directory&&<button disabled={busy} onClick={()=>void run(async()=>{const result=await call({kind:'space.directory',id:selectedSpace.id,expectedRevision:selectedSpace.revision,clear:true});if(result?.status==='committed')await refresh();})}>解除目录关联</button>}</div>}
  {detail&&<article><h3>{detail.context.name}</h3><p>{detail.context.description}</p><ContextAddresses key={detail.context.id} detail={detail} busy={busy} run={run} call={call} reload={()=>open(detail.context.id)} onPreview={value=>{if(!value||value.contextId===selectedContext.current)setResourcePreview(value);}}/>
+ <ContextAssociations key={detail.context.id} bridge={bridge} contextId={detail.context.id} associations={detail.associations??[]} complete={detail.associationsComplete??true} reload={()=>open(detail.context.id)} onOpen={id=>setChatSession({contextId:detail.context.id,...(id?{id}:{}),token:Date.now()})}/>
+ {chatSession?.contextId===detail.context.id&&<><button onClick={()=>setChatSession(undefined)}>关闭 Context 对话</button><ConversationPanel key={chatSession.contextId+':'+chatSession.token} bridge={bridge} contextId={chatSession.contextId} {...(chatSession.id?{initialId:chatSession.id}:{})} startNew={!chatSession.id} associations={detail.associations??[]}/></>}
  <small>Context ID：{detail.context.id}</small><p>记录目录：{detail.location}</p><p>当前 Space：{data.spaces.find(x=>x.id===detail.organization.spaceId)?.name??'未分配'}</p>
  <label>目标 Space<select id="context-space" disabled={busy||detail.organization.spaceId!==null} value={detail.organization.spaceId??spaceId} onChange={event=>setSpaceId(event.target.value)}><option value="">选择 Space</option>{data.spaces.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
  <label>目标分组<select id="context-group" disabled={busy} value={groupId} onChange={event=>setGroupId(event.target.value)}><option value="">不分组</option>{data.groups.filter(g=>g.spaceId===(detail.organization.spaceId??spaceId)).map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select></label>

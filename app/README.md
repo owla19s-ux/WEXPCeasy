@@ -8,6 +8,8 @@
 
 `desktop-connections.ts` 保留配置/凭证及文件动作，并提供 `github.tools/github.invoke`：通过 Connections 公共 capability 端口、配置 revision、精确工具/参数目标及 Native 确认执行。`foundations.ts` 仅负责可信 runtime/vault 装配，不复制授权或 Operation。运行时未装配时明确返回不可用；默认分发尚不自动提供官方二进制。
 
+Issue #11 桌面接线：`desktop-conversations.ts` 兼容 agentId，并消费独立 Role/Position 与显式模型；Context 模式验证 Space Association、复用 Conversations 后绑定实际 Context Scope。`desktop-space.ts` 提供普通 Association CRUD、真实 AI/Conversation Owner 解析与详情投影；内部 readContext 复用当前 Native 确认与受控投影，不暴露任意权限/路径端口。Authority 只对本轮已授权请求附加 Context/设定读取资格约束，撤权后不能继续展示流或完成写入，下一次操作仍须 Native 确认。未重建授权或会话系统。
+
 ## Owner 不变量
 
 - App 只管理可信宿主、装配、Native/IPC、凭证入口、进程、窗口、错误恢复；不拥有 AI/Space/Conversations/权限/Operation 的业务权威。

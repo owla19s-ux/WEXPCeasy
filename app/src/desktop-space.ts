@@ -11,6 +11,7 @@ import type {SpaceCommand,SpaceQuery,QueryResult,ProjectionScope} from '../../sp
 import type {DesktopSpaceInput,DesktopSpaceReply} from '../../UI/src/index.js';
 interface FileObservation {contextId:string;addressId:string;revision:number;address:string;path:string;target:string;version:string}
 const schemas:Record<string,readonly string[]>={
+ 'association.add':['kind','contextId','owner','targetType','targetId','purpose'],'association.replace':['kind','contextId','id','expectedRevision','owner','targetType','targetId','purpose'],'association.remove':['kind','contextId','id','expectedRevision'],
  'tool.connections':['kind','contextId'],'tool.candidates':['kind','contextId','connectionId'],
  'tool.add':['kind','contextId','targetId','purpose'],'tool.set':['kind','contextId','id','expectedRevision','enabled'],'tool.remove':['kind','contextId','id','expectedRevision'],
  'resource.save':['kind','contextId','id','editToken','content'],
@@ -49,7 +50,7 @@ function capture(input:unknown):DesktopSpaceInput|undefined{
  if(required.some(k=>!Object.hasOwn(out,k)))return;
  return out as unknown as DesktopSpaceInput;
 }
-const titles:Record<string,string>={'tool.connections':'读取可关联工具连接（不授权执行）','tool.candidates':'读取可关联能力目录（不授权执行）','tool.add':'关联 Context 工具引用（不授权执行）','tool.set':'变更 Context 工具选择（不授权执行）','tool.remove':'解除 Context 工具引用（保留外部能力）','resource.read':'查看已关联资源','category.create':'创建 Space 类别','category.edit':'编辑 Space 类别','address.add':'添加 Context 地址引用','address.edit':'编辑地址引用','address.remove':'解除地址引用（保留外部原资源）','primary.select':'选择 Context 主地址','space.create':'创建 Space','space.edit':'编辑 Space','space.directory':'变更 Space 工作目录关联','group.create':'创建分组','group.edit':'编辑分组','context.create':'创建 Context','context.edit':'编辑 Context','context.group':'移动 Context 分组','context.open':'查看 Context'};
+const titles:Record<string,string>={'association.add':'添加设定/会话引用（不授权执行）','association.replace':'替换引用','association.remove':'解除引用（保留原对象）','tool.connections':'读取可关联工具连接（不授权执行）','tool.candidates':'读取可关联能力目录（不授权执行）','tool.add':'关联 Context 工具引用（不授权执行）','tool.set':'变更 Context 工具选择（不授权执行）','tool.remove':'解除 Context 工具引用（保留外部能力）','resource.read':'查看已关联资源','category.create':'创建 Space 类别','category.edit':'编辑 Space 类别','address.add':'添加 Context 地址引用','address.edit':'编辑地址引用','address.remove':'解除地址引用（保留外部原资源）','primary.select':'选择 Context 主地址','space.create':'创建 Space','space.edit':'编辑 Space','space.directory':'变更 Space 工作目录关联','group.create':'创建分组','group.edit':'编辑分组','context.create':'创建 Context','context.edit':'编辑 Context','context.group':'移动 Context 分组','context.open':'查看 Context'};
 const key=(op:LocalOperation)=>JSON.stringify(op);
 /** Native-confirmed local UI adapter. Domain data remains in Space; no Renderer identity/grant/path API. */
 export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:string;confirm:(summary:string)=>Promise<boolean>;chooseDirectory:()=>Promise<string|undefined>}){
@@ -81,8 +82,24 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
  }
  const configScope:LocalOperation={resource:'connections',action:'configuration.read',target:'connections:configurations',context:null};
  function toolScope(adapterId:string,connectionId:string):LocalOperation{return {resource:adapterId,action:'read',target:capabilityDiscoveryTarget(adapterId,connectionId),context:null};}
+ function targetScope(target:{owner:string;targetType:string;targetId:string}):LocalOperation|undefined{
+  if(target.owner==='AI'&&['role','position','agent'].includes(target.targetType))return {resource:'AI',action:target.targetType+'.read',target:target.targetType+':'+target.targetId,context:null};
+  if(target.owner==='conversations'&&target.targetType==='conversation')return {resource:'conversations',action:'read',target:'conversation:'+target.targetId,context:null};
+  return;
+ }
  const owner:import('../../space/src/index.js').OwnerPort={async resolve(parent,target){
-  if(closed||!host?.connections||!authority.owns(parent,'space')||target.owner!=='connections'||target.targetType!=='tool')return {status:'unsupported'};
+  if(closed||!host||!authority.owns(parent,'space'))return {status:'unsupported'};
+  const scope=targetScope(target);
+  if(scope){
+   if(!authority.enabled(scope)){if(reading)pending.set(key(scope),scope);return {status:'denied'};}
+   const request=authority.related(parent,scope);if(!request)return {status:'denied'};
+   const result=target.owner==='AI'?host.ai?.read(request,target.targetType as 'role'|'position'|'agent',target.targetId):host.conversations?.service.read(request,target.targetId);
+   if(result?.status!=='ok')return {status:result?.status==='denied'?'denied':'unavailable'};
+   if(!authority.related(parent,scope))return {status:'denied'};
+   const revision='entry'in result?result.entry.revision:result.conversation.revision;
+   return {status:'available',...target,sourceRevision:String(revision),observedAt:new Date().toISOString()};
+  }
+  if(!host.connections||target.owner!=='connections'||target.targetType!=='tool')return {status:'unsupported'};
   const reference=parseCapabilityReference(target.targetId);if(!reference)return {status:'unsupported'};
   for(const scope of [configScope,toolScope(reference.adapterId,reference.connectionId)])if(!authority.enabled(scope)){if(reading)pending.set(key(scope),scope);return {status:'denied'};}
   const configRequest=authority.related(parent,configScope),request=authority.related(parent,toolScope(reference.adapterId,reference.connectionId));
@@ -204,7 +221,7 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
    const location=await query({kind:'context.location',id:input.id},operation('context.locate','context:'+input.id,input.id));
    if(context.status!=='ok'||organization.status!=='ok'||location.status!=='ok')return {status:'unavailable',reason:'context_unavailable'};
    const value=context.value as import('../../space/src/index.js').ContextView;
-   return {status:'ok',view:'context',context:{id:value.id,revision:value.revision,name:value.name,description:value.description,primaryAddress:value.primaryAddress},resources:value.resources,tools:value.tools,location:(location.value as {location:string}).location,organization:organization.value as never};
+   return {status:'ok',view:'context',context:{id:value.id,revision:value.revision,name:value.name,description:value.description,primaryAddress:value.primaryAddress},resources:value.resources,associations:value.associations,associationsComplete:context.complete??true,tools:value.tools,location:(location.value as {location:string}).location,organization:organization.value as never};
   }
   if(input.kind==='tool.connections'||input.kind==='tool.candidates'){
    const context=await query({kind:'context',id:input.contextId},operation('context.read','context:'+input.contextId,input.contextId));
@@ -234,6 +251,7 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
    permit(configScope);permit(toolScope(reference.adapterId,reference.connectionId));
    command={kind:'tool.add',contextId:input.contextId,owner:'connections',targetType:'tool',targetId:input.targetId,purpose:input.purpose,intent:randomUUID()};
   }else command={...input,intent:randomUUID()} as SpaceCommand;
+  if(command.kind==='association.add'||command.kind==='association.replace'){const scope=targetScope(command);if(scope)permit(scope);}
   if(command.kind==='context.group'){
    const current=await query({kind:'context.organization',id:command.contextId},operation('context.organization.read','context:'+command.contextId,command.contextId));
    if(current.status!=='ok')return {status:'unavailable',reason:'organization_unavailable'};
@@ -248,7 +266,8 @@ export function createDesktopSpace(options:{authority?:DesktopAuthority;rootId:s
   // Never automatically replay writes, including unknown results.
   return await host!.space!.execute(bind(op)!,command) as DesktopSpaceReply;
  }
- return Object.freeze({policy,derive,owner,attach(value:FoundationHost){if(host)throw Error('already_attached');host=value;authority.attach(value);},
+ return Object.freeze({policy,derive,owner,
+  async readContext(id:string){const r=await query({kind:'context',id},operation('context.read','context:'+id,id));return r.status==='ok'&&'associations'in r.value?r.value:undefined;},attach(value:FoundationHost){if(host)throw Error('already_attached');host=value;authority.attach(value);},
   async request(raw:unknown):Promise<DesktopSpaceReply>{
    const input=capture(raw);if(!input)return {status:'rejected',reason:'invalid_request'};
    if(closed||!host?.space||!host.local)return {status:'unavailable',reason:'space_unavailable'};

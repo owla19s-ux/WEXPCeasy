@@ -33,7 +33,7 @@
 
 `list` 要求列表范围授权，并对每条返回配置重新检查读授权；`read` 再次检查读取许可；`save` 做修订/intent 校验、Role/Position 引用存在性与读取许可、API model 引用核对和写授权复核。返回可能有 `committed`、`denied`、`invalid`、`reference_unavailable`、`revision_conflict`、`intent_conflict`、`unknown`、`unavailable` 等状态，不能把未知写入当成功。
 
-当前旧 `agent` 配置要求 roleId、positionId、连接及 modelId；普通对话桌面入口还要求 `agentId`。这仅是现状与兼容约束，**不得用它反向规定产品必须经过 Agent**。现有接口缺少独立于该绑定的可复用设定消费通路，具体修复需要另行核验。
+当前旧 `agent` 配置要求 roleId、positionId、连接及 modelId；桌面入口兼容 `agentId`，并接受独立显式 `selection:{roleId?,positionId?,connectionId,modelId}`（至少一个设定）。发送消费 Role.prompt 与 Position.responsibility，组合超出生成上限时在追加历史前拒绝；确认后重核设定和模型修订。AI 配置存储格式不变。
 
 ## 3. 历史功能锚点及分期（不因旧 Agent 名称形成新产品类别）
 
@@ -67,8 +67,8 @@ F10-014 公共策略/经验库目前 owner 未定，不通过此契约擅自交�
 ## 5. 直接依赖与消费接口
 
 - **App/UI**：`app/src/desktop-ai.ts` 已提供 snapshot/save 桌面受信入口；`UI/src/ai-settings.tsx` 当前可管理基础配置。新管理操作如需 UI，沿用现有桥，不绕过宿主权限。
-- **Conversations**：`app/src/desktop-conversations.ts` 当前通过旧 `agentId` 查 Role、API Model/Connection 并准备普通对话；这是既有调用链耦合，**不是产品要求先创建 Agent**。Context 使用既有对话功能的设计仍应以独立设定、受控组合和现有会话复用为基础。
-- **Space**：存储 Context 对 Agent 的选择；AI 提供 Role/职责定义及必要公开查询，不能重复保存 Context 权威成员表。
+- **Conversations**：`app/src/desktop-conversations.ts` 通过独立 selection 或兼容 agentId 读取当前设定与模型配置；Context 消费前验证关联可见性，不复制设定、模型或会话。
+- **Space**：存储 Context 对 Role、Position、旧 Agent 及 Conversation 的引用；AI 提供 Role/职责定义及必要公开查询，不能重复保存 Context 权威成员表。
 - **Permissions**：授予/撤销权限属于 permissions；AI 只持有配置与资格事实，不建立新的 Grant/Operation。
 - **Connections/API**：模型目录和真实调用归 connections/api，AI 不实现 Provider 协议，也不持有 Key、网络请求或模型计费记录。
 - **Workflows**：今后基于 AI 配置引用进行工作分配，任务结果和回执归工作流/连接系统。

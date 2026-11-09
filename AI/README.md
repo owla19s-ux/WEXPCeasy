@@ -15,7 +15,7 @@
 
 - `AI/src/model.ts` 当前仍有 `role`、`position`、`agent` 三种持久类型，其中 `agent` 包含 `roleId/positionId/model`。这是**已存在的实现与兼容事实**，不作为新的产品类别要求。
 - `AI/src/index.ts` 对外导出配置读写与校验入口；`app/src/desktop-ai.ts` 和 `UI/src/ai-settings.tsx` 使用现有配置接口。
-- `app/src/desktop-conversations.ts` 当前发送接口要求 `agentId`，并通过该记录取得 Role 与 Model。这是**对话调用链的现有耦合限制**，不是 Role、Position、API 必须捆绑的已确认产品规则。
+- `app/src/desktop-conversations.ts` 接受显式 `selection:{roleId?,positionId?,connectionId,modelId}`，至少选择一种设定；保留旧 `agentId` 请求兼容。角色提示与岗位职责在消费时组合，保存设定不要求绑定 API。
 - 既有 ID、修订、存储、权限和测试不得因文档恢复而被视为可直接删除或迁移；具体兼容处理须另行核对后施工。
 
 ## 功能与验证状态
@@ -25,11 +25,11 @@
 | 角色设定 | Role 定义、读取/保存及桌面配置入口已有基础 | 独立选择与复用、生命周期和重启/撤权验证 |
 | 岗位设定 | Position 定义、读取/保存及桌面配置入口已有基础 | 与角色独立使用、职责/范围配置和重启验证 |
 | API/模型引用 | 已有 ModelReference 及外部模型校验基础 | 消费时真实引用与配置来源，不复制 API 权威数据 |
-| 对话消费 | 现有普通对话通过旧 `agentId` 路径发起 | 核对该强制依赖与原始设定自由组合要求的偏差；**不在此处决定新接口** |
+| 对话消费 | Role、Position、组合可显式选择模型直接发送；旧 Agent 入口兼容 | 本地 SSE 集成已覆盖，真实 Provider 与 Windows 尚待验收 |
 | 配置权限及恢复 | 存储与授权处理已有代码和测试 | 当前 SHA 的冲突、失效、撤权、恢复与桌面验收 |
 
 ## 后续处理边界
 
-先对照已确认产品需求核查“独立设定 → 组合选择 → 对话消费”的真实入口，再制定最小兼容调整。**当前只修文档，不修改业务源码、不新增 Agent 产品类别、不重写现有会话管理，也不擅自决定 Context 会话的数据结构或版本扩展。**
+Issue #11 本轮只调整现有桌面消费与接线，未变更 AI 持久类型。Role/Position 无 API 保存、编辑与直接生成有定向集成证据；删除/停用、默认模型与继承仍待决，未新增 Agent 产品类别。证据与未签收范围统一见 A2。
 
 阅读顺序：根 README → 本 README / CONTRACT → 目标源码与测试；实际通过情况以同 SHA 的运行证据为准。

@@ -252,18 +252,19 @@ export async function openSpaceService(options:SpaceOptions):Promise<SpaceOpenRe
     const d=authorize(options.permission,request,{action:'context.read',target:`context:${input.id}`,context:input.id});
     const {state}=await registrySnapshot(),entry=find(state.contexts,input.id);if(entry.phase!=='ready')return fail('context_pending','unavailable');
     return await inContext(entry.location,entry.rootId,false,async(db,contextRoot)=>{
+     let complete=true;
      const s=body(db.read().value,contextRoot.id,input.id),associations:Association[]=[],tools:ToolView[]=[];
      // Owner projections are revalidated on every query, never cached or inferred from persisted selection.
      for(const [items,out] of [[s.associations,associations],[s.tools,tools]] as const){
       for(const item of items){
-       recheck(options.permission,request,d);if(!options.owner)continue;let observation;try{observation=await options.owner.resolve(request,{owner:item.owner,targetType:item.targetType,targetId:item.targetId});}catch{continue;}
+       recheck(options.permission,request,d);if(!options.owner){complete=false;continue;}let observation;try{observation=await options.owner.resolve(request,{owner:item.owner,targetType:item.targetType,targetId:item.targetId});}catch{complete=false;continue;}
        if(observation.status==='available'&&observation.owner===item.owner&&observation.targetType===item.targetType&&observation.targetId===item.targetId&&nonempty(observation.sourceRevision)&&Number.isFinite(Date.parse(observation.observedAt))){
         if(out===tools){const availability=observation.availability===undefined?'unknown':observation.availability;if(!['available','unavailable','conflict','unknown'].includes(availability))continue;tools.push({...structuredClone(item as Tool),availability,sourceRevision:observation.sourceRevision,observedAt:observation.observedAt});}
         else associations.push(structuredClone(item));
-       }
+       }else complete=false;
       }
      }
-     recheck(options.permission,request,d);return {status:'ok' as const,value:{...structuredClone(s.context),resources:structuredClone(s.resources),associations,tools}};
+     recheck(options.permission,request,d);return {status:'ok' as const,value:{...structuredClone(s.context),resources:structuredClone(s.resources),associations,tools},complete};
     });
    }
    if(input.kind==='contexts'){

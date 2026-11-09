@@ -9,8 +9,9 @@ export interface GroupItem extends SpaceName {spaceId:string;order:number}
 export type ContextItem=({status:'available';description:string}&SpaceName)|{status:'unavailable';id:string;reason:string};
 export interface ContextOrganization {contextId:string;revision:number;spaceId:string|null;groupId:string|null}
 export interface AddressItem extends SpaceName {address:string;notes:string;purpose:string|string[];status:'unverified';type?:string;source?:string}
+export interface AssociationItem {id:string;revision:number;owner:string;targetType:string;targetId:string;purpose:string}
 export interface ToolItem {id:string;revision:number;owner:string;targetType:string;targetId:string;purpose:string;enabled:boolean;availability:'available'|'unavailable'|'conflict'|'unknown';sourceRevision:string;observedAt:string}
-export type DesktopSpaceInput={kind:'tool.connections';contextId:string}|{kind:'tool.candidates';contextId:string;connectionId:string}|{kind:'tool.add';contextId:string;targetId:string;purpose:string}|{kind:'tool.set';contextId:string;id:string;expectedRevision:number;enabled:boolean}|{kind:'tool.remove';contextId:string;id:string;expectedRevision:number}|{kind:'resource.save';contextId:string;id:string;editToken:string;content:string}|{kind:'resource.read';contextId:string;id:string;mode:'file'|'directory'}|{kind:'category.create';name:string}|{kind:'category.edit';id:string;expectedRevision:number;name:string}|
+export type DesktopSpaceInput={kind:'association.add';contextId:string;owner:string;targetType:string;targetId:string;purpose:string}|{kind:'association.replace';contextId:string;id:string;expectedRevision:number;owner:string;targetType:string;targetId:string;purpose:string}|{kind:'association.remove';contextId:string;id:string;expectedRevision:number}|{kind:'tool.connections';contextId:string}|{kind:'tool.candidates';contextId:string;connectionId:string}|{kind:'tool.add';contextId:string;targetId:string;purpose:string}|{kind:'tool.set';contextId:string;id:string;expectedRevision:number;enabled:boolean}|{kind:'tool.remove';contextId:string;id:string;expectedRevision:number}|{kind:'resource.save';contextId:string;id:string;editToken:string;content:string}|{kind:'resource.read';contextId:string;id:string;mode:'file'|'directory'}|{kind:'category.create';name:string}|{kind:'category.edit';id:string;expectedRevision:number;name:string}|
  {kind:'address.add';contextId:string;name:string;address:string;notes?:string;purpose?:string|string[]}|{kind:'address.edit';contextId:string;id:string;expectedRevision:number;name:string;address:string;notes?:string;purpose?:string|string[]}|
  {kind:'address.remove';contextId:string;id:string;expectedRevision:number}|{kind:'primary.select';contextId:string;id:string|null;expectedRevision:number}|{kind:'snapshot'}|{kind:'context.open';id:string}|
  {kind:'space.create';name:string;description?:string;categoryId?:string|null}|{kind:'space.edit';id:string;expectedRevision:number;name:string;description?:string;categoryId?:string|null}|
@@ -24,7 +25,7 @@ export type DesktopSpaceReply={status:'ok';view:'tool-connections';connections:{
  {status:'ok';view:'file';contextId:string;addressId:string;content:string;version:string;editToken?:string}|
  {status:'ok';view:'directory';contextId:string;addressId:string;entries:{name:string;kind:'file'|'directory'|'symlink'|'other'}[];complete:boolean;version:string}|
  {status:'ok';view:'snapshot';categories:SpaceName[];spaces:SpaceItem[];groups:GroupItem[];contexts:ContextItem[];organizations:ContextOrganization[];complete:boolean}|
- {status:'ok';view:'context';context:SpaceName&{description:string;primaryAddress:string|null};resources:AddressItem[];tools:ToolItem[];location:string;organization:ContextOrganization}|
+ {status:'ok';view:'context';context:SpaceName&{description:string;primaryAddress:string|null};resources:AddressItem[];associations:AssociationItem[];associationsComplete:boolean;tools:ToolItem[];location:string;organization:ContextOrganization}|
  {status:'committed';id:string;revision:number}|
  {status:'cancelled'}|{status:'unknown';intent:string;id?:string}|
  {status:'unavailable'|'rejected'|'failed_no_commit';reason:string;operationId?:string};
@@ -58,14 +59,16 @@ export type DesktopAiInput={kind:'snapshot'}|{kind:'save';id:string;expectedRevi
 export type DesktopAiReply={status:'ok';entries:AiEntry[]}|{status:'committed';revision:number}|{status:'invalid_request'|'storage_unavailable'|'cancelled'|'unavailable'|'denied'|'invalid'|'reference_unavailable'|'revision_conflict'|'intent_conflict'|'unknown'|'not_committed'|'conflict'|'rejected'|'not_found'|'failed_no_commit';reason?:string;intent?:string};
 export interface ConversationFileReference {kind:'local-reference';contextId:string;addressId:string;version:string;mime:'text/plain'}
 export interface ConversationView {id:string;revision:number;messages:{id:string;role:'user'|'assistant';segments:{id:string;text:string;source?:ConversationFileReference}[];replaces?:string}[];generations:{id:string;inputMessageId:string;status:string;operationId?:string}[];selections?:{messageId:string;segmentIds:string[]}[]}
-export type DesktopConversationInput={kind:'snapshot'}|{kind:'create'}|{kind:'open';id:string}|
- {kind:'send'|'resend';id:string;expectedRevision:number;agentId:string;text:string;replaces?:string;attachments?:ConversationFileReference[]}|
+export interface ConversationSelection {roleId?:string;positionId?:string;connectionId:string;modelId:string}
+export type DesktopConversationInput=DesktopConversationCommand&{contextId?:string};
+export type DesktopConversationCommand={kind:'snapshot'}|{kind:'create'}|{kind:'open';id:string}|
+ {kind:'send'|'resend';id:string;expectedRevision:number;agentId?:string;selection?:ConversationSelection;text:string;replaces?:string;attachments?:ConversationFileReference[]}|
  {kind:'append';id:string;expectedRevision:number;text:string;attachments?:ConversationFileReference[]}|
  {kind:'select';id:string;expectedRevision:number;messageId:string;segmentIds:string[]}|
  {kind:'recover';id:string;generationId:string};
 export type DesktopConversationReply={status:'ok';conversation:ConversationView}|{status:'ok';conversations:ConversationView[]}|
- {status:'committed';id?:string;revision:number}|{status:'invalid_request'|'storage_unavailable'|'cancelled'|'unavailable'|'denied'|'invalid'|'reference_unavailable'|'revision_conflict'|'intent_conflict'|'unknown'|'not_committed'|'conflict'|'rejected'|'not_found'|'failed_no_commit'|'invalid_transition'|'already_dispatched';reason?:string;operationId?:string};
-export interface ConversationText {conversationId:string;generationId:string;text:string}
+ {status:'committed';id?:string;revision:number}|{status:'invalid_request'|'storage_unavailable'|'cancelled'|'unavailable'|'denied'|'invalid'|'reference_unavailable'|'revision_conflict'|'intent_conflict'|'unknown'|'not_committed'|'conflict'|'rejected'|'not_found'|'failed_no_commit'|'invalid_transition'|'already_dispatched';reason?:string;operationId?:string;id?:string;intent?:string};
+export interface ConversationText {conversationId:string;generationId:string;text:string;contextId?:string}
 export type DesktopPermissionInput={kind:'snapshot'}|{kind:'revoke';id:string;expectedRevision:number};
 export type DesktopPermissionReply={status:'ok';source?:{kind:'native-local';subject:string;entry:string;relationship:string;relationshipGeneration:number;moduleEnabled:boolean;globalEnabled:boolean;entryEnabled:boolean};revision:number;entries:{id:string;resource:string;action:string;target:string;context:string|null}[]}|
  {status:'committed';revision:number}|{status:'unknown';intent:string}|{status:'rejected'|'unavailable';reason:string}|{status:'cancelled'};

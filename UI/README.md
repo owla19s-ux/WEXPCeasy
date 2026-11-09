@@ -11,7 +11,7 @@
 | `src/layout.ts` | 外层布局调节、旧布局状态迁移及恢复 |
 | `src/space.tsx`、`space-addresses.tsx` | Space/Context 组织、地址与受控资源入口 |
 | `src/middle-workspace.tsx`、`workspace-state.ts` | Context 多视图标签、预览、按 Context ID 隔离的布局状态 |
-| `src/conversation.tsx` | **正式普通对话组件已存在**：历史、新建、Agent 选择、发送、段落引用、编辑重发、生成状态及回执查询 |
+| `src/conversation.tsx` | **正式普通对话组件已存在**：历史、新建、角色/岗位和显式模型选择（兼容旧 Agent）、发送、段落引用、编辑重发、生成状态及回执查询 |
 | `src/local-file-editor.tsx` | **本地编辑器已存在**：窗口内草稿、版本绑定保存、冲突重读、取消/unknown 反馈 |
 | `src/context-tools.tsx`、`operation-receipt.tsx` | Context 工具发现/引用与桌面 Operation 回执展示；工具可见不等于授权，回执呈现不等于业务确认已签收 |
 | `src/conversation-files.tsx` | 对话受控文件引用入口；文件选择、读取权限和真实发送仍须端到端验收 |
@@ -23,7 +23,7 @@
 
 ## 产品约束
 
-0.1.1 新增明确的最小入口：从当前 Context 打开一个由所选主 AI 服务、能够保存恢复的基础会话；独立普通对话入口继续保留。当前 `ConversationPanel` 仍是独立入口，**此接线尚未实施**，不可将有普通对话页当作已经完成 Context 内对话。不能将一个 Context 的未完成流、草稿或会话错误呈现在另一个 Context 中。
+Issue #11：Context 详情的 `context-associations.tsx` 使用 owner 现有列表发现角色/岗位/会话，调用 Association 添加/替换/解除；可打开已有会话或新建关联会话，复用 `ConversationPanel`。本轮可选已引用角色、岗位或组合，并显式选择连接/模型。切换 Context 关闭原面板、请求停止在途等待；流事件按 Context、Conversation 与 generation 过滤，迟到回复不能继续读新环境。未把虚拟形象占位扩展为完整形象系统。关联和会话持久化不代表未发送草稿已持久保存。
 
 当前界面只有 `context` / `structure` 两类工作视图：它们是基础标签和按需预览，不是长期专业多视图引擎。`src/space.tsx` 的类别按钮目前纵列渲染，且导航只有折叠态，与 A1 三个横排窄高类别按钮及完全隐藏能力仍有差距。形象与交互栏现分属 [`avatar/`](avatar/README.md) 和 [`interaction-bar/`](interaction-bar/README.md)，由 `src/interaction-dock.tsx` 维持现有联动/位置与旧导出兼容；AI/秘书/Context 对象入口尚未接线，底部输出也不是交互栏。虚拟形象未来可映射 AI/Agent/秘书的显示身份与状态，但 AI 配置和会话事实仍由各自模块负责，UI 不能凭形象点击直接授权或执行。
 
@@ -37,7 +37,7 @@
 
 已通过 main 提交差异核到 API/AI/Permissions/Space 设置页的撤权后迟到响应隔离、发现模型 ID 选择（不隐式注册），以及 Context 工具引用、对话文件引用、Operation 回执相关组件与桌面测试修改。对应 A2 最新记录的基线为 `a91aacf3`；当前同 SHA CI 和完整真实 UI 验收未核实。不能据代码提交推断这些交互已独立签收。
 
-补齐该最小 Context 对话入口时复用既有 `UI/src/conversation.tsx` 与 DesktopBridge，不另建第二个对话编辑器；允许从 Context 切入并返回原视图，保留 per-Context 状态，复杂多会话/专业多视图/工作流留后续版本。
+本轮最小 Context 对话入口已复用既有 `UI/src/conversation.tsx` 与 DesktopBridge，不另建第二个对话编辑器；允许从 Context 切入并返回原视图，保持 Context/会话身份隔离；跨 Context 共享/移动政策、专业多视图/工作流仍待后续决定。
 
 ## 剩余施工与验收
 
