@@ -173,3 +173,13 @@ test('desktop GitHub config, isolated credential, official SDK read/write, confl
  snap=await controls.request({kind:'snapshot'});assert.equal(snap.connections[0].enabled,false);assert.equal(snap.connections[0].hasCredential,false);
  assert.notEqual((await controls.request({kind:'github.read',id,expectedRevision:snap.revision,file})).status,'file');
 });
+
+test('desktop append saves a user message without a model or network and respects consent and revision',async t=>{
+ const f=await fixture(t),created=await f.chat.request({kind:'create'}),id=created.id;
+ f.deny();assert.equal((await f.chat.request({kind:'append',id,expectedRevision:1,text:'private draft'})).status,'cancelled');f.allow();
+ assert.equal((await f.chat.request({kind:'append',id,expectedRevision:1,text:'saved without generation'})).status,'committed');
+ let opened=await f.chat.request({kind:'open',id});assert.equal(opened.conversation.messages[0].segments[0].text,'saved without generation');assert.equal(opened.conversation.generations.length,0);assert.equal(f.calls.length,0);
+ assert.equal((await f.chat.request({kind:'append',id,expectedRevision:1,text:'stale'})).status,'revision_conflict');
+ assert.equal((await f.chat.request({kind:'append',id,expectedRevision:2,text:'unsafe',agentId:'admin'})).status,'rejected');
+ opened=await f.chat.request({kind:'open',id});assert.equal(opened.conversation.messages.length,1);
+});

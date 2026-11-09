@@ -58,6 +58,7 @@ export type DesktopAiReply={status:'ok';entries:AiEntry[]}|{status:'committed';r
 export interface ConversationView {id:string;revision:number;messages:{id:string;role:'user'|'assistant';segments:{id:string;text:string}[];replaces?:string}[];generations:{id:string;inputMessageId:string;status:string;operationId?:string}[];selections?:{messageId:string;segmentIds:string[]}[]}
 export type DesktopConversationInput={kind:'snapshot'}|{kind:'create'}|{kind:'open';id:string}|
  {kind:'send'|'resend';id:string;expectedRevision:number;agentId:string;text:string;replaces?:string}|
+ {kind:'append';id:string;expectedRevision:number;text:string}|
  {kind:'select';id:string;expectedRevision:number;messageId:string;segmentIds:string[]}|
  {kind:'recover';id:string;generationId:string};
 export type DesktopConversationReply={status:'ok';conversation:ConversationView}|{status:'ok';conversations:ConversationView[]}|

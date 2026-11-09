@@ -9,7 +9,7 @@ const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const id=(v:unknown):v is string=>typeof v==='string'&&/^[a-zA-Z0-9_-]{1,120}$/.test(v);
 function capture(raw:unknown):DesktopConversationInput|undefined{
  if(!object(raw)||typeof raw.kind!=='string')return;
- const fields:Record<string,string[]>={snapshot:['kind'],create:['kind'],open:['kind','id'],send:['kind','id','expectedRevision','agentId','text'],resend:['kind','id','expectedRevision','agentId','text','replaces'],select:['kind','id','expectedRevision','messageId','segmentIds'],recover:['kind','id','generationId']};
+ const fields:Record<string,string[]>={snapshot:['kind'],create:['kind'],open:['kind','id'],append:['kind','id','expectedRevision','text'],send:['kind','id','expectedRevision','agentId','text'],resend:['kind','id','expectedRevision','agentId','text','replaces'],select:['kind','id','expectedRevision','messageId','segmentIds'],recover:['kind','id','generationId']};
  const keys=Object.hasOwn(fields,raw.kind)?fields[raw.kind]:undefined;
  if(!keys||Reflect.ownKeys(raw).length!==keys.length||!keys.every(k=>Object.hasOwn(raw,k)))return;
  for(const [k,v] of Object.entries(raw)){
@@ -66,6 +66,7 @@ export function createDesktopConversations(options:{authority:DesktopAuthority;c
    return host!.conversations!.generation!.recover({read:grant(chat('read',input.id)),receipt:grant(op('conversations','receipt.read','operation:'+generation.operationId)),finish:grant(chat('finish',input.id))},input.id,input.generationId,randomUUID());
   }
   if(current.revision!==input.expectedRevision)return {status:'revision_conflict'};
+  if(input.kind==='append')return change(input.id,input.expectedRevision,{kind:'append',messageId:randomUUID(),segments:[{id:'text',text:input.text}]});
   if(input.kind==='select')return change(input.id,input.expectedRevision,{kind:'select',messageId:input.messageId,segmentIds:input.segmentIds});
   if(!host?.api||!host.ai||!host.conversations?.generation)return {status:'unavailable',reason:'generation_unavailable'};
   const agent=ai('agent',input.agentId);if(agent.kind!=='agent')return {status:'reference_unavailable'};
