@@ -29,3 +29,11 @@ Space 维护 Category、Space、Group、Context 的组织关系、稳定 ID、�
 4. 先查 [Actions 总运行集合](https://github.com/owla19s-ux/WEXPCeasy/actions/runs) 及被测 SHA，再记录验证结果。当前仅静态源码/提交证据，未独立签收。
 
 施工路径：根 README → 本 README/CONTRACT → 本模块源码与测试；有明确争议时再查 A1/A2，不建立跨 A0/A1/A2 的额外索引。
+
+## 97 项对账｜Space/Context 操作与 UI 入口（2026-11-09）
+
+- 对应第二批 F01 操作级检查点与 UIX-01/04：Category、Space、Group、Context 的创建/编辑、可选组织、地址 add/edit/remove/primary、Association add/replace/remove、Tool add/set/remove 由 `space/src/service.ts` 负责。工作目录登记不移动实体数据，Context ID 不随重命名改变。
+- Context 的 config 字段不等于完整可编辑配置：当前 `context.edit` 只编辑名称/说明；目标 Association 目前仅支持部分 AI/API 类型和 Connections tool。Context 对 Agent/Role/Model 等是**引用/选择**，执行仍须独立授权。
+- `UI/src/space.tsx` 的类别导航目前从 `data.categories` 逐项生成一般按钮，并非 A1 规定的三枚横排窄高分类按钮；这是 UI 容器设计缺口，Space 不应为了布局伪造新的业务 Category 实体。
+- 对应 A1 UIX-13～17 的多视图/多层自由格子/模板组合为长期方向；本 owner 只提供可引用的稳定身份和受控查询，不占有视图坐标、画布关系、工作流依赖或另一份资源本体。
+- 待核：Context.config 明确批准的字段与修改入口、引用失联与撤权投影、Group 跨 Space/删除/排序和完整 UI 生命周期；原历史 Placement 冻结，不能恢复。具体 F 编号/状态见 A2 四批清单及 UIX 对账。
