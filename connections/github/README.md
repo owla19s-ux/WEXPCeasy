@@ -20,9 +20,11 @@
 
 当前 `UI/src/connection-settings.tsx` 有连接与文件交互，`UI/src/github-tools.tsx` 提供通用目录、Schema、JSON 参数和手动调用；需按工具/版本/Operation 分开验收，不把官方工具改写成另一套 WEX API。
 
-未签收：真实远端业务写入/回读、完整官方工具逐项执行、Windows 手工安装验收、正式二进制分发与默认桌面运行时装配、Context 内对话→能力发现/选择→授权→MCP 调用→Operation 回执→原会话显示的完整组合闭环（尚未正式确定版本归属）。原 0.1.1 仍要求基础 GitHub 受控读写、回执以及 Context→Connections 基础调用。工具可见或只读注解均不授予执行权限。
+未签收：真实远端业务写入/回读、完整官方工具逐项执行、Windows 手工安装验收、正式二进制分发与默认桌面运行时装配、Context 内对话→模型自动提议→MCP 调用→结果自动回注的高级组合闭环（本次不纳入 0.1.1）。本版仅延用已批准的 Context 关联能力、GitHub 受控基础调用及原 Operation 回执。原 0.1.1 仍要求基础 GitHub 受控读写、回执以及 Context→Connections 基础调用。工具可见或只读注解均不授予执行权限。
 
 **Context 的 Tool.enabled 与 GitHub 工具可执行是两回事**：Space.tool.add/set/remove 保存局部引用/启用，不代表官方 MCP runtime 在线、工具 Schema 有效、本轮对话被授权或远端动作已成功。真实调用继续经公共 Connections discover/invoke、精确参数授权与 Operation；GitHub 连接器不创建 Context/Conversation 事实，也不逐个重写官方工具。
+
+新版最小 Context 主 AI 对话不需要模型自动调用 GitHub 工具。测试 GitHub 基础连接、Context 已启用工具的手动受控发现/执行、回执及撤权即可；完整多 AI 工作流/自动工具回注不据此提前施工。
 
 ## 继续施工与源码调整
 
