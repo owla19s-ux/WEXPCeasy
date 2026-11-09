@@ -87,3 +87,7 @@
 Task/工作轮次/Requirement/Artifact/Review/Verification/Acceptance 由本域维护；Task 引用输入资料与 Operation，不复制文件正文或 Operation 状态。Task 检查点必须能让新 Conversation、模型或执行者在读取最新修订、核对资源和原 Operation、重新判权后安全接续。检查点不是聊天总结，也不保证 Agent 或进程仍在运行。
 
 见[基础能力落地映射](../docs/A0-产品构想与研究/历史参考/旧工程规划/FOUNDATION-CAPABILITY-IMPLEMENTATION-MAP-2026-10-31.md)。
+
+## 97 项对账｜自由格子与执行工作流的界线（2026-11-09）
+
+UIX-13～17 是跨专业多视图、多层自由格子、引用组织及模板组合的长期产品方向，**不等于执行工作流编辑器**。WORKFLOWS-EDITOR 只负责工作流语义的编辑行为，不能因历史 prototype 路径占有通用画布所有职责。Workflows 拥有定义/执行依赖/Task 与验收领域事实，Views 负责布局/投影，Space 维护 Context 与资源引用。视觉线不生成自动执行关系；模板可以组合可选工作流而非必须。原型不是可运行调度器，不随 0.1.1 UI 基础功能提前施工。
